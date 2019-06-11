@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         name="%extension.name"
+         point="org.eclipse.ui.views">
+      <category
+            name="%category.name"
+            id="io.snyk.eclipse.plugin">
+      </category>
+      <view
+            id="io.snyk.eclipse.plugin.views.SnykView"
+            name="%view.name"
+            icon="icons/patch.png"
+            class="io.snyk.eclipse.plugin.views.SnykView"
+            category="io.snyk.eclipse.plugin"
+            inject="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <view
+               id="io.snyk.eclipse.plugin.views.SampleView"
+               relative="org.eclipse.ui.views.ProblemView"
+               relationship="right"
+               ratio="0.5">
+         </view>
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="io.snyk.eclipse.plugin.properties.SamplePreferencesPage"
+            id="io.snyk.eclipse.plugin.properties.preferencespage"
+            name="%page.name">
+      </page>
+   </extension>
+
+</plugin>
