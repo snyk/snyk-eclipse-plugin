@@ -1,4 +1,5 @@
 /target/
+.DS_Store
 
 # Eclipse Core      
 .project
