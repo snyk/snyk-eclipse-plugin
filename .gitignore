@@ -1,4 +1,5 @@
 /target/
+**/bin/
 .DS_Store
 
 # Eclipse Core      
@@ -7,4 +8,4 @@
 # JDT-specific (Eclipse Java Development Tools)     
 # .classpath
 
-.class
+*.class
