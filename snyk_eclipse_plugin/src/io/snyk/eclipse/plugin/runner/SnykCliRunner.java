@@ -34,6 +34,8 @@ public class SnykCliRunner {
 
 	private static final String AUTH_PARAM = "auth";
 	private static final String CONFIG_PARAM = "config";
+	
+	private static final String NO_AUTH_TOKEN = "Snyk isn’t yet configured, please insert Auth token in preferences page";
 
 	ProcessRunner processRunner = new ProcessRunner();
 
@@ -41,7 +43,7 @@ public class SnykCliRunner {
 	public ProcessResult snykAuth() {
 		String authToken = Preferences.getAuthToken();
 		if (authToken == null || authToken.isEmpty()) {
-			return ProcessResult.error("No Auth Token Available");
+			return ProcessResult.error(NO_AUTH_TOKEN);
 		}
 		
 		try {
