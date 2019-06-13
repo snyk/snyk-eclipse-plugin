@@ -1,5 +1,9 @@
 package io.snyk.eclipse.plugin.utils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import io.snyk.eclipse.plugin.runner.ProcessResult;
 
 public class MockHandler {
@@ -15,6 +19,16 @@ public class MockHandler {
 		return getMockContent(MOCK_SCAN_RESULT);
 	}
 	
+	private static String getResource() {
+		try {
+			return new String(Files.readAllBytes(Paths.get("some_output.json")));
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "error";
+		}
+		 
+	}
+		
 	private static final String MOCK_SCAN_RESULT = "{\n" + 
 			"  \"ok\": false,\n" + 
 			"  \"vulnerabilities\": [\n" + 

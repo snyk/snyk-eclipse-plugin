@@ -11,16 +11,9 @@ public class ScanResult {
      Boolean ok;
      Integer dependencyCount;
      String org;
-     String policyes;
      Boolean isPrivate;
-     String licensesPolicy;
      String packageManager;
-     String ignoreSettings;
      String summary;
-     String filesystemPolicy;
-
      Integer uniqueCount;
      String path;
-
-
 }

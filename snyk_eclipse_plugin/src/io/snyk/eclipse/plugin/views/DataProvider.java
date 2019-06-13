@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.domain.ContentError;
 import io.snyk.eclipse.plugin.domain.ScanResult;
 import io.snyk.eclipse.plugin.domain.Vuln;
+import io.snyk.eclipse.plugin.exception.AuthException;
 import io.snyk.eclipse.plugin.runner.Authenticator;
 import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.runner.SnykCliRunner;
@@ -58,29 +59,31 @@ public class DataProvider {
 	public List<DisplayModel> scan(List<IProject> projects) {
 		abort.set(false);
 		List<DisplayModel> result = new ArrayList<>();
+
 		try {
 			Authenticator.INSTANCE.doAuthentication();
+		} catch (AuthException e) {
+			result.add(error("", e));
+			return result;
+		}
 			
-			for (IProject project : projects) {
-				if (abort.get()) return abortResult();
-				if (!project.isOpen()) continue;
-	
-				List<IFile> poms = scrapeForPomfiles(project);
-				if (poms.size() > 1) {
-					DisplayModel projectLevel = new DisplayModel();
-					projectLevel.projectName = project.getName();
-					projectLevel.description = project.getName();
-					for (IFile pom : poms) {
-						if (abort.get()) return abortResult();
-						projectLevel.children.add(scanFile(pom, project.getName()));
-					}
-					result.add(projectLevel);
-				} else {
-					result.add(scanProject(project));
+		for (IProject project : projects) {
+			if (abort.get()) return abortResult();
+			if (!project.isOpen()) continue;
+
+			List<IFile> poms = scrapeForPomfiles(project);
+			if (poms.size() > 1) {
+				DisplayModel projectLevel = new DisplayModel();
+				projectLevel.projectName = project.getName();
+				projectLevel.description = project.getName();
+				for (IFile pom : poms) {
+					if (abort.get()) return abortResult();
+					projectLevel.children.add(scanFile(pom, project.getName()));
 				}
+				result.add(projectLevel);
+			} else {
+				result.add(scanProject(project));
 			}
-		} catch (Exception e) {
-			result.add(error(e));
 		}
 		return result;
 	}
@@ -92,12 +95,12 @@ public class DataProvider {
 		return result;
 	}
 	
-	private DisplayModel scanFile(IFile file, String projectName) throws JsonParseException, JsonMappingException, IOException {
+	private DisplayModel scanFile(IFile file, String projectName) {
 		ProcessResult result = cliRunner.snykTestFile(file.getRawLocation().toString());
 		return processResult(result, projectName, Optional.of(file.getFullPath().toString()));
 	}
 
-	private DisplayModel scanProject(IProject project) throws JsonParseException, JsonMappingException, IOException {
+	private DisplayModel scanProject(IProject project) {
 		if (project == null) return new DisplayModel();
 		IPath path = project.getRawLocation();
 		
@@ -113,34 +116,42 @@ public class DataProvider {
 		return processResult(result, project.getName(), Optional.empty());
 	}
 
-	private DisplayModel processResult(ProcessResult result, String projectName, Optional<String> fileName)
-			throws JsonParseException, JsonMappingException, IOException {
-		System.out.println(result);
-		DisplayModel projectModel;
-		if (result.hasError()) {
-			projectModel = DisplayModel.builder().description(result.getError()).projectName(projectName).build();
-		} else if (result.hasContentError()) {
-			ContentError error = objectMapper.readValue(result.getContent(), ContentError.class);
-			projectModel = DisplayModel.builder()
-					.description(projectName + " " + error.getError() + " Path: " + error.getPath())
-					.projectName(projectName).build();
-		} else {
-			ScanResult scanResult = objectMapper.readValue(result.getContent(), ScanResult.class);
-			List<DisplayModel> vulns = scanResult.getVulnerabilities().stream()
-					.sorted(Comparator.comparingInt(vuln -> ((Vuln) vuln).getCvssScore()).reversed())
-					.map(this::transform).collect(Collectors.toList());
-			
-			projectModel = DisplayModel.builder().description(fileName.orElse(projectName))
-					.projectName(projectName)
-					.dependecy(scanResult.getUniqueCount() + " vulns, " + scanResult.getSummary()).children(vulns)
-					.build();
+	private DisplayModel processResult(ProcessResult result, String projectName, Optional<String> fileName) {
+		try {
+			System.out.println(result);
+			DisplayModel projectModel;
+			if (result.hasError()) {
+				projectModel = DisplayModel.builder().description(result.getError()).projectName(projectName).build();
+			} else if (result.hasContentError()) {
+				ContentError error = objectMapper.readValue(result.getContent(), ContentError.class);
+				projectModel = DisplayModel.builder()
+						.description(projectName + " " + error.getError() + " Path: " + error.getPath())
+						.projectName(projectName).build();
+			} else {
+				ScanResult scanResult = objectMapper.readValue(result.getContent(), ScanResult.class);
+				List<DisplayModel> vulns = scanResult.getVulnerabilities().stream()
+						.sorted(Comparator.comparingInt(vuln -> ((Vuln) vuln).getCvssScore()).reversed())
+						.map(this::transform).collect(Collectors.toList());
+				
+				projectModel = DisplayModel.builder().description(fileName.orElse(projectName))
+						.projectName(projectName)
+						.dependecy(scanResult.getUniqueCount() + " vulns, " + scanResult.getSummary()).children(vulns)
+						.build();
+			}
+			return projectModel;
+		} catch (Exception e) {
+			return error(projectName, e);
 		}
-		return projectModel;
 
 	}
 
-	List<IFile> scrapeForPomfiles(IProject project) throws CoreException {
-		return processContainer(project, new ArrayList<>());
+	List<IFile> scrapeForPomfiles(IProject project) {
+		try {
+			return processContainer(project, new ArrayList<>());
+		} catch (CoreException e) {
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
 	}
 
 	List<IFile> processContainer(IContainer container, List<IFile> files) throws CoreException {
@@ -178,7 +189,6 @@ public class DataProvider {
 	
 
 	private DisplayModel fromPath(String path, int indent) {
-		String tail = "-";
 		String arrow = Stream.generate(() -> "-").limit(indent).collect(Collectors.joining()) + ">";
 		return DisplayModel.builder().dependecy(arrow + " " + path).build();
 	}
@@ -189,9 +199,11 @@ public class DataProvider {
 		return messageModel;
 	}
 
-	public DisplayModel error(Exception e) {
+	public DisplayModel error(String prefix, Exception e) {
 		e.printStackTrace();
-		return DisplayModel.builder().description("ERROR: " + e.getMessage()).children(new ArrayList<>()).build();
+		String message =  "Error: " + e.getMessage();
+		if (!prefix.isEmpty()) message = prefix + " - " + message;
+		return DisplayModel.builder().description(message).children(new ArrayList<>()).build();
 	}
 
 }
