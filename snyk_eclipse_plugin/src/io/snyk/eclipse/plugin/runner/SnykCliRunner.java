@@ -31,6 +31,8 @@ public class SnykCliRunner {
 
 	private static final String TEST_PARAMS = "test --json";
 	private static final String FILE_PARAM = "--file=";
+	
+	private static final String MONITOR_PARAM = "monitor --json";
 
 	private static final String AUTH_PARAM = "auth";
 	private static final String CONFIG_PARAM = "config";
@@ -58,6 +60,15 @@ public class SnykCliRunner {
 		try {
 			ProcessBuilder processBuilder = createProcessBuilderByOS(Lists.of​(CONFIG_PARAM),Preferences.getPath());
 			return processRunner.run(processBuilder, Optional.empty());
+		} catch (Exception e) {
+			return ProcessResult.error(e.getMessage());
+		}
+	}
+	
+	public ProcessResult snykMonitor(File navigatePath) {
+		try {
+			ProcessBuilder processBuilder = createProcessBuilderByOS(Lists.of​(MONITOR_PARAM), Preferences.getPath());
+			return processRunner.run(processBuilder, Optional.of(navigatePath));
 		} catch (Exception e) {
 			return ProcessResult.error(e.getMessage());
 		}
@@ -106,10 +117,6 @@ public class SnykCliRunner {
 	}
 
 	private String getRunnableLocation(String relativeLoc) throws IOException {
-//		Bundle bundle = Platform.getBundle("io.snyk");
-//		System.out.println(Platform.getInstallLocation().getURL());
-//		URL url = FileLocator.find(bundle, new Path(relativeLoc), null);
-//		url = FileLocator.toFileURL(url);
 		URL url = new URL(Platform.getInstallLocation().getURL(), relativeLoc);
 		return url.getFile();
 	}

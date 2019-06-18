@@ -2,6 +2,7 @@ package io.snyk.eclipse.plugin.views;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -14,6 +15,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ITreeSelection;
@@ -34,6 +36,9 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.domain.MonitorResult;
+import io.snyk.eclipse.plugin.runner.ProcessResult;
+import io.snyk.eclipse.plugin.runner.SnykCliRunner;
 
 public class SnykView extends ViewPart {
 
@@ -59,6 +64,10 @@ public class SnykView extends ViewPart {
 	
 	private static final String RUNNING = "running...";
 	private static final String ABORTING = "abort scanning...";
+	
+	private List<Action> rerunActions = new ArrayList<>();
+	private List<Action> monitorActions = new ArrayList<>();
+	
 	
 	public SnykView() {
 		model = new DisplayModel();
@@ -160,8 +169,10 @@ public class SnykView extends ViewPart {
 	private void fillContextMenu(IMenuManager manager) {
 		ITreeSelection selection = viewer.getStructuredSelection();
 		DisplayModel selected = (DisplayModel)selection.getFirstElement();
+		monitorActions = new ArrayList<>();
 		if (selected != null && selected.projectName != null) {
 			manager.add(rerunProjectAction(selected.projectName));
+			manager.add(monitorAction(selected.projectName));
 		}
 		manager.add(scanWorkspace);
 		manager.add(new Separator());
@@ -178,6 +189,7 @@ public class SnykView extends ViewPart {
 		scanWorkspace = new Action() {
 			@Override
 			public void run() {
+
 				showMessage(RUNNING);
 				scanWorkspace.setEnabled(false);
 				abortScanning.setEnabled(true);
@@ -237,7 +249,6 @@ public class SnykView extends ViewPart {
 					viewer.getTree().getDisplay().asyncExec(() -> viewer.refresh());
 					scanWorkspace.setEnabled(true);
 				});
-				
 			}
 		};
 		
@@ -245,10 +256,31 @@ public class SnykView extends ViewPart {
 		return action;
 	}
 	
+	private Action monitorAction(String projectName) {
+		Action action = new Action() {
+			public void run() {
+				CompletableFuture.runAsync(()-> handleMonitorOutput(DataProvider.INSTANCE.monitorProject(projectName)));
+			}
+		};
+		action.setText("Snyk monitor " + projectName );
+		monitorActions.add(action);
+		return action;
+	}
+	
+	private void handleMonitorOutput(MonitorResult result) {
+		if (result.hasError()) shell.getDisplay().asyncExec(()->MessageDialog.openError(shell, "Snyk Monitor Failed", result.getError()));
+		else shell.getDisplay().asyncExec(()-> {
+			LinkDialog dialog = new LinkDialog(shell, "Snyk Monitor Succesful", "Monitoring "+result.getPath()+" \n\nExplore this snapshot at: ", result.getUri());
+			dialog.open();	
+		});
+		
+	}
+	
 	public void showMessage(String message) {
 		model.children.clear();
 		model.children.add(DataProvider.INSTANCE.message(message));
 		viewer.refresh();
+		monitorActions.forEach(act -> act.setEnabled(true));
 	}
 	
 

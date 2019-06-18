@@ -19,6 +19,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.dialogs.MessageDialog;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.domain.ContentError;
+import io.snyk.eclipse.plugin.domain.MonitorResult;
 import io.snyk.eclipse.plugin.domain.ScanResult;
 import io.snyk.eclipse.plugin.domain.Vuln;
 import io.snyk.eclipse.plugin.exception.AuthException;
@@ -40,8 +42,7 @@ public class DataProvider {
 	public AtomicBoolean abort = new AtomicBoolean(false);
 	private SnykCliRunner cliRunner = new SnykCliRunner();
 	ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-	
-	
+		
 		
 	public List<DisplayModel> scanWorkspace() {
 		List<IProject> allProjects = Arrays.asList(ResourcesPlugin.getWorkspace().getRoot().getProjects());
@@ -53,6 +54,43 @@ public class DataProvider {
 				.filter(project -> project.getName().equals(projectName))
 				.collect(Collectors.toList());
 		return scan(selectedProjects);
+	}
+	
+	public MonitorResult monitorProject(String projectName) {
+		Optional<IProject> foundProject = Arrays.stream(ResourcesPlugin.getWorkspace().getRoot().getProjects())
+				.filter(project -> project.getName().equals(projectName))
+				.findAny();
+		
+		ProcessResult result = foundProject.map(this::monitor).orElse(ProcessResult.error("Unable to find project: " + projectName));
+		return mapMonitorResult(result);
+	}
+	
+	private ProcessResult monitor(IProject project) {
+		if (project == null) return ProcessResult.error("project = null");
+		IPath path = project.getRawLocation();
+		
+		if (path == null) {
+			path = project.getLocation();
+			if (path == null) {
+				return ProcessResult.error("Unable to find project :" + project.getName());	
+			}
+		}		
+		File location = new File(path.toString());
+
+		ProcessResult result = cliRunner.snykMonitor(location);
+		return result;
+	}
+	
+	private MonitorResult mapMonitorResult(ProcessResult processResult) {
+		if (processResult.hasError()) return MonitorResult.error(processResult.getError());
+		else if (processResult.hasContentError())return MonitorResult.error(processResult.getContent());
+		else
+			try {
+				return objectMapper.readValue(processResult.getContent(), MonitorResult.class);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return MonitorResult.error(e.getMessage());
+			} 
 	}
 	
 	
