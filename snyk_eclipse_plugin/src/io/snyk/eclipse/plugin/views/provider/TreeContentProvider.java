@@ -1,8 +1,10 @@
-package io.snyk.eclipse.plugin.views;
+package io.snyk.eclipse.plugin.views.provider;
 
 import java.util.List;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
+
+import io.snyk.eclipse.plugin.views.DisplayModel;
 
 public class TreeContentProvider implements ITreeContentProvider {
     

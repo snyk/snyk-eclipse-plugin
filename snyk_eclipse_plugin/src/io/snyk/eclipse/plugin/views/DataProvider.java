@@ -36,7 +36,7 @@ import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.runner.SnykCliRunner;
 
 public class DataProvider {
-
+	
 	public static DataProvider INSTANCE = new DataProvider();
 
 	public AtomicBoolean abort = new AtomicBoolean(false);

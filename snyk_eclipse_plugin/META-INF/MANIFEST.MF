@@ -8,7 +8,8 @@ Bundle-Vendor: %Bundle-Vendor
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.ui.forms;bundle-version="3.7.500",
- org.eclipse.pde.runtime;bundle-version="3.6.400"
+ org.eclipse.pde.runtime;bundle-version="3.6.400",
+ org.eclipse.jdt.core
 Automatic-Module-Name: io.snyk
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,

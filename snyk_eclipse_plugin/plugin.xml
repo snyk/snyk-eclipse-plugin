@@ -44,5 +44,38 @@
             name="%page.name">
       </page>
    </extension>
+    <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="io.snyk.eclipse.plugin.views.MenuHandler"
+            id="io.snyk.eclipse.plugin.commands.execute"
+            name="Run">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+
+            <command
+                  commandId="io.snyk.eclipse.plugin.commands.execute"
+                  icon="icons/patch.png"
+                  label="Snyk test"
+                  style="push">
+                                      <visibleWhen>
+				           <with variable="activeMenuSelection">
+				            <iterate
+				                 ifEmpty="false">
+				             <adapt type="org.eclipse.core.resources.IProject">
+				             
+				             </adapt>
+				            </iterate>
+				           </with>
+         			</visibleWhen>
+            </command>
+
+            
+      </menuContribution>
+   </extension>
 
 </plugin>

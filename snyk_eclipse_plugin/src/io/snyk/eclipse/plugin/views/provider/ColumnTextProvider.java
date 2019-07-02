@@ -1,8 +1,10 @@
-package io.snyk.eclipse.plugin.views;
+package io.snyk.eclipse.plugin.views.provider;
 
 import java.util.function.Function;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+
+import io.snyk.eclipse.plugin.views.DisplayModel;
 
 public class ColumnTextProvider extends ColumnLabelProvider{
 	

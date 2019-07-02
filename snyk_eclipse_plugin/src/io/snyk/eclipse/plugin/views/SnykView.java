@@ -8,6 +8,10 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -18,6 +22,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
@@ -30,15 +35,22 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
 import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.runner.SnykCliRunner;
+import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
+import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;
+import io.snyk.eclipse.plugin.views.provider.LinkLabelProvider;
+import io.snyk.eclipse.plugin.views.provider.TreeContentProvider;
 
 public class SnykView extends ViewPart {
 
@@ -67,6 +79,8 @@ public class SnykView extends ViewPart {
 	
 	private List<Action> rerunActions = new ArrayList<>();
 	private List<Action> monitorActions = new ArrayList<>();
+	
+	private boolean alreadyRunning = false;
 	
 	
 	public SnykView() {
@@ -189,17 +203,19 @@ public class SnykView extends ViewPart {
 		scanWorkspace = new Action() {
 			@Override
 			public void run() {
-
+				if (alreadyRunning) return;
 				showMessage(RUNNING);
 				scanWorkspace.setEnabled(false);
 				abortScanning.setEnabled(true);
 				
 				CompletableFuture.runAsync(()-> {
+					alreadyRunning = true;
 					List<DisplayModel> scanResult = DataProvider.INSTANCE.scanWorkspace();
 					model.children.clear();
 					model.children.addAll(scanResult);
 					viewer.getTree().getDisplay().asyncExec(() -> viewer.refresh());
 					scanWorkspace.setEnabled(true);
+					alreadyRunning = false;
 				});
 				
 			}
@@ -213,7 +229,6 @@ public class SnykView extends ViewPart {
 			
 			@Override
 			public void run() {
-				
 				PreferenceDialog pref = PreferencesUtil.createPreferenceDialogOn(
 						shell, "io.snyk.eclipse.plugin.properties.preferencespage",  
 						null, null);
@@ -235,20 +250,27 @@ public class SnykView extends ViewPart {
 				Activator.getImageDescriptor("platform:/plugin/org.eclipse.ui.browser/icons/clcl16/nav_stop.png"));
 		abortScanning.setEnabled(false);
 	}
+	
+	public void testProject(String projectName) {
+		if (alreadyRunning) return;
+		showMessage(RUNNING);
+		scanWorkspace.setEnabled(false);
+		abortScanning.setEnabled(true);
+		
+		CompletableFuture.runAsync(()-> {
+			alreadyRunning = true;
+			model.children.clear();
+			model.children.addAll(DataProvider.INSTANCE.scanProject(projectName));
+			viewer.getTree().getDisplay().asyncExec(() -> viewer.refresh());
+			scanWorkspace.setEnabled(true);
+			alreadyRunning = false;
+		});
+	}
 		
 	private Action rerunProjectAction(String projectName) {
 		Action action = new Action() {
 			public void run() {
-				showMessage(RUNNING);
-				scanWorkspace.setEnabled(false);
-				abortScanning.setEnabled(true);
-				
-				CompletableFuture.runAsync(()-> {
-					model.children.clear();
-					model.children.addAll(DataProvider.INSTANCE.scanProject(projectName));
-					viewer.getTree().getDisplay().asyncExec(() -> viewer.refresh());
-					scanWorkspace.setEnabled(true);
-				});
+				testProject(projectName);
 			}
 		};
 		
@@ -256,9 +278,12 @@ public class SnykView extends ViewPart {
 		return action;
 	}
 	
+	
 	private Action monitorAction(String projectName) {
 		Action action = new Action() {
 			public void run() {
+				if(alreadyRunning) return;
+				MessageDialog.openInformation(shell,"Snyk monitor", "Snyk monitor for project "+projectName+" in progress..." );
 				CompletableFuture.runAsync(()-> handleMonitorOutput(DataProvider.INSTANCE.monitorProject(projectName)));
 			}
 		};
@@ -268,11 +293,13 @@ public class SnykView extends ViewPart {
 	}
 	
 	private void handleMonitorOutput(MonitorResult result) {
+		alreadyRunning = true;
 		if (result.hasError()) shell.getDisplay().asyncExec(()->MessageDialog.openError(shell, "Snyk Monitor Failed", result.getError()));
 		else shell.getDisplay().asyncExec(()-> {
 			LinkDialog dialog = new LinkDialog(shell, "Snyk Monitor Succesful", "Monitoring "+result.getPath()+" \n\nExplore this snapshot at: ", result.getUri());
 			dialog.open();	
 		});
+		alreadyRunning = false;
 		
 	}
 	
@@ -288,4 +315,5 @@ public class SnykView extends ViewPart {
 	public void setFocus() {
 		viewer.getControl().setFocus();
 	}
+	
 }

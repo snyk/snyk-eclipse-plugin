@@ -1,4 +1,4 @@
-package io.snyk.eclipse.plugin.views;
+package io.snyk.eclipse.plugin.views.provider;
 
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.StyledCellLabelProvider;
@@ -12,6 +12,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Event;
+
+import io.snyk.eclipse.plugin.views.DisplayModel;
 
 public class LinkLabelProvider extends StyledCellLabelProvider {
 
