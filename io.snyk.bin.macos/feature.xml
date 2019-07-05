@@ -2,7 +2,8 @@
 <feature
       id="io.snyk.bin.macos"
       label="Snyk scan tool for Mac"
-      version="1.0.0.qualifier">
+      version="1.0.0.qualifier"
+      os="macosx">
 
    <description>
       Snyk scan tool for MacOS

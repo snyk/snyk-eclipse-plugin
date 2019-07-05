@@ -35,14 +35,17 @@ limitations under the License.
    <includes
          id="io.snyk.bin.linux"
          version="0.0.0"
-         optional="true"
          os="linux"/>
 
    <includes
          id="io.snyk.bin.macos"
          version="0.0.0"
-         optional="true"
          os="macosx"/>
+
+   <includes
+         id="io.snyk.bin.win"
+         version="0.0.0"
+         os="win32"/>
 
    <plugin
          id="io.snyk.eclipse.plugin"
