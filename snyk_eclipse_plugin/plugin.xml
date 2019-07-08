@@ -39,7 +39,7 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            class="io.snyk.eclipse.plugin.properties.SamplePreferencesPage"
+            class="io.snyk.eclipse.plugin.properties.PreferencesPage"
             id="io.snyk.eclipse.plugin.properties.preferencespage"
             name="%page.name">
       </page>

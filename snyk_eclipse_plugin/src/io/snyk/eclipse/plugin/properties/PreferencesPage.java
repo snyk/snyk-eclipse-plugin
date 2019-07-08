@@ -6,9 +6,9 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 
-public class SamplePreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
-	public SamplePreferencesPage() {
+	public PreferencesPage() {
 		super(GRID);
 	}
 	
