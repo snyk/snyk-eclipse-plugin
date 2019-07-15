@@ -1,18 +1,11 @@
 package io.snyk.eclipse.plugin.views;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
-import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -22,7 +15,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
@@ -35,18 +27,13 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
-import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
-import io.snyk.eclipse.plugin.runner.ProcessResult;
-import io.snyk.eclipse.plugin.runner.SnykCliRunner;
 import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
 import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;
 import io.snyk.eclipse.plugin.views.provider.LinkLabelProvider;
@@ -77,7 +64,6 @@ public class SnykView extends ViewPart {
 	private static final String RUNNING = "running...";
 	private static final String ABORTING = "abort scanning...";
 	
-	private List<Action> rerunActions = new ArrayList<>();
 	private List<Action> monitorActions = new ArrayList<>();
 	
 	private boolean alreadyRunning = false;

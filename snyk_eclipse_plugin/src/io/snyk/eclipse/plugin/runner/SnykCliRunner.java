@@ -11,11 +11,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.ui.statushandlers.StatusManager;
-import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
 import io.snyk.eclipse.plugin.properties.Preferences;
