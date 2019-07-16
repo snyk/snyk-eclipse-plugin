@@ -23,7 +23,7 @@
       <perspectiveExtension
             targetID="org.eclipse.jdt.ui.JavaPerspective">
          <view
-               id="io.snyk.eclipse.plugin.views.SampleView"
+               id="io.snyk.eclipse.plugin.views.SnykView"
                relative="org.eclipse.ui.views.ProblemView"
                relationship="right"
                ratio="0.5">
@@ -39,7 +39,7 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            class="io.snyk.eclipse.plugin.properties.SamplePreferencesPage"
+            class="io.snyk.eclipse.plugin.properties.PreferencesPage"
             id="io.snyk.eclipse.plugin.properties.preferencespage"
             name="%page.name">
       </page>

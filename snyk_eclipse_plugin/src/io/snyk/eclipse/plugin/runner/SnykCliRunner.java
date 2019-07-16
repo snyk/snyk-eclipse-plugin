@@ -11,11 +11,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.ui.statushandlers.StatusManager;
-import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
 import io.snyk.eclipse.plugin.properties.Preferences;
@@ -37,7 +33,7 @@ public class SnykCliRunner {
 	private static final String AUTH_PARAM = "auth";
 	private static final String CONFIG_PARAM = "config";
 	
-	private static final String NO_AUTH_TOKEN = "Snyk isn’t yet configured, please insert Auth token in preferences page";
+	private static final String NO_AUTH_TOKEN = "Snyk isn’t yet configured, please authenticate in preferences page";
 
 	ProcessRunner processRunner = new ProcessRunner();
 
