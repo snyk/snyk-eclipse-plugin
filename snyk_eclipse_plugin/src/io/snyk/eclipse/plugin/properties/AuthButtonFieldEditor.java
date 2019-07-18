@@ -22,7 +22,6 @@ public class AuthButtonFieldEditor extends StringButtonFieldEditor{
 	protected String changePressed() {
 		try {
 			String apiKey = Authenticator.INSTANCE.callLogin();
-			Authenticator.INSTANCE.auth();
 			return apiKey;
 		} catch (AuthException e) {
 			e.printStackTrace();
