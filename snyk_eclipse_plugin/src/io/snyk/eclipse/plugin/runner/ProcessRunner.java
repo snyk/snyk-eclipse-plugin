@@ -6,6 +6,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
+import org.eclipse.e4.core.services.log.Logger;
+import org.eclipse.ui.PlatformUI;
+
 public class ProcessRunner {
 	
 	private static final String DEFAULT_MAC_PATH = "/usr/local/bin";
@@ -56,6 +61,7 @@ public class ProcessRunner {
 	
 	//TODO implement for Win
 	public ProcessBuilder createWinProcessBuilder(String command, Optional<String> path) {
+		if (command.startsWith("/")) command = command.replaceFirst("/", "");
 		ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", command);
 		pb.environment().put("PATH", path.map(p -> p+":"+DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH) + File.pathSeparator + System.getenv("PATH"));
 		return pb;
