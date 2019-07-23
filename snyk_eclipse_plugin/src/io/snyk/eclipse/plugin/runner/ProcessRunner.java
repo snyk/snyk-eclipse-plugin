@@ -6,11 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Optional;
 
-import javax.inject.Inject;
-
-import org.eclipse.e4.core.services.log.Logger;
-import org.eclipse.ui.PlatformUI;
-
 public class ProcessRunner {
 	
 	private static final String DEFAULT_MAC_PATH = "/usr/local/bin";
