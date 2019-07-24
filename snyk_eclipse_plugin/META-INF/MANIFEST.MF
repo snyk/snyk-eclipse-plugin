@@ -7,7 +7,6 @@ Bundle-Activator: io.snyk.eclipse.plugin.Activator
 Bundle-Vendor: %Bundle-Vendor
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.eclipse.pde.runtime;bundle-version="3.6.400",
  org.eclipse.jdt.core
 Automatic-Module-Name: io.snyk
 Bundle-ActivationPolicy: lazy
@@ -18,7 +17,9 @@ Bundle-ClassPath: .,
  lib/lombok-1.18.6.jar,
  lib/commons-lang3-3.9.jar,
  lib/httpclient-4.5.9.jar,
- lib/httpcore-4.4.11.jar
+ lib/httpcore-4.4.11.jar,
+ lib/commons-codec-1.11.jar,
+ lib/commons-logging-1.2.jar
 Import-Package: org.eclipse.core.resources
 Export-Package: .,
  Class50.lombok.eclipse.agent,
