@@ -7,9 +7,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Link;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 
@@ -46,13 +44,7 @@ public class LinkDialog extends Dialog {
 		
 		Link link = new Link(container, SWT.NONE);
 		link.setText(message+"\n<a href=\""+ projectURL + "\">" + projectURL + "</a>");
-		link.addListener (SWT.Selection, new Listener () {
-			
-			public void handleEvent(Event event) {
-				org.eclipse.swt.program.Program.launch(event.text);
-			}
-			
-		});
+		link.addListener (SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
 				
 		link.setSize(330, 150);
 

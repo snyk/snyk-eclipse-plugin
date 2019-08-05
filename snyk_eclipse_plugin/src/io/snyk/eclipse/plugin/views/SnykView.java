@@ -7,7 +7,6 @@ import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -58,7 +57,7 @@ public class SnykView extends ViewPart {
 
 	private TreeViewer viewer;
 	private Action scanWorkspace, openPrefPage, abortScanning;	
-	private DisplayModel model;
+	private DisplayModel rootModel;
 	private Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 	
 	private static final String RUNNING = "running...";
@@ -70,10 +69,10 @@ public class SnykView extends ViewPart {
 	
 	
 	public SnykView() {
-		model = new DisplayModel();
+		rootModel = new DisplayModel();
 		DisplayModel init = new DisplayModel();
 		init.description = "Hit play to run scan";
-		model.children.add(init);
+		rootModel.children.add(init);
 	}
 	
 
@@ -91,7 +90,7 @@ public class SnykView extends ViewPart {
 	private void createViewer(Composite parent) {
 		viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER);
 		ColumnViewerToolTipSupport.enableFor(viewer);
-		createColumns(parent, viewer);
+		createColumns();
 		final Tree table = viewer.getTree();
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
@@ -108,22 +107,22 @@ public class SnykView extends ViewPart {
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
 		viewer.getControl().setLayoutData(gridData);
-		viewer.setInput(model);
+		viewer.setInput(rootModel);
 		
 	}
 
-	private void createColumns(final Composite parent, final TreeViewer viewer) {
-		TreeViewerColumn col = createTreeViewerColumn("Title", 400, 0);
+	private void createColumns() {
+		TreeViewerColumn col = createTreeViewerColumn("Title", 400);
 		ColumnProvider label = new ColumnProvider(this::findSeverityImage ,model -> model.description);
 		col.setLabelProvider(new LinkLabelProvider(label));
 
-		col = createTreeViewerColumn("Dependency", 400, 1);
+		col = createTreeViewerColumn("Dependency", 400);
 		col.setLabelProvider(new ColumnTextProvider(model -> model.dependecy));
 
-		col = createTreeViewerColumn("Package", 400, 2);
+		col = createTreeViewerColumn("Package", 400);
 		col.setLabelProvider(new ColumnTextProvider(model -> model.vulnPackage));
 
-		col = createTreeViewerColumn("Fix", 400, 3);
+		col = createTreeViewerColumn("Fix", 400);
 		col.setLabelProvider(new ColumnTextProvider(model -> model.fix));
 	}
 
@@ -137,7 +136,7 @@ public class SnykView extends ViewPart {
 		return null;
 	}
 
-	private TreeViewerColumn createTreeViewerColumn(String title, int bound, final int colNumber) {
+	private TreeViewerColumn createTreeViewerColumn(String title, int bound) {
 		final TreeViewerColumn viewerColumn = new TreeViewerColumn(viewer, SWT.NONE);
 		final TreeColumn column = viewerColumn.getColumn();
 		column.setText(title);
@@ -150,11 +149,7 @@ public class SnykView extends ViewPart {
 	private void hookContextMenu() {
 		MenuManager menuMgr = new MenuManager("#PopupMenu");
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager) {
-				SnykView.this.fillContextMenu(manager);
-			}
-		});
+		menuMgr.addMenuListener(SnykView.this::fillContextMenu);
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
 		
@@ -197,8 +192,8 @@ public class SnykView extends ViewPart {
 				CompletableFuture.runAsync(()-> {
 					alreadyRunning = true;
 					List<DisplayModel> scanResult = DataProvider.INSTANCE.scanWorkspace();
-					model.children.clear();
-					model.children.addAll(scanResult);
+					rootModel.children.clear();
+					rootModel.children.addAll(scanResult);
 					viewer.getTree().getDisplay().asyncExec(() -> viewer.refresh());
 					scanWorkspace.setEnabled(true);
 					alreadyRunning = false;
@@ -228,7 +223,7 @@ public class SnykView extends ViewPart {
 			@Override
 			public void run() {
 				showMessage(ABORTING);
-				DataProvider.INSTANCE.abort.set(true);
+				DataProvider.abort.set(true);
 				abortScanning.setEnabled(false);
 			}			
 		};
@@ -245,8 +240,8 @@ public class SnykView extends ViewPart {
 		
 		CompletableFuture.runAsync(()-> {
 			alreadyRunning = true;
-			model.children.clear();
-			model.children.addAll(DataProvider.INSTANCE.scanProject(projectName));
+			rootModel.children.clear();
+			rootModel.children.addAll(DataProvider.INSTANCE.scanProject(projectName));
 			viewer.getTree().getDisplay().asyncExec(() -> viewer.refresh());
 			scanWorkspace.setEnabled(true);
 			alreadyRunning = false;
@@ -255,6 +250,7 @@ public class SnykView extends ViewPart {
 		
 	private Action rerunProjectAction(String projectName) {
 		Action action = new Action() {
+			@Override
 			public void run() {
 				testProject(projectName);
 			}
@@ -267,6 +263,7 @@ public class SnykView extends ViewPart {
 	
 	private Action monitorAction(String projectName) {
 		Action action = new Action() {
+			@Override
 			public void run() {
 				if(alreadyRunning) return;
 				MessageDialog.openInformation(shell,"Snyk monitor", "Snyk monitor for project "+projectName+" in progress..." );
@@ -290,8 +287,8 @@ public class SnykView extends ViewPart {
 	}
 	
 	public void showMessage(String message) {
-		model.children.clear();
-		model.children.add(DataProvider.INSTANCE.message(message));
+		rootModel.children.clear();
+		rootModel.children.add(DataProvider.INSTANCE.message(message));
 		viewer.refresh();
 		monitorActions.forEach(act -> act.setEnabled(true));
 	}

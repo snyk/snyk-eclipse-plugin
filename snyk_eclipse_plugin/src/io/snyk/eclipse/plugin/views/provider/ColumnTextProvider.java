@@ -14,6 +14,7 @@ public class ColumnTextProvider extends ColumnLabelProvider{
 		this.vulnFunc = vulnFunc;
 	}
 	
+	@Override
 	public String getText(Object element) {
 		DisplayModel v = (DisplayModel) element;
 		return vulnFunc.apply(v);

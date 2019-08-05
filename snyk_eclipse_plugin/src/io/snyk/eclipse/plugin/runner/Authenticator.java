@@ -22,7 +22,7 @@ import io.snyk.eclipse.plugin.properties.Preferences;
 
 public class Authenticator {
 	
-	public static Authenticator INSTANCE = new Authenticator();
+	public static final Authenticator INSTANCE = new Authenticator();
 	
 	private static final String API_URL = "https://snyk.io";
 	
@@ -91,8 +91,7 @@ public class Authenticator {
 		
 		for (int i = 0; i <20; i++) {
 	        String payload = "{\"token\" : \"" + token + "\"}";
-	        
-	        System.out.println(payload);
+
 	        StringEntity payloadEntity = new StringEntity(payload);
 	
 	        HttpClient httpClient = HttpClientBuilder.create().build();

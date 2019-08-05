@@ -26,16 +26,18 @@ import io.snyk.eclipse.plugin.domain.ContentError;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
 import io.snyk.eclipse.plugin.domain.ScanResult;
 import io.snyk.eclipse.plugin.domain.Vuln;
+import io.snyk.eclipse.plugin.exception.AbortException;
 import io.snyk.eclipse.plugin.exception.AuthException;
 import io.snyk.eclipse.plugin.runner.Authenticator;
 import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.runner.SnykCliRunner;
+import io.snyk.eclipse.plugin.utils.Lists;
 
 public class DataProvider {
 	
-	public static DataProvider INSTANCE = new DataProvider();
+	public static final  DataProvider INSTANCE = new DataProvider();
 
-	public AtomicBoolean abort = new AtomicBoolean(false);
+	public static final AtomicBoolean abort = new AtomicBoolean(false);
 	private SnykCliRunner cliRunner = new SnykCliRunner();
 	ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		
@@ -73,8 +75,7 @@ public class DataProvider {
 		}		
 		File location = new File(path.toString());
 
-		ProcessResult result = cliRunner.snykMonitor(location);
-		return result;
+		return cliRunner.snykMonitor(location);
 	}
 	
 	private MonitorResult mapMonitorResult(ProcessResult processResult) {
@@ -92,29 +93,26 @@ public class DataProvider {
 	
 	public List<DisplayModel> scan(List<IProject> projects) {
 		abort.set(false);
-		List<DisplayModel> result = new ArrayList<>();
+
 
 		try {
 			Authenticator.INSTANCE.doAuthentication();
 		} catch (AuthException e) {
-			result.add(error("", e));
-			return result;
+			return Lists.of​(error("", e));
 		}
 			
+		List<DisplayModel> result = new ArrayList<>();
 		for (IProject project : projects) {
 			if (abort.get()) return abortResult();
 			if (!project.isOpen()) continue;
 
-			List<IFile> poms = scrapeForPomfiles(project);
+			List<IFile> poms = scrapeForPomfiles(project);			
 			if (poms.size() > 1) {
-				DisplayModel projectLevel = new DisplayModel();
-				projectLevel.projectName = project.getName();
-				projectLevel.description = project.getName();
-				for (IFile pom : poms) {
-					if (abort.get()) return abortResult();
-					projectLevel.children.add(scanFile(pom, project.getName()));
+				try {
+					result.add(handleMultiplePoms(poms, project));
+				} catch (AbortException e) {
+					return abortResult();
 				}
-				result.add(projectLevel);
 			} else {
 				result.add(scanProject(project));
 			}
@@ -122,8 +120,21 @@ public class DataProvider {
 		return result;
 	}
 	
+	private DisplayModel handleMultiplePoms(List<IFile> poms, IProject project) throws AbortException {
+		DisplayModel projectLevel = new DisplayModel();
+		projectLevel.projectName = project.getName();
+		projectLevel.description = project.getName();
+		for (IFile pom : poms) {
+			if (abort.get()) throw new AbortException();
+			projectLevel.children.add(scanFile(pom, project.getName()));
+		}
+		return projectLevel;
+	}
+	
+
+
+	
 	public List<DisplayModel> abortResult() {
-		System.out.println("abort!");
 		List<DisplayModel> result = new ArrayList<>();
 		result.add(message("scan aborted"));
 		return result;
@@ -152,7 +163,6 @@ public class DataProvider {
 
 	private DisplayModel processResult(ProcessResult result, String projectName, Optional<String> fileName) {
 		try {
-			System.out.println(result);
 			DisplayModel projectModel;
 			if (result.hasError()) {
 				projectModel = DisplayModel.builder().description(result.getError()).projectName(projectName).build();

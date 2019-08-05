@@ -41,7 +41,6 @@ public class ProcessRunner {
 		}			
 	}
 	
-	//TODO implement default install path for linux
 	public ProcessBuilder createLinuxProcessBuilder(String command, Optional<String> path) {
 		ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
 		pb.environment().put("PATH", path.map(p -> p+":"+DEFAULT_LINUX_PATH).orElse(DEFAULT_LINUX_PATH) + File.pathSeparator + System.getenv("PATH"));
@@ -54,7 +53,6 @@ public class ProcessRunner {
 		return pb;
 	}
 	
-	//TODO implement for Win
 	public ProcessBuilder createWinProcessBuilder(String command, Optional<String> path) {
 		if (command.startsWith("/")) command = command.replaceFirst("/", "");
 		ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", command);

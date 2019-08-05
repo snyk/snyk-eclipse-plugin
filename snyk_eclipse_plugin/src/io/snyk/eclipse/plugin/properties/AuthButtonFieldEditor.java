@@ -21,8 +21,7 @@ public class AuthButtonFieldEditor extends StringButtonFieldEditor{
 	@Override
 	protected String changePressed() {
 		try {
-			String apiKey = Authenticator.INSTANCE.callLogin();
-			return apiKey;
+			return Authenticator.INSTANCE.callLogin();
 		} catch (AuthException e) {
 			e.printStackTrace();
 			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Authentication", e.getMessage());

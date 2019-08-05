@@ -19,8 +19,6 @@ import io.snyk.eclipse.plugin.utils.Lists;
 
 public class SnykCliRunner {
 
-//	public static SnykCliRunner INSTANCE = new SnykCliRunner();
-
 	private static final String SNYK_CLI_MAC = "snyk-macos";
 	private static final String SNYK_CLI_LINUX = "snyk-linux";
 	private static final String SNYK_CLI_WIN = "snyk-win.exe";
