@@ -9,3 +9,5 @@
 # .classpath
 
 *.class
+
+.metadata/
