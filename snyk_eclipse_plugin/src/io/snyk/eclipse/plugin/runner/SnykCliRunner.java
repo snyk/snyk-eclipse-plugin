@@ -51,13 +51,22 @@ public class SnykCliRunner {
 	}
 	
 	public ProcessResult snykConfig() {
+		return snykRun(Lists.of​(CONFIG_PARAM));
+	}
+	
+	public ProcessResult snykSetEndpoint(String url) {
+		return snykRun(Lists.of​(CONFIG_PARAM, "set endpoint=" + url));
+	}
+	
+	private ProcessResult snykRun(List<String> arguments) {
 		try {
-			ProcessBuilder processBuilder = createProcessBuilderByOS(Lists.of​(CONFIG_PARAM),Preferences.getPath());
+			ProcessBuilder processBuilder = createProcessBuilderByOS(arguments, Preferences.getPath());
 			return processRunner.run(processBuilder, Optional.empty());
 		} catch (Exception e) {
 			return ProcessResult.error(e.getMessage());
 		}
 	}
+	
 	
 	public ProcessResult snykMonitor(File navigatePath) {
 		try {

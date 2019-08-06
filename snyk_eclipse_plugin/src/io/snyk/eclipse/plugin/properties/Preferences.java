@@ -11,8 +11,12 @@ public class Preferences {
 	public static final String QUALIFIER = "io.snyk.eclipse.plugin";
 	public static final String AUTH_TOKEN_KEY = "authtoken";
 	public static final String PATH_KEY = "path";
+	public static final String ENDPOINT_KEY = "endpoint";
 	
 	public static final ScopedPreferenceStore STORE = new ScopedPreferenceStore(InstanceScope.INSTANCE, QUALIFIER);
+	
+	private Preferences() {
+	}
 	
 	public static String getPref(String key) {
 		return Platform.getPreferencesService().getString(Preferences.QUALIFIER, key, null, null);
