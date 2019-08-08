@@ -28,8 +28,8 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	private void handlePropertyChange(PropertyChangeEvent event) {
 		if (event.getProperty().equals(Preferences.ENDPOINT_KEY)) {
 			String newEndpoint = event.getNewValue().toString();
-			String okMessage = "Custom endpoint configuration set to: " + newEndpoint;
-			if (newEndpoint.isEmpty()) okMessage = "Custom endpoint removed";
+			String okMessage = "Custom endpoint configuration set to: " + newEndpoint + "\nPlease (re)authenticate for this endpoint";
+			if (newEndpoint.isEmpty()) okMessage = "Custom endpoint removed \nPlease (re)authenticate";
 			handleProcessResult(cliRunner.snykSetEndpoint(newEndpoint), "Custom endpoint configuration failed", okMessage);
 		}
 	}
@@ -38,7 +38,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	public void init(IWorkbench workbench) {
        setPreferenceStore(Preferences.STORE);
        setMessage("Snyk preferences");
-       setDescription("- Please authenticate this plugin by clicking the button \n- Path is the path to your package managers (npm, maven, etc.) separated by : \n");
+       setDescription("- Please authenticate this plugin by clicking the button \n- Path is the path to your package managers (npm, maven, etc.) separated by : \n- Custom Endpoint only needed for on-prem solution \n");
 	}
 
 	@Override

@@ -26,6 +26,10 @@ public class Preferences {
 		return getPref(AUTH_TOKEN_KEY);
 	}
 	
+	public static String getEndpoint() {
+		return getPref(ENDPOINT_KEY);
+	}
+	
 	public static Optional<String> getPath() {
 		String path = getPref(PATH_KEY);
 		if (path == null || path.isEmpty()) {
