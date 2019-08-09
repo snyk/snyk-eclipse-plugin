@@ -54,7 +54,7 @@ public class SnykCliRunner {
 	}	
 	
 	public ProcessResult snykMonitor(File navigatePath) {
-		return snykRun(Lists.of​(MONITOR_PARAM));
+		return snykRun(Lists.of​(MONITOR_PARAM), Optional.of(navigatePath));
 	}
 
 
