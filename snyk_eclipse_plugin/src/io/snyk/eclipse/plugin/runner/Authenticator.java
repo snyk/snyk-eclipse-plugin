@@ -71,7 +71,10 @@ public class Authenticator {
 	public String callLogin() throws AuthException{
 		String newToken = UUID.randomUUID().toString();
 		
-		String loginUri = new StringBuilder(API_URL)
+		
+
+		
+		String loginUri = new StringBuilder(getAuthUrlBase())
 				.append("/login?token=").append(newToken)
 				.append("&from=eclipsePlugin")
 				.toString();
@@ -79,13 +82,14 @@ public class Authenticator {
 		try {		
 			PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(loginUri));			
 			Thread.sleep(2000);
-			return pollCallback(newToken);
-			
+			return pollCallback(newToken);		
 		} catch (Exception e) {
 			throw new AuthException("Authentication problem: " + e.getMessage(),  e);
 		}
 		
 	}
+	
+	
 
 	private String pollCallback(String token) throws IOException, InterruptedException, AuthException {
 		
@@ -95,7 +99,7 @@ public class Authenticator {
 	        StringEntity payloadEntity = new StringEntity(payload);
 	
 	        HttpClient httpClient = HttpClientBuilder.create().build();
-	        HttpPost post = new HttpPost(API_URL + "/api/verify/callback");
+	        HttpPost post = new HttpPost(getAuthUrlBase() + "/api/verify/callback");
 	        post.setHeader("Content-type", "application/json");
 	        post.setHeader("user-agent", "Needle/2.1.1 (Node.js v8.11.3; linux x64)");
 	        post.setEntity(payloadEntity);
@@ -113,7 +117,18 @@ public class Authenticator {
 		
 	}
 	
-
+	public String getAuthUrlBase() throws AuthException {		
+		String customEndpoint = Preferences.getEndpoint();
+		if (customEndpoint == null || customEndpoint.isEmpty()) {
+			return API_URL;
+		}		
+				
+		try {
+			URL endpoint = new URL(Preferences.getEndpoint());
+			return endpoint.getProtocol() + "://" + endpoint.getAuthority();
+		} catch (Exception e) {
+			throw new AuthException("Authentication problem: " + e.getMessage(),  e);
+		}	
+	}
 	
-
 }

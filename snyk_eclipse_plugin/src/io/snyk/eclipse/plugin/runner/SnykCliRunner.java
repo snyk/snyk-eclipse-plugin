@@ -41,49 +41,41 @@ public class SnykCliRunner {
 		if (authToken == null || authToken.isEmpty()) {
 			return ProcessResult.error(NO_AUTH_TOKEN);
 		}
-		
-		try {
-			ProcessBuilder processBuilder = createProcessBuilderByOS(Lists.of​(AUTH_PARAM, authToken),Preferences.getPath());
-			return processRunner.run(processBuilder, Optional.empty());
-		} catch (Exception e) {
-			return ProcessResult.error(e.getMessage());
-		}
+
+		return snykRun(Lists.of​(AUTH_PARAM, authToken));
 	}
 	
 	public ProcessResult snykConfig() {
-		try {
-			ProcessBuilder processBuilder = createProcessBuilderByOS(Lists.of​(CONFIG_PARAM),Preferences.getPath());
-			return processRunner.run(processBuilder, Optional.empty());
-		} catch (Exception e) {
-			return ProcessResult.error(e.getMessage());
-		}
+		return snykRun(Lists.of​(CONFIG_PARAM));
 	}
 	
+	public ProcessResult snykSetEndpoint(String url) {
+		return snykRun(Lists.of​(CONFIG_PARAM, "set endpoint=" + url));
+	}	
+	
 	public ProcessResult snykMonitor(File navigatePath) {
-		try {
-			ProcessBuilder processBuilder = createProcessBuilderByOS(Lists.of​(MONITOR_PARAM), Preferences.getPath());
-			return processRunner.run(processBuilder, Optional.of(navigatePath));
-		} catch (Exception e) {
-			return ProcessResult.error(e.getMessage());
-		}
+		return snykRun(Lists.of​(MONITOR_PARAM));
 	}
 
 
 	public ProcessResult snykTestFile(String rawPath) {
-		try {
-			ProcessBuilder processBuilder = createProcessBuilderByOS(Lists.of​(TEST_PARAMS, FILE_PARAM+rawPath),
-					Preferences.getPath());
-			return processRunner.run(processBuilder, Optional.empty());
-		} catch (Exception e) {
-			return ProcessResult.error(e.getMessage());
-		}
+		return snykRun(Lists.of​(TEST_PARAMS, FILE_PARAM+rawPath));
 	}
 
 	public ProcessResult snykTest(File navigatePath) {
 		if (MOCK) return getMockScanResult();
+		return snykRun(Lists.of​(TEST_PARAMS), Optional.of(navigatePath));
+	}
+	
+	private ProcessResult snykRun(List<String> arguments) {
+		return snykRun(arguments, Optional.empty());
+	}
+	
+	
+	private ProcessResult snykRun(List<String> arguments, Optional<File> navigatePath) {
 		try {
-			ProcessBuilder processBuilder = createProcessBuilderByOS(Lists.of​(TEST_PARAMS), Preferences.getPath());
-			return processRunner.run(processBuilder, Optional.of(navigatePath));
+			ProcessBuilder processBuilder = createProcessBuilderByOS(arguments, Preferences.getPath());
+			return processRunner.run(processBuilder, navigatePath);
 		} catch (Exception e) {
 			return ProcessResult.error(e.getMessage());
 		}

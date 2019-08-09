@@ -31,5 +31,14 @@ public class ProcessResult {
 		return content != null && content.contains("\"error\":");
 	}
 	
+	public boolean hasErrorOrContentError() {
+		return hasError() || hasContentError();
+	}
+	
+	public String getErrorOrContent() {
+		if (error == null) return content;
+		return error;
+	}
+	
 	
 }
