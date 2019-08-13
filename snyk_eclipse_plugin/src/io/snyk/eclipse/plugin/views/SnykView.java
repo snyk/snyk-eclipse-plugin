@@ -6,6 +6,8 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -33,6 +35,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
+import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
 import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;
 import io.snyk.eclipse.plugin.views.provider.LinkLabelProvider;
@@ -169,6 +172,9 @@ public class SnykView extends ViewPart {
 			manager.add(rerunProjectAction(selected.projectName));
 			manager.add(monitorAction(selected.projectName));
 		}
+		if (selected != null && selected.id != null) {
+			manager.add(ignoreAction(selected.id, selected.iProject));
+		}
 		manager.add(scanWorkspace);
 		manager.add(new Separator());
 		manager.add(openPrefPage);
@@ -272,6 +278,18 @@ public class SnykView extends ViewPart {
 		};
 		action.setText("Snyk monitor " + projectName );
 		monitorActions.add(action);
+		return action;
+	}
+	
+	private Action ignoreAction(String snykId, IProject project) {
+		Action action = new Action() {
+			@Override
+			public void run() {
+				DataProvider.INSTANCE.ignoreIssue(snykId, project);
+			}
+		};
+
+		action.setText("Ignore this issue");
 		return action;
 	}
 	

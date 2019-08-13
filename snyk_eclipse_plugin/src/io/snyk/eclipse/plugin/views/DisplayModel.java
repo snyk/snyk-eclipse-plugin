@@ -3,6 +3,8 @@ package io.snyk.eclipse.plugin.views;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -27,5 +29,6 @@ public class DisplayModel {
 	public String fileName;
 	public String link;
 	
+	public IProject iProject;
 
 }

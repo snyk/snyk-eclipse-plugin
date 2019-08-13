@@ -30,8 +30,10 @@ public class SnykCliRunner {
 
 	private static final String AUTH_PARAM = "auth";
 	private static final String CONFIG_PARAM = "config";
+	private static final String IGNORE_PARAM = "ignore";
 	
 	private static final String NO_AUTH_TOKEN = "Snyk isn’t yet configured, please authenticate in preferences page";
+	
 
 	ProcessRunner processRunner = new ProcessRunner();
 
@@ -58,13 +60,19 @@ public class SnykCliRunner {
 	}
 
 
-	public ProcessResult snykTestFile(String rawPath) {
-		return snykRun(Lists.of​(TEST_PARAMS, FILE_PARAM+rawPath));
+	public ProcessResult snykTestFile(String rawPath, File navigatePath) {
+		return snykRun(Lists.of​(TEST_PARAMS, FILE_PARAM+rawPath), Optional.of(navigatePath));
 	}
 
 	public ProcessResult snykTest(File navigatePath) {
 		if (MOCK) return getMockScanResult();
 		return snykRun(Lists.of​(TEST_PARAMS), Optional.of(navigatePath));
+	}
+	
+	public ProcessResult snykIgnore(String id, File navigatePath) {
+		String idParam = "--id='" + id + "'";
+		
+		return snykRun(Lists.of​(IGNORE_PARAM, idParam), Optional.of(navigatePath));
 	}
 	
 	private ProcessResult snykRun(List<String> arguments) {
