@@ -1,24 +1,20 @@
 package io.snyk.eclipse.plugin.properties;
 
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.runner.SnykCliRunner;
+import io.snyk.eclipse.plugin.views.DataProvider;
 
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 	
 	private SnykCliRunner cliRunner = new SnykCliRunner();
-	private Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
 	public PreferencesPage() {
 		super(GRID);
@@ -30,7 +26,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 			String newEndpoint = event.getNewValue().toString();
 			String okMessage = "Custom endpoint configuration set to: " + newEndpoint + "\nPlease (re)authenticate for this endpoint";
 			if (newEndpoint.isEmpty()) okMessage = "Custom endpoint removed \nPlease (re)authenticate";
-			handleProcessResult(cliRunner.snykSetEndpoint(newEndpoint), "Custom endpoint configuration failed", okMessage);
+			DataProvider.messageProcessResult(cliRunner.snykSetEndpoint(newEndpoint), "Custom endpoint configuration failed", okMessage);
 		}
 	}
 
@@ -49,11 +45,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	}
 	
 
-	
-	private void handleProcessResult(ProcessResult result, String errorMessage, String okMessage) {
-		if (result.hasErrorOrContentError()) shell.getDisplay().asyncExec(()-> MessageDialog.openError(shell, errorMessage, result.getErrorOrContent()));
-		else shell.getDisplay().asyncExec(()-> MessageDialog.openInformation(shell, "", okMessage));		
-	}
 	
 	
 }
