@@ -18,6 +18,9 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -89,8 +92,7 @@ public class DataProvider {
 				return MonitorResult.error(e.getMessage());
 			} 
 	}
-	
-	
+		
 	public List<DisplayModel> scan(List<IProject> projects) {
 		abort.set(false);
 
@@ -126,12 +128,10 @@ public class DataProvider {
 		projectLevel.description = project.getName();
 		for (IFile pom : poms) {
 			if (abort.get()) throw new AbortException();
-			projectLevel.children.add(scanFile(pom, project.getName()));
+			projectLevel.children.add(scanFile(pom, project));
 		}
 		return projectLevel;
 	}
-	
-
 
 	
 	public List<DisplayModel> abortResult() {
@@ -140,9 +140,20 @@ public class DataProvider {
 		return result;
 	}
 	
-	private DisplayModel scanFile(IFile file, String projectName) {
-		ProcessResult result = cliRunner.snykTestFile(file.getRawLocation().toString());
-		return processResult(result, projectName, Optional.of(file.getFullPath().toString()));
+	private DisplayModel scanFile(IFile file, IProject project) {
+		if (project == null) return new DisplayModel();
+		IPath path = project.getRawLocation();
+		
+		if (path == null) {
+			path = project.getLocation();
+			if (path == null) {
+				return DisplayModel.builder().description(project.getName()).children(new ArrayList<>()).iProject(project).build();	
+			}
+		}		
+		File location = new File(path.toString());
+		
+		ProcessResult result = cliRunner.snykTestFile(file.getRawLocation().toString(), location);
+		return processResult(result, project, Optional.of(file.getFullPath().toString()));
 	}
 
 	private DisplayModel scanProject(IProject project) {
@@ -152,16 +163,19 @@ public class DataProvider {
 		if (path == null) {
 			path = project.getLocation();
 			if (path == null) {
-				return DisplayModel.builder().description(project.getName()).children(new ArrayList<>()).build();	
+				return DisplayModel.builder().description(project.getName()).children(new ArrayList<>()).iProject(project).build();	
 			}
 		}		
 		File location = new File(path.toString());
 
 		ProcessResult result = cliRunner.snykTest(location);
-		return processResult(result, project.getName(), Optional.empty());
+		return processResult(result, project, Optional.empty());
 	}
 
-	private DisplayModel processResult(ProcessResult result, String projectName, Optional<String> fileName) {
+	private DisplayModel processResult(ProcessResult result, IProject project, Optional<String> fileName) {
+		String projectName = project.getName();
+		
+		
 		try {
 			DisplayModel projectModel;
 			if (result.hasError()) {
@@ -175,7 +189,7 @@ public class DataProvider {
 				ScanResult scanResult = objectMapper.readValue(result.getContent(), ScanResult.class);
 				List<DisplayModel> vulns = scanResult.getVulnerabilities().stream()
 						.sorted(Comparator.comparingInt(vuln -> ((Vuln) vuln).getCvssScore()).reversed())
-						.map(this::transform).collect(Collectors.toList());
+						.map(vuln -> transform(vuln, project)).collect(Collectors.toList());
 				
 				projectModel = DisplayModel.builder().description(fileName.orElse(projectName))
 						.projectName(projectName)
@@ -216,7 +230,7 @@ public class DataProvider {
 		return Optional.empty();
 	}
 
-	private DisplayModel transform(Vuln vuln) {
+	private DisplayModel transform(Vuln vuln, IProject project) {
 		List<String> vulns = vuln.getFrom().stream()
 				.skip((vuln.getFrom().size() >= 2) ? 2 : 1)
 				.collect(Collectors.toList());
@@ -228,6 +242,7 @@ public class DataProvider {
 				.dependecy(vuln.getVulnTopLevelDependecy()).vulnPackage(vuln.getPackageName() + "@" + vuln.getVersion())
 				.link(vuln.getUrl())
 				.id(vuln.getId())
+				.iProject(project)
 				.fix(vuln.getFix()).vulnPath(vuln.printFrom()).children(pathtrace).build();
 	}
 	
@@ -248,6 +263,24 @@ public class DataProvider {
 		String message =  "Error: " + e.getMessage();
 		if (!prefix.isEmpty()) message = prefix + " - " + message;
 		return DisplayModel.builder().description(message).children(new ArrayList<>()).build();
+	}
+	
+	
+	public void ignoreIssue(String id, IProject project) {
+		IPath path = project.getRawLocation();		
+		if (path == null) {
+			path = project.getLocation();
+		}
+		
+		ProcessResult ignoreResult = cliRunner.snykIgnore(id, new File(path.toString()));
+		messageProcessResult(ignoreResult, "Ignoring "+id+" failed", "Ignoring "+id+ " for this project for 30 days");
+	}
+	
+	public static void messageProcessResult(ProcessResult result, String errorMessage, String okMessage) {
+		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		
+		if (result.hasErrorOrContentError()) shell.getDisplay().asyncExec(()-> MessageDialog.openError(shell, errorMessage, result.getErrorOrContent()));
+		else shell.getDisplay().asyncExec(()-> MessageDialog.openInformation(shell, "", okMessage));		
 	}
 
 }
