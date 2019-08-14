@@ -11,3 +11,8 @@
 *.class
 
 .metadata/
+/snyk_binaries/
+
+io.snyk.bin.linux/snyk-linux
+io.snyk.bin.macos/snyk-macos
+io.snyk.bin.win/snyk-win.exe
