@@ -39,7 +39,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	@Override
 	protected void createFieldEditors() {
-        addField(new AuthButtonFieldEditor(Preferences.AUTH_TOKEN_KEY, "Snyk Auth Token:", getFieldEditorParent()));
+        addField(new AuthButtonFieldEditor(Preferences.AUTH_TOKEN_KEY, "Snyk API Token:", getFieldEditorParent()));
         addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));
         addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
 	}

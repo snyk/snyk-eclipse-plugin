@@ -63,7 +63,7 @@ public class SnykView extends ViewPart {
 	private DisplayModel rootModel;
 	private Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 	
-	private static final String RUNNING = "running...";
+	private static final String RUNNING = "Scanning your project...";
 	private static final String ABORTING = "abort scanning...";
 	
 	private List<Action> monitorActions = new ArrayList<>();

@@ -49,7 +49,7 @@
         <command
                 defaultHandler="io.snyk.eclipse.plugin.views.MenuHandler"
                 id="io.snyk.eclipse.plugin.commands.execute"
-                name="Run">
+                name="%command.name">
         </command>
     </extension>
     <extension
@@ -60,7 +60,7 @@
             <command
                     commandId="io.snyk.eclipse.plugin.commands.execute"
                     icon="icons/patch.png"
-                    label="Snyk test"
+                    label="%command.label"
                     style="push">
                 <visibleWhen>
                     <with variable="activeMenuSelection">
@@ -80,7 +80,7 @@
             <command
                     commandId="io.snyk.eclipse.plugin.commands.execute"
                     icon="icons/patch.png"
-                    label="Snyk test"
+                    label="%command.label.0"
                     style="push">
                 <visibleWhen>
                     <with variable="activeMenuSelection">
