@@ -12,7 +12,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -20,7 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.exception.AuthException;
 import io.snyk.eclipse.plugin.properties.Preferences;
-import io.snyk.eclipse.plugin.views.SnykView;
 
 public class Authenticator {
 	
