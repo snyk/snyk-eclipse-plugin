@@ -12,6 +12,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.exception.AuthException;
 import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.views.SnykView;
 
 public class Authenticator {
 	
@@ -84,7 +86,7 @@ public class Authenticator {
 			Thread.sleep(2000);
 			return pollCallback(newToken);		
 		} catch (Exception e) {
-			throw new AuthException("Authentication problem: " + e.getMessage(),  e);
+			throw new AuthException("Authentication problem, " + e.getMessage(),  e);
 		}
 		
 	}
@@ -113,7 +115,7 @@ public class Authenticator {
 	        Thread.sleep(2000);
 		}
 		
-		throw new AuthException("Authentication timeout!");
+		throw new AuthException("timeout, please try again");
 		
 	}
 	
@@ -127,7 +129,7 @@ public class Authenticator {
 			URL endpoint = new URL(Preferences.getEndpoint());
 			return endpoint.getProtocol() + "://" + endpoint.getAuthority();
 		} catch (Exception e) {
-			throw new AuthException("Authentication problem: " + e.getMessage(),  e);
+			throw new AuthException("Authentication problem, " + e.getMessage(),  e);
 		}	
 	}
 	

@@ -12,10 +12,14 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.ui.PlatformUI;
 
+import io.snyk.eclipse.plugin.exception.AuthException;
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
 import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
+import io.snyk.eclipse.plugin.views.SnykView;
 
 public class SnykCliRunner {
 
@@ -36,14 +40,20 @@ public class SnykCliRunner {
 	
 
 	ProcessRunner processRunner = new ProcessRunner();
-
 	
 	public ProcessResult snykAuth() {
 		String authToken = Preferences.getAuthToken();
 		if (authToken == null || authToken.isEmpty()) {
-			return ProcessResult.error(NO_AUTH_TOKEN);
+			try {
+				String apiToken = Authenticator.INSTANCE.callLogin();
+				Preferences.store(Preferences.AUTH_TOKEN_KEY, apiToken);
+				authToken = Preferences.getAuthToken();
+			} catch (AuthException e) {
+				e.printStackTrace();
+				return ProcessResult.error(e.getMessage());
+				
+			}
 		}
-
 		return snykRun(Lists.of​(AUTH_PARAM, authToken));
 	}
 	

@@ -4,7 +4,10 @@ import java.util.Optional;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
+
+import io.snyk.eclipse.plugin.Activator;
 
 public class Preferences {
 	
@@ -36,6 +39,11 @@ public class Preferences {
 			return Optional.empty();
 		}
 		return Optional.of(path);
+	}
+	
+	public static void store(String key, String value) {
+		IPreferenceStore prefStore = Activator.getDefault().getPreferenceStore();
+		prefStore.setValue(key, value);
 	}
 
 }
