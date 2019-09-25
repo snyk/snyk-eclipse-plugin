@@ -7,7 +7,6 @@ import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -29,13 +28,13 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
-import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
 import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;
 import io.snyk.eclipse.plugin.views.provider.LinkLabelProvider;
@@ -309,6 +308,17 @@ public class SnykView extends ViewPart {
 		rootModel.children.add(DataProvider.INSTANCE.message(message));
 		viewer.refresh();
 		monitorActions.forEach(act -> act.setEnabled(true));
+	}
+	
+	public static void displayMessage(String message) {
+		try {
+			SnykView snykView = (SnykView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("io.snyk.eclipse.plugin.views.SnykView");
+			snykView.showMessage(message);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+
+		
 	}
 	
 

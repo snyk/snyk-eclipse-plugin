@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.Platform;
 
+import io.snyk.eclipse.plugin.exception.AuthException;
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
 import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
@@ -34,16 +35,21 @@ public class SnykCliRunner {
 	
 	private static final String NO_AUTH_TOKEN = "Snyk isn’t yet configured, please authenticate in preferences page";
 	
-
 	ProcessRunner processRunner = new ProcessRunner();
-
 	
 	public ProcessResult snykAuth() {
 		String authToken = Preferences.getAuthToken();
 		if (authToken == null || authToken.isEmpty()) {
-			return ProcessResult.error(NO_AUTH_TOKEN);
+			try {
+				String apiToken = Authenticator.INSTANCE.callLogin();
+				Preferences.store(Preferences.AUTH_TOKEN_KEY, apiToken);
+				authToken = Preferences.getAuthToken();
+			} catch (AuthException e) {
+				e.printStackTrace();
+				return ProcessResult.error(e.getMessage());
+				
+			}
 		}
-
 		return snykRun(Lists.of​(AUTH_PARAM, authToken));
 	}
 	
@@ -53,7 +59,11 @@ public class SnykCliRunner {
 	
 	public ProcessResult snykSetEndpoint(String url) {
 		return snykRun(Lists.of​(CONFIG_PARAM, "set endpoint=" + url));
-	}	
+	}
+	
+	public ProcessResult snykUnsetEndpoint() {
+		return snykRun(Lists.of​(CONFIG_PARAM, "unset endpoint"));
+	}
 	
 	public ProcessResult snykMonitor(File navigatePath) {
 		return snykRun(Lists.of​(MONITOR_PARAM), Optional.of(navigatePath));

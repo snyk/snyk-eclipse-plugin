@@ -84,7 +84,7 @@ public class Authenticator {
 			Thread.sleep(2000);
 			return pollCallback(newToken);		
 		} catch (Exception e) {
-			throw new AuthException("Authentication problem: " + e.getMessage(),  e);
+			throw new AuthException("Authentication problem, " + e.getMessage(),  e);
 		}
 		
 	}
@@ -113,7 +113,7 @@ public class Authenticator {
 	        Thread.sleep(2000);
 		}
 		
-		throw new AuthException("Authentication timeout!");
+		throw new AuthException("timeout, please try again");
 		
 	}
 	
@@ -127,7 +127,7 @@ public class Authenticator {
 			URL endpoint = new URL(Preferences.getEndpoint());
 			return endpoint.getProtocol() + "://" + endpoint.getAuthority();
 		} catch (Exception e) {
-			throw new AuthException("Authentication problem: " + e.getMessage(),  e);
+			throw new AuthException("Authentication problem, " + e.getMessage(),  e);
 		}	
 	}
 	
