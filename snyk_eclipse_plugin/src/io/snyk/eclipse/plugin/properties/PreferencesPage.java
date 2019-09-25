@@ -24,8 +24,11 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	private void handlePropertyChange(PropertyChangeEvent event) {
 		if (event.getProperty().equals(Preferences.ENDPOINT_KEY)) {
 			String newEndpoint = event.getNewValue().toString();
+			if (newEndpoint.isEmpty()) {
+				DataProvider.messageProcessResult(cliRunner.snykUnsetEndpoint(), "Removing custom endpoint failed", "Custom endpoint removed \nPlease (re)authenticate");
+				return;
+			}			
 			String okMessage = "Custom endpoint configuration set to: " + newEndpoint + "\nPlease (re)authenticate for this endpoint";
-			if (newEndpoint.isEmpty()) okMessage = "Custom endpoint removed \nPlease (re)authenticate";
 			DataProvider.messageProcessResult(cliRunner.snykSetEndpoint(newEndpoint), "Custom endpoint configuration failed", okMessage);
 		}
 	}

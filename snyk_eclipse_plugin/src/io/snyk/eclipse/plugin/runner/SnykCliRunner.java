@@ -35,7 +35,6 @@ public class SnykCliRunner {
 	
 	private static final String NO_AUTH_TOKEN = "Snyk isn’t yet configured, please authenticate in preferences page";
 	
-
 	ProcessRunner processRunner = new ProcessRunner();
 	
 	public ProcessResult snykAuth() {
@@ -60,7 +59,11 @@ public class SnykCliRunner {
 	
 	public ProcessResult snykSetEndpoint(String url) {
 		return snykRun(Lists.of​(CONFIG_PARAM, "set endpoint=" + url));
-	}	
+	}
+	
+	public ProcessResult snykUnsetEndpoint() {
+		return snykRun(Lists.of​(CONFIG_PARAM, "unset endpoint"));
+	}
 	
 	public ProcessResult snykMonitor(File navigatePath) {
 		return snykRun(Lists.of​(MONITOR_PARAM), Optional.of(navigatePath));
