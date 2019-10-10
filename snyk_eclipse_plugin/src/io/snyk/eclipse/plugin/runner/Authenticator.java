@@ -4,6 +4,7 @@ import static io.snyk.eclipse.plugin.utils.MockHandler.MOCK;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.apache.http.HttpResponse;
@@ -20,29 +21,51 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.exception.AuthException;
 import io.snyk.eclipse.plugin.properties.Preferences;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContextBuilder;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+
 public class Authenticator {
-	
+
 	public static final Authenticator INSTANCE = new Authenticator();
-	
+
 	private static final String API_URL = "https://snyk.io";
-	
+
 	private SnykCliRunner cliRunner = new SnykCliRunner();
 	ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-	
-	
+
 	public boolean isAuthenticated() throws AuthException {
-		if(MOCK) return true;
-		
+		if (MOCK)
+			return true;
+
 		ProcessResult procesResult = cliRunner.snykConfig();
 		if (procesResult.hasError()) {
 			throw new AuthException(procesResult.getError());
 		}
-		
+
 		if (procesResult.hasContentError()) {
 			throw new AuthException(procesResult.getContent());
 		}
-		
-	
+
 		String content = procesResult.getContent();
 		String authToken = Preferences.getAuthToken();
 		if (content != null && authToken != null) {
@@ -50,85 +73,107 @@ public class Authenticator {
 		}
 		return false;
 	}
-	
+
 	public void auth() throws AuthException {
 		ProcessResult procesResult = cliRunner.snykAuth();
 		if (procesResult.hasError()) {
 			throw new AuthException(procesResult.getError());
 		}
-		
+
 		String content = procesResult.getContent();
-		if (content != null && content.contains("failed") ) {
+		if (content != null && content.contains("failed")) {
 			throw new AuthException(procesResult.getContent());
 		}
 	}
-	
+
 	public void doAuthentication() throws AuthException {
-		if (!isAuthenticated()) auth();
+		if (!isAuthenticated())
+			auth();
 	}
-	
+
 	// call login url and do callback
-	public String callLogin() throws AuthException{
+	public String callLogin() throws AuthException {
 		String newToken = UUID.randomUUID().toString();
-		
-		
 
-		
-		String loginUri = new StringBuilder(getAuthUrlBase())
-				.append("/login?token=").append(newToken)
-				.append("&from=eclipsePlugin")
-				.toString();
-		
-		try {		
-			PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(loginUri));			
+		String loginUri = new StringBuilder(getAuthUrlBase()).append("/login?token=").append(newToken)
+				.append("&from=eclipsePlugin").toString();
+
+		try {
+			PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(loginUri));
 			Thread.sleep(2000);
-			return pollCallback(newToken);		
+			return pollCallback(newToken);
 		} catch (Exception e) {
-			throw new AuthException("Authentication problem, " + e.getMessage(),  e);
+			throw new AuthException("Authentication problem, " + e.getMessage(), e);
 		}
-		
+
 	}
-	
-	
 
-	private String pollCallback(String token) throws IOException, InterruptedException, AuthException {
+	private String pollCallback(String token) throws IOException, InterruptedException, AuthException,
+			KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
 		
-		for (int i = 0; i <20; i++) {
-	        String payload = "{\"token\" : \"" + token + "\"}";
+		//Only if insecure flag is active, create httpclient that accepts all ssl cert
+		HttpClient httpClient = Preferences.isInsecure() ? httpClientIgnoresCerts() : HttpClientBuilder.create().build();
+		String payload = "{\"token\" : \"" + token + "\"}";
 
-	        StringEntity payloadEntity = new StringEntity(payload);
-	
-	        HttpClient httpClient = HttpClientBuilder.create().build();
-	        HttpPost post = new HttpPost(getAuthUrlBase() + "/api/verify/callback");
-	        post.setHeader("Content-type", "application/json");
-	        post.setHeader("user-agent", "Needle/2.1.1 (Node.js v8.11.3; linux x64)");
-	        post.setEntity(payloadEntity);
-	
-	        HttpResponse response = httpClient.execute(post);
-	        String responseJson = EntityUtils.toString(response.getEntity(), "UTF-8");
-	        AuthResponse authResponse = objectMapper.readValue(responseJson, AuthResponse.class);
-	        if (authResponse.isOk()) {
-	        	return authResponse.getApi();
-	        }
-	        Thread.sleep(2000);
+		StringEntity payloadEntity = new StringEntity(payload);
+
+		HttpPost post = new HttpPost(getAuthUrlBase() + "/api/verify/callback");
+		post.setHeader("Content-type", "application/json");
+		post.setHeader("user-agent", "Needle/2.1.1 (Node.js v8.11.3; linux x64)");
+		post.setEntity(payloadEntity);
+
+		for (int i = 0; i < 20; i++) {
+			HttpResponse response = httpClient.execute(post);
+			String responseJson = EntityUtils.toString(response.getEntity(), "UTF-8");
+			AuthResponse authResponse = objectMapper.readValue(responseJson, AuthResponse.class);
+			if (authResponse.isOk()) {
+				return authResponse.getApi();
+			}
+			Thread.sleep(2000);
 		}
-		
+
 		throw new AuthException("timeout, please try again");
-		
+
 	}
 	
-	public String getAuthUrlBase() throws AuthException {		
+	@SuppressWarnings("deprecation")
+	private HttpClient httpClientIgnoresCerts() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
+	    HttpClientBuilder b = HttpClientBuilder.create();
+	 
+	    SSLContext sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy() {
+	        public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+	            return true;
+	        }
+	    }).build();
+	    b.setSslcontext( sslContext);	 
+
+	    HostnameVerifier hostnameVerifier = SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+	 
+	    SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, hostnameVerifier);
+	    Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+	            .register("http", PlainConnectionSocketFactory.getSocketFactory())
+	            .register("https", sslSocketFactory)
+	            .build();	 
+
+	    PoolingHttpClientConnectionManager connMgr = new PoolingHttpClientConnectionManager( socketFactoryRegistry);
+	    b.setConnectionManager( connMgr);
+	 
+	    HttpClient client = b.build();
+	    return client;
+	}
+
+	public String getAuthUrlBase() throws AuthException {
 		String customEndpoint = Preferences.getEndpoint();
 		if (customEndpoint == null || customEndpoint.isEmpty()) {
 			return API_URL;
-		}		
-				
+		}
+
 		try {
 			URL endpoint = new URL(Preferences.getEndpoint());
 			return endpoint.getProtocol() + "://" + endpoint.getAuthority();
 		} catch (Exception e) {
-			throw new AuthException("Authentication problem, " + e.getMessage(),  e);
-		}	
+			throw new AuthException("Authentication problem, " + e.getMessage(), e);
+		}
 	}
-	
+
 }

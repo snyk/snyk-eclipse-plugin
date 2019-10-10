@@ -15,6 +15,7 @@ public class Preferences {
 	public static final String AUTH_TOKEN_KEY = "authtoken";
 	public static final String PATH_KEY = "path";
 	public static final String ENDPOINT_KEY = "endpoint";
+	public static final String INSECURE_KEY = "insecure";
 	
 	public static final ScopedPreferenceStore STORE = new ScopedPreferenceStore(InstanceScope.INSTANCE, QUALIFIER);
 	
@@ -39,6 +40,10 @@ public class Preferences {
 			return Optional.empty();
 		}
 		return Optional.of(path);
+	}
+	
+	public static boolean isInsecure() {
+		return Platform.getPreferencesService().getBoolean(Preferences.QUALIFIER, INSECURE_KEY, false, null);
 	}
 	
 	public static void store(String key, String value) {

@@ -1,6 +1,8 @@
 package io.snyk.eclipse.plugin.properties;
 
 
+import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -43,8 +45,19 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	@Override
 	protected void createFieldEditors() {
         addField(new AuthButtonFieldEditor(Preferences.AUTH_TOKEN_KEY, "Snyk API Token:", getFieldEditorParent()));
-        addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));
+        addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));        
+        addField(space());
+        addField(label("Advanced options:"));
         addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Ignore unknown certificate authorities", getFieldEditorParent()));
+	}
+	
+	private FieldEditor space() {
+		return new LabelFieldEditor("", getFieldEditorParent());
+	}
+	
+	private FieldEditor label(String label) {
+		return new LabelFieldEditor(label, getFieldEditorParent());
 	}
 	
 

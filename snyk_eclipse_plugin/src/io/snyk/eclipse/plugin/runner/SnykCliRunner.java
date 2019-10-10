@@ -6,6 +6,7 @@ import static io.snyk.eclipse.plugin.utils.MockHandler.getMockScanResult;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,13 +28,13 @@ public class SnykCliRunner {
 	private static final String TEST_PARAMS = "test --json";
 	private static final String FILE_PARAM = "--file=";
 	
+	private static final String INSECURE = "--insecure";
+	
 	private static final String MONITOR_PARAM = "monitor --json";
 
 	private static final String AUTH_PARAM = "auth";
 	private static final String CONFIG_PARAM = "config";
 	private static final String IGNORE_PARAM = "ignore";
-	
-	private static final String NO_AUTH_TOKEN = "Snyk isn’t yet configured, please authenticate in preferences page";
 	
 	ProcessRunner processRunner = new ProcessRunner();
 	
@@ -92,6 +93,11 @@ public class SnykCliRunner {
 	
 	private ProcessResult snykRun(List<String> arguments, Optional<File> navigatePath) {
 		try {
+			if (Preferences.isInsecure()) {
+				arguments = new ArrayList<>(arguments);
+				arguments.add(INSECURE);
+			}
+			
 			ProcessBuilder processBuilder = createProcessBuilderByOS(arguments, Preferences.getPath());
 			return processRunner.run(processBuilder, navigatePath);
 		} catch (Exception e) {
