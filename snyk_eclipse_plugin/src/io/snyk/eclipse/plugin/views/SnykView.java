@@ -82,7 +82,6 @@ public class SnykView extends ViewPart {
 	public void createPartControl(Composite parent) {
 		createViewer(parent);
 
-		workbench.getHelpSystem().setHelp(viewer.getControl(), "io.snyk.viewer");
 		getSite().setSelectionProvider(viewer);
 		makeActions();
 		hookContextMenu();

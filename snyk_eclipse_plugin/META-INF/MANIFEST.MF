@@ -5,9 +5,9 @@ Bundle-SymbolicName: io.snyk.eclipse.plugin;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: io.snyk.eclipse.plugin.Activator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: org.eclipse.ui,
- org.eclipse.core.runtime,
- org.eclipse.jdt.core
+Require-Bundle: org.eclipse.ui;visibility:=reexport,
+ org.eclipse.core.runtime;visibility:=reexport,
+ org.eclipse.jdt.core;visibility:=reexport
 Automatic-Module-Name: io.snyk
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
