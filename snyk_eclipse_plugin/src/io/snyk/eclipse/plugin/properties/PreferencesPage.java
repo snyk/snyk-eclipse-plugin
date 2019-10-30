@@ -49,7 +49,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
         addField(space());
         addField(label("Advanced options:"));
         addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Ignore unknown certificate authorities", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities", getFieldEditorParent()));
 	}
 	
 	private FieldEditor space() {
