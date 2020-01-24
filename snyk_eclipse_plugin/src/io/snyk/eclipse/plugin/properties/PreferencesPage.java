@@ -17,6 +17,8 @@ import io.snyk.eclipse.plugin.views.DataProvider;
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 	
 	private SnykCliRunner cliRunner = new SnykCliRunner();
+	private AuthButtonFieldEditor tokenField; 
+	
 
 	public PreferencesPage() {
 		super(GRID);
@@ -27,11 +29,11 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		if (event.getProperty().equals(Preferences.ENDPOINT_KEY)) {
 			String newEndpoint = event.getNewValue().toString();
 			if (newEndpoint.isEmpty()) {
-				DataProvider.messageProcessResult(cliRunner.snykUnsetEndpoint(), "Removing custom endpoint failed", "Custom endpoint removed \nPlease (re)authenticate");
-				return;
+				cliRunner.snykUnsetEndpoint();
+			} else {
+				cliRunner.snykSetEndpoint(newEndpoint);
 			}			
-			String okMessage = "Custom endpoint configuration set to: " + newEndpoint + "\nPlease (re)authenticate for this endpoint";
-			DataProvider.messageProcessResult(cliRunner.snykSetEndpoint(newEndpoint), "Custom endpoint configuration failed", okMessage);
+			tokenField.emptyTextfield();
 		}
 	}
 
@@ -44,13 +46,15 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	@Override
 	protected void createFieldEditors() {
-        addField(new AuthButtonFieldEditor(Preferences.AUTH_TOKEN_KEY, "Snyk API Token:", getFieldEditorParent()));
+		tokenField = new AuthButtonFieldEditor(Preferences.AUTH_TOKEN_KEY, "Snyk API Token:", getFieldEditorParent());
+        addField(tokenField);
         addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));        
         addField(space());
         addField(label("Advanced options:"));
         addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
         addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities", getFieldEditorParent()));
 	}
+	
 	
 	private FieldEditor space() {
 		return new LabelFieldEditor("", getFieldEditorParent());
@@ -60,7 +64,17 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		return new LabelFieldEditor(label, getFieldEditorParent());
 	}
 	
-
+	public void persist() {
+		super.performOk();
+	}
 	
+	@Override
+	public boolean performOk() {
+		boolean superOK = super.performOk();
+		if (tokenField.getStringValue() == null || tokenField.getStringValue().isEmpty()) {
+			DataProvider.popUpWarn("Authentication", "Please (re)authenticate before using the Snyk scanner");
+		}
+		return superOK;
+	}
 	
 }

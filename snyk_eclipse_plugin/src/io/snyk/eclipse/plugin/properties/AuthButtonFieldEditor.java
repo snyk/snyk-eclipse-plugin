@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.properties;
 
+import org.eclipse.jface.dialogs.DialogPage;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.StringButtonFieldEditor;
 import org.eclipse.swt.widgets.Composite;
@@ -21,6 +22,9 @@ public class AuthButtonFieldEditor extends StringButtonFieldEditor{
 	@Override
 	protected String changePressed() {
 		try {
+			PreferencesPage page = (PreferencesPage) getPage();
+			page.persist();
+		
 			return Authenticator.INSTANCE.callLogin();
 		} catch (AuthException e) {
 			e.printStackTrace();
@@ -28,7 +32,10 @@ public class AuthButtonFieldEditor extends StringButtonFieldEditor{
 			return null;
 		}
 	}
-
 	
+	public void emptyTextfield() {
+		setStringValue("");
+		Preferences.store(Preferences.AUTH_TOKEN_KEY, "");
+	}
 
 }
