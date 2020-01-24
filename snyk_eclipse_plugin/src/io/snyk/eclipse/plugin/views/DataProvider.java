@@ -282,5 +282,10 @@ public class DataProvider {
 		if (result.hasErrorOrContentError()) shell.getDisplay().asyncExec(()-> MessageDialog.openError(shell, errorMessage, result.getErrorOrContent()));
 		else shell.getDisplay().asyncExec(()-> MessageDialog.openInformation(shell, "", okMessage));		
 	}
+	
+	public static void popUpWarn(String title, String message) {
+		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		shell.getDisplay().asyncExec(()-> MessageDialog.openWarning(shell, title, message));
+	}
 
 }
