@@ -56,7 +56,7 @@ public class ProcessRunner {
 	public ProcessBuilder createWinProcessBuilder(String command, Optional<String> path) {
 		if (command.startsWith("/")) command = command.replaceFirst("/", "");
 		ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", command);
-		pb.environment().put("PATH", path.map(p -> p+":"+DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH) + File.pathSeparator + System.getenv("PATH"));
+		pb.environment().put("PATH", path.map(p -> p+";"+DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH) + File.pathSeparator + System.getenv("PATH"));
 		return pb;
 	}
 
