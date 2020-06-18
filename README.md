@@ -10,7 +10,7 @@ You can use Snyk for free on your Java, Scala, JavaScript .Net, Ruby projects an
 
 ## Download
 - Manual downloads : https://github.com/snyk/snyk-eclipse-plugin/releases
-- Eclipse market place (recommanded): https://marketplace.eclipse.org/content/snyk-vuln-scanner
+- Eclipse market place (recommended): https://marketplace.eclipse.org/content/snyk-vuln-scanner
 
 ## Supported Eclipse versions
 - 2019-09 (4.13)

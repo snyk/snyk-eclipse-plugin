@@ -16,7 +16,8 @@ public class AuthButtonFieldEditor extends StringButtonFieldEditor{
             Composite parent) {
         super(name, labelText, parent);
         setChangeButtonText("Authenticate");
-        getTextControl().setEditable(false);
+        // workaround: enable token textfield until issue with SSO is solved
+        // getTextControl().setEditable(false);
     }
 
 	@Override
