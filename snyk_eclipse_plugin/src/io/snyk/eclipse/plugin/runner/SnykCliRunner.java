@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -118,7 +119,9 @@ public class SnykCliRunner {
 			processbuilder= processRunner.createLinuxProcessBuilder(runnable + " " + paramsString, path);
 		} else if (SystemUtils.IS_OS_WINDOWS) {
 			runnable = getRunnableLocation(SNYK_CLI_WIN);
-			processbuilder= processRunner.createWinProcessBuilder(runnable + " " + paramsString, path);
+			// workaround: use quotes for every param until we rewrite ProcessRunner
+			String quotedParamsString = Arrays.stream(paramsString.split(" ")).collect(Collectors.joining("\" \"", "\"", "\""));
+			processbuilder= processRunner.createWinProcessBuilder("\"" + runnable + "\" " + quotedParamsString, path);
 		} else {
 			throw new NotSupportedException("This operating system is not supported");
 		}

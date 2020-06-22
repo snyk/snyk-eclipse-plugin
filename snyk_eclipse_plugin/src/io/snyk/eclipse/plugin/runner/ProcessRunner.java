@@ -6,8 +6,19 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Optional;
 
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+
 public class ProcessRunner {
 	
+	private static final Bundle BUNDLE = FrameworkUtil.getBundle(ProcessRunner.class);
+	private static final ILog LOG = Platform.getLog(BUNDLE);
+
 	private static final String DEFAULT_MAC_PATH = "/usr/local/bin";
 	private static final String DEFAULT_LINUX_PATH = "/usr/bin";
 	private static final String DEFAULT_WIN_PATH = "";
@@ -54,9 +65,19 @@ public class ProcessRunner {
 	}
 	
 	public ProcessBuilder createWinProcessBuilder(String command, Optional<String> path) {
-		if (command.startsWith("/")) command = command.replaceFirst("/", "");
-		ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", command);
+		if (command.startsWith("\"/")) command = command.replaceFirst("/", "");
+		ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c ", command);
 		pb.environment().put("PATH", path.map(p -> p+";"+DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH) + File.pathSeparator + System.getenv("PATH"));
+
+		// debug logging on windows machines
+		IStatus[] statuses = new IStatus[] {
+			new Status(Status.INFO, BUNDLE.getSymbolicName(), "env.PATH = " + pb.environment().get("PATH")),
+			new Status(Status.INFO, BUNDLE.getSymbolicName(), "path = " + path),
+			new Status(Status.INFO, BUNDLE.getSymbolicName(), "command = " + command),
+		};
+		MultiStatus multiStatusCommand = new MultiStatus(BUNDLE.getSymbolicName(), Status.INFO, statuses, "Snyk command execution", null);
+		LOG.log(multiStatusCommand);
+
 		return pb;
 	}
 
