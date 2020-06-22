@@ -17,10 +17,17 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +45,9 @@ import io.snyk.eclipse.plugin.utils.Lists;
 
 public class DataProvider {
 	
+	private static final Bundle BUNDLE = FrameworkUtil.getBundle(DataProvider.class);
+	private static final ILog LOG = Platform.getLog(BUNDLE);
+
 	public static final  DataProvider INSTANCE = new DataProvider();
 
 	public static final AtomicBoolean abort = new AtomicBoolean(false);
@@ -174,7 +184,12 @@ public class DataProvider {
 
 	private DisplayModel processResult(ProcessResult result, IProject project, Optional<String> fileName) {
 		String projectName = project.getName();
-		
+
+		IStatus[] statuses = new IStatus[] {
+			new Status(Status.INFO, BUNDLE.getSymbolicName(), "result = " + result.getContent())
+		};
+		MultiStatus multiStatusResult = new MultiStatus(BUNDLE.getSymbolicName(), Status.INFO, statuses, "Snyk command result", null);
+		LOG.log(multiStatusResult);
 		
 		try {
 			DisplayModel projectModel;
