@@ -121,7 +121,7 @@ public class SnykCliRunner {
 			runnable = getRunnableLocation(SNYK_CLI_WIN);
 			// workaround: use quotes for every param until we rewrite ProcessRunner
 			String quotedParamsString = Arrays.stream(paramsString.split(" ")).collect(Collectors.joining("\" \"", "\"", "\""));
-			processbuilder= processRunner.createWinProcessBuilder("\"" + runnable + "\" " + quotedParamsString, path);
+			processbuilder = processRunner.createWinProcessBuilder("\"" + runnable + "\" " + quotedParamsString, path);
 		} else {
 			throw new NotSupportedException("This operating system is not supported");
 		}
