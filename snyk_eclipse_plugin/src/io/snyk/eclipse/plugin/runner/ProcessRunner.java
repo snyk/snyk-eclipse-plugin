@@ -14,11 +14,15 @@ import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
+import io.snyk.eclipse.plugin.properties.Preferences;
+
 public class ProcessRunner {
 	
 	private static final Bundle BUNDLE = FrameworkUtil.getBundle(ProcessRunner.class);
 	private static final ILog LOG = Platform.getLog(BUNDLE);
 
+	private static final String ENV_SNYK_API = "SNYK_API";
+	private static final String ENV_SNYK_TOKEN = "SNYK_TOKEN";
 	private static final String DEFAULT_MAC_PATH = "/usr/local/bin";
 	private static final String DEFAULT_LINUX_PATH = "/usr/bin";
 	private static final String DEFAULT_WIN_PATH = "";
@@ -54,12 +58,22 @@ public class ProcessRunner {
 	
 	public ProcessBuilder createLinuxProcessBuilder(String command, Optional<String> path) {
 		ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
+		String endpoint = Preferences.getEndpoint();
+		if (endpoint != null && !endpoint.isEmpty()) {
+			pb.environment().put(ENV_SNYK_API, endpoint);
+		}
+		pb.environment().put(ENV_SNYK_TOKEN, Preferences.getAuthToken());
 		pb.environment().put("PATH", path.map(p -> p+":"+DEFAULT_LINUX_PATH).orElse(DEFAULT_LINUX_PATH) + File.pathSeparator + System.getenv("PATH"));
 		return pb;
 	}
 	
 	public ProcessBuilder createMacProcessBuilder(String command, Optional<String> path) {
 		ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
+		String endpoint = Preferences.getEndpoint();
+		if (endpoint != null && !endpoint.isEmpty()) {
+			pb.environment().put(ENV_SNYK_API, endpoint);
+		}
+		pb.environment().put(ENV_SNYK_TOKEN, Preferences.getAuthToken());
 		pb.environment().put("PATH", path.map(p -> p+":"+DEFAULT_MAC_PATH).orElse(DEFAULT_MAC_PATH) + File.pathSeparator + System.getenv("PATH"));
 		return pb;
 	}
@@ -67,6 +81,11 @@ public class ProcessRunner {
 	public ProcessBuilder createWinProcessBuilder(String command, Optional<String> path) {
 		if (command.startsWith("\"/")) command = command.replaceFirst("/", "");
 		ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c ", command);
+		String endpoint = Preferences.getEndpoint();
+		if (endpoint != null && !endpoint.isEmpty()) {
+			pb.environment().put(ENV_SNYK_API,endpoint);
+		}
+		pb.environment().put(ENV_SNYK_TOKEN, Preferences.getAuthToken());
 		pb.environment().put("PATH", path.map(p -> p+";"+DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH) + File.pathSeparator + System.getenv("PATH"));
 
 		// debug logging on windows machines
@@ -80,6 +99,4 @@ public class ProcessRunner {
 
 		return pb;
 	}
-
-
 }

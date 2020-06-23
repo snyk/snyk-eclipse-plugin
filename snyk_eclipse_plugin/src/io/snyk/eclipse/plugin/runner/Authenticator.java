@@ -45,7 +45,7 @@ public class Authenticator {
 	private SnykCliRunner cliRunner = new SnykCliRunner();
 	ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-	public boolean isAuthenticated() throws AuthException {
+	private boolean isAuthenticated() throws AuthException {
 		if (MOCK)
 			return true;
 
@@ -66,25 +66,26 @@ public class Authenticator {
 		return false;
 	}
 
-	public void auth() throws AuthException {
-		ProcessResult procesResult = cliRunner.snykAuth();
-		if (procesResult.hasError()) {
-			throw new AuthException(procesResult.getError());
-		}
-
-		String content = procesResult.getContent();
-		if (content != null && content.contains("failed")) {
-			throw new AuthException(procesResult.getContent());
-		}
+	private void auth() throws AuthException {
+		// don't authenticate using 'snyk auth'
+//		ProcessResult procesResult = cliRunner.snykAuth();
+//		if (procesResult.hasError()) {
+//			throw new AuthException(procesResult.getError());
+//		}
+//
+//		String content = procesResult.getContent();
+//		if (content != null && content.contains("failed")) {
+//			throw new AuthException(procesResult.getContent());
+//		}
 	}
 
-	public void doAuthentication() throws AuthException {
+	private void doAuthentication() throws AuthException {
 		if (!isAuthenticated())
 			auth();
 	}
 
 	// call login url and do callback
-	public String callLogin() throws AuthException {
+	private String callLogin() throws AuthException {
 		String newToken = UUID.randomUUID().toString();
 
 		String loginUri = new StringBuilder(getAuthUrlBase()).append("/login?token=").append(newToken)
@@ -154,7 +155,7 @@ public class Authenticator {
 	    return client;
 	}
 
-	public String getAuthUrlBase() throws AuthException {
+	private String getAuthUrlBase() throws AuthException {
 		String customEndpoint = Preferences.getEndpoint();
 		if (customEndpoint == null || customEndpoint.isEmpty()) {
 			return API_URL;
