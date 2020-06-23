@@ -107,11 +107,12 @@ public class DataProvider {
 		abort.set(false);
 
 
-		try {
-			Authenticator.INSTANCE.doAuthentication();
-		} catch (AuthException e) {
-			return Lists.of​(error("", e));
-		}
+		// we don't need to do authentication hier because of passing SNYK_TOKEN
+//		try {
+//			Authenticator.INSTANCE.doAuthentication();
+//		} catch (AuthException e) {
+//			return Lists.of​(error("", e));
+//		}
 			
 		List<DisplayModel> result = new ArrayList<>();
 		for (IProject project : projects) {

@@ -26,15 +26,16 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	}
 	
 	private void handlePropertyChange(PropertyChangeEvent event) {
-		if (event.getProperty().equals(Preferences.ENDPOINT_KEY)) {
-			String newEndpoint = event.getNewValue().toString();
-			if (newEndpoint.isEmpty()) {
-				cliRunner.snykUnsetEndpoint();
-			} else {
-				cliRunner.snykSetEndpoint(newEndpoint);
-			}			
-			tokenField.emptyTextfield();
-		}
+		// don't run 'snyk config' command, so we use settings from eclipse prefs only
+//		if (event.getProperty().equals(Preferences.ENDPOINT_KEY)) {
+//			String newEndpoint = event.getNewValue().toString();
+//			if (newEndpoint.isEmpty()) {
+//				cliRunner.snykUnsetEndpoint();
+//			} else {
+//				cliRunner.snykSetEndpoint(newEndpoint);
+//			}
+//			tokenField.emptyTextfield();
+//		}
 	}
 
 	@Override

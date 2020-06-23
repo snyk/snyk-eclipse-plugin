@@ -33,27 +33,27 @@ public class SnykCliRunner {
 	
 	private static final String MONITOR_PARAM = "monitor --json";
 
-	private static final String AUTH_PARAM = "auth";
+//	private static final String AUTH_PARAM = "auth";
 	private static final String CONFIG_PARAM = "config";
 	private static final String IGNORE_PARAM = "ignore";
 	
 	ProcessRunner processRunner = new ProcessRunner();
 	
-	public ProcessResult snykAuth() {
-		String authToken = Preferences.getAuthToken();
-		if (authToken == null || authToken.isEmpty()) {
-			try {
-				String apiToken = Authenticator.INSTANCE.callLogin();
-				Preferences.store(Preferences.AUTH_TOKEN_KEY, apiToken);
-				authToken = Preferences.getAuthToken();
-			} catch (AuthException e) {
-				e.printStackTrace();
-				return ProcessResult.error(e.getMessage());
-				
-			}
-		}
-		return snykRun(Lists.of​(AUTH_PARAM, authToken));
-	}
+//	public ProcessResult snykAuth() {
+//		String authToken = Preferences.getAuthToken();
+//		if (authToken == null || authToken.isEmpty()) {
+//			try {
+//				String apiToken = Authenticator.INSTANCE.callLogin();
+//				Preferences.store(Preferences.AUTH_TOKEN_KEY, apiToken);
+//				authToken = Preferences.getAuthToken();
+//			} catch (AuthException e) {
+//				e.printStackTrace();
+//				return ProcessResult.error(e.getMessage());
+//
+//			}
+//		}
+//		return snykRun(Lists.of​(AUTH_PARAM, authToken));
+//	}
 	
 	public ProcessResult snykConfig() {
 		return snykRun(Lists.of​(CONFIG_PARAM));

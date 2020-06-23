@@ -22,16 +22,18 @@ public class AuthButtonFieldEditor extends StringButtonFieldEditor{
 
 	@Override
 	protected String changePressed() {
-		try {
-			PreferencesPage page = (PreferencesPage) getPage();
-			page.persist();
-		
-			return Authenticator.INSTANCE.callLogin();
-		} catch (AuthException e) {
-			e.printStackTrace();
-			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Authentication", e.getMessage());
-			return null;
-		}
+		MessageDialog.openInformation(null, "Authentication", "Please enter your Snyk API Token into the text field");
+		return null;
+//		try {
+//			PreferencesPage page = (PreferencesPage) getPage();
+//			page.persist();
+//
+//			return Authenticator.INSTANCE.callLogin();
+//		} catch (AuthException e) {
+//			e.printStackTrace();
+//			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Authentication", e.getMessage());
+//			return null;
+//		}
 	}
 	
 	public void emptyTextfield() {
