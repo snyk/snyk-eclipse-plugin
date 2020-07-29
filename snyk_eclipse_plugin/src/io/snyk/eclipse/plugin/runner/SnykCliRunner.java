@@ -113,7 +113,8 @@ public class SnykCliRunner {
 		
 		if (SystemUtils.IS_OS_MAC) {
 			runnable = getRunnableLocation(SNYK_CLI_MAC);
-			processbuilder= processRunner.createMacProcessBuilder(runnable + " " + paramsString, path);
+			String quotedParamsString = Arrays.stream(paramsString.split(" ")).collect(Collectors.joining("\" \"", "\"", "\""));
+			processbuilder= processRunner.createMacProcessBuilder("\"" + runnable + "\" " + quotedParamsString, path);
 		} else if (SystemUtils.IS_OS_LINUX) {
 			runnable = getRunnableLocation(SNYK_CLI_LINUX);
 			processbuilder= processRunner.createLinuxProcessBuilder(runnable + " " + paramsString, path);
