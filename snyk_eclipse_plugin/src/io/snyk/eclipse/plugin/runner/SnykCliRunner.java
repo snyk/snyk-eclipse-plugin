@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.Platform;
 
-import io.snyk.eclipse.plugin.exception.AuthException;
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
 import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
@@ -26,16 +25,17 @@ public class SnykCliRunner {
 	private static final String SNYK_CLI_LINUX = "snyk-linux";
 	private static final String SNYK_CLI_WIN = "snyk-win.exe";
 
-	private static final String TEST_PARAMS = "test --json";
+	private static final String TEST_PARAMS = "test";
 	private static final String FILE_PARAM = "--file=";
 	
 	private static final String INSECURE = "--insecure";
 	
-	private static final String MONITOR_PARAM = "monitor --json";
+	private static final String MONITOR_PARAM = "monitor";
 
 //	private static final String AUTH_PARAM = "auth";
 	private static final String CONFIG_PARAM = "config";
 	private static final String IGNORE_PARAM = "ignore";
+	private static final String JSON_PARAM = "--json";
 	
 	ProcessRunner processRunner = new ProcessRunner();
 	
@@ -68,17 +68,17 @@ public class SnykCliRunner {
 	}
 	
 	public ProcessResult snykMonitor(File navigatePath) {
-		return snykRun(Lists.of​(MONITOR_PARAM), Optional.of(navigatePath));
+		return snykRun(Lists.of(MONITOR_PARAM, JSON_PARAM), Optional.of(navigatePath));
 	}
 
 
 	public ProcessResult snykTestFile(String rawPath, File navigatePath) {
-		return snykRun(Lists.of​(TEST_PARAMS, FILE_PARAM+rawPath), Optional.of(navigatePath));
+		return snykRun(Lists.of(TEST_PARAMS, JSON_PARAM, FILE_PARAM+rawPath), Optional.of(navigatePath));
 	}
 
 	public ProcessResult snykTest(File navigatePath) {
 		if (MOCK) return getMockScanResult();
-		return snykRun(Lists.of​(TEST_PARAMS), Optional.of(navigatePath));
+		return snykRun(Lists.of(TEST_PARAMS, JSON_PARAM), Optional.of(navigatePath));
 	}
 	
 	public ProcessResult snykIgnore(String id, File navigatePath) {
@@ -109,20 +109,17 @@ public class SnykCliRunner {
 	private ProcessBuilder createProcessBuilderByOS(List<String> params, Optional<String> path) throws IOException, NotSupportedException {
 		String runnable;
 		ProcessBuilder processbuilder;
-		String paramsString = params.stream().collect(Collectors.joining(" "));
+		String paramsString = params.stream().collect(Collectors.joining("\" \"", "\"", "\""));
 		
 		if (SystemUtils.IS_OS_MAC) {
 			runnable = getRunnableLocation(SNYK_CLI_MAC);
-			String quotedParamsString = Arrays.stream(paramsString.split(" ")).collect(Collectors.joining("\" \"", "\"", "\""));
-			processbuilder= processRunner.createMacProcessBuilder("\"" + runnable + "\" " + quotedParamsString, path);
+			processbuilder= processRunner.createMacProcessBuilder("\"" + runnable + "\" " + paramsString, path);
 		} else if (SystemUtils.IS_OS_LINUX) {
 			runnable = getRunnableLocation(SNYK_CLI_LINUX);
 			processbuilder= processRunner.createLinuxProcessBuilder(runnable + " " + paramsString, path);
 		} else if (SystemUtils.IS_OS_WINDOWS) {
 			runnable = getRunnableLocation(SNYK_CLI_WIN);
-			// workaround: use quotes for every param until we rewrite ProcessRunner
-			String quotedParamsString = Arrays.stream(paramsString.split(" ")).collect(Collectors.joining("\" \"", "\"", "\""));
-			processbuilder = processRunner.createWinProcessBuilder("\"" + runnable + "\" " + quotedParamsString, path);
+			processbuilder = processRunner.createWinProcessBuilder("\"" + runnable + "\" " + paramsString, path);
 		} else {
 			throw new NotSupportedException("This operating system is not supported");
 		}
