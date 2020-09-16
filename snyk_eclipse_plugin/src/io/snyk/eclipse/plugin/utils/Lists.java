@@ -9,7 +9,7 @@ public class Lists {
 	
 	private Lists() {}
 	
-	public static <E> List<E> of​(E... elements) {
+	public static <E> List<E> of(E... elements) {
         List<E> list = Stream.of(elements).collect(Collectors.toList());
         return Collections.unmodifiableList(list);
     }

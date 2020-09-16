@@ -56,15 +56,15 @@ public class SnykCliRunner {
 //	}
 	
 	public ProcessResult snykConfig() {
-		return snykRun(Lists.of​(CONFIG_PARAM));
+		return snykRun(Lists.of(CONFIG_PARAM));
 	}
 	
 	public ProcessResult snykSetEndpoint(String url) {
-		return snykRun(Lists.of​(CONFIG_PARAM, "set endpoint=" + url));
+		return snykRun(Lists.of(CONFIG_PARAM, "set endpoint=" + url));
 	}
 	
 	public ProcessResult snykUnsetEndpoint() {
-		return snykRun(Lists.of​(CONFIG_PARAM, "unset endpoint"));
+		return snykRun(Lists.of(CONFIG_PARAM, "unset endpoint"));
 	}
 	
 	public ProcessResult snykMonitor(File navigatePath) {
@@ -84,7 +84,7 @@ public class SnykCliRunner {
 	public ProcessResult snykIgnore(String id, File navigatePath) {
 		String idParam = "--id='" + id + "'";
 		
-		return snykRun(Lists.of​(IGNORE_PARAM, idParam), Optional.of(navigatePath));
+		return snykRun(Lists.of(IGNORE_PARAM, idParam), Optional.of(navigatePath));
 	}
 	
 	private ProcessResult snykRun(List<String> arguments) {
