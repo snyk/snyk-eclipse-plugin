@@ -23,6 +23,8 @@ public class ProcessRunner {
 
 	private static final String ENV_SNYK_API = "SNYK_API";
 	private static final String ENV_SNYK_TOKEN = "SNYK_TOKEN";
+	private static final String ENV_SNYK_INTEGRATION_NAME = "SNYK_INTEGRATION_NAME";
+	private static final String ENV_SNYK_INTEGRATION_VERSION = "SNYK_INTEGRATION_VERSION";
 	private static final String DEFAULT_MAC_PATH = "/usr/local/bin";
 	private static final String DEFAULT_LINUX_PATH = "/usr/bin";
 	private static final String DEFAULT_WIN_PATH = "";
@@ -63,6 +65,8 @@ public class ProcessRunner {
 			pb.environment().put(ENV_SNYK_API, endpoint);
 		}
 		pb.environment().put(ENV_SNYK_TOKEN, Preferences.getAuthToken());
+		pb.environment().put(ENV_SNYK_INTEGRATION_NAME, "ECLIPSE");
+		pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
 		pb.environment().put("PATH", path.map(p -> p+":"+DEFAULT_LINUX_PATH).orElse(DEFAULT_LINUX_PATH) + File.pathSeparator + System.getenv("PATH"));
 		return pb;
 	}
@@ -74,6 +78,8 @@ public class ProcessRunner {
 			pb.environment().put(ENV_SNYK_API, endpoint);
 		}
 		pb.environment().put(ENV_SNYK_TOKEN, Preferences.getAuthToken());
+		pb.environment().put(ENV_SNYK_INTEGRATION_NAME, "ECLIPSE");
+		pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
 		pb.environment().put("PATH", path.map(p -> p+":"+DEFAULT_MAC_PATH).orElse(DEFAULT_MAC_PATH) + File.pathSeparator + System.getenv("PATH"));
 		return pb;
 	}
@@ -86,6 +92,8 @@ public class ProcessRunner {
 			pb.environment().put(ENV_SNYK_API,endpoint);
 		}
 		pb.environment().put(ENV_SNYK_TOKEN, Preferences.getAuthToken());
+		pb.environment().put(ENV_SNYK_INTEGRATION_NAME, "ECLIPSE");
+		pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
 		pb.environment().put("PATH", path.map(p -> p+";"+DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH) + File.pathSeparator + System.getenv("PATH"));
 
 		// debug logging on windows machines
@@ -98,5 +106,9 @@ public class ProcessRunner {
 		LOG.log(multiStatusCommand);
 
 		return pb;
+	}
+
+	public String getVersion() {
+		return BUNDLE.getVersion().toString();
 	}
 }
