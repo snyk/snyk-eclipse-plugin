@@ -95,4 +95,7 @@
             </command>
         </menuContribution>
     </extension>
+    <extension point="org.eclipse.ui.startup">
+     	<startup class="io.snyk.eclipse.plugin.SnykStartup"/>
+   </extension>
 </plugin>
