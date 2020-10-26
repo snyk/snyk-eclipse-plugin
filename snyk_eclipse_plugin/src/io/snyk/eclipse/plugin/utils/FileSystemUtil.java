@@ -27,7 +27,7 @@ public final class FileSystemUtil {
 		File destinationDirectory;
 
 		if (SystemUtils.IS_OS_WINDOWS) {
-			destinationDirectory = new File(new File(userHomePath, "Local"), "Snyk");
+			destinationDirectory = new File(getWindowsLocalAppDataDirectory(), "Snyk");
 		} else {
 			destinationDirectory = new File(userHomePath, ".snyk");
 		}
