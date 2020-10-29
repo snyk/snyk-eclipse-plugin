@@ -16,6 +16,7 @@ import io.snyk.eclipse.plugin.utils.CliDownloader;
 import io.snyk.eclipse.plugin.views.SnykView;
 
 import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliFile;
+import static io.snyk.eclipse.plugin.utils.SnykLogger.logError;
 
 public class SnykStartup implements IStartup {
 
@@ -44,7 +45,7 @@ public class SnykStartup implements IStartup {
 						snykView.setRunActionEnabled();
 					}
 				} catch (Exception exception) {
-					exception.printStackTrace();
+					logError(exception);
 				}
 
 				return Status.OK_STATUS;
@@ -68,7 +69,7 @@ public class SnykStartup implements IStartup {
 					try {
 						snykView = (SnykView) workbenchWindow.getActivePage().showView(SnykView.ID);
 					} catch (PartInitException partInitException) {
-						partInitException.printStackTrace();
+						logError(partInitException);
 					}
 				}
 			});
