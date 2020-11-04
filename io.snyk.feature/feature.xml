@@ -32,21 +32,6 @@ limitations under the License.
       <discovery label="Snyk login" url="https://app.snyk.io/login"/>
    </url>
 
-   <includes
-         id="io.snyk.bin.linux"
-         version="0.0.0"
-         os="linux"/>
-
-   <includes
-         id="io.snyk.bin.macos"
-         version="0.0.0"
-         os="macosx"/>
-
-   <includes
-         id="io.snyk.bin.win"
-         version="0.0.0"
-         os="win32"/>
-
    <plugin
          id="io.snyk.eclipse.plugin"
          download-size="0"

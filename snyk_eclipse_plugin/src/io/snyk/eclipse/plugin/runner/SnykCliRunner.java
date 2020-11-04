@@ -4,26 +4,19 @@ import static io.snyk.eclipse.plugin.utils.MockHandler.MOCK;
 import static io.snyk.eclipse.plugin.utils.MockHandler.getMockScanResult;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.core.runtime.Platform;
 
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
 import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
+import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliFile;
 
 public class SnykCliRunner {
-
-	private static final String SNYK_CLI_MAC = "snyk-macos";
-	private static final String SNYK_CLI_LINUX = "snyk-linux";
-	private static final String SNYK_CLI_WIN = "snyk-win.exe";
 
 	private static final String TEST_PARAMS = "test";
 	private static final String FILE_PARAM = "--file=";
@@ -106,30 +99,21 @@ public class SnykCliRunner {
 		}
 	}
 
-	private ProcessBuilder createProcessBuilderByOS(List<String> params, Optional<String> path) throws IOException, NotSupportedException {
-		String runnable;
+	private ProcessBuilder createProcessBuilderByOS(List<String> params, Optional<String> path) throws Exception {
+		String runnable = getCliFile().getAbsolutePath();
 		ProcessBuilder processbuilder;
 		String paramsString = params.stream().collect(Collectors.joining("\" \"", "\"", "\""));
 		
 		if (SystemUtils.IS_OS_MAC) {
-			runnable = getRunnableLocation(SNYK_CLI_MAC);
 			processbuilder= processRunner.createMacProcessBuilder("\"" + runnable + "\" " + paramsString, path);
 		} else if (SystemUtils.IS_OS_LINUX) {
-			runnable = getRunnableLocation(SNYK_CLI_LINUX);
 			processbuilder= processRunner.createLinuxProcessBuilder(runnable + " " + paramsString, path);
 		} else if (SystemUtils.IS_OS_WINDOWS) {
-			runnable = getRunnableLocation(SNYK_CLI_WIN);
 			processbuilder = processRunner.createWinProcessBuilder("\"" + runnable + "\" " + paramsString, path);
 		} else {
 			throw new NotSupportedException("This operating system is not supported");
 		}
 		
 		return processbuilder;
-	}
-
-	private String getRunnableLocation(String relativeLoc) throws IOException {
-		URL url = new URL(Platform.getInstallLocation().getURL(), relativeLoc);
-		return url.getFile();
-	}
-
+	}	
 }

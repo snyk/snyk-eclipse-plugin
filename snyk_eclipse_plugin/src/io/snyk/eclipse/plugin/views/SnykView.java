@@ -39,6 +39,7 @@ import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
 import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;
 import io.snyk.eclipse.plugin.views.provider.LinkLabelProvider;
 import io.snyk.eclipse.plugin.views.provider.TreeContentProvider;
+import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliFile;
 
 public class SnykView extends ViewPart {
 
@@ -205,6 +206,13 @@ public class SnykView extends ViewPart {
 				
 			}
 		};
+		
+		try {
+			scanWorkspace.setEnabled(getCliFile().exists());
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+		
 		scanWorkspace.setText("Snyk test");
 		scanWorkspace.setToolTipText("Snyk test");
 		scanWorkspace.setImageDescriptor(
@@ -309,18 +317,31 @@ public class SnykView extends ViewPart {
 		monitorActions.forEach(act -> act.setEnabled(true));
 	}
 	
-	public static void displayMessage(String message) {
-		try {
-			SnykView snykView = (SnykView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("io.snyk.eclipse.plugin.views.SnykView");
-			snykView.showMessage(message);
-		} catch (PartInitException e) {
-			e.printStackTrace();
-		}
-
-		
+	public void setRunActionEnabled() {
+		this.scanWorkspace.setEnabled(true);
 	}
 	
-
+	public void disableActions() {
+		this.scanWorkspace.setEnabled(false);
+		this.abortScanning.setEnabled(false);
+	}
+	
+	public static void displayMessage(String message) {
+		try {
+			getInstance().showMessage(message);
+		} catch (PartInitException partInitException) {
+			partInitException.printStackTrace();
+		}		
+	}
+	
+	public static SnykView getInstance() throws PartInitException {
+		return (SnykView) PlatformUI
+				.getWorkbench()
+				.getActiveWorkbenchWindow()
+				.getActivePage()
+				.showView(ID);
+	}
+	
 	@Override
 	public void setFocus() {
 		viewer.getControl().setFocus();
