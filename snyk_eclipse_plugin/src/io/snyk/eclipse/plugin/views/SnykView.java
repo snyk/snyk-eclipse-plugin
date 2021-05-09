@@ -47,13 +47,18 @@ public class SnykView extends ViewPart {
 	 * The ID of the view as specified by the extension.
 	 */
 	public static final String ID = "io.snyk.eclipse.plugin.views.SnykView";
-	public static final Image ERROR = Activator.getImageDescriptor(
-            "platform:/plugin/org.eclipse.ui.views.log/icons/obj16/error_st_obj.png").createImage();
-	public static final Image WARNING = Activator.getImageDescriptor(
-            "platform:/plugin/org.eclipse.ui.views.log/icons/obj16/warning_st_obj.png").createImage();
-	public static final Image INFO = Activator.getImageDescriptor(
-            "platform:/plugin/org.eclipse.ui.views.log/icons/obj16/info_st_obj.png").createImage();
-
+	
+	public static final Image CRITICAL_SEVERITY = 
+			Activator.getImageDescriptor("/icons/severity-critical.png").createImage();
+	
+	public static final Image HIGH_SEVERITY = 
+			Activator.getImageDescriptor("/icons/severity-high.png").createImage();
+	
+	public static final Image MEDIUM_SEVERITY = 
+			Activator.getImageDescriptor("/icons/severity-medium.png").createImage();
+	
+	public static final Image LOW_SEVERITY = 
+			Activator.getImageDescriptor("/icons/severity-low.png").createImage();
 
 	@Inject
 	IWorkbench workbench;
@@ -132,9 +137,11 @@ public class SnykView extends ViewPart {
 		String severity = model.severity;
 		if (severity == null) return null;
 
-		if (severity.equalsIgnoreCase("high")) return ERROR;
-		if (severity.equalsIgnoreCase("medium")) return WARNING;
-		if (severity.equalsIgnoreCase("low")) return INFO;
+		if (severity.equalsIgnoreCase("critical")) return CRITICAL_SEVERITY;
+		if (severity.equalsIgnoreCase("high")) return HIGH_SEVERITY;
+		if (severity.equalsIgnoreCase("medium")) return MEDIUM_SEVERITY;
+		if (severity.equalsIgnoreCase("low")) return LOW_SEVERITY;
+		
 		return null;
 	}
 
