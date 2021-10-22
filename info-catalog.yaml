@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    github.com/project-slug: snyk/snyk-eclipse-plugin
+  description: A Snyk Vuln Scanner for Eclipse
+  tags:
+    - typescript
+    - plugin
+  links:
+    - icon: message
+      title: "Team Asks Channel"
+      url: "https://snyk.slack.com/channels/ask-team-hammer"
+  name: snyk-eclipse-plugin
+spec:
+  lifecycle: unknown
+  type: service
+  owner: hammer
