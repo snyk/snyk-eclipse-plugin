@@ -19,7 +19,9 @@ Bundle-ClassPath: .,
  lib/httpclient-4.5.9.jar,
  lib/httpcore-4.4.11.jar,
  lib/commons-codec-1.11.jar,
- lib/commons-logging-1.2.jar
+ lib/commons-logging-1.2.jar,
+ lib/javax.inject-1.jar,
+ lib/lombok-1.18.22.jar
 Import-Package: org.eclipse.core.resources
 Export-Package: .,
  Class50.lombok.eclipse.agent,
