@@ -1,10 +1,5 @@
 package io.snyk.eclipse.plugin.runner;
 
-import lombok.Getter;
-import lombok.ToString;
-
-@ToString
-@Getter
 public class ProcessResult {
 	private String content;
 	private String error;
@@ -39,6 +34,17 @@ public class ProcessResult {
 		if (error == null) return content;
 		return error;
 	}
-	
-	
+
+
+	public String getContent() {
+		return this.content;
+	}
+
+	public String getError() {
+		return this.error;
+	}
+
+	public String toString() {
+		return "ProcessResult(content=" + this.getContent() + ", error=" + this.getError() + ")";
+	}
 }
