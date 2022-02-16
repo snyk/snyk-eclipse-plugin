@@ -197,3 +197,4 @@ local.properties
 hs_err_pid*
 
 /.idea/
+.DS_Store
