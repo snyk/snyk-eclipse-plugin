@@ -45,16 +45,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>4.3.1</version>
@@ -152,9 +142,9 @@
             </snapshots>
         </repository>
         <repository>
-            <id>oxygen</id>
+            <id>2021-12</id>
             <layout>p2</layout>
-            <url>https://download.eclipse.org/releases/oxygen/</url>
+            <url>https://download.eclipse.org/releases/2021-12</url>
         </repository>
     </repositories>
 </project>

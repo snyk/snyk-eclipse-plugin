@@ -6,7 +6,7 @@ import org.eclipse.lsp4e.server.StreamConnectionProvider;
 import java.util.LinkedList;
 
 public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvider implements StreamConnectionProvider {
-	private static final String EXECUTABLE_MAC = "snyk-lsp";
+	private static final String EXECUTABLE_MAC = "/Users/bdoetsch/workspace/go/bin/snyk-lsp";
 	private static final String EXECUTABLE_LINUX = "snyk-lsp-linux";
 	private static final String EXECUTABLE_WIN = "snyk-lsp.exe";
 	private static final String OS = System.getProperty("os.name").toLowerCase();

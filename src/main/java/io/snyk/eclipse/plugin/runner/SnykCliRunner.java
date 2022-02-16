@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang.SystemUtils;
 
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
 import io.snyk.eclipse.plugin.properties.Preferences;
