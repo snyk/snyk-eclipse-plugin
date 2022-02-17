@@ -99,23 +99,6 @@
      	<startup class="io.snyk.eclipse.plugin.SnykStartup"/>
    </extension>
     <extension
-          point="org.eclipse.core.contenttype.contentTypes">
-       <content-type
-             id="io.snyk.languageserver.contentType"
-             base-type="org.eclipse.runtime.text"
-             name="Snyk Language Server"
-             file-extensions="java,json,xml,mod,kt,cs,gradle,kts"
-             priority="normal">
-       </content-type>
-    </extension>
-    <extension
-          point="org.eclipse.ui.editors">
-       <editorContentTypeBinding
-             contentTypeId="io.snyk.languageserver.contentType"
-             editorId="org.eclipse.ui.genericeditor.GenericEditor">
-       </editorContentTypeBinding>
-    </extension>
-    <extension
           point="org.eclipse.lsp4e.languageServer">
        <server
              class="io.snyk.languageserver.SnykStreamConnectionProvider"
@@ -124,7 +107,51 @@
              singleton="true">
        </server>
        <contentTypeMapping
-             contentType="io.snyk.languageserver.contentType"
+             contentType="org.eclipse.jdt.core.javaSource"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.buildship.core.files.gradlebuildscript"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.core.runtime.text"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.core.runtime.xml"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.wildwebdeveloper.json"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.wildwebdeveloper.yaml"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.wildwebdeveloper.js"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.wst.dtd.core.dtdsource"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.wst.xml.core.xmisource"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.wst.xml.core.xmlsource"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.wildwebdeveloper.ts"
+             id="io.snyk.languageserver">
+       </contentTypeMapping>
+       <contentTypeMapping
+             contentType="org.eclipse.wildwebdeveloper.tsx"
              id="io.snyk.languageserver">
        </contentTypeMapping>
     </extension>

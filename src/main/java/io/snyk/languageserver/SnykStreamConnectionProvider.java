@@ -14,8 +14,6 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
 	public SnykStreamConnectionProvider() {
 		LinkedList<String> commands = new LinkedList<>();
 		commands.add(getExecutableNameByOs());
-		commands.add("-l");
-		commands.add("debug");
 		setCommands(commands);
 		String workingDir = System.getenv("HOME");
 		setWorkingDirectory(workingDir);
