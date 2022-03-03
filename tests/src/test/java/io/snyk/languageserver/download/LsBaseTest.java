@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -25,6 +26,7 @@ public class LsBaseTest {
         when(utils.getLSFile()).thenReturn(lsFile);
         when(utils.getArch()).thenReturn("amd64");
         when(utils.getOs()).thenReturn("linux");
+        when(utils.getDownloadBinaryName(any())).thenReturn("snyk-ls_testVersion_linux_amd64");
     }
 
     @AfterEach

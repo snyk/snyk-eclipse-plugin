@@ -38,23 +38,32 @@ public class LsUtils {
         map.put("686", "386");
     }
 
-    public String getBinaryName(String osArch, String osName) {
-        String base = "snyk-lsp.";
-        String executable = base + map.get(osName.toLowerCase().substring(0, 3)) + "." + map.get(osArch.toLowerCase());
-        if (osName.toLowerCase().contains("win")) executable += ".exe";
+    public String getDownloadBinaryName(String version) {
+    	String base = "snyk-ls_%s_%s_%s";
+        String os = getOs();
+		String executable = String.format(base, version, os, getArch());
+		if (executable.toLowerCase().contains("windows")) executable += ".exe";
         return executable;
     }
 
+	String getArch() {
+    	String arch = SystemUtils.OS_ARCH;
+		return map.get(arch.toLowerCase());
+	}
 
+	String getOs() {
+		String os = SystemUtils.OS_NAME;
+		return map.get(os.toLowerCase().substring(0,3));
+	}
+    
+    public String getBinaryName() {
+    	var osName = SystemUtils.OS_NAME;
+    	var executable = "snyk-ls";
+        if (osName.toLowerCase().startsWith("win")) executable += ".exe";
+        return executable;
+    }
+    
     public File getLSFile() {
-        return new File(getCliDirectory(), getBinaryName(getArch(), getOs()));
-    }
-
-    public String getArch() {
-        return SystemUtils.OS_ARCH;
-    }
-
-    public String getOs() {
-        return SystemUtils.OS_NAME;
+        return new File(getCliDirectory(), getBinaryName());
     }
 }

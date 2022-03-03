@@ -1,19 +1,25 @@
 package io.snyk.languageserver.download;
 
-import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
-
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.eclipse.core.runtime.IProgressMonitor;
-
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.eclipse.core.runtime.IProgressMonitor;
+
+import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
+import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class LsDownloader {
 	private final CloseableHttpClient httpClient;
@@ -24,24 +30,16 @@ public class LsDownloader {
 		this.utils = utils;
 	}
 
-	@SuppressWarnings("ResultOfMethodCallIgnored")
 	public void download(IProgressMonitor monitor) {
-		LsDownloadRequest binaryRequest = new LsDownloadRequest(utils);
-		LsShaDownloadRequest shaRequest = new LsShaDownloadRequest(utils);
 		File destinationFile = utils.getLSFile();
 		File tempFile = null;
 		try {
 			tempFile = File.createTempFile(destinationFile.getName(), ".tmp", destinationFile.getParentFile());
-			CloseableHttpResponse response = httpClient.execute(shaRequest);
-			if (response.getStatusLine().getStatusCode() >= 400) {
-				throw new RuntimeException("Download of Language Server failed. " + response.getStatusLine());
-			}
+			var version = getVersion();
+			var expectedSha = getSha(version);
 
-			var entity = response.getEntity();
-			var expectedSha = new String(entity.getContent().readAllBytes()); // for a sha content encoding should not
-																				// matter;
+			LsDownloadRequest binaryRequest = new LsDownloadRequest(version, utils);
 			tempFile = httpClient.execute(binaryRequest, new FileDownloadResponseHandler(tempFile, monitor));
-			
 
 			var checksumDownloadedFile = Files.readAllBytes(tempFile.toPath());
 			verifyChecksum(expectedSha, checksumDownloadedFile);
@@ -63,6 +61,39 @@ public class LsDownloader {
 			} catch (Exception e) {
 				SnykLogger.logError(e);
 			}
+		}
+	}
+
+	String getVersion() {
+		LsVersionRequest req = new LsVersionRequest();
+		LsMetadata metadata;
+		try {
+			metadata = httpClient.execute(req, new LsMetadataResponseHandler());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return metadata.getVersion();
+	}
+
+	String getSha(String version) {
+		LsShaRequest shaRequest = new LsShaRequest(version, utils);
+		try (CloseableHttpResponse response = httpClient.execute(shaRequest)) {
+			if (response.getStatusLine().getStatusCode() >= 400) {
+				throw new RuntimeException("Download of Language Server failed. " + response.getStatusLine());
+			}
+
+			var entity = response.getEntity();
+			try (var buf = new BufferedReader(new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8))) {
+				String fileName = utils.getDownloadBinaryName(version);
+				List<String> lines = buf.lines().filter(s -> s.contains(fileName)).collect(Collectors.toList());
+				if (lines.size() != 1)
+					throw new ChecksumVerificationException("Could not find sha for verification of file: " + fileName);
+				return lines.get(0).split(" ")[0];
+			} catch (IOException e) {
+				throw new ChecksumVerificationException(e);
+			}
+		} catch (UnsupportedOperationException | IOException e) {
+			throw new ChecksumVerificationException(e);
 		}
 	}
 
