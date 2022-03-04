@@ -11,7 +11,7 @@ public class LsVersionRequest extends HttpGet {
 
     public LsVersionRequest() {
         try {
-        	var effectiveURL = String.format(DOWNLOAD_URL, "metadata.json");        	
+            var effectiveURL = String.format(DOWNLOAD_URL, "metadata.json");
             setURI(new URI(effectiveURL));
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

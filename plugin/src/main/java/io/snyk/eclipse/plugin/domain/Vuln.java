@@ -27,34 +27,34 @@ public class Vuln {
     }
 
     public String getVulnTopLevelDependecy() {
-    	if (from.size() >= 2) return from.get(1);
-    	return from.get(0);
+        if (from.size() >= 2) return from.get(1);
+        return from.get(0);
     }
-    
+
     public String getFix() {
-    	if (isUpgradable) {
-    		if (upgradePath.size() > 1) return upgradePath.get(1);
-        	return upgradePath.get(0);
-    	}
-    	
-    	if (isPatchable) 
-    		return patches.stream().map(Patch::getId).collect(Collectors.joining(", "));
-    	    	
-    	return null;    	
+        if (isUpgradable) {
+            if (upgradePath.size() > 1) return upgradePath.get(1);
+            return upgradePath.get(0);
+        }
+
+        if (isPatchable)
+            return patches.stream().map(Patch::getId).collect(Collectors.joining(", "));
+
+        return null;
     }
-    
+
     public String getUrl() {
-    	if (id == null) return null;
-    	return "https://snyk.io/vuln/" + id;
+        if (id == null) return null;
+        return "https://snyk.io/vuln/" + id;
     }
-    
-    
+
+
     public String printFrom() {
-    	return from.stream().collect(Collectors.joining(" -> "));
+        return String.join(" -> ", from);
     }
-    
+
     public String printUpgrade() {
-    	return upgradePath.stream().collect(Collectors.joining(" -> "));
+        return String.join(" -> ", upgradePath);
     }
 
     public int getCvssScore() {
@@ -197,7 +197,7 @@ public class Vuln {
         if (o == this) return true;
         if (!(o instanceof Vuln)) return false;
         final Vuln other = (Vuln) o;
-        if (!other.canEqual((Object) this)) return false;
+        if (!other.canEqual(this)) return false;
         if (this.getCvssScore() != other.getCvssScore()) return false;
         final Object this$id = this.getId();
         final Object other$id = other.getId();
@@ -254,8 +254,7 @@ public class Vuln {
         if (this$name == null ? other$name != null : !this$name.equals(other$name)) return false;
         final Object this$version = this.getVersion();
         final Object other$version = other.getVersion();
-        if (this$version == null ? other$version != null : !this$version.equals(other$version)) return false;
-        return true;
+        return this$version == null ? other$version == null : this$version.equals(other$version);
     }
 
     protected boolean canEqual(final Object other) {

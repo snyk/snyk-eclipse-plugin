@@ -35,7 +35,7 @@ public class FileDownloadResponseHandler implements ResponseHandler<File> {
                 outputStream.write(buffer, 0, readCount);
 
                 //noinspection IntegerDivisionInFloatingPointContext
-                subMonitor.split(Math.round(readCount/contentLengthStr));
+                subMonitor.split(Math.round(readCount / contentLengthStr));
             }
         }
 

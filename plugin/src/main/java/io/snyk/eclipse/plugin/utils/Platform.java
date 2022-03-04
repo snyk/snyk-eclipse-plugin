@@ -8,32 +8,32 @@ import java.util.Map;
  * Supported platform.
  */
 public enum Platform {
-	LINUX("snyk-linux"),
-	LINUX_ALPINE("snyk-alpine"),
-	MAC_OS("snyk-macos"),
-	WINDOWS("snyk-win.exe");
+    LINUX("snyk-linux"),
+    LINUX_ALPINE("snyk-alpine"),
+    MAC_OS("snyk-macos"),
+    WINDOWS("snyk-win.exe");
 
-	public final String snykWrapperFileName;
-	
-	Platform(String snykWrapperFileName) {
-		this.snykWrapperFileName = snykWrapperFileName;
-	}
+    public final String snykWrapperFileName;
 
-	public static Platform current() {
-		return detect(System.getProperties());
-	}
+    Platform(String snykWrapperFileName) {
+        this.snykWrapperFileName = snykWrapperFileName;
+    }
 
-	private static Platform detect(Map<Object, Object> systemProperties) {
-		String osArchitecture = ((String) systemProperties.get("os.name")).toLowerCase(Locale.ENGLISH);
+    public static Platform current() {
+        return detect(System.getProperties());
+    }
 
-		if (osArchitecture.contains("linux")) {
-			return Paths.get("/etc/alpine-release").toFile().exists() ? LINUX_ALPINE : LINUX;
-		} else if (osArchitecture.contains("mac os x") || osArchitecture.contains("darwin") || osArchitecture.contains("osx")) {
-			return MAC_OS;
-		} else if (osArchitecture.contains("windows")) {
-			return WINDOWS;
-		}
+    private static Platform detect(Map<Object, Object> systemProperties) {
+        String osArchitecture = ((String) systemProperties.get("os.name")).toLowerCase(Locale.ENGLISH);
 
-		throw new RuntimeException(osArchitecture + " is not supported CPU type");
-	}
+        if (osArchitecture.contains("linux")) {
+            return Paths.get("/etc/alpine-release").toFile().exists() ? LINUX_ALPINE : LINUX;
+        } else if (osArchitecture.contains("mac os x") || osArchitecture.contains("darwin") || osArchitecture.contains("osx")) {
+            return MAC_OS;
+        } else if (osArchitecture.contains("windows")) {
+            return WINDOWS;
+        }
+
+        throw new RuntimeException(osArchitecture + " is not supported CPU type");
+    }
 }

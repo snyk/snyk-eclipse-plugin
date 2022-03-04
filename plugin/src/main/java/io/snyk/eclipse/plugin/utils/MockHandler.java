@@ -1,46 +1,47 @@
 package io.snyk.eclipse.plugin.utils;
 
+import io.snyk.eclipse.plugin.runner.ProcessResult;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-import io.snyk.eclipse.plugin.runner.ProcessResult;
-
 public class MockHandler {
 
-	// set to fake mock the CLI calls
-	public static final boolean MOCK = false;
-	
-	private MockHandler() {}
+    // set to fake mock the CLI calls
+    public static final boolean MOCK = false;
 
-	public static ProcessResult getMockContent(String result) {
-		return new ProcessResult(result, null);
-	}
+    private MockHandler() {
+    }
 
-	public static ProcessResult getMockScanResult() {
-		return getMockContent(getResource());
-	}
+    public static ProcessResult getMockContent(String result) {
+        return new ProcessResult(result, null);
+    }
 
-	private static String getResource() {
+    public static ProcessResult getMockScanResult() {
+        return getMockContent(getResource());
+    }
 
-		try {
-			URL url = new URL("platform:/plugin/io.snyk.eclipse.plugin/resources/mockCliOutput.json");
-			InputStream inputStream = url.openConnection().getInputStream();
-			BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
-			String inputLine;
-			StringBuilder output = new StringBuilder();
+    private static String getResource() {
 
-			while ((inputLine = in.readLine()) != null) {
-				output.append(inputLine);
-			}
+        try {
+            URL url = new URL("platform:/plugin/io.snyk.eclipse.plugin/resources/mockCliOutput.json");
+            InputStream inputStream = url.openConnection().getInputStream();
+            BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
+            String inputLine;
+            StringBuilder output = new StringBuilder();
 
-			in.close();
-			return output.toString();
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
-	}
+            while ((inputLine = in.readLine()) != null) {
+                output.append(inputLine);
+            }
+
+            in.close();
+            return output.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 }

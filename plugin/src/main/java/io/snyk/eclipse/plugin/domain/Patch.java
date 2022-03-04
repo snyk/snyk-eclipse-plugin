@@ -56,7 +56,7 @@ public class Patch {
         if (o == this) return true;
         if (!(o instanceof Patch)) return false;
         final Patch other = (Patch) o;
-        if (!other.canEqual((Object) this)) return false;
+        if (!other.canEqual(this)) return false;
         final Object this$comments = this.getComments();
         final Object other$comments = other.getComments();
         if (this$comments == null ? other$comments != null : !this$comments.equals(other$comments)) return false;
@@ -72,8 +72,7 @@ public class Patch {
         if (this$urls == null ? other$urls != null : !this$urls.equals(other$urls)) return false;
         final Object this$version = this.getVersion();
         final Object other$version = other.getVersion();
-        if (this$version == null ? other$version != null : !this$version.equals(other$version)) return false;
-        return true;
+        return this$version == null ? other$version == null : this$version.equals(other$version);
     }
 
     protected boolean canEqual(final Object other) {

@@ -1,54 +1,70 @@
 package io.snyk.eclipse.plugin.properties;
 
+import org.eclipse.equinox.security.storage.ISecurePreferences;
+import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
+import org.eclipse.equinox.security.storage.StorageException;
+import org.eclipse.jface.preference.IPreferenceStore;
+
 import java.util.Optional;
 
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.preferences.ScopedPreferenceStore;
-
-import io.snyk.eclipse.plugin.Activator;
-
 public class Preferences {
-	
 	public static final String QUALIFIER = "io.snyk.eclipse.plugin";
 	public static final String AUTH_TOKEN_KEY = "authtoken";
 	public static final String PATH_KEY = "path";
 	public static final String ENDPOINT_KEY = "endpoint";
 	public static final String INSECURE_KEY = "insecure";
-	
-	public static final ScopedPreferenceStore STORE = new ScopedPreferenceStore(InstanceScope.INSTANCE, QUALIFIER);
-	
-	private Preferences() {
+	public static final String LS_BINARY_KEY = "ls-binary";
+
+
+	private final ISecurePreferences node = SecurePreferencesFactory.getDefault().node(QUALIFIER);
+	private final IPreferenceStore store = new SnykSecurePreferenceStore(node, QUALIFIER);
+
+	public String getPref(String key) {
+		try {
+			return node.get(key, null);
+		} catch (StorageException e) {
+			throw new RuntimeException(e);
+		}
 	}
-	
-	public static String getPref(String key) {
-		return Platform.getPreferencesService().getString(Preferences.QUALIFIER, key, null, null);
-	}
-	
-	public static String getAuthToken() {
+
+	public String getAuthToken() {
 		return getPref(AUTH_TOKEN_KEY);
 	}
-	
-	public static String getEndpoint() {
+
+	public String getEndpoint() {
 		return getPref(ENDPOINT_KEY);
 	}
-	
-	public static Optional<String> getPath() {
+
+	public String getLsBinary() {
+		return getPref(LS_BINARY_KEY);
+	}
+
+	public Optional<String> getPath() {
 		String path = getPref(PATH_KEY);
 		if (path == null || path.isEmpty()) {
 			return Optional.empty();
 		}
 		return Optional.of(path);
 	}
-	
-	public static boolean isInsecure() {
-		return Platform.getPreferencesService().getBoolean(Preferences.QUALIFIER, INSECURE_KEY, false, null);
+
+	public boolean isInsecure() {
+		try {
+			return node.getBoolean(INSECURE_KEY, false);
+		} catch (StorageException e) {
+			throw new RuntimeException(e);
+		}
 	}
-	
-	public static void store(String key, String value) {
-		IPreferenceStore prefStore = Activator.getDefault().getPreferenceStore();
-		prefStore.setValue(key, value);
+
+	public void store(String key, String value) {
+		try {
+			node.put(key, value, true);
+		} catch (StorageException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public IPreferenceStore getStore() {
+		return store;
 	}
 
 }

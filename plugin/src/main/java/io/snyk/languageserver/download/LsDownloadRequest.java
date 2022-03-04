@@ -1,5 +1,6 @@
 package io.snyk.languageserver.download;
 
+import io.snyk.languageserver.LsUtils;
 import org.apache.http.client.methods.HttpGet;
 
 import java.net.URI;
@@ -11,8 +12,8 @@ public class LsDownloadRequest extends HttpGet {
 
     public LsDownloadRequest(String version, LsUtils utils) {
         try {
-        	var binary = utils.getDownloadBinaryName(version);
-        	var effectiveURL = String.format(DOWNLOAD_URL, binary);        	
+            var binary = utils.getDownloadBinaryName(version);
+            var effectiveURL = String.format(DOWNLOAD_URL, binary);
             setURI(new URI(effectiveURL));
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

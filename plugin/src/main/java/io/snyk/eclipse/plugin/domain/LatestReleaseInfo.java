@@ -3,10 +3,10 @@ package io.snyk.eclipse.plugin.domain;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class LatestReleaseInfo {
-	Long id;
+    Long id;
     String url;
     String name;
-    
+
     @JsonProperty("tag_name")
     String tagName;
 
@@ -50,7 +50,7 @@ public class LatestReleaseInfo {
         if (o == this) return true;
         if (!(o instanceof LatestReleaseInfo)) return false;
         final LatestReleaseInfo other = (LatestReleaseInfo) o;
-        if (!other.canEqual((Object) this)) return false;
+        if (!other.canEqual(this)) return false;
         final Object this$id = this.getId();
         final Object other$id = other.getId();
         if (this$id == null ? other$id != null : !this$id.equals(other$id)) return false;
@@ -62,8 +62,7 @@ public class LatestReleaseInfo {
         if (this$name == null ? other$name != null : !this$name.equals(other$name)) return false;
         final Object this$tagName = this.getTagName();
         final Object other$tagName = other.getTagName();
-        if (this$tagName == null ? other$tagName != null : !this$tagName.equals(other$tagName)) return false;
-        return true;
+        return this$tagName == null ? other$tagName == null : this$tagName.equals(other$tagName);
     }
 
     protected boolean canEqual(final Object other) {

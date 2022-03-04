@@ -1,5 +1,6 @@
-package io.snyk.languageserver.download;
+package io.snyk.languageserver;
 
+import io.snyk.eclipse.plugin.properties.Preferences;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
@@ -9,6 +10,7 @@ import java.util.Map;
 import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliDirectory;
 
 public class LsUtils {
+    private final Preferences preferences;
     public static final Map<String, String> map = new HashMap<>();
 
     static {
@@ -38,32 +40,41 @@ public class LsUtils {
         map.put("686", "386");
     }
 
+    public LsUtils(Preferences prefs) {
+        this.preferences = prefs;
+    }
+
     public String getDownloadBinaryName(String version) {
-    	String base = "snyk-ls_%s_%s_%s";
+        String base = "snyk-ls_%s_%s_%s";
         String os = getOs();
-		String executable = String.format(base, version, os, getArch());
-		if (executable.toLowerCase().contains("windows")) executable += ".exe";
+        String executable = String.format(base, version, os, getArch());
+        if (executable.toLowerCase().contains("windows")) executable += ".exe";
         return executable;
     }
 
-	String getArch() {
-    	String arch = SystemUtils.OS_ARCH;
-		return map.get(arch.toLowerCase());
-	}
+    String getArch() {
+        String arch = SystemUtils.OS_ARCH;
+        return map.get(arch.toLowerCase());
+    }
 
-	String getOs() {
-		String os = SystemUtils.OS_NAME;
-		return map.get(os.toLowerCase().substring(0,3));
-	}
-    
+    String getOs() {
+        String os = SystemUtils.OS_NAME;
+        return map.get(os.toLowerCase().substring(0, 3));
+    }
+
     public String getBinaryName() {
-    	var osName = SystemUtils.OS_NAME;
-    	var executable = "snyk-ls";
+        var osName = SystemUtils.OS_NAME;
+        var executable = "snyk-ls";
         if (osName.toLowerCase().startsWith("win")) executable += ".exe";
         return executable;
     }
-    
+
     public File getLSFile() {
-        return new File(getCliDirectory(), getBinaryName());
+        String lsBinaryPath = preferences.getLsBinary();
+        File binary = new File(getCliDirectory(), getBinaryName());
+        if (lsBinaryPath != null && !lsBinaryPath.isBlank()) {
+            binary = new File(lsBinaryPath);
+        }
+        return binary;
     }
 }

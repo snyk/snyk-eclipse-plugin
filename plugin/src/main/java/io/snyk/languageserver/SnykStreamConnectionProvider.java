@@ -20,14 +20,13 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
 
+import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.download.LsDownloader;
-import io.snyk.languageserver.download.LsUtils;
 
 public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvider
 		implements StreamConnectionProvider, IJobChangeListener {
-	private final LsUtils utils = new LsUtils();
+	private final LsUtils utils = new LsUtils(new Preferences());
 	private static ReentrantLock scheduled = new ReentrantLock();
 	private static boolean downloadStarted = false;
 

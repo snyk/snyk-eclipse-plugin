@@ -1,6 +1,6 @@
 package io.snyk.eclipse.plugin.utils;
 
-import io.snyk.languageserver.download.LsBaseTest;
+import io.snyk.languageserver.LsBaseTest;
 import org.apache.http.HttpEntity;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.entity.BasicHttpEntity;
