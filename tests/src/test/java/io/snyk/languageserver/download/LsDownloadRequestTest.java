@@ -11,15 +11,16 @@ import static org.mockito.Mockito.*;
 
 class LsDownloadRequestTest extends LsBaseTest {
 
-    @Test
-    void shouldDownloadFromGithubWithOsDetectionByDefault() throws URISyntaxException {
-        reset(utils);
-        when(utils.getBinaryName(any(), any())).thenReturn("snyk-lsp.linux.amd64");
+	@Test
+	void shouldDownloadFromGithubWithOsDetectionByDefault() throws URISyntaxException {
+		var version = "20220303.140906";
+		String binary = "snyk-ls_" + version + "_windows_amd64.exe";
+		when(utils.getDownloadBinaryName(version)).thenReturn(binary);
 
-        LsDownloadRequest cut = new LsDownloadRequest(utils);
+		LsDownloadRequest cut = new LsDownloadRequest(version, utils);
 
-        URI expectedUri = new URI("https://github.com/snyk/snyk-lsp/releases/download/latest/snyk-lsp.linux.amd64");
-        assertEquals(expectedUri, cut.getURI());
-        verify(utils).getBinaryName(any(), any());
-    }
+		URI expectedUri = new URI("https://static.snyk.io/snyk-ls/" + binary);
+		assertEquals(expectedUri, cut.getURI());
+		verify(utils).getDownloadBinaryName(version);
+	}
 }

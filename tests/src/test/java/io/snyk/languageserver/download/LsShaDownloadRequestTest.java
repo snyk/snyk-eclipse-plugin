@@ -11,15 +11,14 @@ import static org.mockito.Mockito.*;
 
 class LsShaDownloadRequestTest extends LsBaseTest {
 
-    @Test
-    void shouldDownloadFromGithubWithOsDetectionByDefault() throws URISyntaxException {
-        reset(utils);
-        when(utils.getBinaryName(any(), any())).thenReturn("snyk-lsp.linux.amd64");
+	@Test
+	void shouldDownloadFromSnyk() throws URISyntaxException {
+		reset(utils);
+		var version = "20220303.140906";
+		
+		LsShaRequest cut = new LsShaRequest(version, utils);
 
-        LsShaDownloadRequest cut = new LsShaDownloadRequest(utils);
-
-        URI expectedUri = new URI("https://github.com/snyk/snyk-lsp/releases/download/latest/snyk-lsp.linux.amd64.sha256");
-        assertEquals(expectedUri, cut.getURI());
-        verify(utils).getBinaryName(any(), any());
-    }
+		URI expectedUri = new URI("https://static.snyk.io/snyk-ls/snyk-ls_20220303.140906_SHA256SUMS");
+		assertEquals(expectedUri, cut.getURI());
+	}
 }

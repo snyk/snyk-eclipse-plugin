@@ -6,13 +6,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 
-public class LsDownloadRequest extends HttpGet {
+public class LsVersionRequest extends HttpGet {
     private static final String DOWNLOAD_URL = "https://static.snyk.io/snyk-ls/%s";
 
-    public LsDownloadRequest(String version, LsUtils utils) {
+    public LsVersionRequest() {
         try {
-        	var binary = utils.getDownloadBinaryName(version);
-        	var effectiveURL = String.format(DOWNLOAD_URL, binary);        	
+        	var effectiveURL = String.format(DOWNLOAD_URL, "metadata.json");        	
             setURI(new URI(effectiveURL));
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
