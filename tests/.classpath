@@ -23,6 +23,5 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Maven: org.junit.platform:junit-platform-commons:1.8.2"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Maven: org.apiguardian:apiguardian-api:1.1.2"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Maven: org.objenesis:objenesis:3.2"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/plugin"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
