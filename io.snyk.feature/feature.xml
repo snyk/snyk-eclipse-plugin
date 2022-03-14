@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="io.snyk.scanner"
-      label="Snyk Vuln Scanner"
+      label="Snyk Security - Code and Open Source Dependencies"
       version="1.0.0.qualifier"
       provider-name="Snyk">
 
