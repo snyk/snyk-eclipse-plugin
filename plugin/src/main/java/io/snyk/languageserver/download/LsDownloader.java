@@ -3,9 +3,20 @@ package io.snyk.languageserver.download;
 import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
 import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.languageserver.LsUtils;
+import io.snyk.languageserver.LsRuntimeEnvironment;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
+import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import java.io.BufferedReader;
@@ -22,99 +33,152 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class LsDownloader {
-    private final CloseableHttpClient httpClient;
-    private final LsUtils utils;
+	private final CloseableHttpClient httpClient;
+	private final LsRuntimeEnvironment runtimeEnvironment;
+	private HttpClientContext context = HttpClientContext.create();
+	private DefaultProxyRoutePlanner proxyRoutePlanner = null;
+	private BasicCredentialsProvider credentialsProvider = null;
+	private AuthScope authScope = null;
 
-    public LsDownloader(LsUtils utils, CloseableHttpClient httpClient) {
-        this.httpClient = httpClient;
-        this.utils = utils;
-    }
+	private UsernamePasswordCredentials credentials;
 
-    public void download(IProgressMonitor monitor) {
-        File destinationFile = utils.getLSFile();
-        File tempFile = null;
-        try {
-            tempFile = File.createTempFile(destinationFile.getName(), ".tmp", destinationFile.getParentFile());
-            var version = getVersion();
-            var expectedSha = getSha(version);
 
-            LsDownloadRequest binaryRequest = new LsDownloadRequest(version, utils);
-            tempFile = httpClient.execute(binaryRequest, new FileDownloadResponseHandler(tempFile, monitor));
+	public LsDownloader(LsRuntimeEnvironment environment, HttpClientBuilder httpClientBuilder, IProxyData data) {
+		this.runtimeEnvironment = environment;
+		configure(httpClientBuilder, data);
+		this.httpClient = httpClientBuilder.build();
+	}
 
-            var checksumDownloadedFile = Files.readAllBytes(tempFile.toPath());
-            verifyChecksum(expectedSha, checksumDownloadedFile);
+	private void configure(HttpClientBuilder builder, IProxyData data) {
+		if (data == null) return;
 
-            try {
-                Files.move(tempFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException e) {
-                // fallback to renameTo because of e
-                if (!tempFile.renameTo(destinationFile)) throw new IOException("Rename not successful");
-            }
-            if (!destinationFile.setExecutable(true))
-                throw new IOException("Could not set executable permission on " + destinationFile);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                if (tempFile != null && tempFile.exists()) if (!tempFile.delete()) tempFile.deleteOnExit();
-            } catch (Exception e) {
-                SnykLogger.logError(e);
-            }
-        }
-    }
+		HttpHost proxy = new HttpHost(data.getHost(), data.getPort());
+		this.proxyRoutePlanner = new DefaultProxyRoutePlanner(proxy);
+		builder.setRoutePlanner(proxyRoutePlanner);
 
-    String getVersion() {
-        LsVersionRequest req = new LsVersionRequest();
-        LsMetadata metadata;
-        try {
-            metadata = httpClient.execute(req, new LsMetadataResponseHandler());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return metadata.getVersion();
-    }
+		if (data.getUserId() == null) return;
 
-    String getSha(String version) {
-        LsShaRequest shaRequest = new LsShaRequest(version, utils);
-        try (CloseableHttpResponse response = httpClient.execute(shaRequest)) {
-            if (response.getStatusLine().getStatusCode() >= 400) {
-                throw new RuntimeException("Download of Language Server failed. " + response.getStatusLine());
-            }
+		this.credentialsProvider = new BasicCredentialsProvider();
+		this.authScope = new AuthScope(proxy);
+		this.credentials = new UsernamePasswordCredentials(data.getUserId(), data.getPassword());
+		this.credentialsProvider.setCredentials(authScope, credentials);
+		builder.setDefaultCredentialsProvider(this.credentialsProvider);
 
-            var entity = response.getEntity();
-            try (var buf = new BufferedReader(new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8))) {
-                String fileName = utils.getDownloadBinaryName(version);
-                List<String> lines = buf.lines().filter(s -> s.contains(fileName)).collect(Collectors.toList());
-                if (lines.size() != 1)
-                    throw new ChecksumVerificationException("Could not find sha for verification of file: " + fileName);
-                return lines.get(0).split(" ")[0];
-            }
-        } catch (UnsupportedOperationException | IOException e) {
-            throw new ChecksumVerificationException(e);
-        }
-    }
+		AuthCache authCache = new BasicAuthCache();
+		BasicScheme basicAuth = new BasicScheme();
+		authCache.put(proxy, basicAuth);
 
-    private void verifyChecksum(String expectedSha, byte[] checksumDownloadedFile) {
-        try {
-            byte[] sha = MessageDigest.getInstance("SHA-256").digest(checksumDownloadedFile);
-            String actualSha = bytesToHex(sha).toLowerCase();
-            if (!actualSha.equalsIgnoreCase(expectedSha)) {
-                throw new ChecksumVerificationException("Expected " + expectedSha + ", but downloaded file has " + actualSha);
-            }
-        } catch (NoSuchAlgorithmException e) {
-            throw new ChecksumVerificationException(e);
-        }
-    }
+		this.context = HttpClientContext.create();
+		this.context.setCredentialsProvider(this.credentialsProvider);
+		this.context.setAuthCache(authCache);
+	}
 
-    private static String bytesToHex(byte[] hash) {
-        StringBuilder hexString = new StringBuilder(2 * hash.length);
-        for (byte b : hash) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        }
-        return hexString.toString();
-    }
+	public void download(IProgressMonitor monitor) {
+		File destinationFile = runtimeEnvironment.getLSFile();
+		File tempFile = null;
+		try {
+			tempFile = File.createTempFile(destinationFile.getName(), ".tmp", destinationFile.getParentFile());
+			var version = getVersion();
+			var expectedSha = getSha(version);
+
+			LsDownloadRequest binaryRequest = new LsDownloadRequest(version, runtimeEnvironment);
+			tempFile = httpClient.execute(binaryRequest, new FileDownloadResponseHandler(tempFile, monitor), context);
+
+			var checksumDownloadedFile = Files.readAllBytes(tempFile.toPath());
+			verifyChecksum(expectedSha, checksumDownloadedFile);
+
+			try {
+				Files.move(tempFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE,
+						StandardCopyOption.REPLACE_EXISTING);
+			} catch (AtomicMoveNotSupportedException e) {
+				// fallback to renameTo because of e
+				if (!tempFile.renameTo(destinationFile))
+					throw new IOException("Rename not successful");
+			}
+			if (!destinationFile.setExecutable(true))
+				throw new IOException("Could not set executable permission on " + destinationFile);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				if (tempFile != null && tempFile.exists())
+					if (!tempFile.delete())
+						tempFile.deleteOnExit();
+			} catch (Exception e) {
+				SnykLogger.logError(e);
+			}
+		}
+	}
+
+	String getVersion() {
+		LsVersionRequest req = new LsVersionRequest();
+		LsMetadata metadata;
+		try {
+			metadata = httpClient.execute(req, new LsMetadataResponseHandler(), context);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return metadata.getVersion();
+	}
+
+	String getSha(String version) {
+		LsShaRequest shaRequest = new LsShaRequest(version, runtimeEnvironment);
+		try (CloseableHttpResponse response = httpClient.execute(shaRequest, context)) {
+			if (response.getStatusLine().getStatusCode() >= 400) {
+				throw new RuntimeException("Download of Language Server failed. " + response.getStatusLine());
+			}
+
+			var entity = response.getEntity();
+			try (var buf = new BufferedReader(new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8))) {
+				String fileName = runtimeEnvironment.getDownloadBinaryName(version);
+				List<String> lines = buf.lines().filter(s -> s.contains(fileName)).collect(Collectors.toList());
+				if (lines.size() != 1)
+					throw new ChecksumVerificationException("Could not find sha for verification of file: " + fileName);
+				return lines.get(0).split(" ")[0];
+			}
+		} catch (UnsupportedOperationException | IOException e) {
+			throw new ChecksumVerificationException(e);
+		}
+	}
+
+	private void verifyChecksum(String expectedSha, byte[] checksumDownloadedFile) {
+		try {
+			byte[] sha = MessageDigest.getInstance("SHA-256").digest(checksumDownloadedFile);
+			String actualSha = bytesToHex(sha).toLowerCase();
+			if (!actualSha.equalsIgnoreCase(expectedSha)) {
+				throw new ChecksumVerificationException(
+						"Expected " + expectedSha + ", but downloaded file has " + actualSha);
+			}
+		} catch (NoSuchAlgorithmException e) {
+			throw new ChecksumVerificationException(e);
+		}
+	}
+
+	private static String bytesToHex(byte[] hash) {
+		StringBuilder hexString = new StringBuilder(2 * hash.length);
+		for (byte b : hash) {
+			String hex = Integer.toHexString(0xff & b);
+			if (hex.length() == 1) {
+				hexString.append('0');
+			}
+			hexString.append(hex);
+		}
+		return hexString.toString();
+	}
+
+	public DefaultProxyRoutePlanner getProxyRoutePlanner() {
+		return proxyRoutePlanner;
+	}
+
+	public BasicCredentialsProvider getCredentialsProvider() {
+		return credentialsProvider;
+	}
+
+	public AuthScope getAuthScope() {
+		return authScope;
+	}
+
+	public UsernamePasswordCredentials getCredentials() {
+		return credentials;
+	}
 }

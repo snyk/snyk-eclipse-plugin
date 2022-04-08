@@ -1,11 +1,9 @@
 package io.snyk.eclipse.plugin.properties;
 
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.internal.security.storage.SecurePreferencesWrapper;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
 import org.eclipse.equinox.security.storage.StorageException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -27,11 +25,6 @@ class PreferencesTest {
             new Preferences().store(Preferences.AUTH_TOKEN_KEY, "testValue");
 
             verify(node).put(Preferences.AUTH_TOKEN_KEY, "testValue", true);
-            Assertions.assertNull(
-                    Platform.getPreferencesService().getString(
-                            Preferences.QUALIFIER, Preferences.AUTH_TOKEN_KEY, null, null
-                    )
-            );
         }
     }
 

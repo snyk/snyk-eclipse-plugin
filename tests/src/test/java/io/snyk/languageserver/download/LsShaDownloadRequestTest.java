@@ -13,10 +13,10 @@ class LsShaDownloadRequestTest extends LsBaseTest {
 
     @Test
     void shouldDownloadFromSnyk() throws URISyntaxException {
-        reset(utils);
+        reset(environment);
         var version = "20220303.140906";
 
-        LsShaRequest cut = new LsShaRequest(version, utils);
+        LsShaRequest cut = new LsShaRequest(version, environment);
 
         URI expectedUri = new URI("https://static.snyk.io/snyk-ls/snyk-ls_20220303.140906_SHA256SUMS");
         assertEquals(expectedUri, cut.getURI());

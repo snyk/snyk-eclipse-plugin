@@ -3,9 +3,11 @@ package io.snyk.languageserver;
 import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.download.LsDownloadRequest;
 import io.snyk.languageserver.download.LsDownloader;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.http.impl.client.HttpClients;
+import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -27,6 +29,8 @@ import org.eclipse.ui.PlatformUI;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
@@ -36,7 +40,7 @@ import java.util.stream.Collectors;
 
 public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvider implements StreamConnectionProvider, IJobChangeListener {
     public static final String LANGUAGE_SERVER_ID = "io.snyk.languageserver";
-    private final LsUtils utils = new LsUtils(new Preferences());
+    private final LsRuntimeEnvironment runtimeEnvironment = new LsRuntimeEnvironment(new Preferences());
     private static boolean downloadStarted = false;
     private static boolean initialized = false;
 
@@ -55,7 +59,7 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
     }
 
     private boolean update() {
-        File lsFile = utils.getLSFile();
+        File lsFile = runtimeEnvironment.getLSFile();
         boolean customCliPath = new Preferences().getLsBinary() == null;
         if (customCliPath) return false;
         if (lsFile.exists()) {
@@ -75,32 +79,57 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
     @Override
     public void start() throws IOException {
         if (!initialized || downloadStarted) throw new IllegalStateException("Not yet initialized!");
-        List<String> commands = Lists.of(utils.getLSFile().getCanonicalPath());
+        List<String> commands = Lists.of(runtimeEnvironment.getLSFile().getCanonicalPath());
         String workingDir = SystemUtils.USER_DIR;
         setCommands(commands);
         setWorkingDirectory(workingDir);
         super.start();
     }
 
-    private Job getJob() {
-        return new Job("Downloading latest Snyk LSP ...") {
-            private final File lsFile = utils.getLSFile();
+    @Override
+    protected ProcessBuilder createProcessBuilder() {
+        var pb = super.createProcessBuilder();
+        runtimeEnvironment.updateEnvironment(pb.environment());
+        return pb;
+    }
 
-            @SuppressWarnings("ResultOfMethodCallIgnored")
+    private Job getJob() {
+        return new Job("Downloading latest Snyk Language Server ...") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
-                try {
-                    var httpClient = HttpClients.createDefault();
-                    var lsDownloader = new LsDownloader(utils, httpClient);
-                    lsFile.getParentFile().mkdirs();
-                    lsDownloader.download(monitor);
-                    lsFile.setExecutable(true);
-                } catch (RuntimeException e) {
-                    return Status.error("Download of Snyk Language Server failed", e);
-                }
-                return Status.OK_STATUS;
+                return download(monitor);
             }
         };
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    IStatus download(IProgressMonitor monitor) {
+        final File lsFile = runtimeEnvironment.getLSFile();
+        try {
+            LsDownloader lsDownloader = getLsDownloader();
+            lsFile.getParentFile().mkdirs();
+            lsDownloader.download(monitor);
+            lsFile.setExecutable(true);
+        } catch (RuntimeException | URISyntaxException e) {
+            return Status.error("Download of Snyk Language Server failed", e);
+        }
+        return Status.OK_STATUS;
+    }
+
+    LsDownloader getLsDownloader() throws URISyntaxException {
+        URI baseUri = URI.create(LsDownloadRequest.getBaseURL());
+        IProxyData[] proxyData = runtimeEnvironment.getProxyService().select(baseUri);
+        var relevantProxyData = getRelevantProxyData(proxyData, baseUri);
+        var builder = HttpClients.custom();
+        return new LsDownloader(runtimeEnvironment, builder, relevantProxyData);
+    }
+
+    private IProxyData getRelevantProxyData(IProxyData[] proxyData, URI uri) {
+        for (IProxyData data : proxyData) {
+            if (data.getHost() == null) continue;
+            return data;
+        }
+        return null;
     }
 
     @Override

@@ -23,10 +23,10 @@ class FileDownloadResponseHandlerTest extends LsBaseTest {
         String payload = "test test test";
         BasicHttpResponse response = getBasicHttpResponse(payload);
 
-        var cut = new FileDownloadResponseHandler(utils.getLSFile(), mock(IProgressMonitor.class));
+        var cut = new FileDownloadResponseHandler(environment.getLSFile(), mock(IProgressMonitor.class));
         cut.handleResponse(response);
 
-        var actual = Files.readString(utils.getLSFile().toPath());
+        var actual = Files.readString(environment.getLSFile().toPath());
         assertEquals(payload, actual);
     }
 

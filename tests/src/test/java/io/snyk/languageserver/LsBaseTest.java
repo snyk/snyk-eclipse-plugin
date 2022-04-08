@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class LsBaseTest {
-    protected LsUtils utils = null;
+    protected LsRuntimeEnvironment environment = null;
 
     private File lsFile = getTempFile();
 
@@ -20,11 +20,11 @@ public class LsBaseTest {
     protected void setUp() {
         if (lsFile.exists()) lsFile.delete();
         lsFile = getTempFile();
-        utils = mock(LsUtils.class);
-        when(utils.getLSFile()).thenReturn(lsFile);
-        when(utils.getArch()).thenReturn("amd64");
-        when(utils.getOs()).thenReturn("linux");
-        when(utils.getDownloadBinaryName(any())).thenReturn("snyk-ls_testVersion_linux_amd64");
+        environment = mock(LsRuntimeEnvironment.class);
+        when(environment.getLSFile()).thenReturn(lsFile);
+        when(environment.getArch()).thenReturn("amd64");
+        when(environment.getOs()).thenReturn("linux");
+        when(environment.getDownloadBinaryName(any())).thenReturn("snyk-ls_testVersion_linux_amd64");
     }
 
     @AfterEach
