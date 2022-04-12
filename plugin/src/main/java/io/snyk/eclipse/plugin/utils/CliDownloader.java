@@ -16,52 +16,52 @@ import java.util.Objects;
 
 public class CliDownloader {
 
-    private static final String LATEST_RELEASES_URL = "https://api.github.com/repos/snyk/snyk/releases/latest";
-    private static final String LATEST_RELEASE_DOWNLOAD_URL = "https://github.com/snyk/snyk/releases/download/%s/%s";
+  private static final String LATEST_RELEASES_URL = "https://api.github.com/repos/snyk/snyk/releases/latest";
+  private static final String LATEST_RELEASE_DOWNLOAD_URL = "https://github.com/snyk/snyk/releases/download/%s/%s";
 
-    public static CliDownloader newInstance() {
-        return new CliDownloader();
+  public static CliDownloader newInstance() {
+    return new CliDownloader();
+  }
+
+  public File download(File destinationFile, IProgressMonitor monitor) {
+    CloseableHttpClient httpClient = HttpClients
+      .custom()
+      .setRedirectStrategy(new LaxRedirectStrategy())
+      .build();
+
+    try {
+      String snykWrapperFileName = Platform.current().snykWrapperFileName;
+      String cliVersion = Objects.requireNonNull(getLatestReleaseInfo()).getTagName();
+
+      HttpGet httpGet = new HttpGet(String.format(LATEST_RELEASE_DOWNLOAD_URL, cliVersion, snykWrapperFileName));
+
+      return httpClient.execute(httpGet, new FileDownloadResponseHandler(destinationFile, monitor));
+    } catch (Exception exception) {
+      throw new IllegalStateException(exception);
+    } finally {
+      try {
+        httpClient.close();
+      } catch (IOException ioException) {
+        SnykLogger.logError(ioException);
+      }
+    }
+  }
+
+  private LatestReleaseInfo getLatestReleaseInfo() {
+    ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    try {
+      String latestReleaseInfoStr = requestLatestReleaseInfo();
+
+      return objectMapper.readValue(latestReleaseInfoStr, LatestReleaseInfo.class);
+    } catch (IOException ioException) {
+      SnykLogger.logError(ioException);
     }
 
-    public File download(File destinationFile, IProgressMonitor monitor) {
-        CloseableHttpClient httpClient = HttpClients
-                .custom()
-                .setRedirectStrategy(new LaxRedirectStrategy())
-                .build();
+    return null;
+  }
 
-        try {
-            String snykWrapperFileName = Platform.current().snykWrapperFileName;
-            String cliVersion = Objects.requireNonNull(getLatestReleaseInfo()).getTagName();
-
-            HttpGet httpGet = new HttpGet(String.format(LATEST_RELEASE_DOWNLOAD_URL, cliVersion, snykWrapperFileName));
-
-            return httpClient.execute(httpGet, new FileDownloadResponseHandler(destinationFile, monitor));
-        } catch (Exception exception) {
-            throw new IllegalStateException(exception);
-        } finally {
-            try {
-                httpClient.close();
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-        }
-    }
-
-    private LatestReleaseInfo getLatestReleaseInfo() {
-        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        try {
-            String latestReleaseInfoStr = requestLatestReleaseInfo();
-
-            return objectMapper.readValue(latestReleaseInfoStr, LatestReleaseInfo.class);
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-        }
-
-        return null;
-    }
-
-    private String requestLatestReleaseInfo() throws IOException {
-        return HttpClients.createDefault().execute(new HttpGet(LATEST_RELEASES_URL), new BasicResponseHandler());
-    }
+  private String requestLatestReleaseInfo() throws IOException {
+    return HttpClients.createDefault().execute(new HttpGet(LATEST_RELEASES_URL), new BasicResponseHandler());
+  }
 }

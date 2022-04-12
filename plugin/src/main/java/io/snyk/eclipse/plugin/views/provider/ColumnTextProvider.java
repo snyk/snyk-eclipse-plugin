@@ -7,15 +7,15 @@ import java.util.function.Function;
 
 public class ColumnTextProvider extends ColumnLabelProvider {
 
-    Function<DisplayModel, String> vulnFunc;
+  Function<DisplayModel, String> vulnFunc;
 
-    public ColumnTextProvider(Function<DisplayModel, String> vulnFunc) {
-        this.vulnFunc = vulnFunc;
-    }
+  public ColumnTextProvider(Function<DisplayModel, String> vulnFunc) {
+    this.vulnFunc = vulnFunc;
+  }
 
-    @Override
-    public String getText(Object element) {
-        DisplayModel v = (DisplayModel) element;
-        return vulnFunc.apply(v);
-    }
+  @Override
+  public String getText(Object element) {
+    DisplayModel v = (DisplayModel) element;
+    return vulnFunc.apply(v);
+  }
 }

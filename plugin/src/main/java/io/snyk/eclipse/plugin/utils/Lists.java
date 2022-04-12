@@ -6,11 +6,11 @@ import java.util.stream.Stream;
 
 public class Lists {
 
-    private Lists() {
-    }
+  private Lists() {
+  }
 
-    @SafeVarargs
-    public static <E> List<E> of(E... elements) {
-        return Stream.of(elements).collect(Collectors.toUnmodifiableList());
-    }
+  @SafeVarargs
+  public static <E> List<E> of(E... elements) {
+    return Stream.of(elements).collect(Collectors.toUnmodifiableList());
+  }
 }

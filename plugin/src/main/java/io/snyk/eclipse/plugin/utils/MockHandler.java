@@ -10,38 +10,38 @@ import java.net.URL;
 
 public class MockHandler {
 
-    // set to fake mock the CLI calls
-    public static final boolean MOCK = false;
+  // set to fake mock the CLI calls
+  public static final boolean MOCK = false;
 
-    private MockHandler() {
+  private MockHandler() {
+  }
+
+  public static ProcessResult getMockContent(String result) {
+    return new ProcessResult(result, null);
+  }
+
+  public static ProcessResult getMockScanResult() {
+    return getMockContent(getResource());
+  }
+
+  private static String getResource() {
+
+    try {
+      URL url = new URL("platform:/plugin/io.snyk.eclipse.plugin/resources/mockCliOutput.json");
+      InputStream inputStream = url.openConnection().getInputStream();
+      BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
+      String inputLine;
+      StringBuilder output = new StringBuilder();
+
+      while ((inputLine = in.readLine()) != null) {
+        output.append(inputLine);
+      }
+
+      in.close();
+      return output.toString();
+    } catch (IOException e) {
+      SnykLogger.logError(e);
+      throw new RuntimeException(e);
     }
-
-    public static ProcessResult getMockContent(String result) {
-        return new ProcessResult(result, null);
-    }
-
-    public static ProcessResult getMockScanResult() {
-        return getMockContent(getResource());
-    }
-
-    private static String getResource() {
-
-        try {
-            URL url = new URL("platform:/plugin/io.snyk.eclipse.plugin/resources/mockCliOutput.json");
-            InputStream inputStream = url.openConnection().getInputStream();
-            BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
-            String inputLine;
-            StringBuilder output = new StringBuilder();
-
-            while ((inputLine = in.readLine()) != null) {
-                output.append(inputLine);
-            }
-
-            in.close();
-            return output.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
+  }
 }

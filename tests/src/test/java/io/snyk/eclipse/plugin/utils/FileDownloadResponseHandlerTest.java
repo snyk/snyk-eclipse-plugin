@@ -18,30 +18,30 @@ import static org.mockito.Mockito.mock;
 
 class FileDownloadResponseHandlerTest extends LsBaseTest {
 
-    @Test
-    void shouldSaveFile() throws IOException {
-        String payload = "test test test";
-        BasicHttpResponse response = getBasicHttpResponse(payload);
+  @Test
+  void shouldSaveFile() throws IOException {
+    String payload = "test test test";
+    BasicHttpResponse response = getBasicHttpResponse(payload);
 
-        var cut = new FileDownloadResponseHandler(environment.getLSFile(), mock(IProgressMonitor.class));
-        cut.handleResponse(response);
+    var cut = new FileDownloadResponseHandler(environment.getLSFile(), mock(IProgressMonitor.class));
+    cut.handleResponse(response);
 
-        var actual = Files.readString(environment.getLSFile().toPath());
-        assertEquals(payload, actual);
-    }
+    var actual = Files.readString(environment.getLSFile().toPath());
+    assertEquals(payload, actual);
+  }
 
-    private BasicHttpResponse getBasicHttpResponse(String payload) {
-        var response =
-                new BasicHttpResponse(new BasicStatusLine(new ProtocolVersion("https", 1, 1), 200, "OK"));
-        HttpEntity entity = getHttpEntity(payload);
-        response.setEntity(entity);
-        return response;
-    }
+  private BasicHttpResponse getBasicHttpResponse(String payload) {
+    var response =
+      new BasicHttpResponse(new BasicStatusLine(new ProtocolVersion("https", 1, 1), 200, "OK"));
+    HttpEntity entity = getHttpEntity(payload);
+    response.setEntity(entity);
+    return response;
+  }
 
-    private HttpEntity getHttpEntity(String payload) {
-        BasicHttpEntity entity = new BasicHttpEntity();
-        entity.setContentLength(payload.length());
-        entity.setContent(new ByteArrayInputStream(payload.getBytes()));
-        return entity;
-    }
+  private HttpEntity getHttpEntity(String payload) {
+    BasicHttpEntity entity = new BasicHttpEntity();
+    entity.setContentLength(payload.length());
+    entity.setContent(new ByteArrayInputStream(payload.getBytes()));
+    return entity;
+  }
 }

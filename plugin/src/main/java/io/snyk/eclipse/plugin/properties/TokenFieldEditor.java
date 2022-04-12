@@ -6,19 +6,19 @@ import org.eclipse.swt.widgets.Composite;
 
 public class TokenFieldEditor extends StringFieldEditor {
 
-    private final Preferences store;
+  private final Preferences store;
 
-    protected TokenFieldEditor(Preferences store, String name, String labelText,
-                               Composite parent) {
-        super(name, labelText, parent);
-        this.store = store;
-        getTextControl().setEchoChar('*');
-    }
+  protected TokenFieldEditor(Preferences store, String name, String labelText,
+                             Composite parent) {
+    super(name, labelText, parent);
+    this.store = store;
+    getTextControl().setEchoChar('*');
+  }
 
-    public void emptyTextfield() {
-        setStringValue("");
-        store.store(Preferences.AUTH_TOKEN_KEY, "");
-    }
+  public void emptyTextfield() {
+    setStringValue("");
+    store.store(Preferences.AUTH_TOKEN_KEY, "");
+  }
 
 
 }

@@ -9,17 +9,17 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class LsMetadataResponseHandler implements ResponseHandler<LsMetadata> {
-    private final ObjectMapper om = new ObjectMapper();
+  private final ObjectMapper om = new ObjectMapper();
 
-    public LsMetadataResponseHandler() {
-    }
+  public LsMetadataResponseHandler() {
+  }
 
-    @Override
-    public LsMetadata handleResponse(HttpResponse httpResponse) {
-        try (InputStream inputStream = httpResponse.getEntity().getContent()) {
-            return om.readValue(inputStream, LsMetadata.class);
-        } catch (UnsupportedOperationException | IOException e) {
-            throw new RuntimeException(e);
-        }
+  @Override
+  public LsMetadata handleResponse(HttpResponse httpResponse) {
+    try (InputStream inputStream = httpResponse.getEntity().getContent()) {
+      return om.readValue(inputStream, LsMetadata.class);
+    } catch (UnsupportedOperationException | IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 }
