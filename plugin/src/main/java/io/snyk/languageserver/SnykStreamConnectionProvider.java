@@ -82,8 +82,10 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
 
   @Override
   public void start() throws IOException {
-    if (!initialized || downloadStarted) throw new IllegalStateException("Not yet initialized!");
-    List<String> commands = Lists.of(runtimeEnvironment.getLSFile().getCanonicalPath());
+    if (!initialized || downloadStarted)
+      throw new IllegalStateException("Not yet initialized!");
+    List<String> commands = Lists.of(runtimeEnvironment.getLSFile().getCanonicalPath(), "-l", "debug", "-f",
+      runtimeEnvironment.getLSFile().getParent() + File.separator + "snyk-ls.log");
     String workingDir = SystemUtils.USER_DIR;
     setCommands(commands);
     setWorkingDirectory(workingDir);
