@@ -17,6 +17,49 @@ import static org.mockito.Mockito.when;
 class PreferencesTest {
 
   @Test
+  void testSnykCodeEnablementIsStoredAndRetrievedFromSecureStorage() throws StorageException {
+    try (MockedStatic<SecurePreferencesFactory> mockedSecurePreferencesFactory = Mockito.mockStatic(SecurePreferencesFactory.class)) {
+      ISecurePreferences securePreferenceMock = Mockito.mock(ISecurePreferences.class);
+      mockedSecurePreferencesFactory.when(SecurePreferencesFactory::getDefault).thenReturn(securePreferenceMock);
+      ISecurePreferences node = Mockito.mock(SecurePreferencesWrapper.class);
+      when(securePreferenceMock.node(Preferences.QUALIFIER)).thenReturn(node);
+
+      new Preferences().store(Preferences.ACTIVATE_SNYK_CODE, "testValue");
+
+      verify(node).put(Preferences.ACTIVATE_SNYK_CODE, "testValue", true);
+    }
+  }
+
+  @Test
+  void testSnykOpenSourceEnablementIsStoredAndRetrievedFromSecureStorage() throws StorageException {
+    try (MockedStatic<SecurePreferencesFactory> mockedSecurePreferencesFactory = Mockito.mockStatic(SecurePreferencesFactory.class)) {
+      ISecurePreferences securePreferenceMock = Mockito.mock(ISecurePreferences.class);
+      mockedSecurePreferencesFactory.when(SecurePreferencesFactory::getDefault).thenReturn(securePreferenceMock);
+      ISecurePreferences node = Mockito.mock(SecurePreferencesWrapper.class);
+      when(securePreferenceMock.node(Preferences.QUALIFIER)).thenReturn(node);
+
+      new Preferences().store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "testValue");
+
+      verify(node).put(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "testValue", true);
+    }
+  }
+
+  @Test
+  void testSnykIacEnablementIsStoredAndRetrievedFromSecureStorage() throws StorageException {
+    try (MockedStatic<SecurePreferencesFactory> mockedSecurePreferencesFactory = Mockito.mockStatic(SecurePreferencesFactory.class)) {
+      ISecurePreferences securePreferenceMock = Mockito.mock(ISecurePreferences.class);
+      mockedSecurePreferencesFactory.when(SecurePreferencesFactory::getDefault).thenReturn(securePreferenceMock);
+      ISecurePreferences node = Mockito.mock(SecurePreferencesWrapper.class);
+      when(securePreferenceMock.node(Preferences.QUALIFIER)).thenReturn(node);
+
+      new Preferences().store(Preferences.ACTIVATE_SNYK_IAC, "testValue");
+
+      verify(node).put(Preferences.ACTIVATE_SNYK_IAC, "testValue", true);
+    }
+  }
+
+
+  @Test
   void testAuthTokenIsStoredAndRetrievedFromSecureStorage() throws StorageException {
     try (MockedStatic<SecurePreferencesFactory> mockedSecurePreferencesFactory = Mockito.mockStatic(SecurePreferencesFactory.class)) {
       ISecurePreferences securePreferenceMock = Mockito.mock(ISecurePreferences.class);

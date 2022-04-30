@@ -60,8 +60,7 @@ public class LsRuntimeEnvironment {
     String base = "snyk-ls_%s_%s_%s";
     String os = getOs();
     String executable = String.format(base, version, os, getArch());
-    if (executable.toLowerCase().contains("windows"))
-      executable += ".exe";
+    if (executable.toLowerCase().contains("windows")) executable += ".exe";
     return executable;
   }
 
@@ -78,8 +77,7 @@ public class LsRuntimeEnvironment {
   public String getBinaryName() {
     var osName = SystemUtils.OS_NAME;
     var executable = "snyk-ls";
-    if (osName.toLowerCase().startsWith("win"))
-      executable += ".exe";
+    if (osName.toLowerCase().startsWith("win")) executable += ".exe";
     return executable;
   }
 
@@ -104,6 +102,35 @@ public class LsRuntimeEnvironment {
     addPath(env);
     addIntegrationInfoToEnv(env);
     addProxyToEnv(env);
+    addProductEnablement(env);
+    addAdditionalParamsAndEnv(env);
+  }
+
+  void addAdditionalParamsAndEnv(Map<String, String> env) {
+    String additionalParams = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS, "");
+    if (additionalParams != null && !additionalParams.isBlank()) {
+      env.put(Preferences.ADDITIONAL_PARAMETERS, additionalParams);
+    }
+
+    String additionalEnv = preferences.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "");
+    if (additionalEnv != null && !additionalEnv.isBlank()) {
+      while (additionalEnv.endsWith(";")) {
+        additionalEnv = additionalEnv.substring(0, additionalEnv.length() - 1);
+      }
+      var variables = additionalEnv.split(";");
+      for (String variable : variables) {
+        var split = variable.split("=");
+        if (split.length == 2) {
+          env.put(split[0], split[1]);
+        }
+      }
+    }
+  }
+
+  void addProductEnablement(Map<String, String> env) {
+    env.put(Preferences.ACTIVATE_SNYK_CODE, preferences.getPref(Preferences.ACTIVATE_SNYK_CODE));
+    env.put(Preferences.ACTIVATE_SNYK_IAC, preferences.getPref(Preferences.ACTIVATE_SNYK_IAC));
+    env.put(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
   }
 
   private void addPath(Map<String, String> env) {

@@ -5,6 +5,7 @@ import io.snyk.eclipse.plugin.runner.SnykCliRunner;
 import io.snyk.eclipse.plugin.utils.FileSystemUtil;
 import io.snyk.eclipse.plugin.views.DataProvider;
 import io.snyk.eclipse.plugin.views.SnykView;
+import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
@@ -46,10 +47,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
   @Override
   public void init(IWorkbench workbench) {
     setPreferenceStore(PREFERENCES.getStore());
-    setMessage("Snyk preferences");
-    setDescription("- Please enter the token in the token field, you can get it from https://app.snyk.io \n"
-      + "- Specify custom location of Snyk Language Server and disable updates in Custom Snyk LS Path\n"
-      + "- Path entries are added to the OS path\n" + "Custom Endpoint only needed for on-prem solution \n");
+    setMessage("Snyk Preferences");
   }
 
   @Override
@@ -57,26 +55,40 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
     File lsFile = new LsRuntimeEnvironment(PREFERENCES).getLSFile();
     String msg = "Snyk LS not found at " + lsFile.getAbsolutePath();
     if (lsFile.exists()) {
-      msg = "Snyk LS found: " + lsFile.getAbsolutePath() + "\n";
+      msg = "Snyk LS found: " + lsFile.getAbsolutePath();
     }
-    File cliFile = FileSystemUtil.getCliFile();
-    if (cliFile.exists()) {
-      msg += "CLI found: " + cliFile.getAbsolutePath() + "\n";
-    }
+    addField(new LabelFieldEditor(msg, getFieldEditorParent()));
 
-    LabelFieldEditor labelEditor = new LabelFieldEditor(msg, getFieldEditorParent());
-    addField(labelEditor);
+    File cliFile = FileSystemUtil.getCliFile();
+    msg = "CLI not found at " + cliFile.getAbsolutePath();
+    if (cliFile.exists()) {
+      msg = "CLI found: " + cliFile.getAbsolutePath() + "\n";
+    }
+    addField(new LabelFieldEditor(msg, getFieldEditorParent()));
+
+    addField(space());
 
     addField(new FileFieldEditor(Preferences.LS_BINARY_KEY, "Custom Snyk LS Path:", getFieldEditorParent()));
     tokenField = new TokenFieldEditor(PREFERENCES, Preferences.AUTH_TOKEN_KEY, "Snyk API Token:",
       getFieldEditorParent());
     addField(tokenField);
     addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));
+
+    addField(space());
+    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "Snyk Open Source enabled",
+      getFieldEditorParent()));
+    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE, "Snyk Code enabled", getFieldEditorParent()));
+    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure as Code enabled",
+      getFieldEditorParent()));
+
     addField(space());
     addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
     addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
+    addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", getFieldEditorParent()));
+    addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", getFieldEditorParent()));
     addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
       getFieldEditorParent()));
+
   }
 
   private FieldEditor space() {
@@ -93,6 +105,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
       DataProvider.popUpWarn("Authentication", "Please add a valid Snyk Token, else scanning is not possible.");
     }
     snykView.toggleRunActionEnablement();
+    new LsConfigurationUpdater().configurationChanged(PREFERENCES);
     return superOK;
   }
 

@@ -7,6 +7,7 @@ import org.eclipse.core.internal.net.ProxyData;
 import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.net.proxy.IProxyService;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.security.storage.StorageException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -63,7 +64,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     assertEquals(new File(FileSystemUtil.getCliDirectory(), environment.getBinaryName()), file);
   }
 
-  //    @Test
+  //  @Test
   void testUpdateEnvironment() {
     try (MockedStatic<Platform> platformMockedStatic = Mockito.mockStatic(Platform.class)) {
       HashMap<String, String> env = new HashMap<>();
@@ -88,5 +89,33 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
       assertEquals(version.toString(), env.get("SNYK_INTEGRATION_VERSION"));
     }
     assertThrows(NullPointerException.class, () -> Platform.getBundle(Activator.PLUGIN_ID).getVersion());
+  }
+
+  @Test
+  void testAddProductEnablementEnablesDisablesProducts() throws StorageException {
+    HashMap<String, String> env = new HashMap<>();
+
+    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC)).thenReturn("iac");
+    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE)).thenReturn("code");
+    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn("oss");
+
+    environment.addProductEnablement(env);
+
+    assertEquals("oss", env.get(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+    assertEquals("iac", env.get(Preferences.ACTIVATE_SNYK_IAC));
+    assertEquals("code", env.get(Preferences.ACTIVATE_SNYK_CODE));
+  }
+
+  @Test
+  void testAddAdditionalParamsAndEnvAddsThemToEnvironment() throws StorageException {
+    HashMap<String, String> env = new HashMap<>();
+    when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("addParams");
+    when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("a=b;c=d");
+
+    environment.addAdditionalParamsAndEnv(env);
+
+    assertEquals("addParams", env.get(Preferences.ADDITIONAL_PARAMETERS));
+    assertEquals("b", env.get("a"));
+    assertEquals("d", env.get("c"));
   }
 }
