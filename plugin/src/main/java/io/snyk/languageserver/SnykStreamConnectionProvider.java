@@ -125,12 +125,12 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
   LsDownloader getLsDownloader() throws URISyntaxException {
     URI baseUri = URI.create(LsDownloadRequest.getBaseURL());
     IProxyData[] proxyData = runtimeEnvironment.getProxyService().select(baseUri);
-    var relevantProxyData = getRelevantProxyData(proxyData, baseUri);
+    var relevantProxyData = getRelevantProxyData(proxyData);
     var builder = HttpClients.custom();
     return new LsDownloader(runtimeEnvironment, builder, relevantProxyData);
   }
 
-  private IProxyData getRelevantProxyData(IProxyData[] proxyData, URI uri) {
+  private IProxyData getRelevantProxyData(IProxyData[] proxyData) {
     for (IProxyData data : proxyData) {
       if (data.getHost() == null) continue;
       return data;
