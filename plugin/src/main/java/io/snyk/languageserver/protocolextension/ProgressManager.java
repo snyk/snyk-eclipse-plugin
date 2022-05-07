@@ -53,17 +53,19 @@ public class ProgressManager {
   }
 
   public CompletableFuture<Void> createProgress(WorkDoneProgressCreateParams param) {
-    var job = jobBuilder.build(param);
-    progresses.put(getToken(param.getToken()), new ImmutablePair<>(job, null));
-    job.schedule();
-    return CompletableFuture.completedFuture(null);
+    synchronized (progresses) {
+      var job = jobBuilder.build(param);
+      progresses.put(getToken(param.getToken()), new ImmutablePair<>(job, null));
+      job.schedule();
+      return CompletableFuture.completedFuture(null);
+    }
   }
 
   IStatus doWork(SnykBackgroundJob job, IProgressMonitor monitor, WorkDoneProgressCreateParams param) {
     var token = getToken(param.getToken());
     progresses.put(token, new ImmutablePair<>(job, monitor));
     currentPercentage.put(monitor, 0);
-    while (progresses.get(token) != null) {
+    while (!progresses.containsKey(token)) {
       try {
         if (monitor.isCanceled()) {
           return Status.CANCEL_STATUS;
@@ -83,28 +85,30 @@ public class ProgressManager {
 
   public void updateProgress(ProgressParams param) {
     String progressToken = getToken(param.getToken());
-    while (progresses.get(progressToken) == null) {
+    while (!progresses.containsKey(progressToken)) {
       try {
-        Thread.sleep(100);
+        Thread.sleep(1000);
       } catch (InterruptedException e) {
         SnykLogger.logError(e);
         Thread.currentThread().interrupt();
       }
     }
-    WorkDoneProgressNotification notification = param.getValue().getLeft();
-    IProgressMonitor monitor = progresses.get(progressToken).getValue();
-    switch (notification.getKind()) {
-      case begin:
-        begin((WorkDoneProgressBegin) notification, monitor);
-        break;
-      case report:
-        report((WorkDoneProgressReport) notification, monitor);
-        break;
-      case end:
-        end((WorkDoneProgressEnd) notification, monitor);
-        progresses.remove(progressToken);
-        currentPercentage.remove(monitor);
-        break;
+    synchronized (progresses) {
+      WorkDoneProgressNotification notification = param.getValue().getLeft();
+      IProgressMonitor monitor = progresses.get(progressToken).getValue();
+      switch (notification.getKind()) {
+        case begin:
+          begin((WorkDoneProgressBegin) notification, monitor);
+          break;
+        case report:
+          report((WorkDoneProgressReport) notification, monitor);
+          break;
+        case end:
+          end((WorkDoneProgressEnd) notification, monitor);
+          progresses.remove(progressToken);
+          currentPercentage.remove(monitor);
+          break;
+      }
     }
   }
 
@@ -115,8 +119,7 @@ public class ProgressManager {
 
   private void report(WorkDoneProgressReport report, IProgressMonitor monitor) {
     var worked = currentPercentage.get(monitor) != null ? Math.min(currentPercentage.get(monitor), report.getPercentage()) : 0;
-    if (null != report.getMessage() && !report.getMessage().isBlank())
-      monitor.subTask(report.getMessage());
+    if (null != report.getMessage() && !report.getMessage().isBlank()) monitor.subTask(report.getMessage());
 
     monitor.worked(report.getPercentage() - worked);
     currentPercentage.put(monitor, report.getPercentage());
@@ -125,8 +128,7 @@ public class ProgressManager {
   private void begin(WorkDoneProgressBegin begin, IProgressMonitor monitor) {
     monitor.beginTask(begin.getTitle(), 100);
     String message = begin.getMessage();
-    if (message != null && !message.isBlank())
-      monitor.subTask(message);
+    if (message != null && !message.isBlank()) monitor.subTask(message);
   }
 
 }

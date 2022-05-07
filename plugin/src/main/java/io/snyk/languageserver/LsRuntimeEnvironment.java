@@ -143,7 +143,10 @@ public class LsRuntimeEnvironment {
       } else {
         splitBy = ":";
       }
-      env.put("PATH", path.replace(splitBy, File.pathSeparator) + File.pathSeparator + System.getenv("PATH"));
+      String newPath = path.replace(splitBy, File.pathSeparator)
+        + File.pathSeparator
+        + System.getenv("PATH");
+      env.put("PATH", newPath);
     }
   }
 

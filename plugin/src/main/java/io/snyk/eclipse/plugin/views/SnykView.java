@@ -68,7 +68,7 @@ public class SnykView extends ViewPart {
   private TreeViewer viewer;
   private Action scanWorkspace, openPrefPage, abortScanning;
   private final DisplayModel rootModel;
-  private final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+  private final static Shell SHELL = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
   private static final String RUNNING = "Scanning your project...";
   private static final String ABORTING = "Aborting scan...";
@@ -201,7 +201,7 @@ public class SnykView extends ViewPart {
       @Override
       public void run() {
         PreferenceDialog pref = PreferencesUtil.createPreferenceDialogOn(
-          shell, "io.snyk.eclipse.plugin.properties.preferencespage",
+          getShell(), "io.snyk.eclipse.plugin.properties.preferencespage",
           null, null);
         if (pref != null) pref.open();
       }
@@ -247,6 +247,12 @@ public class SnykView extends ViewPart {
     abortScanning.setImageDescriptor(
       Activator.getImageDescriptor("platform:/plugin/org.eclipse.ui.browser/icons/clcl16/nav_stop.png"));
     abortScanning.setEnabled(false);
+  }
+
+  private static Shell getShell() {
+    var activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+    if (activeWorkbenchWindow == null) return SHELL;
+    return activeWorkbenchWindow.getShell();
   }
 
 
@@ -307,7 +313,7 @@ public class SnykView extends ViewPart {
       @Override
       public void run() {
         if (alreadyRunning) return;
-        MessageDialog.openInformation(shell, "Snyk monitor", "Snyk monitor for project " + projectName + " in progress...");
+        MessageDialog.openInformation(getShell(), "Snyk monitor", "Snyk monitor for project " + projectName + " in progress...");
         CompletableFuture.runAsync(() -> handleMonitorOutput(DataProvider.INSTANCE.monitorProject(projectName)));
       }
     };
@@ -328,10 +334,15 @@ public class SnykView extends ViewPart {
     return action;
   }
 
+  private static void executeInUIThread(Runnable runnable) {
+    getShell().getDisplay().asyncExec(runnable);
+  }
+
   private void handleMonitorOutput(MonitorResult result) {
     alreadyRunning = true;
+    var shell = getShell();
     if (result.hasError())
-      shell.getDisplay().asyncExec(() -> MessageDialog.openError(shell, "Snyk Monitor Failed", result.getError()));
+      executeInUIThread(() -> MessageDialog.openError(shell, "Snyk Monitor Failed", result.getError()));
     else shell.getDisplay().asyncExec(() -> {
       LinkDialog dialog = new LinkDialog(shell, "Snyk Monitor Succesful", "Monitoring " + result.getPath() + " \n\nExplore this snapshot at: ", result.getUri());
       dialog.open();
@@ -341,27 +352,33 @@ public class SnykView extends ViewPart {
   }
 
   public void showMessage(String message) {
-    rootModel.children.clear();
-    rootModel.children.add(DataProvider.INSTANCE.message(message));
-    viewer.refresh();
-    monitorActions.forEach(act -> act.setEnabled(true));
+    executeInUIThread(() -> {
+      rootModel.children.clear();
+      rootModel.children.add(DataProvider.INSTANCE.message(message));
+      viewer.refresh();
+      monitorActions.forEach(act -> act.setEnabled(true));
+    });
   }
 
   public void toggleRunActionEnablement() {
-    enableScanBasedOnConfig();
+    getShell().getDisplay().asyncExec(this::enableScanBasedOnConfig);
   }
 
   public void disableRunAbortActions() {
-    this.scanWorkspace.setEnabled(false);
-    this.abortScanning.setEnabled(false);
+    executeInUIThread(() -> {
+      this.scanWorkspace.setEnabled(false);
+      this.abortScanning.setEnabled(false);
+    });
   }
 
   public static void displayMessage(String message) {
-    try {
-      getInstance().showMessage(message);
-    } catch (PartInitException partInitException) {
-      partInitException.printStackTrace();
-    }
+    executeInUIThread(() -> {
+      try {
+        getInstance().showMessage(message);
+      } catch (PartInitException partInitException) {
+        partInitException.printStackTrace();
+      }
+    });
   }
 
   public static SnykView getInstance() throws PartInitException {
@@ -374,6 +391,6 @@ public class SnykView extends ViewPart {
 
   @Override
   public void setFocus() {
-    viewer.getControl().setFocus();
+    getShell().getDisplay().asyncExec(() -> viewer.getControl().setFocus());
   }
 }
