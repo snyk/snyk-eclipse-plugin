@@ -1,6 +1,6 @@
 # Snyk Changelog
 
-## 2.0.0
+## [2.0.0]
 
 ### Changes
 
@@ -14,3 +14,7 @@
 ### Fixes
 
 - Fixes UI bugs when Token not available
+
+## [1.3.x]
+
+Old version on marketplace 
