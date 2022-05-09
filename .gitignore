@@ -200,3 +200,5 @@ hs_err_pid*
 *.iml
 *.eml
 *.classpath
+/update-site/.idea/
+/update-site/.dcignore
