@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * 2'  # every Tuesday at 9 am UTC
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'zulu'
+          cache: maven
+
+      - name: Build with Maven
+        run: ./mvnw clean verify
+
+      - name: Set up Git actions user
+        uses: fregante/setup-git-user@v1
+
+      - name: Create release tag
+        id: createTag
+        run: |
+          TAG_NAME="v$(git show -s --format=%cd --date=format:%Y%m%d.%H%M%S)"
+          git tag
+          git push --tags
+          echo "::set-output name=tagName::$TAG_NAME"
+
+      - name: Extract release notes
+        id: extract-release-notes
+        uses: ffurrer2/extract-release-notes@v1
+
+      - name: Create release
+        id: create_release
+        if: ${{ !env.ACT }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "${{ steps.createTag.outputs.tagName }}"
+          release_name: "${{ steps.createTag.outputs.tagName }}"
+          draft: false
+          prerelease: false
+          body: '${{ steps.extract-release-notes.outputs.release_notes }}'
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./update-site/target/update-site-2.0.0-SNAPSHOT.zip
+          asset_name: "update-site-2.0.0-${{ steps.createTag.outputs.tagName }}.zip"
+          asset_content_type: application/zip
