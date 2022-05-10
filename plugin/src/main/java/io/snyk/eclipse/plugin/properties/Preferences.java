@@ -25,7 +25,7 @@ public class Preferences {
 
   public Preferences() {
     if (getPref(ACTIVATE_SNYK_CODE) == null) {
-      store(ACTIVATE_SNYK_CODE, "true");
+      store(ACTIVATE_SNYK_CODE, "false");
     }
     if (getPref(ACTIVATE_SNYK_OPEN_SOURCE) == null) {
       store(ACTIVATE_SNYK_OPEN_SOURCE, "true");
