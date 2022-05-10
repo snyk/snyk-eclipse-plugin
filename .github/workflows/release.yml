@@ -22,8 +22,20 @@ jobs:
           distribution: 'zulu'
           cache: maven
 
+      - name: Decode Keystore
+        id: decode_keystore
+        env:
+          fileName: ./keystore.jks
+          encodedString: ${{ secrets.KEYSTORE }}
+        run: |
+          echo "$encodedString" | base64 -d > $fileName
+          echo "6cab9fa86689a9969097a662891fe8a1d8752ac430c18750cfa4d230744ac4a7  $fileName" > sha256.txt
+          sha256sum -c sha256.txt
+
       - name: Build with Maven
-        run: ./mvnw clean verify
+        run: ./mvnw clean verify -P sign
+        env:
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
 
       - name: Set up Git actions user
         uses: fregante/setup-git-user@v1
