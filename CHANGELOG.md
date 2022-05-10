@@ -1,6 +1,10 @@
 # Snyk Changelog
 
-## [2.0.0]
+## [2.0.0] - Unreleased
+
+- fix missing progress bars for scan jobs
+
+## [2.0.0] - v20220509.163447
 
 ### Changes
 

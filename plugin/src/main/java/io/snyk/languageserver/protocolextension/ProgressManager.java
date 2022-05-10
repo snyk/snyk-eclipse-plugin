@@ -65,7 +65,7 @@ public class ProgressManager {
     var token = getToken(param.getToken());
     progresses.put(token, new ImmutablePair<>(job, monitor));
     currentPercentage.put(monitor, 0);
-    while (!progresses.containsKey(token)) {
+    while (progresses.containsKey(token)) {
       try {
         if (monitor.isCanceled()) {
           return Status.CANCEL_STATUS;
