@@ -68,26 +68,29 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
     addField(space());
 
-    addField(new FileFieldEditor(Preferences.LS_BINARY_KEY, "Custom Snyk LS Path:", getFieldEditorParent()));
     tokenField = new TokenFieldEditor(PREFERENCES, Preferences.AUTH_TOKEN_KEY, "Snyk API Token:",
       getFieldEditorParent());
     addField(tokenField);
     addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));
+    addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
+    addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
+      getFieldEditorParent()));
 
     addField(space());
-    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "Snyk Open Source enabled",
+    addField(new LabelFieldEditor("The following options are in BETA and involve the language server.", getFieldEditorParent()));
+    addField(new LabelFieldEditor("Activating Snyk Code will cause upload of source code to Snyk or the given endpoint address.", getFieldEditorParent()));
+    addField(space());
+    addField(new FileFieldEditor(Preferences.LS_BINARY_KEY, "Custom Snyk LS Path:", getFieldEditorParent()));
+    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "Snyk Open Source enabled (BETA)",
       getFieldEditorParent()));
-    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE, "Snyk Code enabled", getFieldEditorParent()));
-    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure as Code enabled",
+    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE, "Snyk Code enabled (BETA)", getFieldEditorParent()));
+    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure-as-Code enabled (BETA)",
       getFieldEditorParent()));
 
     addField(space());
     addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
-    addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
     addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", getFieldEditorParent()));
     addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", getFieldEditorParent()));
-    addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
-      getFieldEditorParent()));
 
   }
 

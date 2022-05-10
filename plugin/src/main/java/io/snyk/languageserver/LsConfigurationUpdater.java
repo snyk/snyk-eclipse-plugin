@@ -43,7 +43,7 @@ public class LsConfigurationUpdater {
 
   Settings getCurrentSettings(Preferences preferences) {
     String activateSnykOpenSource = preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true");
-    String activateSnykCode = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE, "true");
+    String activateSnykCode = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE, "false");
     String activateSnykIac = preferences.getPref(Preferences.ACTIVATE_SNYK_IAC, "true");
     String insecure = preferences.getPref(Preferences.INSECURE_KEY, "false");
     String endpoint = preferences.getPref(Preferences.ENDPOINT_KEY, "");

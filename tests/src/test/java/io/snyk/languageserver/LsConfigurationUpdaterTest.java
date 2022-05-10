@@ -19,7 +19,7 @@ class LsConfigurationUpdaterTest {
   @Test
   void testGetSettings() {
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC, "true")).thenReturn("iac");
-    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE, "true")).thenReturn("code");
+    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE, "false")).thenReturn("code");
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true")).thenReturn("oss");
     when(preferenceMock.getPref(Preferences.INSECURE_KEY, "false")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn("endpoint");
