@@ -59,6 +59,7 @@ jobs:
         with:
           path: "./update-site/target/repository/"
           destination: "snyk-eclipse-plugin/snykscanner_2.0.0"
+          predefinedAcl: publicRead
 
       - name: Extract release notes
         id: extract-release-notes
