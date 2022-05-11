@@ -43,7 +43,7 @@
   </license>
 
   <requires>
-    <import feature="org.eclipse.wildwebdeveloper.feature" version="0.10.12.202202041634"/>
+    <import feature="org.eclipse.wildwebdeveloper.feature" version="0.0.0"/>
   </requires>
 
   <plugin

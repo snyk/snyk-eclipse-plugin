@@ -17,7 +17,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.eclipse.core.net.proxy.IProxyData;
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,6 +41,7 @@ public class LsDownloader {
   private DefaultProxyRoutePlanner proxyRoutePlanner = null;
   private BasicCredentialsProvider credentialsProvider = null;
   private AuthScope authScope = null;
+  private ILog logger = Platform.getLog(getClass());
 
   private UsernamePasswordCredentials credentials;
 
@@ -78,26 +81,36 @@ public class LsDownloader {
     File tempFile = null;
     try {
       tempFile = File.createTempFile(destinationFile.getName(), ".tmp", destinationFile.getParentFile());
+      logger.info("LS: Starting download to "+tempFile.getAbsolutePath());
       var version = getVersion();
       var expectedSha = getSha(version);
 
+      logger.info("LS: Version: "+version+", Sha: "+expectedSha);
+
       LsDownloadRequest binaryRequest = new LsDownloadRequest(version, runtimeEnvironment);
       tempFile = httpClient.execute(binaryRequest, new FileDownloadResponseHandler(tempFile, monitor), context);
+      logger.info("LS: Downloaded file.");
 
-      var checksumDownloadedFile = Files.readAllBytes(tempFile.toPath());
-      verifyChecksum(expectedSha, checksumDownloadedFile);
+      var fileBytes = Files.readAllBytes(tempFile.toPath());
+      verifyChecksum(expectedSha, fileBytes);
+      logger.info("LS: Verified checksum.");
 
       try {
+        logger.info("LS: Moving file to "+destinationFile.toPath());
         Files.move(tempFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE,
           StandardCopyOption.REPLACE_EXISTING);
       } catch (AtomicMoveNotSupportedException e) {
         // fallback to renameTo because of e
+        logger.warn("LS: Fallback using rename to "+destinationFile.toPath());
         if (!tempFile.renameTo(destinationFile))
+          logger.error("LS: Rename failed: "+destinationFile.toPath());
           throw new IOException("Rename not successful");
       }
+      logger.info("LS: Setting executable bit "+destinationFile.toPath());
       if (!destinationFile.setExecutable(true))
         throw new IOException("Could not set executable permission on " + destinationFile);
     } catch (IOException e) {
+      logger.error("IOException", e);
       throw new RuntimeException(e);
     } finally {
       try {

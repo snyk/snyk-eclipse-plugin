@@ -1,6 +1,7 @@
 package io.snyk.languageserver.protocolextension;
 
 import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4e.ServerMessageHandler;
@@ -9,6 +10,7 @@ import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
+import org.eclipse.ui.PlatformUI;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -32,10 +34,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   @JsonNotification(value = "$/hasAuthenticated")
   public void hasAuthenticated(HasAuthenticatedParam param) {
     preferences.store(Preferences.AUTH_TOKEN_KEY, param.getToken());
-    MessageParams messageParams = new MessageParams();
-    messageParams.setType(MessageType.Info);
-    messageParams.setMessage("The authentication token has been stored in Snyk Preferences.");
-    ServerMessageHandler.showMessage("Authentication with Snyk successful", messageParams);
+    showAuthenticatedMessage();
+    enableSnykViewRunActions();
   }
 
   @Override
@@ -46,5 +46,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   @Override
   public void notifyProgress(ProgressParams params) {
     progressMgr.updateProgress(params);
+  }
+
+  private void enableSnykViewRunActions() {
+    PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
+      var snykView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(SnykView.ID);
+      if (snykView != null) ((SnykView) snykView).toggleRunActionEnablement();
+    });
+  }
+
+  private void showAuthenticatedMessage() {
+    MessageParams messageParams = new MessageParams();
+    messageParams.setType(MessageType.Info);
+    messageParams.setMessage("The authentication token has been stored in Snyk Preferences.");
+    ServerMessageHandler.showMessage("Authentication with Snyk successful", messageParams);
   }
 }
