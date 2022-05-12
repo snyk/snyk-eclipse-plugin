@@ -5,8 +5,9 @@
 ### Changes
 
 - optimize dependencies & compatibility (2021-3 is the minimum Eclipse release now)
-- automatic weekly deployment to update site / marketplace
 - add supported file types as content types and associate them with GenericEditor
+- automatic weekly deployment with signed jars to update site / marketplace
+- automatic CI/CD deployment on push to main with signed jars
 
 ### Fixes
 - auto-enable legacy scan from Snyk View when token is retrieved via language server

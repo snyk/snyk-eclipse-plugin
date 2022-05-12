@@ -86,10 +86,29 @@ A: You can always use the [official’s Snyk support channel](https://support.sn
 
 ## Download
 
-- Manual downloads : https://github.com/snyk/snyk-eclipse-plugin/releases
-- Eclipse Marketplace (recommended): https://marketplace.eclipse.org/content/snyk-vuln-scanner
+- Eclipse Marketplace, based on weekly: https://marketplace.eclipse.org/content/snyk-vuln-scanner
 - Update site (CI/CD): https://storage.googleapis.com/snyk-eclipse-plugin-test/preview/repository/
-- Update site (weekly release): https://storage.googleapis.com/snyk-eclipse-plugin/snykscanner_2.0.0/repository/
+- Update site (weekly release): https://storage.googleapis.com/snyk-eclipse-plugin/weekly/repository/
+- Manual downloads : https://github.com/snyk/snyk-eclipse-plugin/releases
+
+### Signing Information for Jars
+If you want to verify the correct provenance of your download, please verify the signing details
+from within the Eclipse dialogue with this data.
+
+```bash
+Alias name: snyk
+Creation date: May 9, 2022
+Owner: CN=Snyk Ltd, OU=Road Runner, O=Snyk Ltd, L=London, ST=London, C=GB
+Issuer: CN=Snyk Ltd, OU=Road Runner, O=Snyk Ltd, L=London, ST=London, C=GB
+Serial number: 2c25dd5e
+Valid from: Mon May 09 21:13:17 CEST 2022 until: Wed May 08 21:13:17 CEST 2024
+Certificate fingerprints:
+SHA1: 19:F0:24:7C:71:72:D5:19:E0:E7:E2:5B:7E:29:EA:8F:40:F2:CB:47
+SHA256: 6F:EC:D6:C8:0C:61:E8:C7:56:14:3B:65:35:E0:45:ED:37:8B:DB:37:28:8D:80:B0:E3:F0:66:E7:9D:4D:04:25
+Signature algorithm name: SHA256withRSA
+Subject Public Key Algorithm: 4096-bit RSA key
+Version: 3
+```
 
 ## Supported Operating Systems
 
