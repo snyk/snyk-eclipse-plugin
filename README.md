@@ -87,13 +87,23 @@ A: You can always use the [official’s Snyk support channel](https://support.sn
 ## Download
 
 - Manual downloads : https://github.com/snyk/snyk-eclipse-plugin/releases
-  - Eclipse market place (recommended): https://marketplace.eclipse.org/content/snyk-vuln-scanner
+- Eclipse Marketplace (recommended): https://marketplace.eclipse.org/content/snyk-vuln-scanner
+- Update site (CI/CD): https://storage.googleapis.com/snyk-eclipse-plugin-test/preview/repository/
+- Update site (weekly release): https://storage.googleapis.com/snyk-eclipse-plugin/snykscanner_2.0.0/repository/
 
 ## Supported Operating Systems
 
 - MacOSX
 - Linux
 - Windows 10
+
+## Supported Eclipse Versions
+
+- 2022-03
+- 2021-12
+- 2021-09
+- 2021-06
+- 2021-03
 
 ## Configuration
 

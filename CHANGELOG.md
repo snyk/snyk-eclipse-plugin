@@ -2,6 +2,18 @@
 
 ## [2.0.0] - Unreleased
 
+### Changes
+
+- optimize dependencies & compatibility (2021-3 is the minimum Eclipse release now)
+- automatic weekly deployment to update site / marketplace
+- add supported file types as content types and associate them with GenericEditor
+
+### Fixes
+- auto-enable legacy scan from Snyk View when token is retrieved via language server
+
+
+## [2.0.0] - v20220510.101331
+
 - fix missing progress bars for scan jobs
 - Language Server: Support Snyk Open Source (activated by default)
 - Language Server: Support Snyk Code (deactivated by default)
