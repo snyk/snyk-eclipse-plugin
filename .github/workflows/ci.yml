@@ -25,3 +25,18 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: ./mvnw clean verify
+
+    - name: Authenticate to GCS
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.os == 'ubuntu-latest' }}
+      id: 'auth'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        credentials_json: '${{ secrets.gcp_credentials }}'
+
+    - name: Publish to Marketplace bucket
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.os == 'ubuntu-latest' }}
+      uses: 'google-github-actions/upload-cloud-storage@v0'
+      with:
+        path: "./update-site/target/repository/"
+        destination: "snyk-eclipse-plugin-test/preview"
+        predefinedAcl: publicRead

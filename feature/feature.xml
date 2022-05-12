@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-  id="io.snyk.scanner"
-  label="Snyk Security - Code, Open Source, IaC Configurations"
-  version="2.0.0.qualifier"
-  provider-name="Snyk">
+      id="io.snyk.scanner"
+      label="Snyk Security - Code, Open Source, IaC Configurations"
+      version="2.0.0.qualifier"
+      provider-name="Snyk">
 
-  <description url="https://snyk.io">
-    Secure development for developers and teams
+   <description url="https://snyk.io">
+      Secure development for developers and teams
 
     Snyk Security finds and fixes security vulnerabilities, infrastructure misconfigurations, and code quality issues
     in your projects early in the development lifecycle to help you ace your security reviews and avoid a costly fix
@@ -22,14 +22,14 @@
     Get security analysis of your code, and configurations free of charge. Snyk scans for vulnerabilities
     and misconfigurations in seconds. When returning your results, Snyk Security categorizes security issues by issue
     type and severity.
-  </description>
+   </description>
 
-  <copyright url="http://www.apache.org/licenses/LICENSE-2.0">
-    Copyright 2019-2022 Snyk Limited
-  </copyright>
+   <copyright url="http://www.apache.org/licenses/LICENSE-2.0">
+      Copyright 2019-2022 Snyk Limited
+   </copyright>
 
-  <license url="http://www.apache.org/licenses/LICENSE-2.0">
-    Licensed under the Apache License, Version 2.0 (the &amp;quot;License&amp;quot;);
+   <license url="http://www.apache.org/licenses/LICENSE-2.0">
+      Licensed under the Apache License, Version 2.0 (the &amp;quot;License&amp;quot;);
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
@@ -40,17 +40,13 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-  </license>
+   </license>
 
-  <requires>
-    <import feature="org.eclipse.wildwebdeveloper.feature" version="0.10.12.202202041634"/>
-  </requires>
-
-  <plugin
-    id="io.snyk.eclipse.plugin"
-    download-size="0"
-    install-size="0"
-    version="0.0.0"
-    unpack="false"/>
+   <plugin
+         id="io.snyk.eclipse.plugin"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
 
 </feature>

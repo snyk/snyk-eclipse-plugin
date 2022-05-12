@@ -48,6 +48,19 @@ jobs:
           git push --tags
           echo "::set-output name=tagName::$TAG_NAME"
 
+      - name: Authenticate to GCS
+        id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.gcp_credentials }}'
+
+      - name: Publish to Marketplace bucket
+        uses: 'google-github-actions/upload-cloud-storage@v0'
+        with:
+          path: "./update-site/target/repository/"
+          destination: "snyk-eclipse-plugin/snykscanner_2.0.0"
+          predefinedAcl: publicRead
+
       - name: Extract release notes
         id: extract-release-notes
         uses: ffurrer2/extract-release-notes@v1
