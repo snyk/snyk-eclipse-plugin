@@ -4,6 +4,7 @@
 
 ### Changes
 
+- enable hovers in JDT
 - optimize dependencies & compatibility (2021-3 is the minimum Eclipse release now)
 - add supported file types as content types and associate them with GenericEditor
 - automatic weekly deployment with signed jars to update site / marketplace

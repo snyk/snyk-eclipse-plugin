@@ -22,6 +22,7 @@
                 type="InstallableUnit">
         <repository location="https://download.eclipse.org/lsp4e/releases/latest/"/>
         <unit id="org.eclipse.lsp4e" version="0.0.0"/>
+        <unit id="org.eclipse.lsp4e.jdt" version="0.0.0"/>
         <unit id="org.eclipse.lsp4e.debug" version="0.0.0"/>
         <unit id="org.eclipse.lsp4j" version="0.0.0"/>
         <unit id="org.eclipse.lsp4j.jsonrpc" version="0.0.0"/>
