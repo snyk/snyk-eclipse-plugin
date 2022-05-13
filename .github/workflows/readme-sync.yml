@@ -14,21 +14,21 @@ jobs:
           gh auth setup-git
           git config --global user.email "noreply@snyk.io"
           git config --global user.name "$GITHUB_ACTOR"
-          gh repo clone snyk/snyk-eclipse-plugin-lsp snyk-eclipse-plugin-lsp -- --depth=1 --quiet
+          gh repo clone snyk/snyk-eclipse-plugin snyk-eclipse-plugin -- --depth=1 --quiet
           gh repo clone snyk/user-docs docs -- --depth=1 --quiet
-          git -C ./snyk-eclipse-plugin-lsp checkout -b docs/automatic-gitbook-update
+          git -C ./snyk-eclipse-plugin checkout -b docs/automatic-gitbook-update
 
-          cp ./docs/docs/ide-tools/eclipse-plugin.md ./snyk-eclipse-plugin-lsp/README.md
+          cp ./docs/docs/ide-tools/eclipse-plugin.md ./snyk-eclipse-plugin/README.md
           sed -i \
               -e "s|../.gitbook/assets/|https://github.com/snyk/user-docs/raw/$(git -C ./docs rev-parse HEAD)/docs/.gitbook/assets/|g" \
-              ./snyk-eclipse-plugin-lsp/README.md
+              ./snyk-eclipse-plugin/README.md
           sed -i \
               -E 's|(\{%.*%\})||g' \
-              ./snyk-eclipse-plugin-lsp/README.md
+              ./snyk-eclipse-plugin/README.md
 
-          if [[ $(git -C ./snyk-eclipse-plugin-lsp status --porcelain) ]]; then
+          if [[ $(git -C ./snyk-eclipse-plugin status --porcelain) ]]; then
             echo "Documentation changes detected"
-            cd ./snyk-eclipse-plugin-lsp
+            cd ./snyk-eclipse-plugin
             git --no-pager diff --name-only
             git add .
             git commit -m "docs: synchronizing README from snyk/user-docs"
