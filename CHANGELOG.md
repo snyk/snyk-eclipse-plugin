@@ -4,6 +4,7 @@
 
 ### Changes
 
+- add setting to configure error reporting to Snyk
 - enable hovers in JDT
 - optimize dependencies & compatibility (2021-3 is the minimum Eclipse release now)
 - add supported file types as content types and associate them with GenericEditor

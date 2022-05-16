@@ -92,6 +92,12 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
     addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", getFieldEditorParent()));
     addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", getFieldEditorParent()));
 
+    addField(space());
+
+    addField(new BooleanFieldEditor(Preferences.SEND_ERROR_REPORTS, "Send error reports to Snyk",
+      getFieldEditorParent()));
+// TODO   addField(new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Agree to send usage statistics to Snyk", getFieldEditorParent()));
+
   }
 
   private FieldEditor space() {

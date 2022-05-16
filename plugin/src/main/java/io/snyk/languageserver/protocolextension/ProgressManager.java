@@ -47,7 +47,8 @@ public class ProgressManager {
 
     protected IStatus run(IProgressMonitor monitor) {
       IStatus cancelStatus = doWork(progresses.get(getToken(param.getToken())).getKey(), monitor, param);
-      if (cancelStatus != null) return cancelStatus;
+      if (cancelStatus != null)
+        return cancelStatus;
       return Status.OK_STATUS;
     }
   }
@@ -85,7 +86,7 @@ public class ProgressManager {
 
   public void updateProgress(ProgressParams param) {
     String progressToken = getToken(param.getToken());
-    while (!progresses.containsKey(progressToken)) {
+    while (!progresses.containsKey(progressToken) || progresses.get(progressToken).getValue() == null) {
       try {
         Thread.sleep(1000);
       } catch (InterruptedException e) {
@@ -113,22 +114,33 @@ public class ProgressManager {
   }
 
   private void end(WorkDoneProgressEnd end, IProgressMonitor monitor) {
+    if (null == end || null == monitor)
+      return;
     monitor.subTask(end.getMessage());
     monitor.done();
   }
 
   private void report(WorkDoneProgressReport report, IProgressMonitor monitor) {
-    var worked = currentPercentage.get(monitor) != null ? Math.min(currentPercentage.get(monitor), report.getPercentage()) : 0;
-    if (null != report.getMessage() && !report.getMessage().isBlank()) monitor.subTask(report.getMessage());
+    if (report.getPercentage() == null) return;
+    var worked = currentPercentage.get(monitor) != null
+      ? Math.min(currentPercentage.get(monitor), report.getPercentage())
+      : 0;
+
+    if (null != report.getMessage() && !report.getMessage().isBlank()) {
+      monitor.subTask(report.getMessage());
+    }
 
     monitor.worked(report.getPercentage() - worked);
     currentPercentage.put(monitor, report.getPercentage());
   }
 
   private void begin(WorkDoneProgressBegin begin, IProgressMonitor monitor) {
+    if (null == begin || null == monitor)
+      return;
     monitor.beginTask(begin.getTitle(), 100);
     String message = begin.getMessage();
-    if (message != null && !message.isBlank()) monitor.subTask(message);
+    if (message != null && !message.isBlank())
+      monitor.subTask(message);
   }
 
 }

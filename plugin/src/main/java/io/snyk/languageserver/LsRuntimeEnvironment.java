@@ -104,6 +104,7 @@ public class LsRuntimeEnvironment {
     addProxyToEnv(env);
     addProductEnablement(env);
     addAdditionalParamsAndEnv(env);
+    addTelemetry(env);
   }
 
   void addAdditionalParamsAndEnv(Map<String, String> env) {
@@ -198,5 +199,10 @@ public class LsRuntimeEnvironment {
   private void addIntegrationInfoToEnv(Map<String, String> env) {
     env.put("SNYK_INTEGRATION_NAME", Activator.INTEGRATION_NAME);
     env.put("SNYK_INTEGRATION_VERSION", Activator.PLUGIN_VERSION);
+  }
+
+  void addTelemetry(Map<String, String> env) {
+    String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "true");
+    env.put("SEND_ERROR_REPORTS", sendErrorReports);
   }
 }

@@ -4,4 +4,30 @@
 	<contentEntry url="file://$MODULE_DIR$">
 		<excludeFolder url="file://$MODULE_DIR$/target"/>
 	</contentEntry>
+	<lib name="Maven: org.junit.jupiter:junit-jupiter-engine:5.8.2" scope="TEST"/>
+	<lib name="Maven: org.junit.platform:junit-platform-engine:1.8.2" scope="TEST"/>
+	<lib name="Maven: org.apiguardian:apiguardian-api:1.1.2" scope="TEST"/>
+	<lib name="Maven: org.junit.jupiter:junit-jupiter-api:5.8.2" scope="TEST"/>
+	<lib name="Maven: org.opentest4j:opentest4j:1.2.0" scope="TEST"/>
+	<lib name="Maven: org.junit.platform:junit-platform-commons:1.8.2" scope="TEST"/>
+	<lib name="Maven: org.junit.jupiter:junit-jupiter-params:5.8.2" scope="TEST"/>
+	<lib name="Maven: org.junit.platform:junit-platform-suite:1.8.1" scope="TEST"/>
+	<lib name="Maven: org.junit.platform:junit-platform-suite-api:1.8.1" scope="TEST"/>
+	<lib name="Maven: org.junit.platform:junit-platform-suite-engine:1.8.1" scope="TEST"/>
+	<lib name="Maven: org.junit.platform:junit-platform-suite-commons:1.8.1" scope="TEST"/>
+	<lib name="Maven: org.junit.platform:junit-platform-launcher:1.8.1" scope="TEST"/>
+	<levels>
+		<level name="Maven: org.junit.jupiter:junit-jupiter-engine:5.8.2" value="project"/>
+		<level name="Maven: org.junit.platform:junit-platform-engine:1.8.2" value="project"/>
+		<level name="Maven: org.apiguardian:apiguardian-api:1.1.2" value="project"/>
+		<level name="Maven: org.junit.jupiter:junit-jupiter-api:5.8.2" value="project"/>
+		<level name="Maven: org.opentest4j:opentest4j:1.2.0" value="project"/>
+		<level name="Maven: org.junit.platform:junit-platform-commons:1.8.2" value="project"/>
+		<level name="Maven: org.junit.jupiter:junit-jupiter-params:5.8.2" value="project"/>
+		<level name="Maven: org.junit.platform:junit-platform-suite:1.8.1" value="project"/>
+		<level name="Maven: org.junit.platform:junit-platform-suite-api:1.8.1" value="project"/>
+		<level name="Maven: org.junit.platform:junit-platform-suite-engine:1.8.1" value="project"/>
+		<level name="Maven: org.junit.platform:junit-platform-suite-commons:1.8.1" value="project"/>
+		<level name="Maven: org.junit.platform:junit-platform-launcher:1.8.1" value="project"/>
+	</levels>
 </component>
