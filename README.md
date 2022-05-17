@@ -109,8 +109,6 @@ Valid from: Mon May 09 21:13:17 CEST 2022 until: Wed May 08 21:13:17 CEST 2024
 - Linux
 - Windows 10
 
-<<<<<<< HEAD
-=======
 ## Supported Eclipse Versions
 
 - 2022-03
@@ -119,7 +117,6 @@ Valid from: Mon May 09 21:13:17 CEST 2022 until: Wed May 08 21:13:17 CEST 2024
 - 2021-06
 - 2021-03
 
->>>>>>> 58b42acdb5be0b0f900a81966a66e92b7bfe04e9
 ## Configuration
 
 ### Environment
