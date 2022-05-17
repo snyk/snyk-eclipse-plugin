@@ -23,18 +23,38 @@ jobs:
         java-version: '11'
         distribution: 'adopt'
         cache: maven
+
+    - name: Decode Keystore
+      id: decode_keystore
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      env:
+        fileName: ./keystore.jks
+        encodedString: ${{ secrets.KEYSTORE }}
+      run: |
+        echo "$encodedString" | base64 -d > $fileName
+        echo "6cab9fa86689a9969097a662891fe8a1d8752ac430c18750cfa4d230744ac4a7  $fileName" > sha256.txt
+        sha256sum -c sha256.txt
+
     - name: Build with Maven
-      run: ./mvnw clean verify
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: ./mvnw clean verify -P sign
+      env:
+        KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+
+    - name: Build with Maven
+      if: ${{ matrix.os != 'ubuntu-latest' }}
+      run: |
+        ./mvnw clean verify
 
     - name: Authenticate to GCS
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.os == 'ubuntu-latest' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
       id: 'auth'
       uses: 'google-github-actions/auth@v0'
       with:
         credentials_json: '${{ secrets.gcp_credentials }}'
 
     - name: Publish to Marketplace bucket
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.os == 'ubuntu-latest' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
       uses: 'google-github-actions/upload-cloud-storage@v0'
       with:
         path: "./update-site/target/repository/"

@@ -19,6 +19,9 @@ public class Preferences {
   public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
   public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
   public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
+  public static final String SEND_ERROR_REPORTS = "SEND_ERROR_REPORTS";
+  public static final String ENABLE_TELEMETRY = "ENABLE_TELEMETRY";
+
 
   private final ISecurePreferences node = SecurePreferencesFactory.getDefault().node(QUALIFIER);
   private final IPreferenceStore store = new SnykSecurePreferenceStore(node, QUALIFIER);
@@ -32,6 +35,9 @@ public class Preferences {
     }
     if (getPref(ACTIVATE_SNYK_IAC) == null) {
       store(ACTIVATE_SNYK_IAC, "true");
+    }
+    if (getPref(SEND_ERROR_REPORTS) == null) {
+      store(SEND_ERROR_REPORTS, "true");
     }
   }
 

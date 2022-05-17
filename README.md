@@ -86,24 +86,22 @@ A: You can always use the [official’s Snyk support channel](https://support.sn
 
 ## Download
 
-- Manual downloads : https://github.com/snyk/snyk-eclipse-plugin/releases
-<<<<<<< HEAD
-- Eclipse market place (recommended): https://marketplace.eclipse.org/content/snyk-vuln-scanner
-
-## Supported Eclipse versions
-
-- 2019-09 (4.13)
-- 2019-06 (4.12)
-- 2019-03 (4.11)
-- 2018-12 (4.10)
-- 2018-09 (4.9)
-- Photon (4.8)
-- Oxygen (4.7)
-=======
 - Eclipse Marketplace (recommended): https://marketplace.eclipse.org/content/snyk-vuln-scanner
 - Update site (CI/CD): https://storage.googleapis.com/snyk-eclipse-plugin-test/preview/repository/
-- Update site (weekly release): https://storage.googleapis.com/snyk-eclipse-plugin/snykscanner_2.0.0/repository/
->>>>>>> 58b42acdb5be0b0f900a81966a66e92b7bfe04e9
+- Update site (weekly): https://storage.googleapis.com/snyk-eclipse-plugin/weekly/repository/
+- Manual downloads : https://github.com/snyk/snyk-eclipse-plugin/releases
+
+### Signing Information for Jars
+If you want to verify the correct provenance of your download, please verify the signing details
+from within the Eclipse dialogue with this data.
+
+```bash
+Creation date: May 9, 2022
+Owner: CN=Snyk Ltd, OU=Road Runner, O=Snyk Ltd, L=London, ST=London, C=GB
+Issuer: CN=Snyk Ltd, OU=Road Runner, O=Snyk Ltd, L=London, ST=London, C=GB
+Serial number: 740679006
+Valid from: Mon May 09 21:13:17 CEST 2022 until: Wed May 08 21:13:17 CEST 2024
+```
 
 ## Supported Operating Systems
 

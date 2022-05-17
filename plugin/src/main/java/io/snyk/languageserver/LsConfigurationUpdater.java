@@ -50,8 +50,9 @@ public class LsConfigurationUpdater {
     String additionalParams = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS, "");
     String additionalEnv = preferences.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "");
     String path = preferences.getPref(Preferences.PATH_KEY, "");
+    String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
     return new Settings(activateSnykOpenSource, activateSnykCode, activateSnykIac, insecure, endpoint, additionalParams,
-      additionalEnv, path);
+      additionalEnv, path, sendErrorReports);
   }
 
   @SuppressWarnings("unused") // getters for GSon serialization
@@ -65,9 +66,10 @@ public class LsConfigurationUpdater {
     private final String additionalParams;
     private final String additionalEnv;
     private final String path;
+    private final String sendErrorReports;
 
     public Settings(String activateSnykOpenSource, String activateSnykCode, String activateSnykIac, String insecure,
-                    String endpoint, String additionalParams, String additionalEnv, String path) {
+                    String endpoint, String additionalParams, String additionalEnv, String path, String sendErrorReports) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
       this.activateSnykIac = activateSnykIac;
@@ -76,6 +78,7 @@ public class LsConfigurationUpdater {
       this.additionalParams = additionalParams;
       this.additionalEnv = additionalEnv;
       this.path = path;
+      this.sendErrorReports = sendErrorReports;
     }
 
     public String getPath() {
@@ -108,6 +111,10 @@ public class LsConfigurationUpdater {
 
     public String getAdditionalEnv() {
       return additionalEnv;
+    }
+
+    public String getSendErrorReports() {
+      return this.sendErrorReports;
     }
   }
 }

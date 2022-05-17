@@ -118,4 +118,16 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     assertEquals("b", env.get("a"));
     assertEquals("d", env.get("c"));
   }
+
+  @Test
+  void testSendErrorReportsIsAddedToEnvironment() throws StorageException {
+    HashMap<String, String> env = new HashMap<>();
+    when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "")).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "true")).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "false")).thenReturn("false");
+
+    environment.addTelemetry(env);
+
+    assertEquals("true", env.get(Preferences.SEND_ERROR_REPORTS));
+  }
 }
