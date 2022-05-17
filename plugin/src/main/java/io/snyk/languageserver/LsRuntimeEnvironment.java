@@ -37,6 +37,7 @@ public class LsRuntimeEnvironment {
     map.put("x64", "amd64");
 
     map.put("aarch_64", "arm64");
+    map.put("aarch64", "arm64");
     map.put("arm64", "arm64");
 
     map.put("arm_32", "arm");
