@@ -8,7 +8,7 @@
 
   <properties>
     <tycho-version>2.7.3</tycho-version>
-    <tycho.scmUrl>scm:git:https://github.com/snyk/snyk-eclipse-plugin-lsp.git</tycho.scmUrl>
+    <tycho.scmUrl>scm:git:https://github.com/snyk/snyk-eclipse-plugin.git</tycho.scmUrl>
     <target-config>target-platform</target-config>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>11</maven.compiler.source>
