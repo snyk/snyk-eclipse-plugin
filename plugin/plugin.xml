@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+  <extension
+    name="%extension.name"
+    point="org.eclipse.ui.views">
+    <category
+      name="%category.name"
+      id="io.snyk.eclipse.plugin">
+    </category>
+    <view
+      id="io.snyk.eclipse.plugin.views.SnykView"
+      name="%view.name"
+      icon="icons/patch.png"
+      class="io.snyk.eclipse.plugin.views.SnykView"
+      category="io.snyk.eclipse.plugin"
+      inject="true">
+    </view>
+  </extension>
+  <extension
+    point="org.eclipse.ui.perspectiveExtensions">
+    <perspectiveExtension
+      targetID="org.eclipse.jdt.ui.JavaPerspective">
+      <view
+        id="io.snyk.eclipse.plugin.views.SnykView"
+        relative="org.eclipse.ui.views.ProblemView"
+        relationship="right"
+        ratio="0.5">
+      </view>
+    </perspectiveExtension>
+  </extension>
+  <extension
+    point="org.eclipse.help.contexts">
+    <contexts
+      file="contexts.xml">
+    </contexts>
+  </extension>
+  <extension
+    point="org.eclipse.ui.preferencePages">
+    <page
+      class="io.snyk.eclipse.plugin.properties.PreferencesPage"
+      id="io.snyk.eclipse.plugin.properties.preferencespage"
+      name="%page.name">
+    </page>
+  </extension>
+  <extension
+    point="org.eclipse.ui.commands">
+    <command
+      defaultHandler="io.snyk.eclipse.plugin.views.MenuHandler"
+      id="io.snyk.eclipse.plugin.commands.execute"
+      name="%command.name">
+    </command>
+  </extension>
+  <extension
+    point="org.eclipse.ui.menus">
+    <menuContribution
+      locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+
+      <command
+        commandId="io.snyk.eclipse.plugin.commands.execute"
+        icon="icons/patch.png"
+        label="%command.label"
+        style="push">
+        <visibleWhen>
+          <with variable="activeMenuSelection">
+            <iterate
+              ifEmpty="false">
+              <adapt type="org.eclipse.core.resources.IProject">
+
+              </adapt>
+            </iterate>
+          </with>
+        </visibleWhen>
+      </command>
+    </menuContribution>
+  </extension>
+  <extension point="org.eclipse.ui.menus">
+    <menuContribution locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu">
+      <command
+        commandId="io.snyk.eclipse.plugin.commands.execute"
+        icon="icons/patch.png"
+        label="%command.label.0"
+        style="push">
+        <visibleWhen>
+          <with variable="activeMenuSelection">
+            <iterate
+              ifEmpty="false">
+              <adapt type="org.eclipse.core.resources.IProject">
+
+              </adapt>
+            </iterate>
+          </with>
+        </visibleWhen>
+      </command>
+    </menuContribution>
+  </extension>
+  <extension point="org.eclipse.ui.startup">
+    <startup class="io.snyk.eclipse.plugin.SnykStartup"/>
+  </extension>
+  <extension
+    point="org.eclipse.core.contenttype.contentTypes">
+    <content-type
+      base-type="org.eclipse.core.runtime.text"
+      file-extensions="*"
+      id="io.snyk.languageserver.parent"
+      name="Snyk"
+      priority="normal">
+    </content-type>
+    <!-- snyk code -->
+    <content-type
+      base-type="io.snyk.languageserver.parent"
+      file-extensions="java,aspx,cs,cls,ejs,es,es6,htm,html,js,jsx,kt,kts,ts,tsx,vue,py,erb,haml,rb,rhtml,slim,go,c,cc,cpp,cxx,h,hpp,hxx,php,phtml"
+      id="io.snyk.languageserver.snykCode"
+      name="Snyk Code"
+      priority="normal">
+    </content-type>
+    <!-- snyk oss -->
+    <content-type
+      base-type="io.snyk.languageserver.parent"
+      file-names="yarn.lock,package-lock.json,package.json,Gemfile,Gemfile.lock,pom.xml,build.gradle,build.gradle.kts,build.sbt,Pipfile,requirements.txt,Gopkg.lock,go.mod,vendor/vendor.json,obj/project.assets.json,project.assets.json,packages.config,paket.dependencies,composer.lock,Podfile,Podfile.lock,poetry.lock,mix.exs,mix.lock"
+      id="io.snyk.languageserver.snykOss"
+      name="Snyk Open Source"
+      priority="normal">
+    </content-type>
+    <!-- snyk Iac -->
+    <content-type
+      base-type="io.snyk.languageserver.parent"
+      file-extensions="yaml,yml,json,tf"
+      id="io.snyk.languageserver.snykIac"
+      name="Snyk Infrastructure-as-Code"
+      priority="normal">
+    </content-type>
+  </extension>
+
+  <extension
+    point="org.eclipse.ui.editors">
+    <editorContentTypeBinding
+      contentTypeId="io.snyk.languageserver.parent"
+      editorId="org.eclipse.ui.genericeditor.GenericEditor">
+    </editorContentTypeBinding>
+    <editorContentTypeBinding
+      contentTypeId="io.snyk.languageserver.parent"
+      editorId="org.eclipse.jdt.ui.CompilationUnitEditor">
+    </editorContentTypeBinding>
+  </extension>
+
+  <extension
+    point="org.eclipse.lsp4e.languageServer">
+    <server
+      class="io.snyk.languageserver.SnykStreamConnectionProvider"
+      id="io.snyk.languageserver"
+      label="Snyk Language Server"
+      clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
+      singleton="true">
+    </server>
+
+    <!-- snyk code -->
+    <contentTypeMapping
+      contentType="io.snyk.languageserver.snykCode"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+
+    <!-- snyk oss  -->
+    <contentTypeMapping
+      contentType="io.snyk.languageserver.snykOss"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+
+    <!-- iac -->
+    <contentTypeMapping
+      contentType="io.snyk.languageserver.snykIac"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+
+    <!-- third party editors & extensions -->
+    <contentTypeMapping
+      contentType="org.eclipse.core.runtime.text"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.core.runtime.xml"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.jdt.core.javaSource"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.buildship.core.files.gradlebuildscript"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.wildwebdeveloper.json"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.wildwebdeveloper.yaml"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.wildwebdeveloper.ts"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.wildwebdeveloper.tsx"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.wildwebdeveloper.js"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.wst.dtd.core.dtdsource"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.wst.xml.core.xmisource"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.eclipse.wst.xml.core.xmlsource"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+    <contentTypeMapping
+      contentType="org.python.pydev.pythonfile"
+      id="io.snyk.languageserver">
+    </contentTypeMapping>
+  </extension>
+</plugin>
