@@ -1,6 +1,9 @@
 # Snyk Changelog
 
 ## [2.0.0] - Unreleased
+### Changes
+
+- add organization preference to specify organization to use for LS scans
 
 ### Changes
 
