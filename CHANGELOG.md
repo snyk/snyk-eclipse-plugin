@@ -1,6 +1,10 @@
 # Snyk Changelog
 
 ## [2.0.0] - Unreleased
+### Fixes
+- support download of Language Server for Apple M1
+
+## [2.0.0] - v20220517.090738
 
 ### Changes
 
