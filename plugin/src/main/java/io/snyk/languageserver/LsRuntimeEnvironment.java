@@ -30,6 +30,7 @@ public class LsRuntimeEnvironment {
     map.put("lin", "linux");
     map.put("mac", "darwin");
     map.put("dar", "darwin");
+    map.put("macosx", "darwin");
 
     map.put("amd64", "amd64");
     map.put("x8664", "amd64");
@@ -37,6 +38,7 @@ public class LsRuntimeEnvironment {
     map.put("x64", "amd64");
 
     map.put("aarch_64", "arm64");
+    map.put("aarch64", "arm64");
     map.put("arm64", "arm64");
 
     map.put("arm_32", "arm");
@@ -103,10 +105,17 @@ public class LsRuntimeEnvironment {
     addIntegrationInfoToEnv(env);
     addProxyToEnv(env);
     addProductEnablement(env);
+    addOrganization(env);
     addAdditionalParamsAndEnv(env);
     addTelemetry(env);
   }
 
+  void addOrganization(Map<String, String> env) {
+    String pref = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
+    if (!pref.isBlank()) {
+      env.put(Preferences.ORGANIZATION_KEY, pref);
+    }
+  }
   void addAdditionalParamsAndEnv(Map<String, String> env) {
     String additionalParams = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS, "");
     if (additionalParams != null && !additionalParams.isBlank()) {
