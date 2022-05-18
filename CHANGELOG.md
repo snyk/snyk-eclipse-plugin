@@ -5,6 +5,11 @@
 
 - add organization preference to specify organization to use for LS scans
 
+### Fixes
+- support download of Language Server for Apple M1
+
+## [2.0.0] - v20220517.090738
+
 ### Changes
 
 - add setting to configure error reporting to Snyk
