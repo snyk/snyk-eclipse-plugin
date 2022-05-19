@@ -37,7 +37,7 @@ public class SnykStartup implements IStartup {
   private final LsRuntimeEnvironment runtimeEnvironment = new LsRuntimeEnvironment(new Preferences());
   private SnykView snykView = null;
   private static boolean downloading = true;
-  private ILog logger = Platform.getLog(getClass());
+  private final ILog logger = Platform.getLog(getClass());
 
   @Override
   public void earlyStartup() {
@@ -125,7 +125,7 @@ public class SnykStartup implements IStartup {
     IProxyData[] proxyData = runtimeEnvironment.getProxyService().select(baseUri);
     var relevantProxyData = getRelevantProxyData(proxyData);
     var builder = HttpClients.custom();
-    return new LsDownloader(runtimeEnvironment, builder, relevantProxyData);
+    return new LsDownloader(runtimeEnvironment, builder, relevantProxyData, logger);
   }
 
   private IProxyData getRelevantProxyData(IProxyData[] proxyData) {

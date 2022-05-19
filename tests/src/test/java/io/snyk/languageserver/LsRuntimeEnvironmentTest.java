@@ -140,4 +140,27 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 
     assertEquals("org", env.get(Preferences.ORGANIZATION_KEY));
   }
+
+  @Test
+  void testEnableTelemetryIsAddedToEnvironment() throws StorageException {
+    HashMap<String, String> env = new HashMap<>();
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "")).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "true")).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("true");
+
+    environment.addTelemetry(env);
+    // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
+    assertEquals("0", env.get(Preferences.ENABLE_TELEMETRY));
+  }
+  @Test
+  void testEnableTelemetryIsAddedToEnvironmentDisabled() throws StorageException {
+    HashMap<String, String> env = new HashMap<>();
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "")).thenReturn("false");
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "true")).thenReturn("false");
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("false");
+
+    environment.addTelemetry(env);
+    // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
+    assertEquals("1", env.get(Preferences.ENABLE_TELEMETRY));
+  }
 }

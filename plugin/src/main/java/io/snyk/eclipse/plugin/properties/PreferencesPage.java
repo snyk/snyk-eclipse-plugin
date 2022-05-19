@@ -22,26 +22,10 @@ import java.io.File;
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
   private static final Preferences PREFERENCES = new Preferences();
-
-  private final SnykCliRunner cliRunner = new SnykCliRunner();
   private TokenFieldEditor tokenField;
 
   public PreferencesPage() {
     super(GRID);
-    Activator.getDefault().getPreferenceStore().addPropertyChangeListener(this::handlePropertyChange);
-  }
-
-  private void handlePropertyChange(PropertyChangeEvent event) {
-    // don't run 'snyk config' command, so we use settings from eclipse prefs only
-//		if (event.getProperty().equals(Preferences.ENDPOINT_KEY)) {
-//			String newEndpoint = event.getNewValue().toString();
-//			if (newEndpoint.isEmpty()) {
-//				cliRunner.snykUnsetEndpoint();
-//			} else {
-//				cliRunner.snykSetEndpoint(newEndpoint);
-//			}
-//			tokenField.emptyTextfield();
-//		}
   }
 
   @Override
@@ -97,7 +81,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
     addField(new BooleanFieldEditor(Preferences.SEND_ERROR_REPORTS, "Send error reports to Snyk",
       getFieldEditorParent()));
-// TODO   addField(new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Agree to send usage statistics to Snyk", getFieldEditorParent()));
+    addField(new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Send usage statistics to Snyk", getFieldEditorParent()));
 
   }
 

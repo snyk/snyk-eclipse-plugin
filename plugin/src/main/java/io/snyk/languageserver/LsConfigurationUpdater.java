@@ -49,6 +49,7 @@ public class LsConfigurationUpdater {
     String additionalEnv = preferences.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "");
     String path = preferences.getPref(Preferences.PATH_KEY, "");
     String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
+    String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, "false");
     String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
     return new Settings(activateSnykOpenSource,
       activateSnykCode,
@@ -59,6 +60,7 @@ public class LsConfigurationUpdater {
       additionalEnv,
       path,
       sendErrorReports,
+      enableTelemetry,
       organization);
   }
 
@@ -74,9 +76,20 @@ public class LsConfigurationUpdater {
     private final String additionalEnv;
     private final String path;
     private final String sendErrorReports;
+    private final String enableTelemetry;
     private final String organization;
 
-    public Settings(String activateSnykOpenSource, String activateSnykCode, String activateSnykIac, String insecure, String endpoint, String additionalParams, String additionalEnv, String path, String sendErrorReports, String organization) {
+    public Settings(String activateSnykOpenSource,
+                    String activateSnykCode,
+                    String activateSnykIac,
+                    String insecure,
+                    String endpoint,
+                    String additionalParams,
+                    String additionalEnv,
+                    String path,
+                    String sendErrorReports,
+                    String enableTelemetry,
+                    String organization) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
       this.activateSnykIac = activateSnykIac;
@@ -86,6 +99,7 @@ public class LsConfigurationUpdater {
       this.additionalEnv = additionalEnv;
       this.path = path;
       this.sendErrorReports = sendErrorReports;
+      this.enableTelemetry = enableTelemetry;
       this.organization = organization;
     }
 
@@ -123,6 +137,10 @@ public class LsConfigurationUpdater {
 
     public String getSendErrorReports() {
       return this.sendErrorReports;
+    }
+
+    public String getEnableTelemetry() {
+      return this.enableTelemetry;
     }
 
     public String getOrganization() {
