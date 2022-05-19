@@ -21,6 +21,7 @@ public class Preferences {
   public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
   public static final String SEND_ERROR_REPORTS = "SEND_ERROR_REPORTS";
   public static final String ENABLE_TELEMETRY = "ENABLE_TELEMETRY";
+  public static final String ORGANIZATION_KEY = "SNYK_ORGANIZATION";
 
 
   private final ISecurePreferences node = SecurePreferencesFactory.getDefault().node(QUALIFIER);

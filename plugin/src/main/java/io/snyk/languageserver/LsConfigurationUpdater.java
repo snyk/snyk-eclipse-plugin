@@ -17,8 +17,7 @@ public class LsConfigurationUpdater {
     var params = new DidChangeConfigurationParams();
     params.setSettings(getCurrentSettings(preferences));
 
-    var definition =
-      LanguageServersRegistry.getInstance().getDefinition(SnykStreamConnectionProvider.LANGUAGE_SERVER_ID);
+    var definition = LanguageServersRegistry.getInstance().getDefinition(SnykStreamConnectionProvider.LANGUAGE_SERVER_ID);
 
     if (definition == null) {
       return;
@@ -29,8 +28,7 @@ public class LsConfigurationUpdater {
           var servers = LanguageServiceAccessor.getLanguageServers(project, null);
           for (LanguageServer ls : servers) {
             var currentDefinition = LanguageServiceAccessor.resolveServerDefinition(ls);
-            if (currentDefinition.isEmpty() || !currentDefinition.get().id.equals(definition.id))
-              continue;
+            if (currentDefinition.isEmpty() || !currentDefinition.get().id.equals(definition.id)) continue;
             WorkspaceService workspaceService = ls.getWorkspaceService();
             workspaceService.didChangeConfiguration(params);
           }
@@ -51,8 +49,17 @@ public class LsConfigurationUpdater {
     String additionalEnv = preferences.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "");
     String path = preferences.getPref(Preferences.PATH_KEY, "");
     String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
-    return new Settings(activateSnykOpenSource, activateSnykCode, activateSnykIac, insecure, endpoint, additionalParams,
-      additionalEnv, path, sendErrorReports);
+    String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
+    return new Settings(activateSnykOpenSource,
+      activateSnykCode,
+      activateSnykIac,
+      insecure,
+      endpoint,
+      additionalParams,
+      additionalEnv,
+      path,
+      sendErrorReports,
+      organization);
   }
 
   @SuppressWarnings("unused") // getters for GSon serialization
@@ -67,9 +74,9 @@ public class LsConfigurationUpdater {
     private final String additionalEnv;
     private final String path;
     private final String sendErrorReports;
+    private final String organization;
 
-    public Settings(String activateSnykOpenSource, String activateSnykCode, String activateSnykIac, String insecure,
-                    String endpoint, String additionalParams, String additionalEnv, String path, String sendErrorReports) {
+    public Settings(String activateSnykOpenSource, String activateSnykCode, String activateSnykIac, String insecure, String endpoint, String additionalParams, String additionalEnv, String path, String sendErrorReports, String organization) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
       this.activateSnykIac = activateSnykIac;
@@ -79,6 +86,7 @@ public class LsConfigurationUpdater {
       this.additionalEnv = additionalEnv;
       this.path = path;
       this.sendErrorReports = sendErrorReports;
+      this.organization = organization;
     }
 
     public String getPath() {
@@ -115,6 +123,10 @@ public class LsConfigurationUpdater {
 
     public String getSendErrorReports() {
       return this.sendErrorReports;
+    }
+
+    public String getOrganization() {
+      return this.organization;
     }
   }
 }

@@ -27,6 +27,7 @@ class LsConfigurationUpdaterTest {
     when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("a=b;c=d");
     when(preferenceMock.getPref(Preferences.PATH_KEY, "")).thenReturn("path");
     when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "")).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("organization");
 
     var settings = new LsConfigurationUpdater().getCurrentSettings(preferenceMock);
 
@@ -39,5 +40,6 @@ class LsConfigurationUpdaterTest {
     assertEquals("a=b;c=d", settings.getAdditionalEnv());
     assertEquals("path", settings.getPath());
     assertEquals("true", settings.getSendErrorReports());
+    assertEquals("organization", settings.getOrganization());
   }
 }

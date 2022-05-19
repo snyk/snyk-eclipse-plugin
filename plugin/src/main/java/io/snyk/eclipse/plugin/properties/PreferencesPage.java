@@ -89,6 +89,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
     addField(space());
     addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
+    addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", getFieldEditorParent()));
     addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", getFieldEditorParent()));
     addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", getFieldEditorParent()));
 
