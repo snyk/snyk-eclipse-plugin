@@ -1,6 +1,10 @@
 # Snyk Changelog
 
 ## [2.0.0] - Unreleased
+### Changes
+
+- add organization preference to specify organization to use for LS scans
+
 ### Fixes
 - support download of Language Server for Apple M1
 - fix download of Language Server in some situations 

@@ -4,6 +4,8 @@ import io.snyk.eclipse.plugin.exception.NotSupportedException;
 import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.core.runtime.Platform;
+import org.osgi.framework.FrameworkUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,34 +32,10 @@ public class SnykCliRunner {
   private static final String IGNORE_PARAM = "ignore";
   private static final String JSON_PARAM = "--json";
 
-  ProcessRunner processRunner = new ProcessRunner();
-
-//	public ProcessResult snykAuth() {
-//		String authToken = Preferences.getAuthToken();
-//		if (authToken == null || authToken.isEmpty()) {
-//			try {
-//				String apiToken = Authenticator.INSTANCE.callLogin();
-//				Preferences.store(Preferences.AUTH_TOKEN_KEY, apiToken);
-//				authToken = Preferences.getAuthToken();
-//			} catch (AuthException e) {
-//				e.printStackTrace();
-//				return ProcessResult.error(e.getMessage());
-//
-//			}
-//		}
-//		return snykRun(Lists.of​(AUTH_PARAM, authToken));
-//	}
+  ProcessRunner processRunner = new ProcessRunner(PREFERENCES);
 
   public ProcessResult snykConfig() {
     return snykRun(Lists.of(CONFIG_PARAM));
-  }
-
-  public ProcessResult snykSetEndpoint(String url) {
-    return snykRun(Lists.of(CONFIG_PARAM, "set endpoint=" + url));
-  }
-
-  public ProcessResult snykUnsetEndpoint() {
-    return snykRun(Lists.of(CONFIG_PARAM, "unset endpoint"));
   }
 
   public ProcessResult snykMonitor(File navigatePath) {
