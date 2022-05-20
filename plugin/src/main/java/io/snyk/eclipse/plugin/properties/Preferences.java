@@ -24,7 +24,7 @@ public class Preferences {
   // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so we need to revert it
   // when populating the environment
   public static final String ENABLE_TELEMETRY = "SNYK_CFG_DISABLE_ANALYTICS";
-  public static final String ORGANIZATION_KEY = "SNYK_ORGANIZATION";
+  public static final String ORGANIZATION_KEY = "SNYK_CFG_ORG";
 
 
   private final ISecurePreferences node = SecurePreferencesFactory.getDefault().node(QUALIFIER);
