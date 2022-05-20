@@ -7,6 +7,7 @@
 
 ### Fixes
 - support download of Language Server for Apple M1
+- fix download of Language Server in some situations 
 
 ### Changes
 - add preference for usage statistics (metrics)

@@ -34,13 +34,17 @@ import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliFile;
 import static io.snyk.eclipse.plugin.utils.SnykLogger.logError;
 
 public class SnykStartup implements IStartup {
-  private final LsRuntimeEnvironment runtimeEnvironment = new LsRuntimeEnvironment(new Preferences());
+  private LsRuntimeEnvironment runtimeEnvironment;
   private SnykView snykView = null;
   private static boolean downloading = true;
-  private final ILog logger = Platform.getLog(getClass());
+  private ILog logger;
 
   @Override
   public void earlyStartup() {
+    if (logger == null) {
+       logger = Platform.getLog(getClass());
+    }
+    runtimeEnvironment = new LsRuntimeEnvironment(new Preferences());
     Job downloadCLIJob = new Job("Downloading latest Snyk CLI release...") {
       @Override
       protected IStatus run(IProgressMonitor monitor) {
@@ -60,7 +64,7 @@ public class SnykStartup implements IStartup {
             logger.info("LS: Need to download");
             downloading = true;
             monitor.subTask("Starting download of Snyk Language Server");
-            getLsDownloader().download(monitor);
+            download(monitor);
           }
         } catch (Exception exception) {
           logError(exception);
@@ -97,15 +101,10 @@ public class SnykStartup implements IStartup {
     File lsFile = runtimeEnvironment.getLSFile();
     logger.info("LS: Expecting file at " + lsFile.getAbsolutePath());
     String customPath = new Preferences().getLsBinary();
-    boolean customLSPath = customPath == null;
-    if (customLSPath) {
-      logger.info("LS: Custom LS path is set, not downloading. Path: " + customPath);
-      return false;
-    }
+    if (!isDownloadAllowed(customPath)) return false;
     if (lsFile.exists()) {
       logger.info("LS: File already exists, checking for age " + lsFile.getAbsolutePath());
       try {
-        logger.info("LS: Custom LS path is set, not downloading. Path: " + lsFile.getAbsolutePath());
         BasicFileAttributes basicFileAttributes;
         basicFileAttributes = Files.readAttributes(lsFile.toPath(), BasicFileAttributes.class);
         Instant lastModified = basicFileAttributes.lastModifiedTime().toInstant();
@@ -116,6 +115,15 @@ public class SnykStartup implements IStartup {
         SnykLogger.logError(e);
         return false;
       }
+    }
+    return true;
+  }
+
+  boolean isDownloadAllowed(String customPath) {
+    boolean customPathSet = customPath != null && !customPath.isBlank();
+    if (customPathSet) {
+      logger.info("LS: Custom LS path is set, not downloading. Path: " + customPath);
+      return false;
     }
     return true;
   }
@@ -155,4 +163,7 @@ public class SnykStartup implements IStartup {
     return downloading;
   }
 
+  public void setLogger(ILog logger) {
+    this.logger = logger;
+  }
 }
