@@ -3,6 +3,7 @@
 ## [2.0.0] - Unreleased
 ### Fixes
 - support download of Language Server for Apple M1
+- fix download of Language Server in some situations 
 
 ## [2.0.0] - v20220517.090738
 
