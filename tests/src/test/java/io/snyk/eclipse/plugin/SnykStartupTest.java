@@ -9,11 +9,11 @@ import static org.mockito.Mockito.mock;
 
 class SnykStartupTest {
   @Test
-  void testDownloadAllowed() {
+  void testIsDownloadAllowed() {
     SnykStartup cut = new SnykStartup();
     cut.setLogger(mock(ILog.class));
-    assertFalse(cut.downloadAllowed(""));
-    assertFalse(cut.downloadAllowed(null));
-    assertTrue(cut.downloadAllowed("a"));
+    assertTrue(cut.isDownloadAllowed(""));
+    assertTrue(cut.isDownloadAllowed(null));
+    assertFalse(cut.isDownloadAllowed("a"));
   }
 }

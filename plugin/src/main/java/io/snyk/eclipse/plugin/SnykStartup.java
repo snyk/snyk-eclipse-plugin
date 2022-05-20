@@ -101,7 +101,7 @@ public class SnykStartup implements IStartup {
     File lsFile = runtimeEnvironment.getLSFile();
     logger.info("LS: Expecting file at " + lsFile.getAbsolutePath());
     String customPath = new Preferences().getLsBinary();
-    if (downloadAllowed(customPath)) return false;
+    if (!isDownloadAllowed(customPath)) return false;
     if (lsFile.exists()) {
       logger.info("LS: File already exists, checking for age " + lsFile.getAbsolutePath());
       try {
@@ -119,13 +119,13 @@ public class SnykStartup implements IStartup {
     return true;
   }
 
-  boolean downloadAllowed(String customPath) {
-    boolean customLSPath = customPath != null && !customPath.isBlank();
-    if (customLSPath) {
+  boolean isDownloadAllowed(String customPath) {
+    boolean customPathSet = customPath != null && !customPath.isBlank();
+    if (customPathSet) {
       logger.info("LS: Custom LS path is set, not downloading. Path: " + customPath);
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   LsDownloader getLsDownloader() throws URISyntaxException {
