@@ -44,7 +44,6 @@ class ProcessRunnerTest {
     assertTrue(env.get("PATH").contains("good:path"));
     assertEquals("organization", env.get(Preferences.ORGANIZATION_KEY));
     assertEquals("0", env.get(Preferences.ENABLE_TELEMETRY));
-
     verify(preferenceMock).getEndpoint();
     verify(preferenceMock).getPref(Preferences.INSECURE_KEY);
     verify(preferenceMock).getPref(Preferences.ORGANIZATION_KEY);
