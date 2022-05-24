@@ -139,10 +139,6 @@
       contentTypeId="io.snyk.languageserver.parent"
       editorId="org.eclipse.ui.genericeditor.GenericEditor">
     </editorContentTypeBinding>
-    <editorContentTypeBinding
-      contentTypeId="io.snyk.languageserver.parent"
-      editorId="org.eclipse.jdt.ui.CompilationUnitEditor">
-    </editorContentTypeBinding>
   </extension>
 
   <extension
