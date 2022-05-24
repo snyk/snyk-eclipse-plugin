@@ -17,18 +17,31 @@ import java.util.Optional;
 
 public class ProcessRunner {
 
-  private static final Preferences PREFERENCES = new Preferences();
-  private static final Bundle BUNDLE = FrameworkUtil.getBundle(ProcessRunner.class);
-  private static final ILog LOG = Platform.getLog(BUNDLE);
+  private final Preferences preferences;
+  private final Bundle bundle;
+  private final ILog log;
 
   private static final String ENV_SNYK_API = "SNYK_API";
   private static final String ENV_SNYK_TOKEN = "SNYK_TOKEN";
   private static final String ENV_SNYK_INTEGRATION_NAME = "SNYK_INTEGRATION_NAME";
   private static final String ENV_SNYK_INTEGRATION_VERSION = "SNYK_INTEGRATION_VERSION";
-  private static final String DEFAULT_MAC_PATH = "/usr/local/bin";
-  private static final String DEFAULT_LINUX_PATH = "/usr/bin";
+
+  private static final String HOME = System.getProperty("user.home");
+  private static final String DEFAULT_MAC_PATH = "/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:" + HOME + "/bin:" + HOME + "/.cargo/bin:" + System.getenv("GOPATH") + "/bin" + System.getenv("GOROOT") + "/bin";
+  private static final String DEFAULT_LINUX_PATH = DEFAULT_MAC_PATH;
   private static final String DEFAULT_WIN_PATH = "";
 
+  public ProcessRunner(Preferences p) {
+    preferences = p;
+    this.log = Platform.getLog(ProcessRunner.class);
+    bundle = FrameworkUtil.getBundle(ProcessRunner.class);
+  }
+
+  public ProcessRunner(Preferences preferences, Bundle bundle, ILog log) {
+    this.preferences = preferences;
+    this.bundle = bundle;
+    this.log = log;
+  }
 
   public ProcessResult run(ProcessBuilder pb, Optional<File> navigatePath) {
     try {
@@ -64,17 +77,33 @@ public class ProcessRunner {
 
   private ProcessBuilder getProcessBuilder(String command, Optional<String> path, String defaultLinuxPath) {
     ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
-    String endpoint = PREFERENCES.getEndpoint();
-    if (endpoint != null && !endpoint.isEmpty()) {
-      pb.environment().put(ENV_SNYK_API, endpoint);
-    }
-    pb.environment().put(ENV_SNYK_TOKEN, PREFERENCES.getAuthToken());
-    pb.environment().put(ENV_SNYK_INTEGRATION_NAME, "ECLIPSE");
-    pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
+    setupProcessBuilderBase(pb);
     if (path.isPresent()) {
       pb.environment().put("PATH", path.map(p -> p + ":" + defaultLinuxPath).orElse(defaultLinuxPath) + File.pathSeparator + System.getenv("PATH"));
     }
     return pb;
+  }
+
+  private void setupProcessBuilderBase(ProcessBuilder pb) {
+    String endpoint = preferences.getEndpoint();
+    if (endpoint != null && !endpoint.isEmpty()) {
+      pb.environment().put(ENV_SNYK_API, endpoint);
+    }
+
+    String organization = preferences.getPref(Preferences.ORGANIZATION_KEY);
+    if (organization != null) {
+      pb.environment().put(Preferences.ORGANIZATION_KEY, organization);
+      pb.command().add("--org=" + organization);
+    }
+
+    String token = preferences.getAuthToken();
+    if (token != null) pb.environment().put(ENV_SNYK_TOKEN, preferences.getAuthToken());
+
+    String insecure = preferences.getPref(Preferences.INSECURE_KEY);
+    if (insecure != null) pb.command().add("--insecure");
+
+    pb.environment().put(ENV_SNYK_INTEGRATION_NAME, "ECLIPSE");
+    pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
   }
 
   public ProcessBuilder createMacProcessBuilder(String command, Optional<String> path) {
@@ -84,28 +113,18 @@ public class ProcessRunner {
   public ProcessBuilder createWinProcessBuilder(String command, Optional<String> path) {
     if (command.startsWith("\"/")) command = command.replaceFirst("/", "");
     ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c ", command);
-    String endpoint = PREFERENCES.getEndpoint();
-    if (endpoint != null && !endpoint.isEmpty()) {
-      pb.environment().put(ENV_SNYK_API, endpoint);
-    }
-    pb.environment().put(ENV_SNYK_TOKEN, PREFERENCES.getAuthToken());
-    pb.environment().put(ENV_SNYK_INTEGRATION_NAME, "ECLIPSE");
-    pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
+    setupProcessBuilderBase(pb);
     pb.environment().put("PATH", path.map(p -> p + ";" + DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH) + File.pathSeparator + System.getenv("PATH"));
 
     // debug logging on windows machines
-    IStatus[] statuses = new IStatus[]{
-      new Status(Status.INFO, BUNDLE.getSymbolicName(), "env.PATH = " + pb.environment().get("PATH")),
-      new Status(Status.INFO, BUNDLE.getSymbolicName(), "path = " + path),
-      new Status(Status.INFO, BUNDLE.getSymbolicName(), "command = " + command),
-    };
-    MultiStatus multiStatusCommand = new MultiStatus(BUNDLE.getSymbolicName(), Status.INFO, statuses, "Snyk command execution", null);
-    LOG.log(multiStatusCommand);
+    IStatus[] statuses = new IStatus[]{new Status(Status.INFO, bundle.getSymbolicName(), "env.PATH = " + pb.environment().get("PATH")), new Status(Status.INFO, bundle.getSymbolicName(), "path = " + path), new Status(Status.INFO, bundle.getSymbolicName(), "command = " + command),};
+    MultiStatus multiStatusCommand = new MultiStatus(bundle.getSymbolicName(), Status.INFO, statuses, "Snyk command execution", null);
+    log.log(multiStatusCommand);
 
     return pb;
   }
 
   public String getVersion() {
-    return BUNDLE.getVersion().toString();
+    return bundle.getVersion().toString();
   }
 }

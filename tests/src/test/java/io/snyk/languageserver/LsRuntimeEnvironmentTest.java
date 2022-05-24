@@ -130,4 +130,14 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 
     assertEquals("true", env.get(Preferences.SEND_ERROR_REPORTS));
   }
+
+  @Test
+  void testOrganizationIsAddedToEnvironment() throws StorageException {
+    HashMap<String, String> env = new HashMap<>();
+    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("org");
+
+    environment.addOrganization(env);
+
+    assertEquals("org", env.get(Preferences.ORGANIZATION_KEY));
+  }
 }
