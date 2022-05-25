@@ -133,7 +133,7 @@ public class SnykStartup implements IStartup {
     IProxyData[] proxyData = runtimeEnvironment.getProxyService().select(baseUri);
     var relevantProxyData = getRelevantProxyData(proxyData);
     var builder = HttpClients.custom();
-    return new LsDownloader(runtimeEnvironment, builder, relevantProxyData);
+    return new LsDownloader(runtimeEnvironment, builder, relevantProxyData, logger);
   }
 
   private IProxyData getRelevantProxyData(IProxyData[] proxyData) {

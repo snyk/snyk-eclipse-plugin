@@ -41,15 +41,20 @@ public class LsDownloader {
   private DefaultProxyRoutePlanner proxyRoutePlanner = null;
   private BasicCredentialsProvider credentialsProvider = null;
   private AuthScope authScope = null;
-  private ILog logger = Platform.getLog(getClass());
+  private final ILog logger;
 
   private UsernamePasswordCredentials credentials;
 
 
-  public LsDownloader(LsRuntimeEnvironment environment, HttpClientBuilder httpClientBuilder, IProxyData data) {
+  public LsDownloader(LsRuntimeEnvironment environment, HttpClientBuilder httpClientBuilder, IProxyData data, ILog logger) {
     this.runtimeEnvironment = environment;
     configure(httpClientBuilder, data);
     this.httpClient = httpClientBuilder.build();
+    if (logger == null) {
+      this.logger = Platform.getLog(getClass());
+    } else {
+      this.logger = logger;
+    }
   }
 
   private void configure(HttpClientBuilder builder, IProxyData data) {

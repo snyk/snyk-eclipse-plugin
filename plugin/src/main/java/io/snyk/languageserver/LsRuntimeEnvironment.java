@@ -213,5 +213,12 @@ public class LsRuntimeEnvironment {
   void addTelemetry(Map<String, String> env) {
     String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "true");
     env.put("SEND_ERROR_REPORTS", sendErrorReports);
+    String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, "false");
+    // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
+    if (Boolean.parseBoolean(enableTelemetry)) {
+      env.put(Preferences.ENABLE_TELEMETRY, "0");
+    } else {
+      env.put(Preferences.ENABLE_TELEMETRY, "1");
+    }
   }
 }

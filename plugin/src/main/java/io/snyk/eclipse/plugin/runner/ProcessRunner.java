@@ -102,6 +102,13 @@ public class ProcessRunner {
     String insecure = preferences.getPref(Preferences.INSECURE_KEY);
     if (insecure != null) pb.command().add("--insecure");
 
+    String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY);
+    if (!enableTelemetry.isBlank() && Boolean.parseBoolean(enableTelemetry)) {
+      pb.environment().put(Preferences.ENABLE_TELEMETRY, "0");
+    } else {
+      pb.environment().put(Preferences.ENABLE_TELEMETRY, "1"); // default to disable telemetry
+    }
+
     pb.environment().put(ENV_SNYK_INTEGRATION_NAME, "ECLIPSE");
     pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
   }

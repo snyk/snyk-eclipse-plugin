@@ -20,7 +20,10 @@ public class Preferences {
   public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
   public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
   public static final String SEND_ERROR_REPORTS = "SEND_ERROR_REPORTS";
-  public static final String ENABLE_TELEMETRY = "ENABLE_TELEMETRY";
+
+  // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so we need to revert it
+  // when populating the environment
+  public static final String ENABLE_TELEMETRY = "SNYK_CFG_DISABLE_ANALYTICS";
   public static final String ORGANIZATION_KEY = "SNYK_CFG_ORG";
 
 
@@ -39,6 +42,9 @@ public class Preferences {
     }
     if (getPref(SEND_ERROR_REPORTS) == null) {
       store(SEND_ERROR_REPORTS, "true");
+    }
+    if (getPref(ENABLE_TELEMETRY) == null) {
+      store(ENABLE_TELEMETRY, "false");
     }
   }
 

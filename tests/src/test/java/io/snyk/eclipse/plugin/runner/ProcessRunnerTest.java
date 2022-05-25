@@ -30,6 +30,7 @@ class ProcessRunnerTest {
     when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
     when(preferenceMock.getEndpoint()).thenReturn("endpoint");
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("organization");
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("true");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
     ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
@@ -42,9 +43,10 @@ class ProcessRunnerTest {
     assertEquals("endpoint", env.get("SNYK_API"));
     assertTrue(env.get("PATH").contains("good:path"));
     assertEquals("organization", env.get(Preferences.ORGANIZATION_KEY));
-
+    assertEquals("0", env.get(Preferences.ENABLE_TELEMETRY));
     verify(preferenceMock).getEndpoint();
     verify(preferenceMock).getPref(Preferences.INSECURE_KEY);
     verify(preferenceMock).getPref(Preferences.ORGANIZATION_KEY);
+    verify(preferenceMock).getPref(Preferences.ENABLE_TELEMETRY);
   }
 }

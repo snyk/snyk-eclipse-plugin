@@ -11,6 +11,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
 import org.eclipse.core.net.proxy.IProxyData;
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,7 @@ public class LsDownloaderTest extends LsBaseTest {
   void downloadShouldFailWhenShaWrongAndFileShouldNotBeOverwritten() throws IOException {
     byte[] expectedLsContent = Files.readAllBytes(environment.getLSFile().toPath());
 
-    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null);
+    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null, mock(ILog.class));
     File testFile = File.createTempFile("download-test", "tmp");
     testFile.deleteOnExit();
     // sha corresponds to file content (`echo "test 123" | sha256sum`)
@@ -74,7 +75,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
   @Test
   void downloadShouldIssueDownloadRequestForShaAndBinary() throws IOException {
-    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null);
+    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null, mock(ILog.class));
     Path source = Paths.get("src/test/resources/ls-dummy-binary");
     var testFile = Files.createTempFile("download-test", "tmp").toFile();
     testFile.deleteOnExit();
@@ -98,7 +99,7 @@ public class LsDownloaderTest extends LsBaseTest {
   @Test
   void downloadShouldUseGivenHttpsProxyData() {
     IProxyData data = getDummyProxyData();
-    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, data);
+    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, data, mock(ILog.class));
 
     assertNotNull(cut.getCredentials());
     assertNotNull(cut.getCredentialsProvider());
@@ -169,7 +170,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
   @Test
   void getVersionShouldDownloadAndExtractTheLatestVersion() {
-    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null);
+    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null, mock(ILog.class));
     var metadataObject = mockMetadata();
     var actual = cut.getVersion();
     assertEquals(metadataObject.getVersion(), actual);
