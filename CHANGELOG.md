@@ -3,6 +3,11 @@
 ## [2.0.0] - Unreleased
 
 ### Fixes
+- ⬆️ update jackson dependencies to 2.13.3
+
+## [2.0.0] - v20220525.165232
+
+### Fixes
 - support download of Language Server for Apple M1
 - fix download of Language Server in some situations 
 
