@@ -84,10 +84,9 @@ public class ProcessRunner {
 
   private ProcessBuilder getProcessBuilder(List<String> command, Optional<String> path, String defaultPathForOS) {
     var cmd = new ArrayList<String>(command.size() + 2);
-    cmd.add("sh");
-    cmd.add("-c");
     cmd.add(getCliFile().getAbsolutePath());
     cmd.addAll(command);
+
     ProcessBuilder pb = new ProcessBuilder(cmd);
     setupProcessBuilderBase(pb);
     if (path.isPresent() && !path.get().isBlank()) {
