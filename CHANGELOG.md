@@ -2,7 +2,12 @@
 
 ## [2.0.0] - Unreleased
 
+
 ### Fixes
+- fixed legacy Snyk View scan under Windows
+- fixed passing of --insecure and --org parameters if empty
+
+### Changes
 - ⬆️ update jackson dependencies to 2.13.3
 
 ## [2.0.0] - v20220525.165232
