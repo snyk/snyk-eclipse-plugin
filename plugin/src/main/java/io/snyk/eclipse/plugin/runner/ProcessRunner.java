@@ -1,6 +1,15 @@
 package io.snyk.eclipse.plugin.runner;
 
-import io.snyk.eclipse.plugin.properties.Preferences;
+import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliFile;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -9,11 +18,8 @@ import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Optional;
+import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class ProcessRunner {
 
@@ -27,7 +33,8 @@ public class ProcessRunner {
   private static final String ENV_SNYK_INTEGRATION_VERSION = "SNYK_INTEGRATION_VERSION";
 
   private static final String HOME = System.getProperty("user.home");
-  private static final String DEFAULT_MAC_PATH = "/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:" + HOME + "/bin:" + HOME + "/.cargo/bin:" + System.getenv("GOPATH") + "/bin" + System.getenv("GOROOT") + "/bin";
+  private static final String DEFAULT_MAC_PATH = "/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:" + HOME + "/bin:"
+    + HOME + "/.cargo/bin:" + System.getenv("GOPATH") + "/bin" + System.getenv("GOROOT") + "/bin";
   private static final String DEFAULT_LINUX_PATH = DEFAULT_MAC_PATH;
   private static final String DEFAULT_WIN_PATH = "";
 
@@ -66,20 +73,27 @@ public class ProcessRunner {
       return new ProcessResult(content.toString(), error.toString());
 
     } catch (IOException e) {
-      e.printStackTrace();
+      SnykLogger.logError(e);
       return new ProcessResult("", e.getMessage());
     }
   }
 
-  public ProcessBuilder createLinuxProcessBuilder(String command, Optional<String> path) {
+  public ProcessBuilder createLinuxProcessBuilder(List<String> command, Optional<String> path) {
     return getProcessBuilder(command, path, DEFAULT_LINUX_PATH);
   }
 
-  private ProcessBuilder getProcessBuilder(String command, Optional<String> path, String defaultLinuxPath) {
-    ProcessBuilder pb = new ProcessBuilder("sh", "-c", command);
+  private ProcessBuilder getProcessBuilder(List<String> command, Optional<String> path, String defaultPathForOS) {
+    var cmd = new ArrayList<String>(command.size() + 2);
+    cmd.add("sh");
+    cmd.add("-c");
+    cmd.add(getCliFile().getAbsolutePath());
+    cmd.addAll(command);
+    ProcessBuilder pb = new ProcessBuilder(cmd);
     setupProcessBuilderBase(pb);
-    if (path.isPresent()) {
-      pb.environment().put("PATH", path.map(p -> p + ":" + defaultLinuxPath).orElse(defaultLinuxPath) + File.pathSeparator + System.getenv("PATH"));
+    if (path.isPresent() && !path.get().isBlank()) {
+      pb.environment().put("PATH",
+        path.map(p -> p + File.pathSeparator + defaultPathForOS).orElse(defaultPathForOS)
+          + File.pathSeparator + System.getenv("PATH"));
     }
     return pb;
   }
@@ -91,16 +105,18 @@ public class ProcessRunner {
     }
 
     String organization = preferences.getPref(Preferences.ORGANIZATION_KEY);
-    if (organization != null) {
+    if (organization != null && !organization.isBlank()) {
       pb.environment().put(Preferences.ORGANIZATION_KEY, organization);
       pb.command().add("--org=" + organization);
     }
 
     String token = preferences.getAuthToken();
-    if (token != null) pb.environment().put(ENV_SNYK_TOKEN, preferences.getAuthToken());
+    if (token != null)
+      pb.environment().put(ENV_SNYK_TOKEN, preferences.getAuthToken());
 
     String insecure = preferences.getPref(Preferences.INSECURE_KEY);
-    if (insecure != null) pb.command().add("--insecure");
+    if (insecure != null && insecure.equalsIgnoreCase("true"))
+      pb.command().add("--insecure");
 
     String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY);
     if (!enableTelemetry.isBlank() && Boolean.parseBoolean(enableTelemetry)) {
@@ -113,19 +129,29 @@ public class ProcessRunner {
     pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
   }
 
-  public ProcessBuilder createMacProcessBuilder(String command, Optional<String> path) {
+  public ProcessBuilder createMacProcessBuilder(List<String> command, Optional<String> path) {
     return getProcessBuilder(command, path, DEFAULT_MAC_PATH);
   }
 
-  public ProcessBuilder createWinProcessBuilder(String command, Optional<String> path) {
-    if (command.startsWith("\"/")) command = command.replaceFirst("/", "");
-    ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c ", command);
+  public ProcessBuilder createWinProcessBuilder(List<String> command, Optional<String> path) {
+    var cmd = new ArrayList<String>(command.size() + 2);
+    cmd.add("cmd.exe");
+    cmd.add("/c");
+    cmd.add(getCliFile().getAbsolutePath());
+    cmd.addAll(command);
+
+    ProcessBuilder pb = new ProcessBuilder(cmd);
     setupProcessBuilderBase(pb);
-    pb.environment().put("PATH", path.map(p -> p + ";" + DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH) + File.pathSeparator + System.getenv("PATH"));
+    pb.environment().put("PATH", path.map(p -> p + ";" + DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH)
+      + File.pathSeparator + System.getenv("PATH"));
 
     // debug logging on windows machines
-    IStatus[] statuses = new IStatus[]{new Status(Status.INFO, bundle.getSymbolicName(), "env.PATH = " + pb.environment().get("PATH")), new Status(Status.INFO, bundle.getSymbolicName(), "path = " + path), new Status(Status.INFO, bundle.getSymbolicName(), "command = " + command),};
-    MultiStatus multiStatusCommand = new MultiStatus(bundle.getSymbolicName(), Status.INFO, statuses, "Snyk command execution", null);
+    IStatus[] statuses = new IStatus[]{
+      new Status(Status.INFO, bundle.getSymbolicName(), "env.PATH = " + pb.environment().get("PATH")),
+      new Status(Status.INFO, bundle.getSymbolicName(), "path = " + path),
+      new Status(Status.INFO, bundle.getSymbolicName(), "command = " + command),};
+    MultiStatus multiStatusCommand = new MultiStatus(bundle.getSymbolicName(), Status.INFO, statuses,
+      "Snyk command execution", null);
     log.log(multiStatusCommand);
 
     return pb;

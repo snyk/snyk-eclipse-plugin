@@ -50,17 +50,15 @@ public class SnykView extends ViewPart {
    */
   public static final String ID = "io.snyk.eclipse.plugin.views.SnykView";
 
-  public static final Image CRITICAL_SEVERITY =
-    Activator.getImageDescriptor("/icons/severity-critical.png").createImage();
+  public static final Image CRITICAL_SEVERITY = Activator.getImageDescriptor("/icons/severity-critical.png")
+    .createImage();
 
-  public static final Image HIGH_SEVERITY =
-    Activator.getImageDescriptor("/icons/severity-high.png").createImage();
+  public static final Image HIGH_SEVERITY = Activator.getImageDescriptor("/icons/severity-high.png").createImage();
 
-  public static final Image MEDIUM_SEVERITY =
-    Activator.getImageDescriptor("/icons/severity-medium.png").createImage();
+  public static final Image MEDIUM_SEVERITY = Activator.getImageDescriptor("/icons/severity-medium.png")
+    .createImage();
 
-  public static final Image LOW_SEVERITY =
-    Activator.getImageDescriptor("/icons/severity-low.png").createImage();
+  public static final Image LOW_SEVERITY = Activator.getImageDescriptor("/icons/severity-low.png").createImage();
 
   @Inject
   IWorkbench workbench;
@@ -78,14 +76,12 @@ public class SnykView extends ViewPart {
   private boolean alreadyRunning = false;
   private final Preferences prefs = new Preferences();
 
-
   public SnykView() {
     rootModel = new DisplayModel();
     DisplayModel init = new DisplayModel();
     init.description = "";
     rootModel.children.add(init);
   }
-
 
   @Override
   public void createPartControl(Composite parent) {
@@ -104,7 +100,6 @@ public class SnykView extends ViewPart {
     final Tree table = viewer.getTree();
     table.setHeaderVisible(true);
     table.setLinesVisible(true);
-
 
     viewer.setContentProvider(new TreeContentProvider());
     getSite().setSelectionProvider(viewer);
@@ -138,12 +133,17 @@ public class SnykView extends ViewPart {
 
   private Image findSeverityImage(DisplayModel model) {
     String severity = model.severity;
-    if (severity == null) return null;
+    if (severity == null)
+      return null;
 
-    if (severity.equalsIgnoreCase("critical")) return CRITICAL_SEVERITY;
-    if (severity.equalsIgnoreCase("high")) return HIGH_SEVERITY;
-    if (severity.equalsIgnoreCase("medium")) return MEDIUM_SEVERITY;
-    if (severity.equalsIgnoreCase("low")) return LOW_SEVERITY;
+    if (severity.equalsIgnoreCase("critical"))
+      return CRITICAL_SEVERITY;
+    if (severity.equalsIgnoreCase("high"))
+      return HIGH_SEVERITY;
+    if (severity.equalsIgnoreCase("medium"))
+      return MEDIUM_SEVERITY;
+    if (severity.equalsIgnoreCase("low"))
+      return LOW_SEVERITY;
 
     return null;
   }
@@ -200,10 +200,10 @@ public class SnykView extends ViewPart {
 
       @Override
       public void run() {
-        PreferenceDialog pref = PreferencesUtil.createPreferenceDialogOn(
-          getShell(), "io.snyk.eclipse.plugin.properties.preferencespage",
-          null, null);
-        if (pref != null) pref.open();
+        PreferenceDialog pref = PreferencesUtil.createPreferenceDialogOn(getShell(),
+          "io.snyk.eclipse.plugin.properties.preferencespage", null, null);
+        if (pref != null)
+          pref.open();
       }
     };
     openPrefPage.setText("Preferences");
@@ -211,7 +211,8 @@ public class SnykView extends ViewPart {
     scanWorkspace = new Action() {
       @Override
       public void run() {
-        if (alreadyRunning) return;
+        if (alreadyRunning)
+          return;
         showMessage(RUNNING);
         scanWorkspace.setEnabled(false);
         abortScanning.setEnabled(true);
@@ -251,10 +252,10 @@ public class SnykView extends ViewPart {
 
   private static Shell getShell() {
     var activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-    if (activeWorkbenchWindow == null) return SHELL;
+    if (activeWorkbenchWindow == null)
+      return SHELL;
     return activeWorkbenchWindow.getShell();
   }
-
 
   public void enableScanBasedOnConfig() {
     try {
@@ -265,7 +266,8 @@ public class SnykView extends ViewPart {
       String init = "Click play to run Snyk Test";
       String msg = "";
       if (!cliFound) {
-        msg = "No Snyk CLI found. Please place a CLI file in " + FileSystemUtil.getCliFile().getAbsolutePath() + ". ";
+        msg = "No Snyk CLI found. Please place a CLI file in " + FileSystemUtil.getCliFile().getAbsolutePath()
+          + ". ";
       }
       if (!tokenFound) {
         msg += "No token found. Please add a Snyk Token in Snyk Preferences.";
@@ -280,7 +282,8 @@ public class SnykView extends ViewPart {
   }
 
   public void testProject(String projectName) {
-    if (alreadyRunning) return;
+    if (alreadyRunning)
+      return;
     showMessage(RUNNING);
     scanWorkspace.setEnabled(false);
     abortScanning.setEnabled(true);
@@ -307,14 +310,16 @@ public class SnykView extends ViewPart {
     return action;
   }
 
-
   private Action monitorAction(String projectName) {
     Action action = new Action() {
       @Override
       public void run() {
-        if (alreadyRunning) return;
-        MessageDialog.openInformation(getShell(), "Snyk monitor", "Snyk monitor for project " + projectName + " in progress...");
-        CompletableFuture.runAsync(() -> handleMonitorOutput(DataProvider.INSTANCE.monitorProject(projectName)));
+        if (alreadyRunning)
+          return;
+        MessageDialog.openInformation(getShell(), "Snyk monitor",
+          "Snyk monitor for project " + projectName + " in progress...");
+        CompletableFuture
+          .runAsync(() -> handleMonitorOutput(DataProvider.INSTANCE.monitorProject(projectName)));
       }
     };
     action.setText("Snyk monitor " + projectName);
@@ -343,10 +348,12 @@ public class SnykView extends ViewPart {
     var shell = getShell();
     if (result.hasError())
       executeInUIThread(() -> MessageDialog.openError(shell, "Snyk Monitor Failed", result.getError()));
-    else shell.getDisplay().asyncExec(() -> {
-      LinkDialog dialog = new LinkDialog(shell, "Snyk Monitor Succesful", "Monitoring " + result.getPath() + " \n\nExplore this snapshot at: ", result.getUri());
-      dialog.open();
-    });
+    else
+      shell.getDisplay().asyncExec(() -> {
+        LinkDialog dialog = new LinkDialog(shell, "Snyk Monitor Succesful",
+          "Monitoring " + result.getPath() + " \n\nExplore this snapshot at: ", result.getUri());
+        dialog.open();
+      });
     alreadyRunning = false;
 
   }
@@ -382,15 +389,14 @@ public class SnykView extends ViewPart {
   }
 
   public static SnykView getInstance() throws PartInitException {
-    return (SnykView) PlatformUI
-      .getWorkbench()
-      .getActiveWorkbenchWindow()
-      .getActivePage()
-      .showView(ID);
+    return (SnykView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(ID);
   }
 
   @Override
   public void setFocus() {
-    getShell().getDisplay().asyncExec(() -> viewer.getControl().setFocus());
+    getShell().getDisplay().asyncExec(() -> {
+      if (!viewer.getControl().isDisposed())
+        viewer.getControl().setFocus();
+    });
   }
 }

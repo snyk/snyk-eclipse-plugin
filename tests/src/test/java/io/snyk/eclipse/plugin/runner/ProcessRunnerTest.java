@@ -7,9 +7,11 @@ import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -34,7 +36,7 @@ class ProcessRunnerTest {
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
     ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
-    ProcessBuilder builder = cut.createLinuxProcessBuilder("test", Optional.of("good:path"));
+    ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
     var env = builder.environment();
     var cmd = builder.command();
@@ -48,5 +50,42 @@ class ProcessRunnerTest {
     verify(preferenceMock).getPref(Preferences.INSECURE_KEY);
     verify(preferenceMock).getPref(Preferences.ORGANIZATION_KEY);
     verify(preferenceMock).getPref(Preferences.ENABLE_TELEMETRY);
+  }
+
+  @Test
+  void testGetProcessBuilderLinuxSecure() {
+    ILog logger = mock(ILog.class);
+    Bundle bundle = mock(Bundle.class);
+    when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("false");
+    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
+    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("organization");
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("false");
+    when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
+
+    ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
+    ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
+
+    var env = builder.environment();
+    var cmd = builder.command();
+    assertFalse(cmd.contains("--insecure"));
+  }
+
+  @Test
+  void testGetProcessBuilderLinuxNoOrg() {
+    ILog logger = mock(ILog.class);
+    Bundle bundle = mock(Bundle.class);
+    when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
+    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
+    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("");
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("false");
+    when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
+
+    ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
+    ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
+
+    var env = builder.environment();
+    var cmd = builder.command();
+    assertFalse(cmd.contains("--org="));
+    assertEquals(null, env.get(Preferences.ORGANIZATION_KEY));
   }
 }

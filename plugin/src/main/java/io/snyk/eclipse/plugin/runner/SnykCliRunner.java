@@ -65,11 +65,6 @@ public class SnykCliRunner {
 
   private ProcessResult snykRun(List<String> arguments, Optional<File> navigatePath) {
     try {
-      if (PREFERENCES.isInsecure()) {
-        arguments = new ArrayList<>(arguments);
-        arguments.add(INSECURE);
-      }
-
       ProcessBuilder processBuilder = createProcessBuilderByOS(arguments, PREFERENCES.getPath());
       return processRunner.run(processBuilder, navigatePath);
     } catch (Exception e) {
@@ -78,16 +73,14 @@ public class SnykCliRunner {
   }
 
   private ProcessBuilder createProcessBuilderByOS(List<String> params, Optional<String> path) throws Exception {
-    String runnable = getCliFile().getAbsolutePath();
     ProcessBuilder processbuilder;
-    String paramsString = params.stream().collect(Collectors.joining("\" \"", "\"", "\""));
-
+    
     if (SystemUtils.IS_OS_MAC) {
-      processbuilder = processRunner.createMacProcessBuilder("\"" + runnable + "\" " + paramsString, path);
+      processbuilder = processRunner.createMacProcessBuilder(params, path);
     } else if (SystemUtils.IS_OS_LINUX) {
-      processbuilder = processRunner.createLinuxProcessBuilder(runnable + " " + paramsString, path);
+      processbuilder = processRunner.createLinuxProcessBuilder(params, path);
     } else if (SystemUtils.IS_OS_WINDOWS) {
-      processbuilder = processRunner.createWinProcessBuilder("\"" + runnable + "\" " + paramsString, path);
+      processbuilder = processRunner.createWinProcessBuilder(params, path);
     } else {
       throw new NotSupportedException("This operating system is not supported");
     }
