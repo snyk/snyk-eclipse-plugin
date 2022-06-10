@@ -78,14 +78,14 @@ public class ProcessRunner {
     }
   }
 
-  public ProcessBuilder createLinuxProcessBuilder(List<String> command, Optional<String> path) {
-    return getProcessBuilder(command, path, DEFAULT_LINUX_PATH);
+  public ProcessBuilder createLinuxProcessBuilder(List<String> params, Optional<String> path) {
+    return getProcessBuilder(params, path, DEFAULT_LINUX_PATH);
   }
 
-  private ProcessBuilder getProcessBuilder(List<String> command, Optional<String> path, String defaultPathForOS) {
-    var cmd = new ArrayList<String>(command.size() + 2);
+  private ProcessBuilder getProcessBuilder(List<String> params, Optional<String> path, String defaultPathForOS) {
+    var cmd = new ArrayList<String>(params.size() + 2);
     cmd.add(getCliFile().getAbsolutePath());
-    cmd.addAll(command);
+    cmd.addAll(params);
 
     ProcessBuilder pb = new ProcessBuilder(cmd);
     setupProcessBuilderBase(pb);
@@ -128,16 +128,16 @@ public class ProcessRunner {
     pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
   }
 
-  public ProcessBuilder createMacProcessBuilder(List<String> command, Optional<String> path) {
-    return getProcessBuilder(command, path, DEFAULT_MAC_PATH);
+  public ProcessBuilder createMacProcessBuilder(List<String> params, Optional<String> path) {
+    return getProcessBuilder(params, path, DEFAULT_MAC_PATH);
   }
 
-  public ProcessBuilder createWinProcessBuilder(List<String> command, Optional<String> path) {
-    var cmd = new ArrayList<String>(command.size() + 2);
+  public ProcessBuilder createWinProcessBuilder(List<String> params, Optional<String> path) {
+    var cmd = new ArrayList<String>(params.size() + 2);
     cmd.add("cmd.exe");
     cmd.add("/c");
     cmd.add(getCliFile().getAbsolutePath());
-    cmd.addAll(command);
+    cmd.addAll(params);
 
     ProcessBuilder pb = new ProcessBuilder(cmd);
     setupProcessBuilderBase(pb);
@@ -148,9 +148,9 @@ public class ProcessRunner {
     IStatus[] statuses = new IStatus[]{
       new Status(Status.INFO, bundle.getSymbolicName(), "env.PATH = " + pb.environment().get("PATH")),
       new Status(Status.INFO, bundle.getSymbolicName(), "path = " + path),
-      new Status(Status.INFO, bundle.getSymbolicName(), "command = " + command),};
+      new Status(Status.INFO, bundle.getSymbolicName(), "params = " + params),};
     MultiStatus multiStatusCommand = new MultiStatus(bundle.getSymbolicName(), Status.INFO, statuses,
-      "Snyk command execution", null);
+      "Snyk params execution", null);
     log.log(multiStatusCommand);
 
     return pb;
