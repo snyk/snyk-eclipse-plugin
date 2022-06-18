@@ -5,7 +5,9 @@
 ### Fixes
 - fixed ConcurrentModificationException when submitting configuration to language server
 - don't shutdown Language Server when all associated files are closed, in order to preserve cached diagnostics for an hour
-- mark retrieved diagnostics as `Snyk` instead of `Language Server`
+
+### Changes
+- mark retrieved diagnostics as `Snyk` instead of `Language Server` to be able to filter, group and sort in problem view.
 
 ## [2.0.0] - v20220610.102110
 
