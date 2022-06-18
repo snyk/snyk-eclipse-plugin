@@ -2,6 +2,11 @@
 
 ## [2.0.0] - Unreleased
 
+### Fixes
+- fixed ConcurrentModificationException when submitting configuration to language server
+
+## [2.0.0] - v20220610.102110
+
 
 ### Fixes
 - fixed legacy Snyk View scan under Windows
