@@ -148,6 +148,7 @@
       id="io.snyk.languageserver"
       label="Snyk Language Server"
       clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
+      stopOnLastDisconnectedDocument="3600"
       singleton="true">
     </server>
 
