@@ -67,7 +67,6 @@ public class LsConfigurationUpdater {
       organization);
   }
 
-  @SuppressWarnings("unused") // getters for GSon serialization
   static class Settings {
     private final String activateSnykOpenSource;
     private final String activateSnykCode;
