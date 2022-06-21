@@ -1,7 +1,7 @@
 package io.snyk.languageserver.protocolextension;
 
+import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.properties.Preferences;
-import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4e.ServerMessageHandler;
@@ -50,8 +50,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
   private void enableSnykViewRunActions() {
     PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
-      var snykView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(SnykView.ID);
-      if (snykView != null) ((SnykView) snykView).toggleRunActionEnablement();
+      var snykView = SnykStartup.getSnykView();
+      if (snykView != null) snykView.toggleRunActionEnablement();
     });
   }
 

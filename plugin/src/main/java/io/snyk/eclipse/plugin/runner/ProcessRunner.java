@@ -108,6 +108,14 @@ public class ProcessRunner {
       pb.environment().put(Preferences.ORGANIZATION_KEY, organization);
       pb.command().add("--org=" + organization);
     }
+    
+    String additionalParameters = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS);
+    if (additionalParameters != null && !additionalParameters.isBlank()) {
+      var split = additionalParameters.split(" ");
+      for (String param : split) {
+        pb.command().add(param);
+      }
+    }
 
     String token = preferences.getAuthToken();
     if (token != null)
