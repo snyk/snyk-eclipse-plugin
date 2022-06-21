@@ -39,8 +39,11 @@ public class SnykStartup implements IStartup {
   private static boolean downloading = true;
   private ILog logger;
 
+  private static SnykStartup instance;
+
   @Override
   public void earlyStartup() {
+    instance = this;
     if (logger == null) {
        logger = Platform.getLog(getClass());
     }
@@ -77,8 +80,8 @@ public class SnykStartup implements IStartup {
     downloadCLIJob.schedule();
   }
 
-  private SnykView getSnykView() {
-    if (snykView == null) {
+  public static SnykView getSnykView() {
+    if (instance.snykView == null) {
       IWorkbench workbench = PlatformUI.getWorkbench();
 
       workbench.getDisplay().syncExec(() -> {
@@ -86,7 +89,7 @@ public class SnykStartup implements IStartup {
 
         if (workbenchWindow != null) {
           try {
-            snykView = (SnykView) workbenchWindow.getActivePage().showView(SnykView.ID);
+            instance.snykView = SnykView.getInstance();
           } catch (PartInitException partInitException) {
             logError(partInitException);
           }
@@ -94,7 +97,7 @@ public class SnykStartup implements IStartup {
       });
     }
 
-    return snykView;
+    return instance.snykView;
   }
 
   private boolean downloadLS() {

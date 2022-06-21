@@ -1,12 +1,14 @@
 package io.snyk.eclipse.plugin.views;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import io.snyk.eclipse.plugin.domain.ContentError;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
 import io.snyk.eclipse.plugin.domain.ScanResult;
 import io.snyk.eclipse.plugin.domain.Vuln;
-import io.snyk.eclipse.plugin.exception.AbortException;
+import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.runner.SnykCliRunner;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
@@ -49,7 +51,6 @@ public class DataProvider {
   public static final AtomicBoolean abort = new AtomicBoolean(false);
   private final SnykCliRunner cliRunner = new SnykCliRunner();
   ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
 
   public List<DisplayModel> scanWorkspace() {
     List<IProject> allProjects = Arrays.asList(ResourcesPlugin.getWorkspace().getRoot().getProjects());
@@ -102,44 +103,25 @@ public class DataProvider {
   public List<DisplayModel> scan(List<IProject> projects) {
     abort.set(false);
 
-
-    // we don't need to do authentication hier because of passing SNYK_TOKEN
-//		try {
-//			Authenticator.INSTANCE.doAuthentication();
-//		} catch (AuthException e) {
-//			return Lists.of​(error("", e));
-//		}
-
     List<DisplayModel> result = new ArrayList<>();
+    var preferences = new Preferences();
+    var additionalParams = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS, "");
     for (IProject project : projects) {
       if (abort.get()) return abortResult();
       if (!project.isOpen()) continue;
 
       List<IFile> poms = scrapeForPomfiles(project);
-      if (poms.size() > 1) {
-        try {
-          result.add(handleMultiplePoms(poms, project));
-        } catch (AbortException e) {
-          return abortResult();
+      if (poms.size() > 0) {
+        if (!additionalParams.contains("--all-projects")) {
+          var tempParams = additionalParams + " --all-projects".trim();
+          preferences.store(Preferences.ADDITIONAL_PARAMETERS, tempParams);
         }
-      } else {
-        result.add(scanProject(project));
       }
+      result.add(scanProject(project));
+      preferences.store(Preferences.ADDITIONAL_PARAMETERS, additionalParams);
     }
     return result;
   }
-
-  private DisplayModel handleMultiplePoms(List<IFile> poms, IProject project) throws AbortException {
-    DisplayModel projectLevel = new DisplayModel();
-    projectLevel.projectName = project.getName();
-    projectLevel.description = project.getName();
-    for (IFile pom : poms) {
-      if (abort.get()) throw new AbortException();
-      projectLevel.children.add(scanFile(pom, project));
-    }
-    return projectLevel;
-  }
-
 
   public List<DisplayModel> abortResult() {
     List<DisplayModel> result = new ArrayList<>();
@@ -147,45 +129,36 @@ public class DataProvider {
     return result;
   }
 
-  private DisplayModel scanFile(IFile file, IProject project) {
-    if (project == null) return new DisplayModel();
+  private IPath getPath(IProject project) {
     IPath path = project.getRawLocation();
 
     if (path == null) {
       path = project.getLocation();
-      if (path == null) {
-        return DisplayModel.builder().description(project.getName()).children(new ArrayList<>()).iProject(project).build();
-      }
-    }
-    File location = new File(path.toString());
 
-    ProcessResult result = cliRunner.snykTestFile(file.getRawLocation().toString(), location);
-    return processResult(result, project, Optional.of(file.getFullPath().toString()));
+    }
+    return path;
   }
 
   private DisplayModel scanProject(IProject project) {
     if (project == null) return new DisplayModel();
-    IPath path = project.getRawLocation();
-
+    IPath path = getPath(project);
     if (path == null) {
-      path = project.getLocation();
-      if (path == null) {
-        return DisplayModel.builder().description(project.getName()).children(new ArrayList<>()).iProject(project).build();
-      }
+      return DisplayModel.builder().description(project.getName()).children(new ArrayList<>()).iProject(project)
+        .build();
     }
-    File location = new File(path.toString());
 
+    File location = new File(path.toString());
     ProcessResult result = cliRunner.snykTest(location);
-    return processResult(result, project, Optional.empty());
+    return processResult(result, project);
   }
 
-  private DisplayModel processResult(ProcessResult result, IProject project, Optional<String> fileName) {
+  private DisplayModel processResult(ProcessResult result, IProject project) {
     String projectName = project.getName();
 
     IStatus[] statuses = new IStatus[]{
-      new Status(Status.INFO, BUNDLE.getSymbolicName(), "result = " + result.getContent())
-    };
-    MultiStatus multiStatusResult = new MultiStatus(BUNDLE.getSymbolicName(), Status.INFO, statuses, "Snyk command result", null);
+      new Status(Status.INFO, BUNDLE.getSymbolicName(), "result = " + result.getContent())};
+    MultiStatus multiStatusResult = new MultiStatus(BUNDLE.getSymbolicName(), Status.INFO, statuses,
+      "Snyk command result", null);
     LOG.log(multiStatusResult);
 
     try {
@@ -195,24 +168,56 @@ public class DataProvider {
       } else if (result.hasContentError()) {
         ContentError error = objectMapper.readValue(result.getContent(), ContentError.class);
         projectModel = DisplayModel.builder()
-          .description(projectName + " " + error.getError() + " Path: " + error.getPath())
-          .projectName(projectName).build();
-      } else {
-        ScanResult scanResult = objectMapper.readValue(result.getContent(), ScanResult.class);
-        List<DisplayModel> vulns = scanResult.getVulnerabilities().stream()
-          .sorted(Comparator.comparingInt(vuln -> ((Vuln) vuln).getCvssScore()).reversed())
-          .map(vuln -> transform(vuln, project)).collect(Collectors.toList());
-
-        projectModel = DisplayModel.builder().description(fileName.orElse(projectName))
-          .projectName(projectName)
-          .dependecy(scanResult.getUniqueCount() + " vulns, " + scanResult.getSummary()).children(vulns)
+          .description(projectName + " " + error.getError() + " Path: " + error.getPath()).projectName(projectName)
           .build();
+      } else {
+        ScanResult[] scanResults = parseScanResults(result);
+        projectModel = getProjectModel(project, projectName, scanResults);
       }
       return projectModel;
     } catch (Exception e) {
       return error(projectName, e);
     }
+  }
 
+  private ScanResult[] parseScanResults(ProcessResult result) throws JsonProcessingException {
+    var json = result.getContent();
+    ScanResult[] scanResults;
+    try {
+      scanResults = objectMapper.readValue(json, ScanResult[].class);
+    } catch (MismatchedInputException e) {
+      ScanResult scanResult = objectMapper.readValue(result.getContent(), ScanResult.class);
+      scanResults = new ScanResult[]{scanResult};
+    }
+    return scanResults;
+  }
+
+  private DisplayModel getProjectModel(IProject project, String projectName, ScanResult[] scanResults) {
+    DisplayModel projectModel;
+    List<DisplayModel> scanResultModels = new ArrayList<>();
+    for (ScanResult scanResult : scanResults) {
+      List<DisplayModel> vulns = scanResult.getVulnerabilities().stream()
+        .sorted(Comparator.comparingInt(vuln -> ((Vuln) vuln).getCvssScore()).reversed())
+        .map(vuln -> transform(vuln, project)).collect(Collectors.toList());
+
+      var scanResultModel = DisplayModel.builder()
+        .description(scanResult.getDisplayTargetFile())
+        .projectName(scanResult.getDisplayTargetFile())
+        .dependecy(scanResult.getUniqueCount() + " vulns, " + scanResult.getSummary()).children(vulns).build();
+      scanResultModels.add(scanResultModel);
+    }
+    if (scanResultModels.size() > 1) {
+      projectModel = DisplayModel.builder()
+        .description(projectName)
+        .projectName(projectName)
+        .children(scanResultModels).build();
+    } else {
+      projectModel = scanResultModels.get(0);
+      projectModel.description = projectName;
+      projectModel.iProject = project;
+      projectModel.projectName = projectName;
+    }
+    return projectModel;
   }
 
   List<IFile> scrapeForPomfiles(IProject project) {
@@ -258,7 +263,6 @@ public class DataProvider {
       .fix(vuln.getFix()).vulnPath(vuln.printFrom()).children(pathtrace).build();
   }
 
-
   private DisplayModel fromPath(String path, int indent) {
     String arrow = Stream.generate(() -> "-").limit(indent).collect(Collectors.joining()) + ">";
     return DisplayModel.builder().dependecy(arrow + " " + path).build();
@@ -277,12 +281,8 @@ public class DataProvider {
     return DisplayModel.builder().description(message).children(new ArrayList<>()).build();
   }
 
-
   public void ignoreIssue(String id, IProject project) {
-    IPath path = project.getRawLocation();
-    if (path == null) {
-      path = project.getLocation();
-    }
+    IPath path = getPath(project);
 
     ProcessResult ignoreResult = cliRunner.snykIgnore(id, new File(path.toString()));
     messageProcessResult(ignoreResult, "Ignoring " + id + " failed", "Ignoring " + id + " for this project for 30 days");
