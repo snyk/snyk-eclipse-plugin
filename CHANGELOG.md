@@ -4,6 +4,9 @@
 
 ### Fixes
 - parse and display findings of multi-module projects in Snyk View, supporting the `--all-projects` parameter there as well.
+- use preferences to configure additional environment variables in environment of CLI
+- proxy configuration for https proxy is now using `https_proxy=http://configured-proxy-settings-in-eclipse` instead of `https_proxy=https://configured-proxy-settings-in-eclipse`
+- support additional environment variables of the format `a=b=c`, e.g. needed for `MAVEN_OPTS=-Djava.awt.headless=true`
 
 
 ## [2.0.0] - v20220620.201253
