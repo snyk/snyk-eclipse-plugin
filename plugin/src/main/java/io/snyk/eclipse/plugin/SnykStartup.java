@@ -169,4 +169,8 @@ public class SnykStartup implements IStartup {
   public void setLogger(ILog logger) {
     this.logger = logger;
   }
+
+  public LsRuntimeEnvironment getRuntimeEnvironment() {
+    return runtimeEnvironment;
+  }
 }
