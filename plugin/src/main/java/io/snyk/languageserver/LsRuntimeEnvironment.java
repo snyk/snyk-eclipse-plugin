@@ -193,14 +193,14 @@ public class LsRuntimeEnvironment {
         }
         creds += "@";
       }
-      // TODO urlencode creds
-      String value = creds + data.getHost() + ":" + data.getPort();
-      String protocol = data.getType();
+      String protocol = data.getType().toLowerCase();
       if (data.getType().equals(HTTPS_PROXY_TYPE)) {
         // TODO verify correctness of this!
-        protocol = HTTP_PROXY_TYPE;
+        protocol = HTTP_PROXY_TYPE.toLowerCase();
       }
-      env.put(protocol + "_proxy", value);
+      // TODO urlencode creds
+      String value = creds + protocol + "://" + data.getHost() + ":" + data.getPort();
+      env.put(data.getType().toLowerCase() + "_proxy", value);
     }
     String[] nonProxiedHostsArray = service.getNonProxiedHosts();
     if (nonProxiedHostsArray != null && nonProxiedHostsArray.length > 0) {
