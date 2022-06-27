@@ -7,6 +7,7 @@ import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.download.LsDownloadRequest;
 import io.snyk.languageserver.download.LsDownloader;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.runtime.ILog;
@@ -57,7 +58,7 @@ public class SnykStartup implements IStartup {
             SnykView snykView = getSnykView();
             snykView.disableRunAbortActions();
             cliFile.getParentFile().mkdirs();
-            CliDownloader.newInstance().download(cliFile, monitor);
+            CliDownloader.newInstance(HttpClientBuilder.create()).download(cliFile, monitor);
             cliFile.setExecutable(true);
             snykView.toggleRunActionEnablement();
           }
@@ -168,9 +169,5 @@ public class SnykStartup implements IStartup {
 
   public void setLogger(ILog logger) {
     this.logger = logger;
-  }
-
-  public LsRuntimeEnvironment getRuntimeEnvironment() {
-    return runtimeEnvironment;
   }
 }
