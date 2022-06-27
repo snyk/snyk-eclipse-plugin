@@ -10,11 +10,16 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliDirectory;
+import static org.eclipse.core.net.proxy.IProxyData.HTTPS_PROXY_TYPE;
+import static org.eclipse.core.net.proxy.IProxyData.HTTP_PROXY_TYPE;
 
 public class LsRuntimeEnvironment {
   private final Preferences preferences;
@@ -116,7 +121,8 @@ public class LsRuntimeEnvironment {
       env.put(Preferences.ORGANIZATION_KEY, pref);
     }
   }
-  void addAdditionalParamsAndEnv(Map<String, String> env) {
+
+  public void addAdditionalParamsAndEnv(Map<String, String> env) {
     String additionalParams = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS, "");
     if (additionalParams != null && !additionalParams.isBlank()) {
       env.put(Preferences.ADDITIONAL_PARAMETERS, additionalParams);
@@ -130,8 +136,11 @@ public class LsRuntimeEnvironment {
       var variables = additionalEnv.split(";");
       for (String variable : variables) {
         var split = variable.split("=");
-        if (split.length == 2) {
-          env.put(split[0], split[1]);
+        if (split.length > 1) {
+          String name = split[0];
+          List<String> value = new ArrayList<>(Arrays.asList(split));
+          value.remove(0);
+          env.put(name, String.join("=", value)); // allow equal signs in variable values
         }
       }
     }
@@ -143,7 +152,7 @@ public class LsRuntimeEnvironment {
     env.put(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
   }
 
-  private void addPath(Map<String, String> env) {
+  public void addPath(Map<String, String> env) {
     var pathOptional = preferences.getPath();
     if (pathOptional.isPresent()) {
       var path = pathOptional.get();
@@ -160,7 +169,7 @@ public class LsRuntimeEnvironment {
     }
   }
 
-  private void addProxyToEnv(Map<String, String> env) {
+  public void addProxyToEnv(Map<String, String> env) {
     for (Entry<Object, Object> entry : System.getProperties().entrySet()) {
       if (!(entry.getKey() instanceof String && entry.getValue() instanceof String)) continue;
 
@@ -184,7 +193,13 @@ public class LsRuntimeEnvironment {
         }
         creds += "@";
       }
-      String value = creds + data.getHost() + ":" + data.getPort();
+      String protocol = data.getType().toLowerCase();
+      if (data.getType().equals(HTTPS_PROXY_TYPE)) {
+        // TODO verify correctness of this!
+        protocol = HTTP_PROXY_TYPE.toLowerCase();
+      }
+      // TODO urlencode creds
+      String value = creds + protocol + "://" + data.getHost() + ":" + data.getPort();
       env.put(data.getType().toLowerCase() + "_proxy", value);
     }
     String[] nonProxiedHostsArray = service.getNonProxiedHosts();
@@ -205,7 +220,7 @@ public class LsRuntimeEnvironment {
     return bundleContext.getService(serviceRef);
   }
 
-  private void addIntegrationInfoToEnv(Map<String, String> env) {
+  public void addIntegrationInfoToEnv(Map<String, String> env) {
     env.put("SNYK_INTEGRATION_NAME", Activator.INTEGRATION_NAME);
     env.put("SNYK_INTEGRATION_VERSION", Activator.PLUGIN_VERSION);
   }

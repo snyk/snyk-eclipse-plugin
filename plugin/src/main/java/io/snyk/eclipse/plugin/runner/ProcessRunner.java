@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import io.snyk.languageserver.LsRuntimeEnvironment;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -29,9 +30,6 @@ public class ProcessRunner {
 
   private static final String ENV_SNYK_API = "SNYK_API";
   private static final String ENV_SNYK_TOKEN = "SNYK_TOKEN";
-  private static final String ENV_SNYK_INTEGRATION_NAME = "SNYK_INTEGRATION_NAME";
-  private static final String ENV_SNYK_INTEGRATION_VERSION = "SNYK_INTEGRATION_VERSION";
-
   private static final String HOME = System.getProperty("user.home");
   private static final String DEFAULT_MAC_PATH = "/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:" + HOME + "/bin:"
     + HOME + "/.cargo/bin:" + System.getenv("GOPATH") + "/bin" + System.getenv("GOROOT") + "/bin";
@@ -89,6 +87,7 @@ public class ProcessRunner {
 
     ProcessBuilder pb = new ProcessBuilder(cmd);
     setupProcessBuilderBase(pb);
+    // TODO: move to runtimeEnvironment
     if (path.isPresent() && !path.get().isBlank()) {
       pb.environment().put("PATH",
         path.map(p -> p + File.pathSeparator + defaultPathForOS).orElse(defaultPathForOS)
@@ -98,6 +97,13 @@ public class ProcessRunner {
   }
 
   private void setupProcessBuilderBase(ProcessBuilder pb) {
+    LsRuntimeEnvironment runtimeEnvironment = new LsRuntimeEnvironment(preferences);
+
+    runtimeEnvironment.addPath(pb.environment());
+    runtimeEnvironment.addProxyToEnv(pb.environment());
+    runtimeEnvironment.addAdditionalParamsAndEnv(pb.environment());
+    runtimeEnvironment.addIntegrationInfoToEnv(pb.environment());
+
     String endpoint = preferences.getEndpoint();
     if (endpoint != null && !endpoint.isEmpty()) {
       pb.environment().put(ENV_SNYK_API, endpoint);
@@ -107,6 +113,14 @@ public class ProcessRunner {
     if (organization != null && !organization.isBlank()) {
       pb.environment().put(Preferences.ORGANIZATION_KEY, organization);
       pb.command().add("--org=" + organization);
+    }
+
+    String additionalParameters = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS);
+    if (additionalParameters != null && !additionalParameters.isBlank()) {
+      var split = additionalParameters.split(" ");
+      for (String param : split) {
+        pb.command().add(param);
+      }
     }
 
     String token = preferences.getAuthToken();
@@ -123,9 +137,6 @@ public class ProcessRunner {
     } else {
       pb.environment().put(Preferences.ENABLE_TELEMETRY, "1"); // default to disable telemetry
     }
-
-    pb.environment().put(ENV_SNYK_INTEGRATION_NAME, "ECLIPSE");
-    pb.environment().put(ENV_SNYK_INTEGRATION_VERSION, getVersion());
   }
 
   public ProcessBuilder createMacProcessBuilder(List<String> params, Optional<String> path) {
@@ -145,12 +156,12 @@ public class ProcessRunner {
       + File.pathSeparator + System.getenv("PATH"));
 
     // debug logging on windows machines
-    IStatus[] statuses = new IStatus[]{
-      new Status(Status.INFO, bundle.getSymbolicName(), "env.PATH = " + pb.environment().get("PATH")),
-      new Status(Status.INFO, bundle.getSymbolicName(), "path = " + path),
-      new Status(Status.INFO, bundle.getSymbolicName(), "params = " + params),};
+    IStatus[] statuses = new IStatus[] {
+        new Status(Status.INFO, bundle.getSymbolicName(), "env.PATH = " + pb.environment().get("PATH")),
+        new Status(Status.INFO, bundle.getSymbolicName(), "path = " + path),
+        new Status(Status.INFO, bundle.getSymbolicName(), "params = " + params), };
     MultiStatus multiStatusCommand = new MultiStatus(bundle.getSymbolicName(), Status.INFO, statuses,
-      "Snyk params execution", null);
+        "Snyk params execution", null);
     log.log(multiStatusCommand);
 
     return pb;

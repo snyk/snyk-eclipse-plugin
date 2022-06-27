@@ -13,6 +13,11 @@ public class ScanResult {
   String summary;
   Integer uniqueCount;
   String path;
+  String displayTargetFile;
+
+  public String getDisplayTargetFile() {
+    return displayTargetFile;
+  }
 
   public ScanResult() {
   }

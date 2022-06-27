@@ -2,6 +2,9 @@ package io.snyk.languageserver;
 
 import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+
+import java.util.Collections;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.lsp4e.LanguageServersRegistry;
@@ -25,7 +28,7 @@ public class LsConfigurationUpdater {
     for (IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
       if (project.isAccessible()) {
         try {
-          var servers = LanguageServiceAccessor.getLanguageServers(project, null);
+          var servers = Collections.unmodifiableCollection(LanguageServiceAccessor.getLanguageServers(project, null));
           for (LanguageServer ls : servers) {
             var currentDefinition = LanguageServiceAccessor.resolveServerDefinition(ls);
             if (currentDefinition.isEmpty() || !currentDefinition.get().id.equals(definition.id)) continue;
@@ -64,7 +67,6 @@ public class LsConfigurationUpdater {
       organization);
   }
 
-  @SuppressWarnings("unused") // getters for GSon serialization
   static class Settings {
     private final String activateSnykOpenSource;
     private final String activateSnykCode;

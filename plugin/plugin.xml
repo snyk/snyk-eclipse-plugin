@@ -148,7 +148,9 @@
       id="io.snyk.languageserver"
       label="Snyk Language Server"
       clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
-      singleton="true">
+      stopOnLastDisconnectedDocument="3600"
+      singleton="true"
+      makerType="io.snyk.languageserver.marker">
     </server>
 
     <!-- snyk code -->
@@ -222,5 +224,14 @@
       contentType="org.python.pydev.pythonfile"
       id="io.snyk.languageserver">
     </contentTypeMapping>
+  </extension>
+  <extension
+        id="io.snyk.languageserver.marker"
+        name="Snyk"
+        point="org.eclipse.core.resources.markers">
+    <super
+          type="org.eclipse.lsp4e.diagnostic">
+    </super>
+    <persistent value="false"/>
   </extension>
 </plugin>

@@ -110,13 +110,14 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
   void testAddAdditionalParamsAndEnvAddsThemToEnvironment() throws StorageException {
     HashMap<String, String> env = new HashMap<>();
     when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("addParams");
-    when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("a=b;c=d");
+    when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("a=b;c=d;e=f=g");
 
     environment.addAdditionalParamsAndEnv(env);
 
     assertEquals("addParams", env.get(Preferences.ADDITIONAL_PARAMETERS));
     assertEquals("b", env.get("a"));
     assertEquals("d", env.get("c"));
+    assertEquals("f=g", env.get("e"));
   }
 
   @Test

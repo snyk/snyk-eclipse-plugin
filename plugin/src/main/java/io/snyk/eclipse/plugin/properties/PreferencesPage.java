@@ -1,10 +1,8 @@
 package io.snyk.eclipse.plugin.properties;
 
-import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.runner.SnykCliRunner;
+import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.utils.FileSystemUtil;
 import io.snyk.eclipse.plugin.views.DataProvider;
-import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -12,17 +10,14 @@ import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.PlatformUI;
 
 import java.io.File;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
   private static final Preferences PREFERENCES = new Preferences();
-  private TokenFieldEditor tokenField;
 
   public PreferencesPage() {
     super(GRID);
@@ -37,9 +32,9 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
   @Override
   protected void createFieldEditors() {
     File lsFile = new LsRuntimeEnvironment(PREFERENCES).getLSFile();
-    String msg = "Snyk LS not found at " + lsFile.getAbsolutePath();
+    String msg = "Snyk Language Server not found at " + lsFile.getAbsolutePath();
     if (lsFile.exists()) {
-      msg = "Snyk LS found: " + lsFile.getAbsolutePath();
+      msg = "Snyk Language Server found: " + lsFile.getAbsolutePath();
     }
     addField(new LabelFieldEditor(msg, getFieldEditorParent()));
 
@@ -52,7 +47,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
     addField(space());
 
-    tokenField = new TokenFieldEditor(PREFERENCES, Preferences.AUTH_TOKEN_KEY, "Snyk API Token:",
+    TokenFieldEditor tokenField = new TokenFieldEditor(PREFERENCES, Preferences.AUTH_TOKEN_KEY, "Snyk API Token:",
       getFieldEditorParent());
     addField(tokenField);
     addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));
@@ -92,12 +87,8 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
   @Override
   public boolean performOk() {
     boolean superOK = super.performOk();
-    SnykView snykView = (SnykView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-      .findView(SnykView.ID);
+    var snykView = SnykStartup.getSnykView();
     snykView.disableRunAbortActions();
-    if (tokenField.getStringValue() == null || tokenField.getStringValue().isEmpty()) {
-      DataProvider.popUpWarn("Authentication", "Please add a valid Snyk Token, else scanning is not possible.");
-    }
     snykView.toggleRunActionEnablement();
     new LsConfigurationUpdater().configurationChanged(PREFERENCES);
     return superOK;

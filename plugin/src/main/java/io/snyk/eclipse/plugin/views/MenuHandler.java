@@ -1,6 +1,6 @@
 package io.snyk.eclipse.plugin.views;
 
-import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.eclipse.plugin.SnykStartup;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -9,8 +9,6 @@ import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 
@@ -37,12 +35,9 @@ public class MenuHandler extends AbstractHandler {
   }
 
   private void runForProject(String projectName) {
-    try {
-      SnykView snykView = (SnykView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(SnykView.ID);
+    SnykView snykView = SnykStartup.getSnykView();
+    if (snykView != null) {
       snykView.testProject(projectName);
-    } catch (PartInitException e) {
-      SnykLogger.logError(e);
     }
   }
-
 }

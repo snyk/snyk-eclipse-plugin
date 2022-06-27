@@ -7,6 +7,7 @@ import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.download.LsDownloadRequest;
 import io.snyk.languageserver.download.LsDownloader;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.runtime.ILog;
@@ -39,8 +40,11 @@ public class SnykStartup implements IStartup {
   private static boolean downloading = true;
   private ILog logger;
 
+  private static SnykStartup instance;
+
   @Override
   public void earlyStartup() {
+    instance = this;
     if (logger == null) {
        logger = Platform.getLog(getClass());
     }
@@ -54,7 +58,7 @@ public class SnykStartup implements IStartup {
             SnykView snykView = getSnykView();
             snykView.disableRunAbortActions();
             cliFile.getParentFile().mkdirs();
-            CliDownloader.newInstance().download(cliFile, monitor);
+            CliDownloader.newInstance(HttpClientBuilder.create()).download(cliFile, monitor);
             cliFile.setExecutable(true);
             snykView.toggleRunActionEnablement();
           }
@@ -77,8 +81,8 @@ public class SnykStartup implements IStartup {
     downloadCLIJob.schedule();
   }
 
-  private SnykView getSnykView() {
-    if (snykView == null) {
+  public static SnykView getSnykView() {
+    if (instance.snykView == null) {
       IWorkbench workbench = PlatformUI.getWorkbench();
 
       workbench.getDisplay().syncExec(() -> {
@@ -86,7 +90,7 @@ public class SnykStartup implements IStartup {
 
         if (workbenchWindow != null) {
           try {
-            snykView = (SnykView) workbenchWindow.getActivePage().showView(SnykView.ID);
+            instance.snykView = SnykView.getInstance();
           } catch (PartInitException partInitException) {
             logError(partInitException);
           }
@@ -94,7 +98,7 @@ public class SnykStartup implements IStartup {
       });
     }
 
-    return snykView;
+    return instance.snykView;
   }
 
   private boolean downloadLS() {
