@@ -24,6 +24,7 @@ public class Preferences {
   // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so we need to revert it
   // when populating the environment
   public static final String ENABLE_TELEMETRY = "SNYK_CFG_DISABLE_ANALYTICS";
+  public static final String MANAGE_BINARIES_AUTOMATICALLY = "SNYK_CFG_MANAGE_BINARIES_AUTOMATICALLY";
   public static final String ORGANIZATION_KEY = "SNYK_CFG_ORG";
 
 
@@ -45,6 +46,9 @@ public class Preferences {
     }
     if (getPref(ENABLE_TELEMETRY) == null) {
       store(ENABLE_TELEMETRY, "false");
+    }
+    if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
+      store(MANAGE_BINARIES_AUTOMATICALLY, "true");
     }
   }
 
@@ -87,6 +91,15 @@ public class Preferences {
       throw new RuntimeException(e);
     }
   }
+
+
+public boolean isManagedBinaries() {
+	 try {
+      return node.getBoolean(MANAGE_BINARIES_AUTOMATICALLY, true);
+    } catch (StorageException e) {
+      throw new RuntimeException(e);
+    }
+}
 
   public void store(String key, String value) {
     try {

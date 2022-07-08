@@ -74,6 +74,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
     addField(space());
 
+    addField(new BooleanFieldEditor(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "Update and install Snyk binaries automatically", getFieldEditorParent()));
     addField(new BooleanFieldEditor(Preferences.SEND_ERROR_REPORTS, "Send error reports to Snyk",
       getFieldEditorParent()));
     addField(new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Send usage statistics to Snyk", getFieldEditorParent()));
