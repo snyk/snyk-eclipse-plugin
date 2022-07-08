@@ -50,6 +50,9 @@ public class Preferences {
     if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
       store(MANAGE_BINARIES_AUTOMATICALLY, "true");
     }
+    if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
+      store(MANAGE_BINARIES_AUTOMATICALLY, "true");
+    }
   }
 
   public String getPref(String key) {
