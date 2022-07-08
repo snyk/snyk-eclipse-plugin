@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin;
 
 import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.PreferencesPage;
 import io.snyk.eclipse.plugin.utils.CliDownloader;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
@@ -104,8 +105,7 @@ public class SnykStartup implements IStartup {
   private boolean downloadLS() {
     File lsFile = runtimeEnvironment.getLSFile();
     logger.info("LS: Expecting file at " + lsFile.getAbsolutePath());
-    String customPath = new Preferences().getLsBinary();
-    if (!isDownloadAllowed(customPath)) return false;
+    if (!isDownloadAllowed(new Preferences())) return false;
     if (lsFile.exists()) {
       logger.info("LS: File already exists, checking for age " + lsFile.getAbsolutePath());
       try {
@@ -123,7 +123,13 @@ public class SnykStartup implements IStartup {
     return true;
   }
 
-  boolean isDownloadAllowed(String customPath) {
+  boolean isDownloadAllowed(Preferences preferences) {
+	String customPath = preferences.getLsBinary();
+	boolean managedBinaries = preferences.isManagedBinaries();
+    if (managedBinaries) {
+        logger.info("LS: Automatically managed binaries disabled, not downloading");
+        return false;
+      }
     boolean customPathSet = customPath != null && !customPath.isBlank();
     if (customPathSet) {
       logger.info("LS: Custom LS path is set, not downloading. Path: " + customPath);

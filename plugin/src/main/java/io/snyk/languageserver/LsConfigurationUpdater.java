@@ -54,6 +54,7 @@ public class LsConfigurationUpdater {
     String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
     String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, "false");
     String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
+    String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true");
     return new Settings(activateSnykOpenSource,
       activateSnykCode,
       activateSnykIac,
@@ -64,7 +65,9 @@ public class LsConfigurationUpdater {
       path,
       sendErrorReports,
       enableTelemetry,
-      organization);
+      organization,
+      manageBinariesAutomatically
+      );
   }
 
   static class Settings {
@@ -80,6 +83,7 @@ public class LsConfigurationUpdater {
     private final String sendErrorReports;
     private final String enableTelemetry;
     private final String organization;
+    private final String manageBinariesAutomatically;
 
     public Settings(String activateSnykOpenSource,
                     String activateSnykCode,
@@ -91,7 +95,8 @@ public class LsConfigurationUpdater {
                     String path,
                     String sendErrorReports,
                     String enableTelemetry,
-                    String organization) {
+                    String organization,
+                    String manageBinariesAutomatically) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
       this.activateSnykIac = activateSnykIac;
@@ -103,6 +108,7 @@ public class LsConfigurationUpdater {
       this.sendErrorReports = sendErrorReports;
       this.enableTelemetry = enableTelemetry;
       this.organization = organization;
+      this.manageBinariesAutomatically = manageBinariesAutomatically;
     }
 
     public String getPath() {
@@ -147,6 +153,9 @@ public class LsConfigurationUpdater {
 
     public String getOrganization() {
       return this.organization;
+    }
+    public String getManageBinariesAutomatically() {
+      return this.manageBinariesAutomatically;
     }
   }
 }
