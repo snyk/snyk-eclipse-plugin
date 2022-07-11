@@ -2,7 +2,6 @@ package io.snyk.eclipse.plugin.properties;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.utils.FileSystemUtil;
-import io.snyk.eclipse.plugin.views.DataProvider;
 import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import org.eclipse.jface.preference.BooleanFieldEditor;
