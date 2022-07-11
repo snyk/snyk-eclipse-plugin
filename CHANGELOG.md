@@ -1,6 +1,10 @@
 # Snyk Changelog
 
 ## [2.0.0] - Unreleased
+### Changes
+- enable telemetry by default
+
+## [2.0.0] - v20220627.112145
 
 ### Fixes
 - parse and display findings of multi-module projects in Snyk View, supporting the `--all-projects` parameter there as well.
