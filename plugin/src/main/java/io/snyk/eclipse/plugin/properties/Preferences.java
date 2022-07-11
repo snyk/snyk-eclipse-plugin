@@ -44,7 +44,7 @@ public class Preferences {
       store(SEND_ERROR_REPORTS, "true");
     }
     if (getPref(ENABLE_TELEMETRY) == null) {
-      store(ENABLE_TELEMETRY, "false");
+      store(ENABLE_TELEMETRY, "true");
     }
   }
 
