@@ -124,9 +124,10 @@ public class SnykStartup implements IStartup {
   }
 
   boolean isDownloadAllowed(Preferences preferences) {
-	String customPath = preferences.getLsBinary();
-	boolean managedBinaries = preferences.isManagedBinaries();
-    if (managedBinaries) {
+    return isDownloadAllowed(preferences.getLsBinary(), preferences.isManagedBinaries());
+  }
+  boolean isDownloadAllowed(String customPath, boolean managedBinaries) {
+    if (!managedBinaries) {
         logger.info("LS: Automatically managed binaries disabled, not downloading");
         return false;
       }

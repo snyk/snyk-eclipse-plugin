@@ -14,6 +14,7 @@ import org.eclipse.lsp4e.server.StreamConnectionProvider;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvider implements StreamConnectionProvider {
@@ -58,5 +59,18 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
     var pb = super.createProcessBuilder();
     runtimeEnvironment.updateEnvironment(pb.environment());
     return pb;
+  }
+
+  @Override
+  public Object getInitializationOptions(URI rootUri) {
+	LsConfigurationUpdater.Settings currentSettings = null;
+	try {
+	    Preferences preferences = runtimeEnvironment.getPreferences();
+		LsConfigurationUpdater lsConfigurationUpdater = new LsConfigurationUpdater();
+		currentSettings = lsConfigurationUpdater.getCurrentSettings(preferences);
+	} catch (RuntimeException e) {
+         SnykLogger.logError(e);
+    }
+	return currentSettings;
   }
 }
