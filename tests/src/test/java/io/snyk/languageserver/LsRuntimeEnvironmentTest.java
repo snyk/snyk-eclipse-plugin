@@ -61,7 +61,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 
     File file = environment.getLSFile();
 
-    assertEquals(new File(FileSystemUtil.getCliDirectory(), environment.getBinaryName()), file);
+    assertEquals(new File(FileSystemUtil.getBinaryDirectory(), environment.getBinaryName()), file);
   }
 
   //  @Test

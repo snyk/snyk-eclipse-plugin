@@ -1,14 +1,11 @@
 package io.snyk.eclipse.plugin;
 
 import io.snyk.eclipse.plugin.properties.Preferences;
-import io.snyk.eclipse.plugin.properties.PreferencesPage;
-import io.snyk.eclipse.plugin.utils.CliDownloader;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.download.LsDownloadRequest;
 import io.snyk.languageserver.download.LsDownloader;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.runtime.ILog;
@@ -32,7 +29,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliFile;
 import static io.snyk.eclipse.plugin.utils.SnykLogger.logError;
 
 public class SnykStartup implements IStartup {
@@ -54,16 +50,6 @@ public class SnykStartup implements IStartup {
       @Override
       protected IStatus run(IProgressMonitor monitor) {
         try {
-          File cliFile = getCliFile();
-          if (!cliFile.exists()) {
-            SnykView snykView = getSnykView();
-            snykView.disableRunAbortActions();
-            cliFile.getParentFile().mkdirs();
-            CliDownloader.newInstance(HttpClientBuilder.create()).download(cliFile, monitor);
-            cliFile.setExecutable(true);
-            snykView.toggleRunActionEnablement();
-          }
-
           logger.info("LS: Checking for needed download");
           if (downloadLS()) {
             logger.info("LS: Need to download");

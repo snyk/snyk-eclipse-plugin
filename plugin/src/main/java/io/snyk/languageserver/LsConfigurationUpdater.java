@@ -55,6 +55,7 @@ public class LsConfigurationUpdater {
     String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, "false");
     String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
     String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true");
+    String cliPath = preferences.getPref(Preferences.CLI_PATH, "");
     return new Settings(activateSnykOpenSource,
       activateSnykCode,
       activateSnykIac,
@@ -66,7 +67,8 @@ public class LsConfigurationUpdater {
       sendErrorReports,
       enableTelemetry,
       organization,
-      manageBinariesAutomatically
+      manageBinariesAutomatically,
+      cliPath
       );
   }
 
@@ -84,6 +86,7 @@ public class LsConfigurationUpdater {
     private final String enableTelemetry;
     private final String organization;
     private final String manageBinariesAutomatically;
+    private final String cliPath;
 
     public Settings(String activateSnykOpenSource,
                     String activateSnykCode,
@@ -96,7 +99,8 @@ public class LsConfigurationUpdater {
                     String sendErrorReports,
                     String enableTelemetry,
                     String organization,
-                    String manageBinariesAutomatically) {
+                    String manageBinariesAutomatically,
+                    String cliPath) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
       this.activateSnykIac = activateSnykIac;
@@ -109,6 +113,7 @@ public class LsConfigurationUpdater {
       this.enableTelemetry = enableTelemetry;
       this.organization = organization;
       this.manageBinariesAutomatically = manageBinariesAutomatically;
+      this.cliPath = cliPath;
     }
 
     public String getPath() {
@@ -156,6 +161,9 @@ public class LsConfigurationUpdater {
     }
     public String getManageBinariesAutomatically() {
       return this.manageBinariesAutomatically;
+    }
+    public String getCliPath() {
+      return cliPath;
     }
   }
 }

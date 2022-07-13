@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.utils;
 
+import io.snyk.eclipse.plugin.properties.Preferences;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
@@ -19,18 +20,18 @@ public final class FileSystemUtil {
    * @return File
    */
   public static File getCliFile() {
-    return new File(getCliDirectory(), Platform.current().snykWrapperFileName);
+    return new File(new Preferences().getCliPath());
   }
 
   /**
-   * Get Snyk CLI directory on OS type.
+   * Get Snyk Binary directory on OS type.
    * <p>
    * If OS is Windows File will reference to %APPDATA%/Local/Snyk directory. In
    * other cases File will reference to ~/.snyk directory.
    *
    * @return File
    */
-  public static File getCliDirectory() {
+  public static File getBinaryDirectory() {
     String userHomePath = System.getProperty("user.home");
 
     File destinationDirectory;

@@ -14,6 +14,7 @@ public class Preferences {
   public static final String ENDPOINT_KEY = "endpoint";
   public static final String INSECURE_KEY = "insecure";
   public static final String LS_BINARY_KEY = "ls-binary";
+  public static final String CLI_PATH = "cli-path";
   public static final String ACTIVATE_SNYK_CODE = "ACTIVATE_SNYK_CODE";
   public static final String ACTIVATE_SNYK_OPEN_SOURCE = "ACTIVATE_SNYK_OPEN_SOURCE";
   public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
@@ -85,6 +86,10 @@ public class Preferences {
       return Optional.empty();
     }
     return Optional.of(path);
+  }
+  
+  public String getCliPath() {
+    return getPref(CLI_PATH, "");
   }
 
   public boolean isInsecure() {

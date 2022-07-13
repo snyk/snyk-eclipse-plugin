@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliDirectory;
+import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getBinaryDirectory;
 import static org.eclipse.core.net.proxy.IProxyData.HTTPS_PROXY_TYPE;
 import static org.eclipse.core.net.proxy.IProxyData.HTTP_PROXY_TYPE;
 
@@ -90,7 +90,7 @@ public class LsRuntimeEnvironment {
 
   public File getLSFile() {
     String lsBinaryPath = preferences.getLsBinary();
-    File binary = new File(getCliDirectory(), getBinaryName());
+    File binary = new File(getBinaryDirectory(), getBinaryName());
     if (lsBinaryPath != null && !lsBinaryPath.isBlank()) {
       binary = new File(lsBinaryPath);
     }
