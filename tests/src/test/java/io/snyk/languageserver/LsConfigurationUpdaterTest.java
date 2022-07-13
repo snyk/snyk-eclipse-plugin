@@ -34,6 +34,7 @@ class LsConfigurationUpdaterTest {
     assertEquals("organization", settings.getOrganization());
     assertEquals("true", settings.getEnableTelemetry());
     assertEquals("true", settings.getManageBinariesAutomatically());
+    assertEquals("/path", settings.getCliPath());
   }
 
   private void setupPreferenceMock() {
@@ -61,5 +62,6 @@ class LsConfigurationUpdaterTest {
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("organization");
+    when(preferenceMock.getPref(Preferences.CLI_PATH, "")).thenReturn("/path");
   }
 }

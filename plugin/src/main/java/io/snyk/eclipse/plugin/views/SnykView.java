@@ -266,7 +266,7 @@ public class SnykView extends ViewPart {
       String init = "Click play to run Snyk Test";
       String msg = "";
       if (!cliFound) {
-        msg = "No Snyk CLI found. Please place a CLI file in " + FileSystemUtil.getCliFile().getAbsolutePath()
+        msg = "No Snyk CLI found. Please place a CLI file in " + getCliFile().getAbsolutePath()
           + ". ";
       }
       if (!tokenFound) {
