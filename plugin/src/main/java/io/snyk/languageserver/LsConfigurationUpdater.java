@@ -56,6 +56,7 @@ public class LsConfigurationUpdater {
     String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
     String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true");
     String cliPath = preferences.getPref(Preferences.CLI_PATH, "");
+    String token = preferences.getPref(Preferences.AUTH_TOKEN_KEY, "");
     return new Settings(activateSnykOpenSource,
       activateSnykCode,
       activateSnykIac,
@@ -68,7 +69,8 @@ public class LsConfigurationUpdater {
       enableTelemetry,
       organization,
       manageBinariesAutomatically,
-      cliPath
+      cliPath,
+      token
       );
   }
 
@@ -87,6 +89,7 @@ public class LsConfigurationUpdater {
     private final String organization;
     private final String manageBinariesAutomatically;
     private final String cliPath;
+    private final String token;
 
     public Settings(String activateSnykOpenSource,
                     String activateSnykCode,
@@ -100,7 +103,9 @@ public class LsConfigurationUpdater {
                     String enableTelemetry,
                     String organization,
                     String manageBinariesAutomatically,
-                    String cliPath) {
+                    String cliPath,
+                    String token
+                    ) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
       this.activateSnykIac = activateSnykIac;
@@ -114,6 +119,7 @@ public class LsConfigurationUpdater {
       this.organization = organization;
       this.manageBinariesAutomatically = manageBinariesAutomatically;
       this.cliPath = cliPath;
+      this.token = token;
     }
 
     public String getPath() {
@@ -164,6 +170,10 @@ public class LsConfigurationUpdater {
     }
     public String getCliPath() {
       return cliPath;
+    }
+
+    public String getToken() {
+      return token;
     }
   }
 }
