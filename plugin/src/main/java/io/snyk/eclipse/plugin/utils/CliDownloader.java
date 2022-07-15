@@ -81,7 +81,7 @@ public class CliDownloader {
 
   @SuppressWarnings("DuplicatedCode") // this whole class will go away, once we switch to language server completely
   private void configure(HttpClientBuilder builder, IProxyData data) {
-    if (data == null) return;
+    if (data == null || data.getHost() == null) return;
 
     HttpHost proxy = new HttpHost(data.getHost(), data.getPort());
     var proxyRoutePlanner = new DefaultProxyRoutePlanner(proxy);
