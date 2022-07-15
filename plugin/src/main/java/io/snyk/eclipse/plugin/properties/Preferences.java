@@ -1,9 +1,12 @@
 package io.snyk.eclipse.plugin.properties;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
 import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.preference.IPreferenceStore;
+
+import io.snyk.eclipse.plugin.EnvironmentConstant;
 
 import java.util.Optional;
 
@@ -24,9 +27,9 @@ public class Preferences {
 
   // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so we need to revert it
   // when populating the environment
-  public static final String ENABLE_TELEMETRY = "SNYK_CFG_DISABLE_ANALYTICS";
+  public static final String ENABLE_TELEMETRY = EnvironmentConstant.ENV_DISABLE_ANALYTICS;
   public static final String MANAGE_BINARIES_AUTOMATICALLY = "SNYK_CFG_MANAGE_BINARIES_AUTOMATICALLY";
-  public static final String ORGANIZATION_KEY = "SNYK_CFG_ORG";
+  public static final String ORGANIZATION_KEY = EnvironmentConstant.ENV_SNYK_ORG;
 
 
   private final ISecurePreferences node = SecurePreferencesFactory.getDefault().node(QUALIFIER);
@@ -53,6 +56,19 @@ public class Preferences {
     }
     if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
       store(MANAGE_BINARIES_AUTOMATICALLY, "true");
+    }
+
+    String token = SystemUtils.getEnvironmentVariable(EnvironmentConstant.ENV_SNYK_TOKEN, "");
+    if (getPref(AUTH_TOKEN_KEY) == null && token != "") {
+    	store(AUTH_TOKEN_KEY, token);
+    }
+    String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstant.ENV_SNYK_API, "");
+    if (getPref(ENDPOINT_KEY) == null && endpoint != "") {
+    	store(ENDPOINT_KEY, endpoint);
+    }
+    String org = SystemUtils.getEnvironmentVariable(EnvironmentConstant.ENV_SNYK_ORG, "");
+    if (getPref(ORGANIZATION_KEY) == null && org != "") {
+    	store(ORGANIZATION_KEY, org);
     }
   }
 

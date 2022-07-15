@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
+import io.snyk.eclipse.plugin.EnvironmentConstant;
 import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 
@@ -28,8 +29,6 @@ public class ProcessRunner {
   private final Bundle bundle;
   private final ILog log;
 
-  private static final String ENV_SNYK_API = "SNYK_API";
-  private static final String ENV_SNYK_TOKEN = "SNYK_TOKEN";
   private static final String HOME = System.getProperty("user.home");
   private static final String DEFAULT_MAC_PATH = "/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:" + HOME + "/bin:"
     + HOME + "/.cargo/bin:" + System.getenv("GOPATH") + "/bin" + System.getenv("GOROOT") + "/bin";
@@ -106,7 +105,7 @@ public class ProcessRunner {
 
     String endpoint = preferences.getEndpoint();
     if (endpoint != null && !endpoint.isEmpty()) {
-      pb.environment().put(ENV_SNYK_API, endpoint);
+      pb.environment().put(EnvironmentConstant.ENV_SNYK_API, endpoint);
     }
 
     String organization = preferences.getPref(Preferences.ORGANIZATION_KEY);
@@ -125,7 +124,7 @@ public class ProcessRunner {
 
     String token = preferences.getAuthToken();
     if (token != null)
-      pb.environment().put(ENV_SNYK_TOKEN, preferences.getAuthToken());
+      pb.environment().put(EnvironmentConstant.ENV_SNYK_TOKEN, preferences.getAuthToken());
 
     String insecure = preferences.getPref(Preferences.INSECURE_KEY);
     if (insecure != null && insecure.equalsIgnoreCase("true"))

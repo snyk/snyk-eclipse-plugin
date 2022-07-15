@@ -23,16 +23,19 @@ class ProcessRunnerTest {
   @BeforeEach
   void setUp() {
     preferenceMock = mock(Preferences.class);
+
+    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("organization");
+    when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY)).thenReturn("token");
+    when(preferenceMock.getPref(Preferences.ENDPOINT_KEY)).thenReturn("https://endpoint.io");
   }
 
   @Test
   void testGetProcessBuilderLinux() {
     ILog logger = mock(ILog.class);
     Bundle bundle = mock(Bundle.class);
-    when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
-    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
-    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("organization");
-    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("true");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
     ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
@@ -57,15 +60,11 @@ class ProcessRunnerTest {
     ILog logger = mock(ILog.class);
     Bundle bundle = mock(Bundle.class);
     when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("false");
-    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
-    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("organization");
-    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("false");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
     ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
-    var env = builder.environment();
     var cmd = builder.command();
     assertFalse(cmd.contains("--insecure"));
   }
@@ -74,10 +73,7 @@ class ProcessRunnerTest {
   void testGetProcessBuilderLinuxNoOrg() {
     ILog logger = mock(ILog.class);
     Bundle bundle = mock(Bundle.class);
-    when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
-    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("");
-    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("false");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
     ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
@@ -88,4 +84,5 @@ class ProcessRunnerTest {
     assertFalse(cmd.contains("--org="));
     assertEquals(null, env.get(Preferences.ORGANIZATION_KEY));
   }
+
 }
