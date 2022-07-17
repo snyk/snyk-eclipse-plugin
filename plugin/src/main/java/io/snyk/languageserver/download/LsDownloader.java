@@ -58,7 +58,7 @@ public class LsDownloader {
   }
 
   public void configure(HttpClientBuilder builder, IProxyData data) {
-    if (data == null) return;
+    if (data == null || data.getHost() == null) return;
 
     HttpHost proxy = new HttpHost(data.getHost(), data.getPort());
     this.proxyRoutePlanner = new DefaultProxyRoutePlanner(proxy);
