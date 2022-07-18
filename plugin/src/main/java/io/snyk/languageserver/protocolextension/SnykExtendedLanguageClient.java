@@ -39,7 +39,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     enableSnykViewRunActions();
   }
 
-  @JsonNotification(value = "$/snyk.IsAvailableCli")
+  @JsonNotification(value = "$/snyk.isAvailableCli")
   public void isAvailableCli(SnykIsAvailableCliParams param) {
     preferences.store(Preferences.CLI_PATH, param.getCliPath());
     enableSnykViewRunActions();
