@@ -2,6 +2,14 @@
 
 ## [2.0.0] - Unreleased
 ### Changes
+- refactor LSP extensions to use snyk namespace - this will force an LS Server update
+- configure LS with initialize options instead of env vars
+- remove redundant CLI download
+- allow automatic/manual Snyk binary management
+- make CLI path configurable 
+
+## [2.0.0] - v20220718.111138
+### Changes
 - enable telemetry by default
 
 ## [2.0.0] - v20220627.112145
