@@ -33,7 +33,7 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
       }
     }
 
-    List<String> commands = Lists.of(runtimeEnvironment.getLSFile().getCanonicalPath(), "-l", "debug", "-f",
+    List<String> commands = Lists.of(runtimeEnvironment.getLSFile().getCanonicalPath(), "-l", "info", "-f",
       runtimeEnvironment.getLSFile().getParent() + File.separator + "snyk-ls.log");
     String workingDir = SystemUtils.USER_DIR;
     setCommands(commands);
