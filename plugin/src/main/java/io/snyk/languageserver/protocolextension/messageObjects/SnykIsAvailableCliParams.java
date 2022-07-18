@@ -1,6 +1,6 @@
 package io.snyk.languageserver.protocolextension.messageObjects;
 
-public class HasDownloadedCliParam {
+public class SnykIsAvailableCliParams {
   private String cliPath;
 
   public String getCliPath() {

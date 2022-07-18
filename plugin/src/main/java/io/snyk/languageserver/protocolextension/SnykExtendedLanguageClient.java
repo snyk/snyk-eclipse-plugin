@@ -3,7 +3,7 @@ package io.snyk.languageserver.protocolextension;
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.properties.Preferences;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
-import io.snyk.languageserver.protocolextension.messageObjects.HasDownloadedCliParam;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4e.ServerMessageHandler;
 import org.eclipse.lsp4j.MessageParams;
@@ -39,8 +39,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     enableSnykViewRunActions();
   }
 
-  @JsonNotification(value = "$/snyk.hasDownloadedCli")
-  public void hasDownloadedCli(HasDownloadedCliParam param) {
+  @JsonNotification(value = "$/snyk.IsAvailableCli")
+  public void isAvailableCli(SnykIsAvailableCliParams param) {
     preferences.store(Preferences.CLI_PATH, param.getCliPath());
     enableSnykViewRunActions();
   }
