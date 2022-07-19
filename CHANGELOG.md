@@ -6,7 +6,8 @@
 - configure LS with initialize options instead of env vars
 - remove redundant CLI download
 - allow automatic/manual Snyk binary management
-- make CLI path configurable 
+- make CLI path configurable
+- pre-fill settings values from SNYK_API, SNYK_TOKEN, SNYK_CFG_ORG environment variables on first time plugin usage
 
 ## [2.0.0] - v20220718.111138
 ### Changes
@@ -43,7 +44,7 @@
 
 ### Fixes
 - support download of Language Server for Apple M1
-- fix download of Language Server in some situations 
+- fix download of Language Server in some situations
 
 ### Changes
 - add organization preference to specify organization to use for LS scans
@@ -92,4 +93,4 @@
 
 ## [1.3.x]
 
-Old version on marketplace 
+Old version on marketplace
