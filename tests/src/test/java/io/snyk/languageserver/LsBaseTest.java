@@ -1,6 +1,6 @@
 package io.snyk.languageserver;
 
-import io.snyk.eclipse.plugin.properties.preferences.InMemoryPreferencesStore;
+import io.snyk.eclipse.plugin.properties.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -24,7 +24,7 @@ public class LsBaseTest {
     if (lsFile.exists()) lsFile.delete();
     lsFile = getTempFile();
     environment = mock(LsRuntimeEnvironment.class);
-    InMemoryPreferencesStore store = new InMemoryPreferencesStore();
+    InMemoryPreferenceStore store = new InMemoryPreferenceStore();
     store.put(Preferences.LS_BINARY_KEY, lsFile.toString());
     PreferencesUtils.setPreferences(Preferences.getInstance(store));
 

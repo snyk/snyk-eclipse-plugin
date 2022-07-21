@@ -6,7 +6,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import java.util.HashMap;
 import java.util.Map;
 
-public class InMemoryPreferencesStore implements PreferencesStore {
+public class InMemoryPreferenceStore implements PreferenceStore {
 
   private final Map<String, String> store = new HashMap<>();
 

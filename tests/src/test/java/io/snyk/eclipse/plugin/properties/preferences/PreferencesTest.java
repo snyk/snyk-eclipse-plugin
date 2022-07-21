@@ -2,11 +2,6 @@ package io.snyk.eclipse.plugin.properties.preferences;
 
 import io.snyk.eclipse.plugin.EnvironmentConstants;
 import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.equinox.internal.security.storage.SecurePreferencesWrapper;
-import org.eclipse.equinox.security.storage.ISecurePreferences;
-import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
-import org.eclipse.equinox.security.storage.StorageException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -14,10 +9,8 @@ import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @SuppressWarnings("restriction")
 class PreferencesTest {
@@ -29,7 +22,7 @@ class PreferencesTest {
 
   @Test
   void test_DefaultPreferences() {
-    Preferences prefs = Preferences.getInstance(new InMemoryPreferencesStore());
+    Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
 
     assertEquals("false", prefs.getPref(Preferences.ACTIVATE_SNYK_CODE));
     assertEquals("true", prefs.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
@@ -47,7 +40,7 @@ class PreferencesTest {
     try (MockedStatic<SystemUtils> mockedSystemUtils = Mockito.mockStatic(SystemUtils.class)) {
       mockedSystemUtils.when(() -> SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "")).thenReturn("token");
 
-      Preferences prefs = Preferences.getInstance(new InMemoryPreferencesStore());
+      Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
 
       assertEquals(prefs.getAuthToken(), "token");
     }
@@ -58,7 +51,7 @@ class PreferencesTest {
     try (MockedStatic<SystemUtils> mockedSystemUtils = Mockito.mockStatic(SystemUtils.class)) {
       mockedSystemUtils.when(() -> SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "")).thenReturn("https://custom.endpoint.io");
 
-      Preferences prefs = Preferences.getInstance(new InMemoryPreferencesStore());
+      Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
 
       assertEquals(prefs.getEndpoint(), "https://custom.endpoint.io");
     }
@@ -69,7 +62,7 @@ class PreferencesTest {
     try (MockedStatic<SystemUtils> mockedSystemUtils = Mockito.mockStatic(SystemUtils.class)) {
       mockedSystemUtils.when(() -> SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, "")).thenReturn("myOrg");
 
-      Preferences prefs = Preferences.getInstance(new InMemoryPreferencesStore());
+      Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
 
       assertEquals(prefs.getPref(Preferences.ORGANIZATION_KEY), "myOrg");
     }

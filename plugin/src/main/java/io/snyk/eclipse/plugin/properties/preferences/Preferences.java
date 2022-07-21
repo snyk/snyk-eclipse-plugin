@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
-import io.snyk.languageserver.download.LsBinaries;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -16,12 +15,12 @@ public class Preferences {
 
   public static synchronized Preferences getInstance() {
     if (CURRENT_PREFERENCES == null) {
-      CURRENT_PREFERENCES = new Preferences(new EclipsePreferencesStore());
+      CURRENT_PREFERENCES = new Preferences(new SecurePreferenceStore());
     }
     return CURRENT_PREFERENCES;
   }
 
-  public static synchronized Preferences getInstance(PreferencesStore store) {
+  public static synchronized Preferences getInstance(PreferenceStore store) {
     Preferences preferences = new Preferences(store);
     CURRENT_PREFERENCES = preferences;
     return preferences;
@@ -48,9 +47,9 @@ public class Preferences {
   public static final String ORGANIZATION_KEY = EnvironmentConstants.ENV_SNYK_ORG;
 
 
-  private final PreferencesStore store;
+  private final PreferenceStore store;
 
-  Preferences(PreferencesStore store) {
+  Preferences(PreferenceStore store) {
     this.store = store;
     if (getPref(ACTIVATE_SNYK_CODE) == null) {
       store(ACTIVATE_SNYK_CODE, "false");

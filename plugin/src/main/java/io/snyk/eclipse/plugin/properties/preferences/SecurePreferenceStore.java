@@ -1,17 +1,20 @@
-package io.snyk.eclipse.plugin.properties;
+package io.snyk.eclipse.plugin.properties.preferences;
 
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
+import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
 import org.eclipse.equinox.security.storage.StorageException;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
-public class SnykSecurePreferenceStore extends ScopedPreferenceStore {
-  private SnykSecurePreferenceStore instance;
+public class SecurePreferenceStore extends ScopedPreferenceStore implements PreferenceStore {
+  static final String QUALIFIER = "io.snyk.eclipse.plugin";
+
   private final ISecurePreferences node;
 
-  public SnykSecurePreferenceStore(ISecurePreferences node, String qualifier) {
-    super(InstanceScope.INSTANCE, qualifier);
-    this.node = node;
+  public SecurePreferenceStore() {
+    super(InstanceScope.INSTANCE, QUALIFIER);
+    node = SecurePreferencesFactory.getDefault().node(QUALIFIER);
   }
 
   @Override
@@ -134,5 +137,37 @@ public class SnykSecurePreferenceStore extends ScopedPreferenceStore {
     } catch (StorageException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  public boolean getBoolean(String key, boolean defaultValue) {
+    try {
+      return node.getBoolean(key, defaultValue);
+    } catch (StorageException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void put(String key, String value) {
+    try {
+      node.put(key, value, true);
+    } catch (StorageException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public String getString(String key, String defaultValue) {
+    try {
+      return node.get(key, defaultValue);
+    } catch (StorageException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public IPreferenceStore getStore() {
+    return this;
   }
 }
