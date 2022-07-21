@@ -1,16 +1,13 @@
 package io.snyk.eclipse.plugin.runner;
 
-import io.snyk.eclipse.plugin.properties.store.Preferences;
-import io.snyk.eclipse.plugin.properties.store.PreferencesUtils;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import org.eclipse.core.runtime.ILog;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 

@@ -1,7 +1,7 @@
 package io.snyk.languageserver.protocolextension;
 
 import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import org.eclipse.lsp4e.LanguageClientImpl;

@@ -1,7 +1,7 @@
 package io.snyk.languageserver;
 
 import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import org.apache.commons.lang3.SystemUtils;

@@ -2,7 +2,7 @@ package io.snyk.eclipse.plugin.views;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
-import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
 import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;

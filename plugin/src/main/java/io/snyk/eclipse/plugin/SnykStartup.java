@@ -1,10 +1,10 @@
 package io.snyk.eclipse.plugin;
 
-import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.LsRuntimeEnvironment;
-import io.snyk.languageserver.download.LsDownloadRequest;
+import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.download.LsDownloader;
 import org.apache.http.impl.client.HttpClients;
 import org.eclipse.core.net.proxy.IProxyData;
@@ -22,7 +22,6 @@ import org.eclipse.ui.PlatformUI;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -46,7 +45,7 @@ public class SnykStartup implements IStartup {
        logger = Platform.getLog(getClass());
     }
     runtimeEnvironment = new LsRuntimeEnvironment();
-    Job downloadCLIJob = new Job("Downloading latest Snyk CLI release...") {
+    Job downloadCLIJob = new Job("Downloading latest Language Server release...") {
       @Override
       protected IStatus run(IProgressMonitor monitor) {
         try {
@@ -101,7 +100,8 @@ public class SnykStartup implements IStartup {
         BasicFileAttributes basicFileAttributes;
         basicFileAttributes = Files.readAttributes(lsFile.toPath(), BasicFileAttributes.class);
         Instant lastModified = basicFileAttributes.lastModifiedTime().toInstant();
-        boolean needsUpdate = lastModified.isBefore(Instant.now().minus(4, ChronoUnit.DAYS));
+        boolean needsUpdate = lastModified.isBefore(Instant.now().minus(4, ChronoUnit.DAYS))
+          || Preferences.getInstance().getLspVersion().equals(LsBinaries.REQUIRED_LSP_VERSION);
         logger.info("LS: Needs update? " + needsUpdate);
         return needsUpdate;
       } catch (IOException e) {
@@ -113,8 +113,7 @@ public class SnykStartup implements IStartup {
   }
 
   LsDownloader getLsDownloader() throws URISyntaxException {
-    URI baseUri = URI.create(LsDownloadRequest.getBaseURL());
-    IProxyData[] proxyData = runtimeEnvironment.getProxyService().select(baseUri);
+    IProxyData[] proxyData = runtimeEnvironment.getProxyService().select(LsBinaries.getBaseUri());
     var relevantProxyData = getRelevantProxyData(proxyData);
     var builder = HttpClients.custom();
     return new LsDownloader(runtimeEnvironment, builder, relevantProxyData, logger);

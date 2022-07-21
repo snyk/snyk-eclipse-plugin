@@ -8,7 +8,7 @@ import io.snyk.eclipse.plugin.domain.ContentError;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
 import io.snyk.eclipse.plugin.domain.ScanResult;
 import io.snyk.eclipse.plugin.domain.Vuln;
-import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.runner.SnykCliRunner;
 import io.snyk.eclipse.plugin.utils.SnykLogger;

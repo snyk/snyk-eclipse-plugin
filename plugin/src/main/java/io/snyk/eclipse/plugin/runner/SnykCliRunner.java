@@ -1,7 +1,7 @@
 package io.snyk.eclipse.plugin.runner;
 
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
-import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import org.apache.commons.lang3.SystemUtils;
 

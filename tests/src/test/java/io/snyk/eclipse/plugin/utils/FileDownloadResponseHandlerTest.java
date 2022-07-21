@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.utils;
 
-import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.languageserver.LsBaseTest;
 import org.apache.http.HttpEntity;
 import org.apache.http.ProtocolVersion;
@@ -26,6 +25,7 @@ class FileDownloadResponseHandlerTest extends LsBaseTest {
     BasicHttpResponse response = getBasicHttpResponse(payload);
 
     File tempFile = File.createTempFile("pre", "fix");
+    tempFile.deleteOnExit();
     var cut = new FileDownloadResponseHandler(tempFile, mock(IProgressMonitor.class));
     cut.handleResponse(response);
 

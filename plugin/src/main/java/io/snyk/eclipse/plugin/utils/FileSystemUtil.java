@@ -1,6 +1,6 @@
 package io.snyk.eclipse.plugin.utils;
 
-import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
