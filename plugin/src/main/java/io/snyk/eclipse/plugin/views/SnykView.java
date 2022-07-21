@@ -2,8 +2,7 @@ package io.snyk.eclipse.plugin.views;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
-import io.snyk.eclipse.plugin.properties.Preferences;
-import io.snyk.eclipse.plugin.utils.FileSystemUtil;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
 import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;
@@ -74,7 +73,6 @@ public class SnykView extends ViewPart {
   private List<Action> monitorActions = new ArrayList<>();
 
   private boolean alreadyRunning = false;
-  private final Preferences prefs = new Preferences();
 
   public SnykView() {
     rootModel = new DisplayModel();
@@ -260,7 +258,7 @@ public class SnykView extends ViewPart {
   public void enableScanBasedOnConfig() {
     try {
       boolean cliFound = getCliFile().exists();
-      boolean tokenFound = !prefs.getAuthToken().isBlank() || System.getenv().containsKey("SNYK_TOKEN");
+      boolean tokenFound = !Preferences.getInstance().getAuthToken().isBlank() || System.getenv().containsKey("SNYK_TOKEN");
 
       scanWorkspace.setEnabled(cliFound && tokenFound);
       String init = "Click play to run Snyk Test";

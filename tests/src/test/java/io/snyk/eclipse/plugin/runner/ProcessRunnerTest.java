@@ -1,12 +1,16 @@
 package io.snyk.eclipse.plugin.runner;
 
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.store.PreferencesUtils;
 import org.eclipse.core.runtime.ILog;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,8 +25,9 @@ class ProcessRunnerTest {
   private Preferences preferenceMock;
 
   @BeforeEach
-  void setUp() {
+  void setUp()  {
     preferenceMock = mock(Preferences.class);
+    PreferencesUtils.setPreferences(preferenceMock);
 
     when(preferenceMock.getEndpoint()).thenReturn("endpoint");
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("true");
@@ -30,6 +35,7 @@ class ProcessRunnerTest {
     when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
     when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY)).thenReturn("token");
     when(preferenceMock.getPref(Preferences.ENDPOINT_KEY)).thenReturn("https://endpoint.io");
+    when(preferenceMock.getCliPath()).thenReturn("");
   }
 
   @Test
@@ -38,7 +44,7 @@ class ProcessRunnerTest {
     Bundle bundle = mock(Bundle.class);
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
-    ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
+    ProcessRunner cut = new ProcessRunner(bundle, logger);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
     var env = builder.environment();
@@ -62,7 +68,7 @@ class ProcessRunnerTest {
     when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("false");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
-    ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
+    ProcessRunner cut = new ProcessRunner(bundle, logger);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
     var cmd = builder.command();
@@ -76,7 +82,7 @@ class ProcessRunnerTest {
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
-    ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
+    ProcessRunner cut = new ProcessRunner(bundle, logger);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
     var env = builder.environment();

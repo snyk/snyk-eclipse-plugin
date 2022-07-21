@@ -1,16 +1,28 @@
-package io.snyk.eclipse.plugin.properties;
+package io.snyk.eclipse.plugin.properties.store;
 
+import io.snyk.eclipse.plugin.properties.SnykSecurePreferenceStore;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
 import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.preference.IPreferenceStore;
 
-import io.snyk.eclipse.plugin.EnvironmentConstant;
+import io.snyk.eclipse.plugin.EnvironmentConstants;
 
+import java.io.File;
 import java.util.Optional;
 
+import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getBinaryDirectory;
+
 public class Preferences {
+  static Preferences CURRENT_PREFERENCES;
+  public static synchronized Preferences getInstance() {
+      if (CURRENT_PREFERENCES == null) {
+        CURRENT_PREFERENCES = new Preferences();
+      }
+      return CURRENT_PREFERENCES;
+  }
+
   public static final String QUALIFIER = "io.snyk.eclipse.plugin";
   public static final String AUTH_TOKEN_KEY = "authtoken";
   public static final String PATH_KEY = "path";
@@ -27,15 +39,15 @@ public class Preferences {
 
   // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so we need to revert it
   // when populating the environment
-  public static final String ENABLE_TELEMETRY = EnvironmentConstant.ENV_DISABLE_ANALYTICS;
+  public static final String ENABLE_TELEMETRY = EnvironmentConstants.ENV_DISABLE_ANALYTICS;
   public static final String MANAGE_BINARIES_AUTOMATICALLY = "SNYK_CFG_MANAGE_BINARIES_AUTOMATICALLY";
-  public static final String ORGANIZATION_KEY = EnvironmentConstant.ENV_SNYK_ORG;
+  public static final String ORGANIZATION_KEY = EnvironmentConstants.ENV_SNYK_ORG;
 
 
   private final ISecurePreferences node = SecurePreferencesFactory.getDefault().node(QUALIFIER);
   private final IPreferenceStore store = new SnykSecurePreferenceStore(node, QUALIFIER);
 
-  public Preferences() {
+  Preferences() {
     if (getPref(ACTIVATE_SNYK_CODE) == null) {
       store(ACTIVATE_SNYK_CODE, "false");
     }
@@ -57,19 +69,34 @@ public class Preferences {
     if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
       store(MANAGE_BINARIES_AUTOMATICALLY, "true");
     }
+    if (getPref(LS_BINARY_KEY) == null || getPref(LS_BINARY_KEY).equals("")) {
+      store(LS_BINARY_KEY, getDefaultLsPath());
+    }
 
-    String token = SystemUtils.getEnvironmentVariable(EnvironmentConstant.ENV_SNYK_TOKEN, "");
+    String token = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
     if (getPref(AUTH_TOKEN_KEY) == null && token != "") {
     	store(AUTH_TOKEN_KEY, token);
     }
-    String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstant.ENV_SNYK_API, "");
+    String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
     if (getPref(ENDPOINT_KEY) == null && endpoint != "") {
     	store(ENDPOINT_KEY, endpoint);
     }
-    String org = SystemUtils.getEnvironmentVariable(EnvironmentConstant.ENV_SNYK_ORG, "");
+    String org = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, "");
     if (getPref(ORGANIZATION_KEY) == null && org != "") {
     	store(ORGANIZATION_KEY, org);
     }
+  }
+
+  private String getBinaryName() {
+    var osName = SystemUtils.OS_NAME;
+    var executable = "snyk-ls";
+    if (osName.toLowerCase().startsWith("win")) executable += ".exe";
+    return executable;
+  }
+
+  private String getDefaultLsPath() {
+    File binary = new File(getBinaryDirectory(), getBinaryName());
+    return binary.getAbsolutePath();
   }
 
   public String getPref(String key) {
@@ -103,7 +130,7 @@ public class Preferences {
     }
     return Optional.of(path);
   }
-  
+
   public String getCliPath() {
     return getPref(CLI_PATH, "");
   }
@@ -138,3 +165,4 @@ public boolean isManagedBinaries() {
   }
 
 }
+

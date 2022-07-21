@@ -19,13 +19,12 @@ import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
-import io.snyk.eclipse.plugin.EnvironmentConstant;
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.EnvironmentConstants;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class ProcessRunner {
 
-  private final Preferences preferences;
   private final Bundle bundle;
   private final ILog log;
 
@@ -35,14 +34,12 @@ public class ProcessRunner {
   private static final String DEFAULT_LINUX_PATH = DEFAULT_MAC_PATH;
   private static final String DEFAULT_WIN_PATH = "";
 
-  public ProcessRunner(Preferences p) {
-    preferences = p;
+  public ProcessRunner() {
     this.log = Platform.getLog(ProcessRunner.class);
     bundle = FrameworkUtil.getBundle(ProcessRunner.class);
   }
 
-  public ProcessRunner(Preferences preferences, Bundle bundle, ILog log) {
-    this.preferences = preferences;
+  public ProcessRunner(Bundle bundle, ILog log) {
     this.bundle = bundle;
     this.log = log;
   }
@@ -96,25 +93,25 @@ public class ProcessRunner {
   }
 
   private void setupProcessBuilderBase(ProcessBuilder pb) {
-    LsRuntimeEnvironment runtimeEnvironment = new LsRuntimeEnvironment(preferences);
+    LsRuntimeEnvironment runtimeEnvironment = new LsRuntimeEnvironment();
 
     runtimeEnvironment.addPath(pb.environment());
     runtimeEnvironment.addProxyToEnv(pb.environment());
     runtimeEnvironment.addAdditionalParamsAndEnv(pb.environment());
     runtimeEnvironment.addIntegrationInfoToEnv(pb.environment());
 
-    String endpoint = preferences.getEndpoint();
+    String endpoint = Preferences.getInstance().getEndpoint();
     if (endpoint != null && !endpoint.isEmpty()) {
-      pb.environment().put(EnvironmentConstant.ENV_SNYK_API, endpoint);
+      pb.environment().put(EnvironmentConstants.ENV_SNYK_API, endpoint);
     }
 
-    String organization = preferences.getPref(Preferences.ORGANIZATION_KEY);
+    String organization = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY);
     if (organization != null && !organization.isBlank()) {
       pb.environment().put(Preferences.ORGANIZATION_KEY, organization);
       pb.command().add("--org=" + organization);
     }
 
-    String additionalParameters = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS);
+    String additionalParameters = Preferences.getInstance().getPref(Preferences.ADDITIONAL_PARAMETERS);
     if (additionalParameters != null && !additionalParameters.isBlank()) {
       var split = additionalParameters.split(" ");
       for (String param : split) {
@@ -122,15 +119,15 @@ public class ProcessRunner {
       }
     }
 
-    String token = preferences.getAuthToken();
+    String token = Preferences.getInstance().getAuthToken();
     if (token != null)
-      pb.environment().put(EnvironmentConstant.ENV_SNYK_TOKEN, preferences.getAuthToken());
+      pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, Preferences.getInstance().getAuthToken());
 
-    String insecure = preferences.getPref(Preferences.INSECURE_KEY);
+    String insecure = Preferences.getInstance().getPref(Preferences.INSECURE_KEY);
     if (insecure != null && insecure.equalsIgnoreCase("true"))
       pb.command().add("--insecure");
 
-    String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY);
+    String enableTelemetry = Preferences.getInstance().getPref(Preferences.ENABLE_TELEMETRY);
     if (!enableTelemetry.isBlank() && Boolean.parseBoolean(enableTelemetry)) {
       pb.environment().put(Preferences.ENABLE_TELEMETRY, "0");
     } else {

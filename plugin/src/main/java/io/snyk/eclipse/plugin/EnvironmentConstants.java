@@ -1,6 +1,6 @@
 package io.snyk.eclipse.plugin;
 
-public interface EnvironmentConstant {
+public interface EnvironmentConstants {
   String ENV_SNYK_API = "SNYK_API";
   String ENV_SNYK_TOKEN = "SNYK_TOKEN";
   String ENV_SNYK_ORG = "SNYK_CFG_ORG";

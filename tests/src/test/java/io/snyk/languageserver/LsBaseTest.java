@@ -1,5 +1,7 @@
 package io.snyk.languageserver;
 
+import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.store.PreferencesUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -21,7 +23,10 @@ public class LsBaseTest {
     if (lsFile.exists()) lsFile.delete();
     lsFile = getTempFile();
     environment = mock(LsRuntimeEnvironment.class);
-    when(environment.getLSFile()).thenReturn(lsFile);
+    Preferences preferenceMock = mock(Preferences.class);
+    PreferencesUtils.setPreferences(preferenceMock);
+
+    when(preferenceMock.getLsBinary()).thenReturn(lsFile.toString());
     when(environment.getArch()).thenReturn("amd64");
     when(environment.getOs()).thenReturn("linux");
     when(environment.getDownloadBinaryName(any())).thenReturn("snyk-ls_testVersion_linux_amd64");

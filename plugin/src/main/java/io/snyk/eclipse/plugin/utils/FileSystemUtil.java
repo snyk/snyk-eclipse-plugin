@@ -1,6 +1,6 @@
 package io.snyk.eclipse.plugin.utils;
 
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
@@ -20,7 +20,7 @@ public final class FileSystemUtil {
    * @return File
    */
   public static File getCliFile() {
-    return new File(new Preferences().getCliPath());
+    return new File(Preferences.getInstance().getCliPath());
   }
 
   /**

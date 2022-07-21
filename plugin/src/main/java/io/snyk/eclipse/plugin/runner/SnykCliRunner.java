@@ -1,25 +1,19 @@
 package io.snyk.eclipse.plugin.runner;
 
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.core.runtime.Platform;
-import org.osgi.framework.FrameworkUtil;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliFile;
 import static io.snyk.eclipse.plugin.utils.MockHandler.MOCK;
 import static io.snyk.eclipse.plugin.utils.MockHandler.getMockScanResult;
 
 public class SnykCliRunner {
 
-  private static final Preferences PREFERENCES = new Preferences();
   private static final String TEST_PARAMS = "test";
   private static final String FILE_PARAM = "--file=";
 
@@ -32,7 +26,7 @@ public class SnykCliRunner {
   private static final String IGNORE_PARAM = "ignore";
   private static final String JSON_PARAM = "--json";
 
-  ProcessRunner processRunner = new ProcessRunner(PREFERENCES);
+  ProcessRunner processRunner = new ProcessRunner();
 
   public ProcessResult snykConfig() {
     return snykRun(Lists.of(CONFIG_PARAM));
@@ -65,7 +59,7 @@ public class SnykCliRunner {
 
   private ProcessResult snykRun(List<String> arguments, Optional<File> navigatePath) {
     try {
-      ProcessBuilder processBuilder = createProcessBuilderByOS(arguments, PREFERENCES.getPath());
+      ProcessBuilder processBuilder = createProcessBuilderByOS(arguments, Preferences.getInstance().getPath());
       return processRunner.run(processBuilder, navigatePath);
     } catch (Exception e) {
       return ProcessResult.error(e.getMessage());
@@ -74,7 +68,7 @@ public class SnykCliRunner {
 
   private ProcessBuilder createProcessBuilderByOS(List<String> params, Optional<String> path) throws Exception {
     ProcessBuilder processbuilder;
-    
+
     if (SystemUtils.IS_OS_MAC) {
       processbuilder = processRunner.createMacProcessBuilder(params, path);
     } else if (SystemUtils.IS_OS_LINUX) {

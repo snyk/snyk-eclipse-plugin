@@ -1,5 +1,6 @@
 package io.snyk.languageserver.download;
 
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
 import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
@@ -82,7 +83,7 @@ public class LsDownloader {
   }
 
   public void download(IProgressMonitor monitor) {
-    File destinationFile = runtimeEnvironment.getLSFile();
+    File destinationFile = new File(Preferences.getInstance().getLsBinary());
     File tempFile = null;
     try {
       tempFile = File.createTempFile(destinationFile.getName(), ".tmp", destinationFile.getParentFile());

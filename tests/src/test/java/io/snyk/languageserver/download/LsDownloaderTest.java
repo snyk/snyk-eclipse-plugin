@@ -1,6 +1,7 @@
 package io.snyk.languageserver.download;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
 import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
 import io.snyk.languageserver.LsBaseTest;
@@ -53,7 +54,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
   @Test
   void downloadShouldFailWhenShaWrongAndFileShouldNotBeOverwritten() throws IOException {
-    byte[] expectedLsContent = Files.readAllBytes(environment.getLSFile().toPath());
+    byte[] expectedLsContent = Files.readAllBytes(new File(Preferences.getInstance().getLsBinary()).toPath());
 
     LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null, mock(ILog.class));
     File testFile = File.createTempFile("download-test", "tmp");
@@ -66,7 +67,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
     assertThrows(ChecksumVerificationException.class, () -> cut.download(mock(IProgressMonitor.class)));
 
-    File lsFile = environment.getLSFile();
+    File lsFile = new File(Preferences.getInstance().getLsBinary());
     assertTrue(lsFile.exists());
     assertArrayEquals(Files.readAllBytes(lsFile.toPath()), expectedLsContent);
     verify(httpClient, times(1)).execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class), any(HttpContext.class));
@@ -91,7 +92,7 @@ public class LsDownloaderTest extends LsBaseTest {
     verify(httpClient, times(1)).execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class), any(HttpContext.class));
     verify(httpClient, times(1)).execute(any(LsShaRequest.class), any(HttpContext.class));
     verify(httpClient, times(1)).execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class), any(HttpContext.class));
-    File lsFile = environment.getLSFile();
+    File lsFile = new File(Preferences.getInstance().getLsBinary());
     assertTrue(lsFile.exists());
     assertArrayEquals(Files.readAllBytes(lsFile.toPath()), fileContent);
   }

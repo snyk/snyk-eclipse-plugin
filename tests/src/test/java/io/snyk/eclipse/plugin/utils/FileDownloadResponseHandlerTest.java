@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.utils;
 
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.languageserver.LsBaseTest;
 import org.apache.http.HttpEntity;
 import org.apache.http.ProtocolVersion;
@@ -10,6 +11,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
@@ -23,10 +25,11 @@ class FileDownloadResponseHandlerTest extends LsBaseTest {
     String payload = "test test test";
     BasicHttpResponse response = getBasicHttpResponse(payload);
 
-    var cut = new FileDownloadResponseHandler(environment.getLSFile(), mock(IProgressMonitor.class));
+    File tempFile = File.createTempFile("pre", "fix");
+    var cut = new FileDownloadResponseHandler(tempFile, mock(IProgressMonitor.class));
     cut.handleResponse(response);
 
-    var actual = Files.readString(environment.getLSFile().toPath());
+    var actual = Files.readString(tempFile.toPath());
     assertEquals(payload, actual);
   }
 

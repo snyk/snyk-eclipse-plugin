@@ -1,6 +1,6 @@
 package io.snyk.languageserver;
 
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 import java.util.Collections;
@@ -16,9 +16,9 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 @SuppressWarnings("restriction")
 public class LsConfigurationUpdater {
 
-  public void configurationChanged(Preferences preferences) {
+  public void configurationChanged() {
     var params = new DidChangeConfigurationParams();
-    params.setSettings(getCurrentSettings(preferences));
+    params.setSettings(getCurrentSettings());
 
     var definition = LanguageServersRegistry.getInstance().getDefinition(SnykStreamConnectionProvider.LANGUAGE_SERVER_ID);
 
@@ -42,7 +42,8 @@ public class LsConfigurationUpdater {
     }
   }
 
-  Settings getCurrentSettings(Preferences preferences) {
+  Settings getCurrentSettings() {
+    Preferences preferences = Preferences.getInstance();
     String activateSnykOpenSource = preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true");
     String activateSnykCode = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE, "false");
     String activateSnykIac = preferences.getPref(Preferences.ACTIVATE_SNYK_IAC, "true");

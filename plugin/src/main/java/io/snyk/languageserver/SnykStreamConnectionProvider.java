@@ -1,7 +1,7 @@
 package io.snyk.languageserver;
 
 import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import org.apache.commons.lang3.SystemUtils;
@@ -19,9 +19,10 @@ import java.util.List;
 
 public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvider implements StreamConnectionProvider {
   public static final String LANGUAGE_SERVER_ID = "io.snyk.languageserver";
-  private final LsRuntimeEnvironment runtimeEnvironment = new LsRuntimeEnvironment(new Preferences());
+  private final LsRuntimeEnvironment runtimeEnvironment;
 
   public SnykStreamConnectionProvider() {
+    runtimeEnvironment = new LsRuntimeEnvironment();
   }
 
   @Override
@@ -34,8 +35,8 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
       }
     }
 
-    List<String> commands = Lists.of(runtimeEnvironment.getLSFile().getCanonicalPath(), "-l", "info", "-f",
-      runtimeEnvironment.getLSFile().getParent() + File.separator + "snyk-ls.log");
+    List<String> commands = Lists.of(Preferences.getInstance().getLsBinary(), "-l", "info", "-f",
+      new File(Preferences.getInstance().getLsBinary()).getParent() + File.separator + "snyk-ls.log");
     String workingDir = SystemUtils.USER_DIR;
     setCommands(commands);
     setWorkingDirectory(workingDir);
@@ -44,7 +45,7 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
       @Override
       protected IStatus run(IProgressMonitor monitor) {
         try {
-          new LsConfigurationUpdater().configurationChanged(runtimeEnvironment.getPreferences());
+          new LsConfigurationUpdater().configurationChanged();
           monitor.done();
         } catch (RuntimeException e) {
           SnykLogger.logError(e);
@@ -65,9 +66,7 @@ public class SnykStreamConnectionProvider extends ProcessStreamConnectionProvide
   public Object getInitializationOptions(URI rootUri) {
 	LsConfigurationUpdater.Settings currentSettings = null;
 	try {
-	    Preferences preferences = runtimeEnvironment.getPreferences();
-		LsConfigurationUpdater lsConfigurationUpdater = new LsConfigurationUpdater();
-		currentSettings = lsConfigurationUpdater.getCurrentSettings(preferences);
+    currentSettings = new LsConfigurationUpdater().getCurrentSettings();
 	} catch (RuntimeException e) {
          SnykLogger.logError(e);
     }

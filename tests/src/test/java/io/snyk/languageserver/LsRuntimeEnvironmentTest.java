@@ -1,8 +1,8 @@
 package io.snyk.languageserver;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.properties.Preferences;
-import io.snyk.eclipse.plugin.utils.FileSystemUtil;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.store.PreferencesUtils;
 import org.eclipse.core.internal.net.ProxyData;
 import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.net.proxy.IProxyService;
@@ -17,7 +17,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
-import java.io.File;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +32,8 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
   @BeforeEach
   protected void setUp() {
     preferenceMock = mock(Preferences.class);
-    environment = new LsRuntimeEnvironment(preferenceMock);
+    PreferencesUtils.setPreferences(preferenceMock);
+    environment = new LsRuntimeEnvironment();
   }
 
   @Test
@@ -43,25 +43,6 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     if (expected.contains("windows"))
       expected += ".exe";
     assertEquals(expected, actual);
-  }
-
-  @Test
-  void testGetLsFileShouldReturnPreferenceIfSet() {
-    String expectedLsPath = "testPath";
-    when(preferenceMock.getLsBinary()).thenReturn(expectedLsPath);
-
-    File file = environment.getLSFile();
-
-    assertEquals(expectedLsPath, file.getPath());
-  }
-
-  @Test
-  void testGetLsFileShouldReturnDefaultIfPreferenceNotSet() {
-    when(preferenceMock.getLsBinary()).thenReturn(null);
-
-    File file = environment.getLSFile();
-
-    assertEquals(new File(FileSystemUtil.getBinaryDirectory(), environment.getBinaryName()), file);
   }
 
   //  @Test

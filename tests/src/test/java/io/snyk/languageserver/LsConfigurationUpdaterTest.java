@@ -1,6 +1,7 @@
 package io.snyk.languageserver;
 
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
+import io.snyk.eclipse.plugin.properties.store.PreferencesUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,13 +15,14 @@ class LsConfigurationUpdaterTest {
   @BeforeEach
   protected void setUp() {
     preferenceMock = mock(Preferences.class);
+    PreferencesUtils.setPreferences(preferenceMock);
   }
 
   @Test
   void testGetSettings() {
     setupPreferenceMock();
 
-    var settings = new LsConfigurationUpdater().getCurrentSettings(preferenceMock);
+    var settings = new LsConfigurationUpdater().getCurrentSettings();
 
     assertEquals("iac", settings.getActivateSnykIac());
     assertEquals("code", settings.getActivateSnykCode());

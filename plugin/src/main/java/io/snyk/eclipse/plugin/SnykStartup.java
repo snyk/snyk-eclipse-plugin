@@ -1,6 +1,6 @@
 package io.snyk.eclipse.plugin;
 
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.LsRuntimeEnvironment;
@@ -45,7 +45,7 @@ public class SnykStartup implements IStartup {
     if (logger == null) {
        logger = Platform.getLog(getClass());
     }
-    runtimeEnvironment = new LsRuntimeEnvironment(new Preferences());
+    runtimeEnvironment = new LsRuntimeEnvironment();
     Job downloadCLIJob = new Job("Downloading latest Snyk CLI release...") {
       @Override
       protected IStatus run(IProgressMonitor monitor) {
@@ -89,9 +89,12 @@ public class SnykStartup implements IStartup {
   }
 
   private boolean downloadLS() {
-    File lsFile = runtimeEnvironment.getLSFile();
+    File lsFile = new File(Preferences.getInstance().getLsBinary());
     logger.info("LS: Expecting file at " + lsFile.getAbsolutePath());
-    if (!isDownloadAllowed(new Preferences())) return false;
+    if (!Preferences.getInstance().isManagedBinaries()) {
+      logger.info("LS: Managed binaries disabled, skipping download");
+      return false;
+    }
     if (lsFile.exists()) {
       logger.info("LS: File already exists, checking for age " + lsFile.getAbsolutePath());
       try {
@@ -105,22 +108,6 @@ public class SnykStartup implements IStartup {
         SnykLogger.logError(e);
         return false;
       }
-    }
-    return true;
-  }
-
-  boolean isDownloadAllowed(Preferences preferences) {
-    return isDownloadAllowed(preferences.getLsBinary(), preferences.isManagedBinaries());
-  }
-  boolean isDownloadAllowed(String customPath, boolean managedBinaries) {
-    if (!managedBinaries) {
-        logger.info("LS: Automatically managed binaries disabled, not downloading");
-        return false;
-      }
-    boolean customPathSet = customPath != null && !customPath.isBlank();
-    if (customPathSet) {
-      logger.info("LS: Custom LS path is set, not downloading. Path: " + customPath);
-      return false;
     }
     return true;
   }
@@ -144,7 +131,7 @@ public class SnykStartup implements IStartup {
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
   IStatus download(IProgressMonitor monitor) {
-    final File lsFile = runtimeEnvironment.getLSFile();
+    final File lsFile = new File(Preferences.getInstance().getLsBinary());
     try {
       LsDownloader lsDownloader = getLsDownloader();
       lsFile.getParentFile().mkdirs();

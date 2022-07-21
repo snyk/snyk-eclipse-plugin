@@ -3,7 +3,7 @@ package io.snyk.eclipse.plugin.runner;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.exception.AuthException;
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.store.Preferences;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -32,8 +32,6 @@ import static io.snyk.eclipse.plugin.utils.MockHandler.MOCK;
 
 public class Authenticator {
 
-  private static final Preferences PREFERENCES = new Preferences();
-
   public static final Authenticator INSTANCE = new Authenticator();
 
   private static final String API_URL = "https://snyk.io";
@@ -55,7 +53,7 @@ public class Authenticator {
     }
 
     String content = procesResult.getContent();
-    String authToken = PREFERENCES.getAuthToken();
+    String authToken = Preferences.getInstance().getAuthToken();
     if (content != null && authToken != null) {
       return content.contains(authToken);
     }
@@ -101,7 +99,7 @@ public class Authenticator {
     KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
 
     //Only if insecure flag is active, create httpclient that accepts all ssl cert
-    HttpClient httpClient = PREFERENCES.isInsecure() ? httpClientIgnoresCerts() : HttpClientBuilder.create().build();
+    HttpClient httpClient = Preferences.getInstance().isInsecure() ? httpClientIgnoresCerts() : HttpClientBuilder.create().build();
     String payload = "{\"token\" : \"" + token + "\"}";
 
     StringEntity payloadEntity = new StringEntity(payload);
@@ -147,13 +145,13 @@ public class Authenticator {
   }
 
   private String getAuthUrlBase() throws AuthException {
-    String customEndpoint = PREFERENCES.getEndpoint();
+    String customEndpoint = Preferences.getInstance().getEndpoint();
     if (customEndpoint == null || customEndpoint.isEmpty()) {
       return API_URL;
     }
 
     try {
-      URL endpoint = new URL(PREFERENCES.getEndpoint());
+      URL endpoint = new URL(Preferences.getInstance().getEndpoint());
       return endpoint.getProtocol() + "://" + endpoint.getAuthority();
     } catch (Exception e) {
       throw new AuthException("Authentication problem, " + e.getMessage(), e);
