@@ -14,7 +14,6 @@ import org.apache.http.protocol.HttpContext;
 import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.oomph.util.OomphPlugin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
