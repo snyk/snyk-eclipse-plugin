@@ -1,7 +1,7 @@
 package io.snyk.languageserver;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.net.proxy.IProxyService;
@@ -17,17 +17,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliDirectory;
 import static org.eclipse.core.net.proxy.IProxyData.HTTPS_PROXY_TYPE;
 import static org.eclipse.core.net.proxy.IProxyData.HTTP_PROXY_TYPE;
 
 public class LsRuntimeEnvironment {
-  private final Preferences preferences;
-
-  public Preferences getPreferences() {
-    return preferences;
-  }
-
   public static final Map<String, String> map = new HashMap<>();
 
   static {
@@ -59,8 +52,7 @@ public class LsRuntimeEnvironment {
     map.put("686", "386");
   }
 
-  public LsRuntimeEnvironment(Preferences prefs) {
-    this.preferences = prefs;
+  public LsRuntimeEnvironment() {
   }
 
   public String getDownloadBinaryName(String version) {
@@ -81,28 +73,12 @@ public class LsRuntimeEnvironment {
     return map.get(os.toLowerCase().substring(0, 3));
   }
 
-  public String getBinaryName() {
-    var osName = SystemUtils.OS_NAME;
-    var executable = "snyk-ls";
-    if (osName.toLowerCase().startsWith("win")) executable += ".exe";
-    return executable;
-  }
-
-  public File getLSFile() {
-    String lsBinaryPath = preferences.getLsBinary();
-    File binary = new File(getCliDirectory(), getBinaryName());
-    if (lsBinaryPath != null && !lsBinaryPath.isBlank()) {
-      binary = new File(lsBinaryPath);
-    }
-    return binary;
-  }
-
   public void updateEnvironment(Map<String, String> env) {
-    String authToken = preferences.getAuthToken();
+    String authToken = Preferences.getInstance().getAuthToken();
     if (authToken != null && !authToken.isBlank()) {
       env.put("SNYK_TOKEN", authToken);
     }
-    String endpoint = preferences.getEndpoint();
+    String endpoint = Preferences.getInstance().getEndpoint();
     if (endpoint != null && !endpoint.isEmpty()) {
       env.put("SNYK_API", endpoint);
     }
@@ -116,19 +92,19 @@ public class LsRuntimeEnvironment {
   }
 
   void addOrganization(Map<String, String> env) {
-    String pref = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
+    String pref = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
     if (!pref.isBlank()) {
       env.put(Preferences.ORGANIZATION_KEY, pref);
     }
   }
 
   public void addAdditionalParamsAndEnv(Map<String, String> env) {
-    String additionalParams = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS, "");
+    String additionalParams = Preferences.getInstance().getPref(Preferences.ADDITIONAL_PARAMETERS, "");
     if (additionalParams != null && !additionalParams.isBlank()) {
       env.put(Preferences.ADDITIONAL_PARAMETERS, additionalParams);
     }
 
-    String additionalEnv = preferences.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "");
+    String additionalEnv = Preferences.getInstance().getPref(Preferences.ADDITIONAL_ENVIRONMENT, "");
     if (additionalEnv != null && !additionalEnv.isBlank()) {
       while (additionalEnv.endsWith(";")) {
         additionalEnv = additionalEnv.substring(0, additionalEnv.length() - 1);
@@ -147,13 +123,13 @@ public class LsRuntimeEnvironment {
   }
 
   void addProductEnablement(Map<String, String> env) {
-    env.put(Preferences.ACTIVATE_SNYK_CODE, preferences.getPref(Preferences.ACTIVATE_SNYK_CODE));
-    env.put(Preferences.ACTIVATE_SNYK_IAC, preferences.getPref(Preferences.ACTIVATE_SNYK_IAC));
-    env.put(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+    env.put(Preferences.ACTIVATE_SNYK_CODE, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_CODE));
+    env.put(Preferences.ACTIVATE_SNYK_IAC, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_IAC));
+    env.put(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
   }
 
   public void addPath(Map<String, String> env) {
-    var pathOptional = preferences.getPath();
+    var pathOptional = Preferences.getInstance().getPath();
     if (pathOptional.isPresent()) {
       var path = pathOptional.get();
       String splitBy;
@@ -226,9 +202,9 @@ public class LsRuntimeEnvironment {
   }
 
   void addTelemetry(Map<String, String> env) {
-    String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "true");
+    String sendErrorReports = Preferences.getInstance().getPref(Preferences.SEND_ERROR_REPORTS, "true");
     env.put("SEND_ERROR_REPORTS", sendErrorReports);
-    String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, "false");
+    String enableTelemetry = Preferences.getInstance().getPref(Preferences.ENABLE_TELEMETRY, "false");
     // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
     if (Boolean.parseBoolean(enableTelemetry)) {
       env.put(Preferences.ENABLE_TELEMETRY, "0");

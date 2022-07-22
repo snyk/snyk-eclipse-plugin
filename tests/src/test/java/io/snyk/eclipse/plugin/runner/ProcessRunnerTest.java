@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.runner;
 
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import org.eclipse.core.runtime.ILog;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,21 +22,26 @@ class ProcessRunnerTest {
   private Preferences preferenceMock;
 
   @BeforeEach
-  void setUp() {
+  void setUp()  {
     preferenceMock = mock(Preferences.class);
+    PreferencesUtils.setPreferences(preferenceMock);
+
+    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
+    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("organization");
+    when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY)).thenReturn("token");
+    when(preferenceMock.getPref(Preferences.ENDPOINT_KEY)).thenReturn("https://endpoint.io");
+    when(preferenceMock.getCliPath()).thenReturn("");
   }
 
   @Test
   void testGetProcessBuilderLinux() {
     ILog logger = mock(ILog.class);
     Bundle bundle = mock(Bundle.class);
-    when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
-    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
-    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("organization");
-    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("true");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
-    ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
+    ProcessRunner cut = new ProcessRunner(bundle, logger);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
     var env = builder.environment();
@@ -57,15 +63,11 @@ class ProcessRunnerTest {
     ILog logger = mock(ILog.class);
     Bundle bundle = mock(Bundle.class);
     when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("false");
-    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
-    when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("organization");
-    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("false");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
-    ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
+    ProcessRunner cut = new ProcessRunner(bundle, logger);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
-    var env = builder.environment();
     var cmd = builder.command();
     assertFalse(cmd.contains("--insecure"));
   }
@@ -74,13 +76,10 @@ class ProcessRunnerTest {
   void testGetProcessBuilderLinuxNoOrg() {
     ILog logger = mock(ILog.class);
     Bundle bundle = mock(Bundle.class);
-    when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
-    when(preferenceMock.getEndpoint()).thenReturn("endpoint");
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("");
-    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("false");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
-    ProcessRunner cut = new ProcessRunner(preferenceMock, bundle, logger);
+    ProcessRunner cut = new ProcessRunner(bundle, logger);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
     var env = builder.environment();
@@ -88,4 +87,5 @@ class ProcessRunnerTest {
     assertFalse(cmd.contains("--org="));
     assertEquals(null, env.get(Preferences.ORGANIZATION_KEY));
   }
+
 }

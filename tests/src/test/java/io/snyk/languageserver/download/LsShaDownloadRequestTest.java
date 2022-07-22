@@ -16,9 +16,9 @@ class LsShaDownloadRequestTest extends LsBaseTest {
     reset(environment);
     var version = "20220303.140906";
 
-    LsShaRequest cut = new LsShaRequest(version, environment);
+    LsShaRequest cut = new LsShaRequest(version);
 
-    URI expectedUri = new URI("https://static.snyk.io/snyk-ls/snyk-ls_20220303.140906_SHA256SUMS");
+    URI expectedUri = new URI("https://static.snyk.io/snyk-ls/2/snyk-ls_20220303.140906_SHA256SUMS");
     assertEquals(expectedUri, cut.getURI());
   }
 }

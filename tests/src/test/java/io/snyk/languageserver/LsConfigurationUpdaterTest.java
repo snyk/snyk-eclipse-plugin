@@ -1,6 +1,7 @@
 package io.snyk.languageserver;
 
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,13 +15,14 @@ class LsConfigurationUpdaterTest {
   @BeforeEach
   protected void setUp() {
     preferenceMock = mock(Preferences.class);
+    PreferencesUtils.setPreferences(preferenceMock);
   }
 
   @Test
   void testGetSettings() {
     setupPreferenceMock();
 
-    var settings = new LsConfigurationUpdater().getCurrentSettings(preferenceMock);
+    var settings = new LsConfigurationUpdater().getCurrentSettings();
 
     assertEquals("iac", settings.getActivateSnykIac());
     assertEquals("code", settings.getActivateSnykCode());
@@ -33,6 +35,8 @@ class LsConfigurationUpdaterTest {
     assertEquals("true", settings.getSendErrorReports());
     assertEquals("organization", settings.getOrganization());
     assertEquals("true", settings.getEnableTelemetry());
+    assertEquals("true", settings.getManageBinariesAutomatically());
+    assertEquals("/path", settings.getCliPath());
   }
 
   private void setupPreferenceMock() {
@@ -58,6 +62,8 @@ class LsConfigurationUpdaterTest {
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "true")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "")).thenReturn("true");
+    when(preferenceMock.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("organization");
+    when(preferenceMock.getPref(Preferences.CLI_PATH, "")).thenReturn("/path");
   }
 }

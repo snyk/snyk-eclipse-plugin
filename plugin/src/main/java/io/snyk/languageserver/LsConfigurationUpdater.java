@@ -1,6 +1,6 @@
 package io.snyk.languageserver;
 
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 import java.util.Collections;
@@ -16,9 +16,9 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 @SuppressWarnings("restriction")
 public class LsConfigurationUpdater {
 
-  public void configurationChanged(Preferences preferences) {
+  public void configurationChanged() {
     var params = new DidChangeConfigurationParams();
-    params.setSettings(getCurrentSettings(preferences));
+    params.setSettings(getCurrentSettings());
 
     var definition = LanguageServersRegistry.getInstance().getDefinition(SnykStreamConnectionProvider.LANGUAGE_SERVER_ID);
 
@@ -42,7 +42,8 @@ public class LsConfigurationUpdater {
     }
   }
 
-  Settings getCurrentSettings(Preferences preferences) {
+  Settings getCurrentSettings() {
+    Preferences preferences = Preferences.getInstance();
     String activateSnykOpenSource = preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true");
     String activateSnykCode = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE, "false");
     String activateSnykIac = preferences.getPref(Preferences.ACTIVATE_SNYK_IAC, "true");
@@ -54,6 +55,9 @@ public class LsConfigurationUpdater {
     String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
     String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, "false");
     String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
+    String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true");
+    String cliPath = preferences.getPref(Preferences.CLI_PATH, "");
+    String token = preferences.getPref(Preferences.AUTH_TOKEN_KEY, "");
     return new Settings(activateSnykOpenSource,
       activateSnykCode,
       activateSnykIac,
@@ -64,7 +68,11 @@ public class LsConfigurationUpdater {
       path,
       sendErrorReports,
       enableTelemetry,
-      organization);
+      organization,
+      manageBinariesAutomatically,
+      cliPath,
+      token
+      );
   }
 
   static class Settings {
@@ -80,6 +88,9 @@ public class LsConfigurationUpdater {
     private final String sendErrorReports;
     private final String enableTelemetry;
     private final String organization;
+    private final String manageBinariesAutomatically;
+    private final String cliPath;
+    private final String token;
 
     public Settings(String activateSnykOpenSource,
                     String activateSnykCode,
@@ -91,7 +102,11 @@ public class LsConfigurationUpdater {
                     String path,
                     String sendErrorReports,
                     String enableTelemetry,
-                    String organization) {
+                    String organization,
+                    String manageBinariesAutomatically,
+                    String cliPath,
+                    String token
+                    ) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
       this.activateSnykIac = activateSnykIac;
@@ -103,6 +118,9 @@ public class LsConfigurationUpdater {
       this.sendErrorReports = sendErrorReports;
       this.enableTelemetry = enableTelemetry;
       this.organization = organization;
+      this.manageBinariesAutomatically = manageBinariesAutomatically;
+      this.cliPath = cliPath;
+      this.token = token;
     }
 
     public String getPath() {
@@ -147,6 +165,16 @@ public class LsConfigurationUpdater {
 
     public String getOrganization() {
       return this.organization;
+    }
+    public String getManageBinariesAutomatically() {
+      return this.manageBinariesAutomatically;
+    }
+    public String getCliPath() {
+      return cliPath;
+    }
+
+    public String getToken() {
+      return token;
     }
   }
 }

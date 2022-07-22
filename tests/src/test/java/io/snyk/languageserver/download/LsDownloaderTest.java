@@ -1,6 +1,7 @@
 package io.snyk.languageserver.download;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
 import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
 import io.snyk.languageserver.LsBaseTest;
@@ -53,7 +54,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
   @Test
   void downloadShouldFailWhenShaWrongAndFileShouldNotBeOverwritten() throws IOException {
-    byte[] expectedLsContent = Files.readAllBytes(environment.getLSFile().toPath());
+    byte[] expectedLsContent = Files.readAllBytes(new File(Preferences.getInstance().getLsBinary()).toPath());
 
     LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null, mock(ILog.class));
     File testFile = File.createTempFile("download-test", "tmp");
@@ -66,11 +67,28 @@ public class LsDownloaderTest extends LsBaseTest {
 
     assertThrows(ChecksumVerificationException.class, () -> cut.download(mock(IProgressMonitor.class)));
 
-    File lsFile = environment.getLSFile();
+    File lsFile = new File(Preferences.getInstance().getLsBinary());
     assertTrue(lsFile.exists());
     assertArrayEquals(Files.readAllBytes(lsFile.toPath()), expectedLsContent);
     verify(httpClient, times(1)).execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class), any(HttpContext.class));
     verify(httpClient, times(1)).execute(any(LsShaRequest.class), any(HttpContext.class));
+  }
+
+  @Test
+  void download_whenFinished_updatesLSPVersion() throws IOException {
+    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null, mock(ILog.class));
+    Path source = Paths.get("src/test/resources/ls-dummy-binary");
+    var testFile = Files.createTempFile("download-test", "tmp").toFile();
+    testFile.deleteOnExit();
+    Files.copy(source, testFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    var checksums = "1a69d74e3b70cd2d386145bf6eb3882196525b7ca2b42e3fc87c67de873abf72  snyk-ls_testVersion_windows_386.exe\n" + "2b418a5d0573164b4f93188fc94de0332fc0968e7a8439b01f530a4cdde1dcf2  snyk-ls_testVersion_linux_amd64\n" + "5f53be6dac86284d58322dff0dd6b9e3a6002e593d3a16fc61e23d82b428915a  snyk-ls_testVersion_darwin_arm64\n";
+    InputStream shaStream = new ByteArrayInputStream(checksums.getBytes());
+    mockShaStream(shaStream);
+    when(httpClient.execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class), any(HttpContext.class))).thenReturn(testFile);
+
+    cut.download(mock(IProgressMonitor.class));
+
+    assertEquals(Preferences.getInstance().getLspVersion(), LsBinaries.REQUIRED_LSP_VERSION);
   }
 
   @Test
@@ -91,7 +109,30 @@ public class LsDownloaderTest extends LsBaseTest {
     verify(httpClient, times(1)).execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class), any(HttpContext.class));
     verify(httpClient, times(1)).execute(any(LsShaRequest.class), any(HttpContext.class));
     verify(httpClient, times(1)).execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class), any(HttpContext.class));
-    File lsFile = environment.getLSFile();
+    File lsFile = new File(Preferences.getInstance().getLsBinary());
+    assertTrue(lsFile.exists());
+    assertArrayEquals(Files.readAllBytes(lsFile.toPath()), fileContent);
+  }
+
+  @Test
+  void respectsLSBinaryPath() throws IOException {
+    String lsBinaryPath = getTempFile().toString();
+    Files.delete(Path.of(lsBinaryPath));
+    Preferences.getInstance().store(Preferences.LS_BINARY_KEY, lsBinaryPath);
+    LsDownloader cut = new LsDownloader(environment, httpClientBuilder, null, mock(ILog.class));
+    Path source = Paths.get("src/test/resources/ls-dummy-binary");
+    var testFile = Files.createTempFile("download-test", "tmp").toFile();
+    testFile.deleteOnExit();
+    Files.copy(source, testFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    var fileContent = Files.readAllBytes(testFile.toPath());
+    var checksums = "1a69d74e3b70cd2d386145bf6eb3882196525b7ca2b42e3fc87c67de873abf72  snyk-ls_testVersion_windows_386.exe\n" + "2b418a5d0573164b4f93188fc94de0332fc0968e7a8439b01f530a4cdde1dcf2  snyk-ls_testVersion_linux_amd64\n" + "5f53be6dac86284d58322dff0dd6b9e3a6002e593d3a16fc61e23d82b428915a  snyk-ls_testVersion_darwin_arm64\n";
+    InputStream shaStream = new ByteArrayInputStream(checksums.getBytes());
+    mockShaStream(shaStream);
+    when(httpClient.execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class), any(HttpContext.class))).thenReturn(testFile);
+
+    cut.download(mock(IProgressMonitor.class));
+
+    File lsFile = new File(lsBinaryPath);
     assertTrue(lsFile.exists());
     assertArrayEquals(Files.readAllBytes(lsFile.toPath()), fileContent);
   }

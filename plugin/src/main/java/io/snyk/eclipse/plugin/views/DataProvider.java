@@ -8,7 +8,7 @@ import io.snyk.eclipse.plugin.domain.ContentError;
 import io.snyk.eclipse.plugin.domain.MonitorResult;
 import io.snyk.eclipse.plugin.domain.ScanResult;
 import io.snyk.eclipse.plugin.domain.Vuln;
-import io.snyk.eclipse.plugin.properties.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.runner.ProcessResult;
 import io.snyk.eclipse.plugin.runner.SnykCliRunner;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
@@ -104,8 +104,7 @@ public class DataProvider {
     abort.set(false);
 
     List<DisplayModel> result = new ArrayList<>();
-    var preferences = new Preferences();
-    var additionalParams = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS, "");
+    var additionalParams = Preferences.getInstance().getPref(Preferences.ADDITIONAL_PARAMETERS, "");
     for (IProject project : projects) {
       if (abort.get()) return abortResult();
       if (!project.isOpen()) continue;
@@ -114,11 +113,11 @@ public class DataProvider {
       if (poms.size() > 0) {
         if (!additionalParams.contains("--all-projects")) {
           var tempParams = additionalParams + " --all-projects".trim();
-          preferences.store(Preferences.ADDITIONAL_PARAMETERS, tempParams);
+          Preferences.getInstance().store(Preferences.ADDITIONAL_PARAMETERS, tempParams);
         }
       }
       result.add(scanProject(project));
-      preferences.store(Preferences.ADDITIONAL_PARAMETERS, additionalParams);
+      Preferences.getInstance().store(Preferences.ADDITIONAL_PARAMETERS, additionalParams);
     }
     return result;
   }

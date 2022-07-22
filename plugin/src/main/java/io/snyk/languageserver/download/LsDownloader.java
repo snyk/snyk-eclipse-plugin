@@ -1,5 +1,6 @@
 package io.snyk.languageserver.download;
 
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
 import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
@@ -82,7 +83,7 @@ public class LsDownloader {
   }
 
   public void download(IProgressMonitor monitor) {
-    File destinationFile = runtimeEnvironment.getLSFile();
+    File destinationFile = new File(Preferences.getInstance().getLsBinary());
     File tempFile = null;
     try {
       tempFile = File.createTempFile(destinationFile.getName(), ".tmp", destinationFile.getParentFile());
@@ -104,6 +105,7 @@ public class LsDownloader {
         logger.info("LS: Moving file to "+destinationFile.toPath());
         Files.move(tempFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE,
           StandardCopyOption.REPLACE_EXISTING);
+        Preferences.getInstance().store(Preferences.LSP_VERSION, LsBinaries.REQUIRED_LSP_VERSION);
       } catch (AtomicMoveNotSupportedException e) {
         // fallback to renameTo because of e
         logger.warn("LS: Fallback using rename to "+destinationFile.toPath());
@@ -140,7 +142,7 @@ public class LsDownloader {
   }
 
   String getSha(String version) {
-    LsShaRequest shaRequest = new LsShaRequest(version, runtimeEnvironment);
+    LsShaRequest shaRequest = new LsShaRequest(version);
     try (CloseableHttpResponse response = httpClient.execute(shaRequest, context)) {
       if (response.getStatusLine().getStatusCode() >= 400) {
         throw new RuntimeException("Download of Language Server failed. " + response.getStatusLine());

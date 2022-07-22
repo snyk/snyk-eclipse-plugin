@@ -13,7 +13,15 @@ marketplace.
 4. In the list, select Eclipse Plugin Development Tools
 5. Proceed with the license terms and click Finish.
 
-### Sorting out dependencies
+### Importing the project
+
+If you import the parent project as a maven project, eclipse should take care of everything.
+
+![](docs/import-maven.png "Import maven project")
+
+If you encounter some issues with dependencies keep on reading.
+
+#### Sorting out dependencies
 
 If `org.eclipse.*` dependencies are causing compilation errors, open `/target-platform/target-platform.target`
 and click in the top right corner (Reload Target Platform).
