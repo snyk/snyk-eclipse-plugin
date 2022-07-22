@@ -102,7 +102,7 @@ public class SnykStartup implements IStartup {
         Instant lastModified = basicFileAttributes.lastModifiedTime().toInstant();
         boolean needsUpdate = lastModified.isBefore(Instant.now().minus(4, ChronoUnit.DAYS))
           || !Preferences.getInstance().getLspVersion().equals(LsBinaries.REQUIRED_LSP_VERSION);
-        logger.info("LS: Needs update? " + needsUpdate);
+        logger.info(String.format("LS: Needs update? %s. Required LSP version=%s, actual version=%s", needsUpdate, LsBinaries.REQUIRED_LSP_VERSION, Preferences.getInstance().getLspVersion()));
         return needsUpdate;
       } catch (IOException e) {
         SnykLogger.logError(e);
