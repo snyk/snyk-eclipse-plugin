@@ -21,7 +21,7 @@ The Snyk Eclipse plugin is available for installation on the [Eclipse Marketplac
 
 ## Supported languages, package managers, and frameworks
 
-* For Snyk Open Source, the Eclipse plugin supports all the languages and package managers supported by Snyk Open Source and the CLI. See the full [list](https://docs.snyk.io/products/snyk-open-source/language-and-package-manager-support).
+* For Snyk Open Source, the Eclipse plugin supports the languages and package managers supported by Snyk Open Source and the CLI except C/C++. See the full [list](https://docs.snyk.io/products/snyk-open-source/language-and-package-manager-support).
 * For Snyk Code, the Eclipse plugin supports all the [languages and frameworks supported by Snyk Code](https://docs.snyk.io/products/snyk-code/snyk-code-language-and-framework-support#language-support-with-snyk-code-ai-engine).
 * For Snyk IaC, the Eclipse plugin supports the following IaC templates: Terraform, Kubernetes, CloudFormation, and Azure Resource Manager.
 
@@ -33,7 +33,7 @@ Navigate to the Marketplace from within your running Eclipse instance. Search fo
 
 When prompted accept the license agreement add the **Snyk Security** certificate to complete the installation (this happens only once).
 
-![Add Snyk Security certificate](<https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1).png>)
+![Add Snyk Security certificate](<https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
 
 Restart the Eclipse instance:
 
@@ -262,7 +262,7 @@ Navigate to **Windows -> Show View -> Other...**
 
 Search for Snyk in the **Show View** dialog window.
 
-![Show View dialog window](<https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 12.02.06 (2).png>)
+![Show View dialog window](<https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 12.02.06 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
 
 You should now be able to see the Snyk Results panel:
 
