@@ -1,19 +1,24 @@
 package io.snyk.languageserver.protocolextension;
 
-import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
-import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
+import java.util.concurrent.CompletableFuture;
+
+import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4e.ServerMessageHandler;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ProgressParams;
+import org.eclipse.lsp4j.ShowDocumentParams;
+import org.eclipse.lsp4j.ShowDocumentResult;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.ui.PlatformUI;
 
-import java.util.concurrent.CompletableFuture;
+import io.snyk.eclipse.plugin.SnykStartup;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -54,7 +59,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   private void enableSnykViewRunActions() {
     PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
       var snykView = SnykStartup.getSnykView();
-      if (snykView != null) snykView.toggleRunActionEnablement();
+      if (snykView != null)
+        snykView.toggleRunActionEnablement();
     });
   }
 
@@ -64,4 +70,20 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     messageParams.setMessage("The authentication token has been stored in Snyk Preferences.");
     ServerMessageHandler.showMessage("Authentication with Snyk successful", messageParams);
   }
+
+  @Override
+  public CompletableFuture<ShowDocumentResult> showDocument(ShowDocumentParams params) {
+    PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
+      var window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+      if (window != null) {
+        var page = window.getActivePage();
+        var location = new Location(params.getUri(), params.getSelection());
+        if (page != null) {
+          LSPEclipseUtils.openInEditor(location, page);
+        }
+      }
+    });
+    return CompletableFuture.completedFuture(null);
+  }
+
 }
