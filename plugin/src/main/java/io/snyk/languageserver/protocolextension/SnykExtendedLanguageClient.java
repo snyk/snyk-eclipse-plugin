@@ -73,17 +73,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
   @Override
   public CompletableFuture<ShowDocumentResult> showDocument(ShowDocumentParams params) {
-    PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
-      var window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-      if (window != null) {
-        var page = window.getActivePage();
+    return CompletableFuture.supplyAsync(() -> {
+      PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
         var location = new Location(params.getUri(), params.getSelection());
-        if (page != null) {
+        var window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window != null) {
+          var page = window.getActivePage();
           LSPEclipseUtils.openInEditor(location, page);
         }
-      }
+      });
+      return new ShowDocumentResult(true);
     });
-    return CompletableFuture.completedFuture(null);
   }
-
 }
