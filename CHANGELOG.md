@@ -2,6 +2,10 @@
 
 ## [2.0.0] - Unreleased
 ### Changes
+- feat: add support for `window/showDocument` request
+
+## [2.0.0] - v20220725.070608
+### Changes
 - refactor LSP extensions to use snyk namespace - this will force an LS Server update
 - configure LS with initialize options instead of env vars
 - remove redundant CLI download
