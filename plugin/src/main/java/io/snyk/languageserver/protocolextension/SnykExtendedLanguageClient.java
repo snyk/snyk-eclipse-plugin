@@ -71,6 +71,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     ServerMessageHandler.showMessage("Authentication with Snyk successful", messageParams);
   }
 
+  // TODO: remove once LSP4e supports `showDocument` in its next release (it's been merged to it already)
   @Override
   public CompletableFuture<ShowDocumentResult> showDocument(ShowDocumentParams params) {
     return CompletableFuture.supplyAsync(() -> {

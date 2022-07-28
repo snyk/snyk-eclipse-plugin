@@ -80,15 +80,15 @@ public class Preferences {
     }
 
     String token = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
-    if (getPref(AUTH_TOKEN_KEY) == null && token != "") {
+    if (getPref(AUTH_TOKEN_KEY) == null && !"".equals(token)) {
       store(AUTH_TOKEN_KEY, token);
     }
     String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
-    if (getPref(ENDPOINT_KEY) == null && endpoint != "") {
+    if (getPref(ENDPOINT_KEY) == null && !"".equals(endpoint)) {
       store(ENDPOINT_KEY, endpoint);
     }
     String org = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, "");
-    if (getPref(ORGANIZATION_KEY) == null && org != "") {
+    if (getPref(ORGANIZATION_KEY) == null && !"".equals(org)) {
       store(ORGANIZATION_KEY, org);
     }
   }
