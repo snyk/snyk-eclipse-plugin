@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.views;
 
-import io.snyk.eclipse.plugin.SnykStartup;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -11,10 +10,14 @@ import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 
+import io.snyk.eclipse.plugin.SnykStartup;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class MenuHandler extends AbstractHandler {
 
   public Object execute(ExecutionEvent event) throws ExecutionException {
+    SnykExtendedLanguageClient.getInstance().triggerScan();
+    
     IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
     ISelectionService service = window.getSelectionService();
     IStructuredSelection structured = (IStructuredSelection) service.getSelection();
@@ -30,7 +33,7 @@ public class MenuHandler extends AbstractHandler {
       JavaProject javaproject = (JavaProject) firstElement;
       runForProject(javaproject.getProject().getName());
     }
-
+     
     return null;
   }
 
