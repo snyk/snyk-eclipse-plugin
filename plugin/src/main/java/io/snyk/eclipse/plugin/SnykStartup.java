@@ -4,6 +4,7 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.LsRuntimeEnvironment;
+import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.download.LsDownloader;
 import org.apache.http.impl.client.HttpClients;
@@ -45,7 +46,7 @@ public class SnykStartup implements IStartup {
        logger = Platform.getLog(getClass());
     }
     runtimeEnvironment = new LsRuntimeEnvironment();
-    Job downloadCLIJob = new Job("Downloading latest Language Server release...") {
+    Job initJob = new Job("Downloading latest Language Server release...") {
       @Override
       protected IStatus run(IProgressMonitor monitor) {
         try {
@@ -56,6 +57,9 @@ public class SnykStartup implements IStartup {
             monitor.subTask("Starting download of Snyk Language Server");
             download(monitor);
           }
+          
+          monitor.subTask("Starting Snyk Language Server...");
+          SnykLanguageServer.InitializeServer();
         } catch (Exception exception) {
           logError(exception);
         }
@@ -63,8 +67,8 @@ public class SnykStartup implements IStartup {
         return Status.OK_STATUS;
       }
     };
-    downloadCLIJob.setPriority(Job.LONG);
-    downloadCLIJob.schedule();
+    initJob.setPriority(Job.LONG);
+    initJob.schedule();
   }
 
   public static SnykView getSnykView() {

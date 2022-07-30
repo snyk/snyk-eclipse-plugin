@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SnykStreamConnectionProviderTest {
+class SnykLanguageServerTest {
 
   @Test
   void getInitializationOptions() {
     PreferencesUtils.setPreferences(Preferences.getInstance(new InMemoryPreferenceStore()));
-    SnykStreamConnectionProvider snykStreamConnectionProvider = new SnykStreamConnectionProvider();
+    SnykLanguageServer snykStreamConnectionProvider = new SnykLanguageServer();
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);
 

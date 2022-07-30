@@ -144,11 +144,11 @@
   <extension
     point="org.eclipse.lsp4e.languageServer">
     <server
-      class="io.snyk.languageserver.SnykStreamConnectionProvider"
+      class="io.snyk.languageserver.SnykLanguageServer"
       id="io.snyk.languageserver"
       label="Snyk Language Server"
       clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
-      stopOnLastDisconnectedDocument="3600"
+      lastDocumentDisconnectedTimeout="3600"
       singleton="true"
       makerType="io.snyk.languageserver.marker">
     </server>

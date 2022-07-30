@@ -20,7 +20,7 @@ public class LsConfigurationUpdater {
     var params = new DidChangeConfigurationParams();
     params.setSettings(getCurrentSettings());
 
-    var definition = LanguageServersRegistry.getInstance().getDefinition(SnykStreamConnectionProvider.LANGUAGE_SERVER_ID);
+    var definition = LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
 
     if (definition == null) {
       return;
