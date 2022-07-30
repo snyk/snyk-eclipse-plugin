@@ -8,6 +8,8 @@ import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
 import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;
 import io.snyk.eclipse.plugin.views.provider.LinkLabelProvider;
 import io.snyk.eclipse.plugin.views.provider.TreeContentProvider;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -50,7 +52,7 @@ public class SnykView extends ViewPart {
   public static final String ID = "io.snyk.eclipse.plugin.views.SnykView";
 
   public static final Image CRITICAL_SEVERITY = Activator.getImageDescriptor("/icons/severity-critical.png")
-    .createImage();
+      .createImage();
 
   public static final Image HIGH_SEVERITY = Activator.getImageDescriptor("/icons/severity-high.png").createImage();
 
@@ -199,7 +201,7 @@ public class SnykView extends ViewPart {
       @Override
       public void run() {
         PreferenceDialog pref = PreferencesUtil.createPreferenceDialogOn(getShell(),
-          "io.snyk.eclipse.plugin.properties.preferencespage", null, null);
+            "io.snyk.eclipse.plugin.properties.preferencespage", null, null);
         if (pref != null)
           pref.open();
       }
@@ -216,6 +218,7 @@ public class SnykView extends ViewPart {
         abortScanning.setEnabled(true);
 
         CompletableFuture.runAsync(() -> {
+          SnykExtendedLanguageClient.getInstance().triggerScan();
           alreadyRunning = true;
           List<DisplayModel> scanResult = DataProvider.INSTANCE.scanWorkspace();
           rootModel.children.clear();
@@ -231,7 +234,7 @@ public class SnykView extends ViewPart {
     scanWorkspace.setText("Snyk Test");
     scanWorkspace.setToolTipText("Snyk Test");
     scanWorkspace.setImageDescriptor(
-      Activator.getImageDescriptor("platform:/plugin/org.eclipse.ui.browser/icons/clcl16/nav_go.png"));
+        Activator.getImageDescriptor("platform:/plugin/org.eclipse.ui.browser/icons/clcl16/nav_go.png"));
 
     enableScanBasedOnConfig();
 
@@ -244,7 +247,7 @@ public class SnykView extends ViewPart {
       }
     };
     abortScanning.setImageDescriptor(
-      Activator.getImageDescriptor("platform:/plugin/org.eclipse.ui.browser/icons/clcl16/nav_stop.png"));
+        Activator.getImageDescriptor("platform:/plugin/org.eclipse.ui.browser/icons/clcl16/nav_stop.png"));
     abortScanning.setEnabled(false);
   }
 
@@ -288,8 +291,9 @@ public class SnykView extends ViewPart {
 
     CompletableFuture.runAsync(() -> {
       alreadyRunning = true;
+      List<DisplayModel> scanResult = DataProvider.INSTANCE.scanProject(projectName);
       rootModel.children.clear();
-      rootModel.children.addAll(DataProvider.INSTANCE.scanProject(projectName));
+      rootModel.children.addAll(scanResult);
       viewer.getTree().getDisplay().asyncExec(() -> viewer.refresh());
       scanWorkspace.setEnabled(true);
       alreadyRunning = false;
@@ -315,7 +319,7 @@ public class SnykView extends ViewPart {
         if (alreadyRunning)
           return;
         MessageDialog.openInformation(getShell(), "Snyk monitor",
-          "Snyk monitor for project " + projectName + " in progress...");
+            "Snyk monitor for project " + projectName + " in progress...");
         CompletableFuture
           .runAsync(() -> handleMonitorOutput(DataProvider.INSTANCE.monitorProject(projectName)));
       }
@@ -349,7 +353,7 @@ public class SnykView extends ViewPart {
     else
       shell.getDisplay().asyncExec(() -> {
         LinkDialog dialog = new LinkDialog(shell, "Snyk Monitor Succesful",
-          "Monitoring " + result.getPath() + " \n\nExplore this snapshot at: ", result.getUri());
+            "Monitoring " + result.getPath() + " \n\nExplore this snapshot at: ", result.getUri());
         dialog.open();
       });
     alreadyRunning = false;
