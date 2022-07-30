@@ -5,7 +5,6 @@
 - add support for `window/showDocument` request
 - automatically start workspace scan on plugin startup
 - allow manually triggering a workspace scan via context menu or Snyk View
-- removed custom progress implementation in favor of LSP4e
 
 ### Fixed
 - Language Server does not shutdown anymore on disconnecting last document, it now uses a grace period of one hour

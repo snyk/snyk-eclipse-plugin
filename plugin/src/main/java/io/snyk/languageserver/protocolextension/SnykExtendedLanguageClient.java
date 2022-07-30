@@ -10,8 +10,10 @@ import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
+import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.ShowDocumentParams;
 import org.eclipse.lsp4j.ShowDocumentResult;
+import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.ui.PlatformUI;
 
@@ -23,6 +25,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCl
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
+  private final ProgressManager progressMgr = new ProgressManager();
   private static SnykExtendedLanguageClient instance = null;
 
   @SuppressWarnings("unused") // used in lsp4e language server instantiation
@@ -36,7 +39,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   }
 
   public void triggerScan() {
-    ExecuteCommandParams params = new ExecuteCommandParams("snyk.workspace.scan", new ArrayList<Object>());
+    ExecuteCommandParams params = new ExecuteCommandParams("snyk.workspace.scan", new ArrayList<>());
     try {
       getLanguageServer().getWorkspaceService().executeCommand(params);
     } catch (Exception e) {
@@ -55,6 +58,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   public void isAvailableCli(SnykIsAvailableCliParams param) {
     Preferences.getInstance().store(Preferences.CLI_PATH, param.getCliPath());
     enableSnykViewRunActions();
+  }
+
+  @Override
+  public CompletableFuture<Void> createProgress(WorkDoneProgressCreateParams params) {
+    return progressMgr.createProgress(params);
+  }
+
+  @Override
+  public void notifyProgress(ProgressParams params) {
+    progressMgr.updateProgress(params);
   }
 
   private void enableSnykViewRunActions() {
