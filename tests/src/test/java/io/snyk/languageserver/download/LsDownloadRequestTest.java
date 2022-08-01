@@ -20,7 +20,8 @@ class LsDownloadRequestTest extends LsBaseTest {
 
     LsDownloadRequest cut = new LsDownloadRequest(version, environment);
 
-    URI expectedUri = new URI("https://static.snyk.io/snyk-ls/2/" + binary);
+    URI expectedUri = new URI(
+        "https://static.snyk.io/snyk-ls/" + LsBinaries.REQUIRED_LS_PROTOCOL_VERSION + "/" + binary);
     assertEquals(expectedUri, cut.getURI());
     verify(environment).getDownloadBinaryName(version);
   }
