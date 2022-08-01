@@ -105,7 +105,7 @@ public class LsDownloader {
         logger.info("LS: Moving file to "+destinationFile.toPath());
         Files.move(tempFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE,
           StandardCopyOption.REPLACE_EXISTING);
-        Preferences.getInstance().store(Preferences.LSP_VERSION, LsBinaries.REQUIRED_LSP_VERSION);
+        Preferences.getInstance().store(Preferences.LSP_VERSION, LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
       } catch (AtomicMoveNotSupportedException e) {
         // fallback to renameTo because of e
         logger.warn("LS: Fallback using rename to "+destinationFile.toPath());

@@ -88,7 +88,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
     cut.download(mock(IProgressMonitor.class));
 
-    assertEquals(Preferences.getInstance().getLspVersion(), LsBinaries.REQUIRED_LSP_VERSION);
+    assertEquals(Preferences.getInstance().getLspVersion(), LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
   }
 
   @Test
