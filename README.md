@@ -16,7 +16,6 @@ Snyk scans for the following types of issues:
 
 * [**Open Source Security**](https://snyk.io/product/open-source-security-management/) - security vulnerabilities and license issues in both the direct and in-direct (transitive) open-source dependencies pulled into the Snyk Project. See also the [`Open Source docs`](https://docs.snyk.io/products/snyk-open-source).
 * [**Code Security**](https://snyk.io/product/snyk-code/) and [**Code Quality**](https://snyk.io/product/snyk-code/) - security vulnerabilities and quality issues in your code. See also the [Snyk Code docs](https://docs.snyk.io/products/snyk-code).
-* ****[**Container Security**](https://snyk.io/product/container-vulnerability-management/) - security vulnerabilities in your containers. See also the [Snyk Container docs](https://docs.snyk.io/products/snyk-container).
 * [**Infrastructure as Code (IaC) Security**](https://snyk.io/product/infrastructure-as-code-security/) - configuration issues in your IaC templates: Terraform, Kubernetes, CloudFormation, and Azure Resource Manager. See also the [Snyk Infrastructure as Code docs](https://docs.snyk.io/products/snyk-infrastructure-as-code).
 
 After you have installed and configured the Eclipse plugin, every time you run it, open a file, or autosave, Snyk scans the manifest files, proprietary code, and configuration files in your project. Snyk delivers actionable vulnerability, license, code quality, or misconfiguration issue details and displays the results natively within the Eclipse UI.
@@ -46,12 +45,15 @@ If you want to verify the correct provenance of your download, please verify the
 
 <img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/image (6).png" alt="The signing key details to verify the integrity and origin of the download plugin" />
 
-* MacOSX
+The plugin runs on
+
+* macOS
 * Linux
-* Windows 10
+* Windows
 
 ## Supported Eclipse Versions
 
+* 2022-06
 * 2022-03
 * 2021-12
 * 2021-09
@@ -72,7 +74,7 @@ Navigate to the Marketplace from your running Eclipse instance. Search for Snyk 
 
 When prompted accept the license agreement add the **Snyk Security** certificate to complete the installation (this happens only once).
 
-<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt="Add Snyk Security certificate" />
+<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (2).png" alt="Add Snyk Security certificate" />
 
 Restart the Eclipse instance:
 
