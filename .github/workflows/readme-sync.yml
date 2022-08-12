@@ -43,7 +43,7 @@ jobs:
               --field branch="$DESTINATION_BRANCH" \
               --field sha="$SHA"
 
-            if [[ $(gh pr view $DESTINATION_BRANCH 2>&1 | grep -e "no pull requests";) ]]; then
+            if [[ ! $(gh pr list --search "$MESSAGE" 2>&1 | grep -e "$MESSAGE";) ]]; then
               echo "Creating PR"
               gh pr create --title="$MESSAGE" --body="Automatic PR controlled by GitHub Action." --head $DESTINATION_BRANCH
             fi
