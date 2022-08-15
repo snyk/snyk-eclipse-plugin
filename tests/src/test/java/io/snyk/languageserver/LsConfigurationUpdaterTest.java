@@ -39,7 +39,7 @@ class LsConfigurationUpdaterTest {
     assertEquals("true", settings.getManageBinariesAutomatically());
     assertEquals("/path", settings.getCliPath());
     assertEquals("ECLIPSE", settings.getIntegrationName());
-    assertEquals("ECLIPSE", Activator.PLUGIN_VERSION);
+    assertEquals(Activator.PLUGIN_VERSION, settings.getIntegrationVersion());
   }
 
   private void setupPreferenceMock() {
