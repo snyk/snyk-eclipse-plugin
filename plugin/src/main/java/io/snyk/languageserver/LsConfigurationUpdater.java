@@ -99,19 +99,23 @@ public class LsConfigurationUpdater {
     private final String integrationName;
     private final String integrationVersion;
 
-    public Settings(String activateSnykOpenSource, 
-        String activateSnykCode, 
-        String activateSnykIac, 
+    public Settings(String activateSnykOpenSource,
+        String activateSnykCode,
+        String activateSnykIac,
         String insecure,
-        String endpoint, 
-        String additionalParams, 
-        String additionalEnv, 
-        String path, 
+        String endpoint,
+        String additionalParams,
+        String additionalEnv,
+        String path,
         String sendErrorReports,
-        String enableTelemetry, 
-        String organization, 
-        String manageBinariesAutomatically, String cliPath,
-        String token, String integrationName, String integrationVersion) {
+        String enableTelemetry,
+        String organization,
+        String manageBinariesAutomatically,
+        String cliPath,
+        String token,
+        String integrationName,
+        String integrationVersion
+        ) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
       this.activateSnykIac = activateSnykIac;
