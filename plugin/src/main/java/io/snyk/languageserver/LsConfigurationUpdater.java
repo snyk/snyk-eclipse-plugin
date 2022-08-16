@@ -1,5 +1,6 @@
 package io.snyk.languageserver;
 
+import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 
@@ -58,21 +59,25 @@ public class LsConfigurationUpdater {
     String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true");
     String cliPath = preferences.getPref(Preferences.CLI_PATH, "");
     String token = preferences.getPref(Preferences.AUTH_TOKEN_KEY, "");
+    String integrationName = Activator.INTEGRATION_NAME;
+    String integrationVersion = Activator.PLUGIN_VERSION;
     return new Settings(activateSnykOpenSource,
-      activateSnykCode,
-      activateSnykIac,
-      insecure,
-      endpoint,
-      additionalParams,
-      additionalEnv,
-      path,
-      sendErrorReports,
-      enableTelemetry,
-      organization,
-      manageBinariesAutomatically,
-      cliPath,
-      token
-      );
+        activateSnykCode,
+        activateSnykIac,
+        insecure,
+        endpoint,
+        additionalParams,
+        additionalEnv,
+        path,
+        sendErrorReports,
+        enableTelemetry,
+        organization,
+        manageBinariesAutomatically,
+        cliPath,
+        token,
+        integrationName,
+        integrationVersion
+        );
   }
 
   static class Settings {
@@ -91,22 +96,26 @@ public class LsConfigurationUpdater {
     private final String manageBinariesAutomatically;
     private final String cliPath;
     private final String token;
+    private final String integrationName;
+    private final String integrationVersion;
 
     public Settings(String activateSnykOpenSource,
-                    String activateSnykCode,
-                    String activateSnykIac,
-                    String insecure,
-                    String endpoint,
-                    String additionalParams,
-                    String additionalEnv,
-                    String path,
-                    String sendErrorReports,
-                    String enableTelemetry,
-                    String organization,
-                    String manageBinariesAutomatically,
-                    String cliPath,
-                    String token
-                    ) {
+        String activateSnykCode,
+        String activateSnykIac,
+        String insecure,
+        String endpoint,
+        String additionalParams,
+        String additionalEnv,
+        String path,
+        String sendErrorReports,
+        String enableTelemetry,
+        String organization,
+        String manageBinariesAutomatically,
+        String cliPath,
+        String token,
+        String integrationName,
+        String integrationVersion
+        ) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
       this.activateSnykIac = activateSnykIac;
@@ -121,6 +130,8 @@ public class LsConfigurationUpdater {
       this.manageBinariesAutomatically = manageBinariesAutomatically;
       this.cliPath = cliPath;
       this.token = token;
+      this.integrationName = integrationName;
+      this.integrationVersion = integrationVersion;
     }
 
     public String getPath() {
@@ -166,15 +177,25 @@ public class LsConfigurationUpdater {
     public String getOrganization() {
       return this.organization;
     }
+
     public String getManageBinariesAutomatically() {
       return this.manageBinariesAutomatically;
     }
+
     public String getCliPath() {
       return cliPath;
     }
 
     public String getToken() {
       return token;
+    }
+
+    public String getIntegrationName() {
+      return integrationName;
+    }
+
+    public String getIntegrationVersion() {
+      return integrationVersion;
     }
   }
 }

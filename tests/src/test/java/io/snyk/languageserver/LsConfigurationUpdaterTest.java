@@ -1,5 +1,6 @@
 package io.snyk.languageserver;
 
+import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,8 @@ class LsConfigurationUpdaterTest {
     assertEquals("true", settings.getEnableTelemetry());
     assertEquals("true", settings.getManageBinariesAutomatically());
     assertEquals("/path", settings.getCliPath());
+    assertEquals("ECLIPSE", settings.getIntegrationName());
+    assertEquals(Activator.PLUGIN_VERSION, settings.getIntegrationVersion());
   }
 
   private void setupPreferenceMock() {
