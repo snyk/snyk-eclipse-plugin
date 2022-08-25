@@ -1,6 +1,10 @@
 # Snyk Changelog
 
-## [2.0.0] - Unreleased
+## [2.0.1] - Unreleased
+### Changes
+- promote language server from BETA to GA
+
+## [2.0.0] - v20220818.075149
 ### Changes
 - add support for `window/showDocument` request
 - automatically start workspace scan on plugin startup
