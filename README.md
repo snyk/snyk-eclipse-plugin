@@ -74,7 +74,7 @@ Navigate to the Marketplace from your running Eclipse instance. Search for Snyk 
 
 When prompted accept the license agreement add the **Snyk Security** certificate to complete the installation (this happens only once).
 
-<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (2).png" alt="Add Snyk Security certificate" />
+<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt="Add Snyk Security certificate" />
 
 Restart the Eclipse instance:
 
