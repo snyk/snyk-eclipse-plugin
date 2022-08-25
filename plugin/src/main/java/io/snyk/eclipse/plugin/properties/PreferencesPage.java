@@ -40,7 +40,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 				"Allow unknown certificate authorities", getFieldEditorParent()));
 
 		addField(space());
-		addField(new LabelFieldEditor("The following options are in BETA and involve the language server.",
+		addField(new LabelFieldEditor("The following options involve the Snyk Language Server.",
 				getFieldEditorParent()));
 		addField(new LabelFieldEditor(
 				"Activating Snyk Code will cause upload of source code to Snyk or the given endpoint address.",
@@ -48,11 +48,11 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		addField(space());
 		addField(new BooleanFieldEditor(
 				io.snyk.eclipse.plugin.properties.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
-				"Snyk Open Source enabled (BETA)", getFieldEditorParent()));
+				"Snyk Open Source enabled", getFieldEditorParent()));
 		addField(new BooleanFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.ACTIVATE_SNYK_CODE,
-				"Snyk Code enabled (BETA)", getFieldEditorParent()));
+				"Snyk Code enabled", getFieldEditorParent()));
 		addField(new BooleanFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.ACTIVATE_SNYK_IAC,
-				"Snyk Infrastructure-as-Code enabled (BETA)", getFieldEditorParent()));
+				"Snyk Infrastructure-as-Code enabled", getFieldEditorParent()));
 
 		addField(space());
 		addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
