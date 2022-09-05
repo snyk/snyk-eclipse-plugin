@@ -18,7 +18,7 @@ class HttpClientFactoryTest extends LsBaseTest {
     when(proxyServiceMock.select(any())).thenReturn(new IProxyData[] { data });
     HttpClientFactory cut = HttpClientFactory.getInstance();
 
-    cut.create(environmentMock);
+    cut.create(environment);
 
     assertNotNull(cut.getContext().getAuthCache());
   }

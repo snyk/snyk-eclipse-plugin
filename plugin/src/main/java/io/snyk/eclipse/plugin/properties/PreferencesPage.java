@@ -90,6 +90,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
         "Send error reports to Snyk", getFieldEditorParent()));
 		addField(new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Send usage statistics to Snyk",
 				getFieldEditorParent()));
+	  disableSnykCodeIfOrgDisabled();
   }
 
   private FieldEditor space() {
@@ -102,15 +103,19 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
     var snykView = SnykStartup.getSnykView();
     snykView.disableRunAbortActions();
     snykView.toggleRunActionEnablement();
-    var apiClient = new ApiClient();
-    if (snykCodeCheckbox.getBooleanValue() && !apiClient.checkSnykCodeEnablement()) {
-      String message = "Snyk Code disabled, because it is not enabled for your organization.";
-      snykCodeCheckbox.setLabelText(snykCodeCheckbox.getLabelText()+" ("+message+")");
-      SnykLogger.logInfo(message);
-    }
+    disableSnykCodeIfOrgDisabled();
 
     new LsConfigurationUpdater().configurationChanged();
     return superOK;
+  }
+
+  private void disableSnykCodeIfOrgDisabled() {
+    var apiClient = new ApiClient();
+    if (snykCodeCheckbox.getBooleanValue() && !apiClient.checkSnykCodeEnablement()) {
+      String message = "Snyk Code disabled, because it is not enabled for your organization. After you close this preference page, it will stay disabled.";
+      snykCodeCheckbox.setLabelText(snykCodeCheckbox.getLabelText()+" ("+message+")");
+      SnykLogger.logInfo(message);
+    }
   }
 
 }

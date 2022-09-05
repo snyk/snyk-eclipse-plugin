@@ -17,7 +17,7 @@ import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class LsBaseTest {
-  protected LsRuntimeEnvironment environmentMock = null;
+  protected LsRuntimeEnvironment environment = null;
   protected IProxyService proxyServiceMock;
 
   private File lsFile = getTempFile();
@@ -27,16 +27,16 @@ public class LsBaseTest {
     if (lsFile.exists())
       lsFile.delete();
     lsFile = getTempFile();
-    environmentMock = mock(LsRuntimeEnvironment.class);
+    environment = mock(LsRuntimeEnvironment.class);
     InMemoryPreferenceStore store = new InMemoryPreferenceStore();
     store.put(Preferences.LS_BINARY_KEY, lsFile.toString());
     PreferencesUtils.setPreferences(Preferences.getInstance(store));
 
-    when(environmentMock.getArch()).thenReturn("amd64");
-    when(environmentMock.getOs()).thenReturn("linux");
-    when(environmentMock.getDownloadBinaryName(any())).thenReturn("snyk-ls_testVersion_linux_amd64");
+    when(environment.getArch()).thenReturn("amd64");
+    when(environment.getOs()).thenReturn("linux");
+    when(environment.getDownloadBinaryName(any())).thenReturn("snyk-ls_testVersion_linux_amd64");
     proxyServiceMock = mock(IProxyService.class);
-    when(environmentMock.getProxyService()).thenReturn(proxyServiceMock);
+    when(environment.getProxyService()).thenReturn(proxyServiceMock);
   }
 
   @AfterEach

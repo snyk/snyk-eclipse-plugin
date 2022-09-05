@@ -58,7 +58,7 @@ public class LsDownloaderTest extends LsBaseTest {
   void downloadShouldFailWhenShaWrongAndFileShouldNotBeOverwritten() throws IOException {
     byte[] expectedLsContent = Files.readAllBytes(new File(Preferences.getInstance().getLsBinary()).toPath());
 
-    LsDownloader cut = new LsDownloader(httpClientFactory, environmentMock, mock(ILog.class));
+    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     File testFile = File.createTempFile("download-test", "tmp");
     testFile.deleteOnExit();
     // sha corresponds to file content (`echo "test 123" | sha256sum`)
@@ -80,7 +80,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
   @Test
   void download_whenFinished_updatesLSPVersion() throws IOException {
-    LsDownloader cut = new LsDownloader(httpClientFactory, environmentMock, mock(ILog.class));
+    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     Path source = Paths.get("src/test/resources/ls-dummy-binary");
     var testFile = Files.createTempFile("download-test", "tmp").toFile();
     testFile.deleteOnExit();
@@ -100,7 +100,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
   @Test
   void downloadShouldIssueDownloadRequestForShaAndBinary() throws IOException {
-    LsDownloader cut = new LsDownloader(httpClientFactory, environmentMock, mock(ILog.class));
+    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     Path source = Paths.get("src/test/resources/ls-dummy-binary");
     var testFile = Files.createTempFile("download-test", "tmp").toFile();
     testFile.deleteOnExit();
@@ -131,7 +131,7 @@ public class LsDownloaderTest extends LsBaseTest {
     String lsBinaryPath = getTempFile().toString();
     Files.delete(Path.of(lsBinaryPath));
     Preferences.getInstance().store(Preferences.LS_BINARY_KEY, lsBinaryPath);
-    LsDownloader cut = new LsDownloader(httpClientFactory, environmentMock, mock(ILog.class));
+    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     Path source = Paths.get("src/test/resources/ls-dummy-binary");
     var testFile = Files.createTempFile("download-test", "tmp").toFile();
     testFile.deleteOnExit();
@@ -154,7 +154,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
   @Test
   void getVersionShouldDownloadAndExtractTheLatestVersion() {
-    LsDownloader cut = new LsDownloader(httpClientFactory, environmentMock, mock(ILog.class));
+    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     var metadataObject = mockMetadata();
     var actual = cut.getVersion();
     assertEquals(metadataObject.getVersion(), actual);

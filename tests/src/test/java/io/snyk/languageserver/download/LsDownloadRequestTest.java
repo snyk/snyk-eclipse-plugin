@@ -16,13 +16,13 @@ class LsDownloadRequestTest extends LsBaseTest {
   void shouldDownloadFromGithubWithOsDetectionByDefault() throws URISyntaxException {
     var version = "20220303.140906";
     String binary = "snyk-ls_" + version + "_windows_amd64.exe";
-    when(environmentMock.getDownloadBinaryName(version)).thenReturn(binary);
+    when(environment.getDownloadBinaryName(version)).thenReturn(binary);
 
-    LsDownloadRequest cut = new LsDownloadRequest(version, environmentMock);
+    LsDownloadRequest cut = new LsDownloadRequest(version, environment);
 
     URI expectedUri = new URI(
         "https://static.snyk.io/snyk-ls/" + LsBinaries.REQUIRED_LS_PROTOCOL_VERSION + "/" + binary);
     assertEquals(expectedUri, cut.getURI());
-    verify(environmentMock).getDownloadBinaryName(version);
+    verify(environment).getDownloadBinaryName(version);
   }
 }
