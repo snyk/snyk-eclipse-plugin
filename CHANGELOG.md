@@ -1,8 +1,10 @@
 # Snyk Changelog
 
-## [2.0.1] - Unreleased
+## [2.0.0] - Unreleased
 ### Changes
 - promote language server from BETA to GA
+- announce workspace folder capability correctly
+- disable / enable Snyk Code based on org settings
 
 ## [2.0.0] - v20220818.075149
 ### Changes

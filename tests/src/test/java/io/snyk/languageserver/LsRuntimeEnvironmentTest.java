@@ -33,13 +33,13 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
   protected void setUp() {
     preferenceMock = mock(Preferences.class);
     PreferencesUtils.setPreferences(preferenceMock);
-    environment = new LsRuntimeEnvironment();
+    environmentMock = new LsRuntimeEnvironment();
   }
 
   @Test
   void testDownloadBinaryNameConstructions() {
-    var actual = environment.getDownloadBinaryName("testVersion");
-    String expected = "snyk-ls_testVersion_" + environment.getOs() + "_" + environment.getArch();
+    var actual = environmentMock.getDownloadBinaryName("testVersion");
+    String expected = "snyk-ls_testVersion_" + environmentMock.getOs() + "_" + environmentMock.getArch();
     if (expected.contains("windows"))
       expected += ".exe";
     assertEquals(expected, actual);
@@ -63,7 +63,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
       when(ctxMock.getService(any())).thenReturn(proxyServiceMock);
       when(proxyServiceMock.getProxyData()).thenReturn(proxyData);
 
-      environment.updateEnvironment(env);
+      environmentMock.updateEnvironment(env);
 
       assertEquals("http://localhost:3128", env.get("https_proxy"));
       assertEquals("ECLIPSE", env.get("SNYK_INTEGRATION_NAME"));
@@ -80,7 +80,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE)).thenReturn("code");
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn("oss");
 
-    environment.addProductEnablement(env);
+    environmentMock.addProductEnablement(env);
 
     assertEquals("oss", env.get(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
     assertEquals("iac", env.get(Preferences.ACTIVATE_SNYK_IAC));
@@ -93,7 +93,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("addParams");
     when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("a=b;c=d;e=f=g");
 
-    environment.addAdditionalParamsAndEnv(env);
+    environmentMock.addAdditionalParamsAndEnv(env);
 
     assertEquals("addParams", env.get(Preferences.ADDITIONAL_PARAMETERS));
     assertEquals("b", env.get("a"));
@@ -108,7 +108,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "true")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "false")).thenReturn("false");
 
-    environment.addTelemetry(env);
+    environmentMock.addTelemetry(env);
 
     assertEquals("true", env.get(Preferences.SEND_ERROR_REPORTS));
   }
@@ -118,7 +118,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     HashMap<String, String> env = new HashMap<>();
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("org");
 
-    environment.addOrganization(env);
+    environmentMock.addOrganization(env);
 
     assertEquals("org", env.get(Preferences.ORGANIZATION_KEY));
   }
@@ -130,7 +130,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "true")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("true");
 
-    environment.addTelemetry(env);
+    environmentMock.addTelemetry(env);
     // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
     assertEquals("0", env.get(Preferences.ENABLE_TELEMETRY));
   }
@@ -141,7 +141,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "true")).thenReturn("false");
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("false");
 
-    environment.addTelemetry(env);
+    environmentMock.addTelemetry(env);
     // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
     assertEquals("1", env.get(Preferences.ENABLE_TELEMETRY));
   }

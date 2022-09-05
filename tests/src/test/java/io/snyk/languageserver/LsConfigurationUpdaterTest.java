@@ -5,10 +5,16 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import org.eclipse.core.runtime.Platform;
 
 class LsConfigurationUpdaterTest {
   private Preferences preferenceMock;
@@ -23,23 +29,28 @@ class LsConfigurationUpdaterTest {
   void testGetSettings() {
     setupPreferenceMock();
 
-    var settings = new LsConfigurationUpdater().getCurrentSettings();
+    try (MockedStatic<Platform> platformMockedStatic = Mockito.mockStatic(Platform.class)) {
+      var bundleMock = mock(Bundle.class); 
+      when(bundleMock.getVersion()).thenReturn(new Version("1.2.3"));
+      platformMockedStatic.when(() -> Platform.getBundle(Activator.PLUGIN_ID)).thenReturn(bundleMock);
+      var settings = new LsConfigurationUpdater().getCurrentSettings();
 
-    assertEquals("iac", settings.getActivateSnykIac());
-    assertEquals("code", settings.getActivateSnykCode());
-    assertEquals("oss", settings.getActivateSnykOpenSource());
-    assertEquals("true", settings.getInsecure());
-    assertEquals("endpoint", settings.getEndpoint());
-    assertEquals("addParams", settings.getAdditionalParams());
-    assertEquals("a=b;c=d", settings.getAdditionalEnv());
-    assertEquals("path", settings.getPath());
-    assertEquals("true", settings.getSendErrorReports());
-    assertEquals("organization", settings.getOrganization());
-    assertEquals("true", settings.getEnableTelemetry());
-    assertEquals("true", settings.getManageBinariesAutomatically());
-    assertEquals("/path", settings.getCliPath());
-    assertEquals("ECLIPSE", settings.getIntegrationName());
-    assertEquals(Activator.PLUGIN_VERSION, settings.getIntegrationVersion());
+      assertEquals("iac", settings.getActivateSnykIac());
+      assertEquals("code", settings.getActivateSnykCode());
+      assertEquals("oss", settings.getActivateSnykOpenSource());
+      assertEquals("true", settings.getInsecure());
+      assertEquals("endpoint", settings.getEndpoint());
+      assertEquals("addParams", settings.getAdditionalParams());
+      assertEquals("a=b;c=d", settings.getAdditionalEnv());
+      assertEquals("path", settings.getPath());
+      assertEquals("true", settings.getSendErrorReports());
+      assertEquals("organization", settings.getOrganization());
+      assertEquals("true", settings.getEnableTelemetry());
+      assertEquals("true", settings.getManageBinariesAutomatically());
+      assertEquals("/path", settings.getCliPath());
+      assertEquals("ECLIPSE", settings.getIntegrationName());
+      assertEquals(Activator.PLUGIN_VERSION, settings.getIntegrationVersion());
+    }
   }
 
   private void setupPreferenceMock() {

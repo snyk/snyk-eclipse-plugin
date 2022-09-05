@@ -1,27 +1,5 @@
 package io.snyk.languageserver.download;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
-import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.languageserver.LsRuntimeEnvironment;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
-import org.eclipse.core.net.proxy.IProxyData;
-import org.eclipse.core.runtime.ILog;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Platform;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -35,51 +13,35 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
+
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
+import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.LsRuntimeEnvironment;
+
 public class LsDownloader {
   private final CloseableHttpClient httpClient;
   private final LsRuntimeEnvironment runtimeEnvironment;
   private HttpClientContext context = HttpClientContext.create();
-  private DefaultProxyRoutePlanner proxyRoutePlanner = null;
-  private BasicCredentialsProvider credentialsProvider = null;
-  private AuthScope authScope = null;
   private final ILog logger;
 
-  private UsernamePasswordCredentials credentials;
-
-
-  public LsDownloader(LsRuntimeEnvironment environment, HttpClientBuilder httpClientBuilder, IProxyData data, ILog logger) {
+  public LsDownloader(HttpClientFactory factory, LsRuntimeEnvironment environment, ILog logger) {
     this.runtimeEnvironment = environment;
-    configure(httpClientBuilder, data);
-    this.httpClient = httpClientBuilder.build();
+    this.httpClient = factory.create(environment);
+    this.context = HttpClientFactory.getInstance().getContext();
     if (logger == null) {
       this.logger = Platform.getLog(getClass());
     } else {
       this.logger = logger;
     }
-  }
-
-  public void configure(HttpClientBuilder builder, IProxyData data) {
-    if (data == null || data.getHost() == null) return;
-
-    HttpHost proxy = new HttpHost(data.getHost(), data.getPort());
-    this.proxyRoutePlanner = new DefaultProxyRoutePlanner(proxy);
-    builder.setRoutePlanner(proxyRoutePlanner);
-
-    if (data.getUserId() == null) return;
-
-    this.credentialsProvider = new BasicCredentialsProvider();
-    this.authScope = new AuthScope(proxy);
-    this.credentials = new UsernamePasswordCredentials(data.getUserId(), data.getPassword());
-    this.credentialsProvider.setCredentials(authScope, credentials);
-    builder.setDefaultCredentialsProvider(this.credentialsProvider);
-
-    AuthCache authCache = new BasicAuthCache();
-    BasicScheme basicAuth = new BasicScheme();
-    authCache.put(proxy, basicAuth);
-
-    this.context = HttpClientContext.create();
-    this.context.setCredentialsProvider(this.credentialsProvider);
-    this.context.setAuthCache(authCache);
   }
 
   public void download(IProgressMonitor monitor) {
@@ -109,9 +71,10 @@ public class LsDownloader {
       } catch (AtomicMoveNotSupportedException e) {
         // fallback to renameTo because of e
         logger.warn("LS: Fallback using rename to "+destinationFile.toPath());
-        if (!tempFile.renameTo(destinationFile))
-          logger.error("LS: Rename failed: "+destinationFile.toPath());
+        if (!tempFile.renameTo(destinationFile)) {
+          logger.error("LS: Rename failed: " + destinationFile.toPath());
           throw new IOException("Rename not successful");
+        }
       }
       logger.info("LS: Setting executable bit "+destinationFile.toPath());
       if (!destinationFile.setExecutable(true))
@@ -184,21 +147,5 @@ public class LsDownloader {
       hexString.append(hex);
     }
     return hexString.toString();
-  }
-
-  public DefaultProxyRoutePlanner getProxyRoutePlanner() {
-    return proxyRoutePlanner;
-  }
-
-  public BasicCredentialsProvider getCredentialsProvider() {
-    return credentialsProvider;
-  }
-
-  public AuthScope getAuthScope() {
-    return authScope;
-  }
-
-  public UsernamePasswordCredentials getCredentials() {
-    return credentials;
   }
 }

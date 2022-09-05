@@ -2,9 +2,14 @@ package io.snyk.eclipse.plugin.runner;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
+import io.snyk.languageserver.LsRuntimeEnvironment;
+
+import org.eclipse.core.net.proxy.IProxyData;
+import org.eclipse.core.net.proxy.IProxyService;
 import org.eclipse.core.runtime.ILog;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
@@ -14,12 +19,15 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class ProcessRunnerTest {
   private Preferences preferenceMock;
+  private LsRuntimeEnvironment environmentMock;
+  private IProxyService proxyServiceMock;
 
   @BeforeEach
   void setUp()  {
@@ -33,6 +41,13 @@ class ProcessRunnerTest {
     when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY)).thenReturn("token");
     when(preferenceMock.getPref(Preferences.ENDPOINT_KEY)).thenReturn("https://endpoint.io");
     when(preferenceMock.getCliPath()).thenReturn("");
+    
+    environmentMock = mock(LsRuntimeEnvironment.class);
+    proxyServiceMock = mock(IProxyService.class);
+    when(environmentMock.getProxyService()).thenReturn(proxyServiceMock);
+    when(proxyServiceMock.select(any())).thenReturn(new IProxyData[0]);
+    when(proxyServiceMock.getProxyData()).thenReturn(new IProxyData[0]);
+    when(proxyServiceMock.getProxyData(any())).thenReturn(mock(IProxyData.class));
   }
 
   @Test
@@ -41,7 +56,7 @@ class ProcessRunnerTest {
     Bundle bundle = mock(Bundle.class);
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
-    ProcessRunner cut = new ProcessRunner(bundle, logger);
+    ProcessRunner cut = new ProcessRunner(bundle, logger, environmentMock);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
     var env = builder.environment();
@@ -65,7 +80,7 @@ class ProcessRunnerTest {
     when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("false");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
-    ProcessRunner cut = new ProcessRunner(bundle, logger);
+    ProcessRunner cut = new ProcessRunner(bundle, logger, environmentMock);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
     var cmd = builder.command();
@@ -79,7 +94,7 @@ class ProcessRunnerTest {
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("");
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
-    ProcessRunner cut = new ProcessRunner(bundle, logger);
+    ProcessRunner cut = new ProcessRunner(bundle, logger, environmentMock);
     ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
 
     var env = builder.environment();

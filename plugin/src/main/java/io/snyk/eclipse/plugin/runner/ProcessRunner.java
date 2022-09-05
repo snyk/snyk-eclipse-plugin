@@ -27,6 +27,7 @@ public class ProcessRunner {
 
   private final Bundle bundle;
   private final ILog log;
+  private LsRuntimeEnvironment environment;
 
   private static final String HOME = System.getProperty("user.home");
   private static final String DEFAULT_MAC_PATH = "/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:" + HOME + "/bin:"
@@ -36,12 +37,14 @@ public class ProcessRunner {
 
   public ProcessRunner() {
     this.log = Platform.getLog(ProcessRunner.class);
-    bundle = FrameworkUtil.getBundle(ProcessRunner.class);
+    this.bundle = FrameworkUtil.getBundle(ProcessRunner.class);
+    this.environment = new LsRuntimeEnvironment();
   }
 
-  public ProcessRunner(Bundle bundle, ILog log) {
+  public ProcessRunner(Bundle bundle, ILog log, LsRuntimeEnvironment environment) {
     this.bundle = bundle;
     this.log = log;
+    this.environment = environment;
   }
 
   public ProcessResult run(ProcessBuilder pb, Optional<File> navigatePath) {
@@ -93,12 +96,10 @@ public class ProcessRunner {
   }
 
   private void setupProcessBuilderBase(ProcessBuilder pb) {
-    LsRuntimeEnvironment runtimeEnvironment = new LsRuntimeEnvironment();
-
-    runtimeEnvironment.addPath(pb.environment());
-    runtimeEnvironment.addProxyToEnv(pb.environment());
-    runtimeEnvironment.addAdditionalParamsAndEnv(pb.environment());
-    runtimeEnvironment.addIntegrationInfoToEnv(pb.environment());
+    environment.addPath(pb.environment());
+    environment.addProxyToEnv(pb.environment());
+    environment.addAdditionalParamsAndEnv(pb.environment());
+    environment.addIntegrationInfoToEnv(pb.environment());
 
     String endpoint = Preferences.getInstance().getEndpoint();
     if (endpoint != null && !endpoint.isEmpty()) {

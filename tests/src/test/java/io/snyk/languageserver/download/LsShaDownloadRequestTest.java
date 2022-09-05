@@ -13,7 +13,7 @@ class LsShaDownloadRequestTest extends LsBaseTest {
 
   @Test
   void shouldDownloadFromSnyk() throws URISyntaxException {
-    reset(environment);
+    reset(environmentMock);
     var version = "20220303.140906";
 
     LsShaRequest cut = new LsShaRequest(version);

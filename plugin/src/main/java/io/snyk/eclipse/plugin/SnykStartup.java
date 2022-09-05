@@ -5,8 +5,11 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.SnykLanguageServer;
+import io.snyk.languageserver.download.HttpClientFactory;
 import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.download.LsDownloader;
+
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.core.runtime.ILog;
@@ -43,7 +46,7 @@ public class SnykStartup implements IStartup {
   public void earlyStartup() {
     instance = this;
     if (logger == null) {
-       logger = Platform.getLog(getClass());
+      logger = Platform.getLog(getClass());
     }
     runtimeEnvironment = new LsRuntimeEnvironment();
     Job initJob = new Job("Downloading latest Language Server release...") {
@@ -57,7 +60,7 @@ public class SnykStartup implements IStartup {
             monitor.subTask("Starting download of Snyk Language Server");
             download(monitor);
           }
-          
+
           monitor.subTask("Starting Snyk Language Server...");
           SnykLanguageServer.InitializeServer();
         } catch (Exception exception) {
@@ -105,7 +108,7 @@ public class SnykStartup implements IStartup {
         basicFileAttributes = Files.readAttributes(lsFile.toPath(), BasicFileAttributes.class);
         Instant lastModified = basicFileAttributes.lastModifiedTime().toInstant();
         boolean needsUpdate = lastModified.isBefore(Instant.now().minus(4, ChronoUnit.DAYS))
-          || !Preferences.getInstance().getLspVersion().equals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
+            || !Preferences.getInstance().getLspVersion().equals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
         logger.info(String.format("LS: Needs update? %s. Required LSP version=%s, actual version=%s", needsUpdate, LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, Preferences.getInstance().getLspVersion()));
         return needsUpdate;
       } catch (IOException e) {
@@ -117,19 +120,7 @@ public class SnykStartup implements IStartup {
   }
 
   LsDownloader getLsDownloader() throws URISyntaxException {
-    IProxyData[] proxyData = runtimeEnvironment.getProxyService().select(LsBinaries.getBaseUri());
-    var relevantProxyData = getRelevantProxyData(proxyData);
-    var builder = HttpClients.custom();
-    return new LsDownloader(runtimeEnvironment, builder, relevantProxyData, logger);
-  }
-
-  private IProxyData getRelevantProxyData(IProxyData[] proxyData) {
-    for (IProxyData data : proxyData) {
-      if (data.getHost() == null)
-        continue;
-      return data;
-    }
-    return null;
+    return new LsDownloader(HttpClientFactory.getInstance(), runtimeEnvironment, logger);
   }
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
