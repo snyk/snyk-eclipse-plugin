@@ -43,7 +43,7 @@ This page explains supported environments, support, and giving feedback and prov
 
 If you want to verify the correct provenance of your download, please verify the signing details from the Eclipse dialog with this data.
 
-<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/image (317).png" alt="The signing key details to verify the integrity and origin of the download plugin" />
+<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/image (369).png" alt="The signing key details to verify the integrity and origin of the download plugin" />
 
 The plugin runs on
 
@@ -74,7 +74,7 @@ Navigate to the Marketplace from your running Eclipse instance. Search for Snyk 
 
 When prompted accept the license agreement add the **Snyk Security** certificate to complete the installation (this happens only once).
 
-<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (2) (4).png" alt="Add Snyk Security certificate" />
+<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52.png" alt="Add Snyk Security certificate" />
 
 Restart the Eclipse instance:
 
