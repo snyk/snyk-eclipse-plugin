@@ -12,4 +12,10 @@ public class SnykLogger {
 
     StatusManager.getManager().handle(status, StatusManager.SHOW | StatusManager.LOG);
   }
+  
+  public static void logInfo(String message) {
+    Status status = new Status(IStatus.INFO, PlatformUI.PLUGIN_ID, "Snyk plugin: " + message);
+
+    StatusManager.getManager().handle(status, StatusManager.SHOW | StatusManager.LOG);
+  }
 }

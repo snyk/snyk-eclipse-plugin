@@ -2,6 +2,12 @@
 
 ## [2.0.0] - Unreleased
 ### Changes
+- promote language server from BETA to GA
+- announce workspace folder capability correctly
+- disable / enable Snyk Code based on org settings
+
+## [2.0.0] - v20220818.075149
+### Changes
 - add support for `window/showDocument` request
 - automatically start workspace scan on plugin startup
 - allow manually triggering a workspace scan via context menu or Snyk View
