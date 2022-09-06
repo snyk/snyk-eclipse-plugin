@@ -2,6 +2,10 @@
 
 ## [2.0.0] - Unreleased
 ### Changes
+- add support for insecure and custom CAs to download and API checks
+
+## [2.0.0] - v20220905.164345
+### Changes
 - promote language server from BETA to GA
 - announce workspace folder capability correctly
 - disable / enable Snyk Code based on org settings
