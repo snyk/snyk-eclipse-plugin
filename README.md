@@ -93,4 +93,3 @@ Continue with the steps to [Download the CLI and language server with the Eclips
 If you need help, submit a [request](https://support.snyk.io/hc/en-us/requests/new) to Snyk Support.
 
 Snyk continuously strives to improve the Snyk plugins experience. If you would you like to share your feedback about the Snyk Eclipse plugin, [schedule a meeting](https://calendly.com/snyk-georgi/45min?month=2022-01).
-
