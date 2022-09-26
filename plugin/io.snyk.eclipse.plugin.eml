@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component LANGUAGE_LEVEL="JDK_17" jdk="11" jdk_type="JavaSDK">
+<component LANGUAGE_LEVEL="JDK_11" jdk="11" jdk_type="JavaSDK">
 	<output-test url="file://$MODULE_DIR$/target/test-classes"/>
 	<contentEntry url="file://$MODULE_DIR$">
 		<excludeFolder url="file://$MODULE_DIR$/target"/>

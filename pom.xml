@@ -11,7 +11,7 @@
     <tycho.scmUrl>scm:git:https://github.com/snyk/snyk-eclipse-plugin.git</tycho.scmUrl>
     <target-config>target-platform</target-config>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
   </properties>
 
