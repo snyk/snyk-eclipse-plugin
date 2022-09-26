@@ -34,4 +34,3 @@ Bundle-ClassPath: .,
  target/dependency/jackson-core-2.13.4.jar,
  target/dependency/jackson-databind-2.13.4.jar,
  target/dependency/javax.inject-1.jar
-Bundle-RequiredExecutionEnvironment: JavaSE-11
