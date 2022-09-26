@@ -9,28 +9,23 @@
     <artifactId>io.snyk.eclipse.plugin.tests</artifactId>
     <packaging>eclipse-test-plugin</packaging>
 
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.13.3</version>
+            <version>2.13.4</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-          <version>2.13.3</version>
+          <version>2.13.4</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-          <version>2.13.3</version>
+          <version>2.13.4</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -77,12 +72,6 @@
             <type>jar</type>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -111,6 +100,7 @@
                 <configuration>
                     <failIfNoTests/>
                     <useUIHarness>false</useUIHarness>
+                    <providerHint>junit58</providerHint>
                 </configuration>
             </plugin>
         </plugins>

@@ -1,6 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-SymbolicName: io.snyk.eclipse.plugin;singleton:=true
 Bundle-Version: 2.0.0.qualifier
 Bundle-Activator: io.snyk.eclipse.plugin.Activator
@@ -30,8 +31,7 @@ Bundle-ClassPath: .,
  target/dependency/commons-logging-1.2.jar,
  target/dependency/httpclient-4.5.13.jar,
  target/dependency/httpcore-4.4.15.jar,
- target/dependency/jackson-annotations-2.13.3.jar,
- target/dependency/jackson-core-2.13.3.jar,
- target/dependency/jackson-databind-2.13.3.jar,
+ target/dependency/jackson-annotations-2.13.4.jar,
+ target/dependency/jackson-core-2.13.4.jar,
+ target/dependency/jackson-databind-2.13.4.jar,
  target/dependency/javax.inject-1.jar
-Bundle-RequiredExecutionEnvironment: JavaSE-11
