@@ -175,7 +175,7 @@ public class LsRuntimeEnvironment {
         protocol = HTTP_PROXY_TYPE.toLowerCase();
       }
       // TODO urlencode creds
-      String value = creds + protocol + "://" + data.getHost() + ":" + data.getPort();
+      String value = protocol + "://" + creds + data.getHost() + ":" + data.getPort();
       env.put(data.getType().toLowerCase() + "_proxy", value);
     }
     String[] nonProxiedHostsArray = service.getNonProxiedHosts();

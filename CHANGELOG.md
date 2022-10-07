@@ -1,6 +1,11 @@
 # Snyk Changelog
 
+
 ## [2.0.0] - Unreleased
+### Fixed
+- malformed proxy URL
+
+## [2.0.0] - v20220927.182222
 ### Changes
 - add support for insecure and custom CAs to download and API checks
 
