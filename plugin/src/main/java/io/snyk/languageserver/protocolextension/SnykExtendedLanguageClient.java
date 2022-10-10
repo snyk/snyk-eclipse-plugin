@@ -1,20 +1,31 @@
 package io.snyk.languageserver.protocolextension;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
+import org.eclipse.lsp4e.LanguageServerWrapper;
 import org.eclipse.lsp4e.ServerMessageHandler;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.ShowDocumentParams;
 import org.eclipse.lsp4j.ShowDocumentResult;
+import org.eclipse.lsp4j.ShowMessageRequestParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.SnykStartup;
@@ -22,6 +33,7 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -60,6 +72,21 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     enableSnykViewRunActions();
   }
 
+  @JsonNotification(value = "$/snyk.addTrustedFolders")
+  public void addTrustedPaths(SnykTrustedFoldersParams param) {
+    var prefs = Preferences.getInstance();
+    var storedTrustedPaths = prefs.getPref(Preferences.TRUSTED_FOLDERS, "");
+    var trustedPaths = storedTrustedPaths.split(File.pathSeparator);
+    var pathSet = new HashSet<>(Arrays.asList(trustedPaths));
+    pathSet.addAll(Arrays.asList(param.getTrustedFolders()));
+    Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS,
+        pathSet.stream()
+        .filter(s -> !s.isBlank())
+        .map(s -> s.trim())
+        .distinct()
+        .collect(Collectors.joining(File.pathSeparator)));
+  }
+
   @Override
   public CompletableFuture<Void> createProgress(WorkDoneProgressCreateParams params) {
     return progressMgr.createProgress(params);
@@ -85,7 +112,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     ServerMessageHandler.showMessage("Authentication with Snyk successful", messageParams);
   }
 
-  // TODO: remove once LSP4e supports `showDocument` in its next release (it's been merged to it already)
+  // TODO: remove once LSP4e supports `showDocument` in its next release (it's
+  // been merged to it already)
   @Override
   public CompletableFuture<ShowDocumentResult> showDocument(ShowDocumentParams params) {
     return CompletableFuture.supplyAsync(() -> {
@@ -100,4 +128,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
       return new ShowDocumentResult(true);
     });
   }
+  
+  
+  
 }
