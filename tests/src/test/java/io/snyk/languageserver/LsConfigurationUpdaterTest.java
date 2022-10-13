@@ -50,6 +50,7 @@ class LsConfigurationUpdaterTest {
       assertEquals("/path", settings.getCliPath());
       assertEquals("ECLIPSE", settings.getIntegrationName());
       assertEquals(Activator.PLUGIN_VERSION, settings.getIntegrationVersion());
+      assertEquals("false", settings.getAutomaticAuthentication());
     }
   }
 
