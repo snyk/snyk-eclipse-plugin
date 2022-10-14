@@ -95,6 +95,57 @@
       </command>
     </menuContribution>
   </extension>
+  <extension
+    point="org.eclipse.ui.commands">
+    <command
+      defaultHandler="io.snyk.eclipse.plugin.views.MenuHandler"
+      id="io.snyk.eclipse.plugin.commands.execute"
+      name="%command1.name">
+    </command>
+  </extension>
+  <extension
+    point="org.eclipse.ui.menus">
+    <menuContribution
+      locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+
+      <command
+        commandId="io.snyk.eclipse.plugin.commands.execute"
+        icon="icons/patch.png"
+        label="%command1.label"
+        style="push">
+        <visibleWhen>
+          <with variable="activeMenuSelection">
+            <iterate
+              ifEmpty="false">
+              <adapt type="org.eclipse.core.resources.IProject">
+
+              </adapt>
+            </iterate>
+          </with>
+        </visibleWhen>
+      </command>
+    </menuContribution>
+  </extension>
+  <extension point="org.eclipse.ui.menus">
+    <menuContribution locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu">
+      <command
+        commandId="io.snyk.eclipse.plugin.commands.execute"
+        icon="icons/patch.png"
+        label="%command1.label.0"
+        style="push">
+        <visibleWhen>
+          <with variable="activeMenuSelection">
+            <iterate
+              ifEmpty="false">
+              <adapt type="org.eclipse.core.resources.IProject">
+
+              </adapt>
+            </iterate>
+          </with>
+        </visibleWhen>
+      </command>
+    </menuContribution>
+  </extension>
   <extension point="org.eclipse.ui.startup">
     <startup class="io.snyk.eclipse.plugin.SnykStartup"/>
   </extension>
@@ -233,5 +284,19 @@
           type="org.eclipse.lsp4e.diagnostic">
     </super>
     <persistent value="false"/>
+  </extension>
+  <extension
+        point="org.eclipse.ui.newWizards">
+     <category
+           id="io.snyk.eclipse.plugin.wizards.category.snyk"
+           name="Snyk">
+     </category>
+     <wizard
+           category="io.snyk.eclipse.plugin.wizards.category.snyk"
+           class="io.snyk.eclipse.plugin.wizards.SnykWizard"
+           icon="icons/patch.png"
+           id="io.snyk.eclipse.plugin.wizards.snykwizard"
+           name="SnykWizard">
+     </wizard>
   </extension>
 </plugin>
