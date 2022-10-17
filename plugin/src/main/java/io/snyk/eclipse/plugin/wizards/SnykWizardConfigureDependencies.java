@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.wizards;
 
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -8,8 +9,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Event;
 
-public class SnykWizardConfigureDependencies extends WizardPage {
+public class SnykWizardConfigureDependencies extends WizardPage implements Listener {
   private Text languageServer;
   private Text cli;
   private Button manageDependenciesEnabled;
@@ -32,15 +35,12 @@ public class SnykWizardConfigureDependencies extends WizardPage {
     new Label(container, SWT.NONE).setText("Update and install Snyk binaries automatically: If disabled, no updates are downloaded and updates must be performed manually. Please make sure that the locations for Language Server and CLI point to an existent, current binary.");
     manageDependenciesEnabled = new Button(container, SWT.CHECK);
     manageDependenciesEnabled.setSelection(false);
-    this.setManageDependenciesEnabled(manageDependenciesEnabled);
     
     new Label(container, SWT.NONE).setText("Snyk Language Server: Specify the location of your language server binary.");
     languageServer = new Text(container, SWT.NONE);
-    this.setLanguageServer(languageServer);
     
     new Label(container, SWT.NONE).setText("Snyk CLI: Specify the location of the Snyk CLI .");
     cli = new Text(container, SWT.NONE);
-    this.setCLI(cli);
     
     GridData gd = new GridData(GridData.FILL_HORIZONTAL);
     languageServer.setLayoutData(gd);
@@ -52,27 +52,30 @@ public class SnykWizardConfigureDependencies extends WizardPage {
     setPageComplete(false);
   }
 
-  private void setLanguageServer(Text languageServer) {
-    // TODO set preferences
+  public void handleEvent(Event e) {
+    getWizard().getContainer().updateButtons();
   }
   
-  private void setCLI(Text cli) {
-    // TODO set preferences
+  public IWizardPage getNextPage() {
+    updateModel();
+    
+    return ((SnykWizard)getWizard()).configureAPI;
   }
   
-  private void setManageDependenciesEnabled(Button manageDependencies) {
-    // TODO set preferences
-  }
-
-  public String getLanguageServer() {
-    return languageServer.getText();
-  }
-  
-  public String getCLI() {
-      return cli.getText();
-  }
-  
-  public Boolean getManagedDependencies() {
-      return manageDependenciesEnabled.getSelection();
+  private void updateModel() {
+    SnykWizard wizard = (SnykWizard)getWizard();
+    SnykWizardModel model = wizard.model;
+    
+    if (languageServer.getText().length() > 0) {
+      model.languageServer = languageServer.getText();
+    }
+    
+    if (cli.getText().length() > 0) {
+      model.cli = cli.getText();
+    }
+    
+    if (manageDependenciesEnabled.isEnabled()) {
+      model.manageDependenciesEnabled = manageDependenciesEnabled.isEnabled();
+    }
   }
 }

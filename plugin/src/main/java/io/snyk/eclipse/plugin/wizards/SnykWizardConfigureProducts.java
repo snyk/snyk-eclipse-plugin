@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.wizards;
 
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -7,8 +8,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Event;
 
-public class SnykWizardConfigureProducts extends WizardPage {
+public class SnykWizardConfigureProducts extends WizardPage implements Listener {
 	Button openSourceEnabled;
 	Button codeEnabled;
 	Button iacEnabled;
@@ -30,17 +33,14 @@ public class SnykWizardConfigureProducts extends WizardPage {
         new Label(container, SWT.NONE).setText("Snyk Open Source enabled: Enable/Disable Snyk Open Source Dependency Scans via Language Server.");
         openSourceEnabled = new Button(container, SWT.CHECK);
         openSourceEnabled.setSelection(true);
-        this.setOpenSourceEnabled(openSourceEnabled);
         
         new Label(container, SWT.NONE).setText("Snyk Code enabled: Enable/Disable Snyk Code Scans via Language Server.");
         codeEnabled = new Button(container, SWT.CHECK);
         codeEnabled.setSelection(false);
-        this.setCodeEnabled(codeEnabled);
         
         new Label(container, SWT.NONE).setText("Snyk Infrastructure-as-Code enabled : Enable/Disable Snyk IaC Scans via Language Server.");
         iacEnabled = new Button(container, SWT.CHECK);
         iacEnabled.setSelection(false);
-        this.setIacEnabled(iacEnabled);
         
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         openSourceEnabled.setLayoutData(gd);
@@ -51,28 +51,21 @@ public class SnykWizardConfigureProducts extends WizardPage {
         setControl(container);
         setPageComplete(false);
     }
-	  
-	private void setOpenSourceEnabled(Button openSourceEnabled) {
-	  // TODO set preferences
+	
+	public void handleEvent(Event e) {
+	  getWizard().getContainer().updateButtons();
 	}
 	
-	private void setCodeEnabled(Button openCodeEnabled) {
-	  // TODO set preferences
+	public IWizardPage getNextPage() {
+	  updateModel();
+	    
+	  return ((SnykWizard)getWizard()).configureAdvance;
 	}
 	
-	private void setIacEnabled(Button iacEnabled) {
-	  // TODO set preferences
-	}
-
-	public Boolean getOpenSourceEnabled() {
-	  return openSourceEnabled.getSelection();
-	}
-	
-	public Boolean getCodeEnabled() {
-	  return codeEnabled.getSelection();
-	}
-	
-	public Boolean getiacEnabled() {
-	  return iacEnabled.getSelection();
+	private void updateModel() {
+	  SnykWizard wizard = (SnykWizard)getWizard();
+	  wizard.model.openSourceEnabled = openSourceEnabled.getSelection();
+	  wizard.model.codeEnabled = codeEnabled.getSelection();
+	  wizard.model.iacEnabled = iacEnabled.getSelection();
 	}
 }

@@ -285,7 +285,10 @@
     </super>
     <persistent value="false"/>
   </extension>
+  
   <extension
+  		id="wizard"
+  		name="Snyk"
         point="org.eclipse.ui.newWizards">
      <category
            id="io.snyk.eclipse.plugin.wizards.category.snyk"
@@ -299,4 +302,5 @@
            name="SnykWizard">
      </wizard>
   </extension>
+  
 </plugin>
