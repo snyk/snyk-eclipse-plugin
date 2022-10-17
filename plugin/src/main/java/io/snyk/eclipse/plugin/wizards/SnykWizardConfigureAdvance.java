@@ -14,7 +14,6 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
   private Text organization;
   private Text additionalParameters;
   private Text additionalEnvironment;
-  private Composite container;
 
 
   public SnykWizardConfigureAdvance() {
@@ -25,31 +24,40 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
 
   @Override
   public void createControl(Composite parent) {
-    // TODO Auto-generated method stub
-    container = new Composite(parent, SWT.NONE);
-    GridLayout layout = new GridLayout();
-    layout.numColumns = 2;
-    container.setLayout(layout);
-    
-    new Label(container, SWT.NONE).setText("Organization: Specify the Snyk Organization to use for scanning.");
-    organization = new Text(container, SWT.NONE);
-    
-    new Label(container, SWT.NONE).setText("Additional Parameters: Specify additional parameters to pass to the CLI (for example, --all-projects or -d).");
-    additionalParameters = new Text(container, SWT.NONE);
-    
-    new Label(container, SWT.NONE).setText("Additional Environment: Add environment variables to Language Server, multiple can be separated by ;. (e.g. JAVA_HOME=/usr/local/bin;GOPATH=/usr/local/bin).");
-    additionalEnvironment = new Text(container, SWT.NONE);
+    Composite composite = new Composite(parent, SWT.NONE);
     
     GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+    GridLayout gl = new GridLayout();
+    int ncol = 2;
+    gl.numColumns = ncol;
+    composite.setLayout(gl);
+    
+    Label organizationLabel = new Label(composite, SWT.NONE);
+    organizationLabel.setText("Organization:");
+    organizationLabel.setToolTipText("Specify the Snyk Organization to use for scanning.");
+
+    organization = new Text(composite, SWT.BORDER);
     organization.setLayoutData(gd);
+    
+    Label additionalParametersLabel = new Label(composite, SWT.NONE);
+    additionalParametersLabel.setText("Additional Parameters:");
+    additionalParametersLabel.setToolTipText("Specify additional parameters to pass to the CLI (for example, --all-projects or -d).");
+
+    additionalParameters = new Text(composite, SWT.BORDER);
     additionalParameters.setLayoutData(gd);
-    additionalEnvironment.setLayoutData(gd);
+    
+    Label additionalEnvironmentLabel = new Label(composite, SWT.NONE);
+    additionalEnvironmentLabel.setText("Additional Environment:");
+    additionalEnvironmentLabel.setToolTipText("Add environment variables to Language Server, multiple can be separated by ;. (e.g. JAVA_HOME=/usr/local/bin;GOPATH=/usr/local/bin).");
+
+    additionalEnvironment = new Text(composite, SWT.BORDER);
+    additionalEnvironment.setLayoutData(gd);    
     
     // required to avoid an error in the system
-    setControl(container);
+    setControl(composite);
     setPageComplete(false);
   }
-
+  
   public void handleEvent(Event e) {
     getWizard().getContainer().updateButtons();
   }
@@ -74,7 +82,5 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
     if (additionalEnvironment.getText().length() > 0) {
       model.additionalEnvironment= additionalEnvironment.getText();
     }
-
-    wizard.configureAdvanceCompleted = true;
   }
 }

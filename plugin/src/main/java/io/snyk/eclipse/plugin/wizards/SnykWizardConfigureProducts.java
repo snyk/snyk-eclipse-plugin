@@ -15,7 +15,6 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
 	Button openSourceEnabled;
 	Button codeEnabled;
 	Button iacEnabled;
-	private Composite container;
 
 	public SnykWizardConfigureProducts() {
         super("Snyk Wizard");
@@ -25,21 +24,30 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
  
 	@Override
     public void createControl(Composite parent) {
-        container = new Composite(parent, SWT.NONE);
+        Composite composite = new Composite(parent, SWT.NONE);
         GridLayout layout = new GridLayout();
         layout.numColumns = 2;
-        container.setLayout(layout);
+        composite.setLayout(layout);
 
-        new Label(container, SWT.NONE).setText("Snyk Open Source enabled: Enable/Disable Snyk Open Source Dependency Scans via Language Server.");
-        openSourceEnabled = new Button(container, SWT.CHECK);
+        Label openSourceLabel = new Label(composite, SWT.NONE);
+        openSourceLabel.setText("Snyk Open Source enabled:");
+        openSourceLabel.setToolTipText("Enable/Disable Snyk Open Source Dependency Scans via Language Server.");
+
+        openSourceEnabled = new Button(composite, SWT.CHECK);
         openSourceEnabled.setSelection(true);
         
-        new Label(container, SWT.NONE).setText("Snyk Code enabled: Enable/Disable Snyk Code Scans via Language Server.");
-        codeEnabled = new Button(container, SWT.CHECK);
+        Label codeLabel = new Label(composite, SWT.NONE);
+        codeLabel.setText("Snyk Code enabled:");
+        codeLabel.setToolTipText("Enable/Disable Snyk Code Scans via Language Server.");
+
+        codeEnabled = new Button(composite, SWT.CHECK);
         codeEnabled.setSelection(false);
         
-        new Label(container, SWT.NONE).setText("Snyk Infrastructure-as-Code enabled : Enable/Disable Snyk IaC Scans via Language Server.");
-        iacEnabled = new Button(container, SWT.CHECK);
+        Label iacLabel = new Label(composite, SWT.NONE);
+        iacLabel.setText("Snyk Infrastructure-as-Code enabled:");
+        iacLabel.setToolTipText("Enable/Disable Snyk IaC Scans via Language Server.");
+
+        iacEnabled = new Button(composite, SWT.CHECK);
         iacEnabled.setSelection(false);
         
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
@@ -48,12 +56,16 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
         iacEnabled.setLayoutData(gd);
         
         // required to avoid an error in the system
-        setControl(container);
+        setControl(composite);
         setPageComplete(false);
     }
 	
 	public void handleEvent(Event e) {
 	  getWizard().getContainer().updateButtons();
+	}
+    
+	public boolean canFlipToNextPage() {
+	    return true;
 	}
 	
 	public IWizardPage getNextPage() {

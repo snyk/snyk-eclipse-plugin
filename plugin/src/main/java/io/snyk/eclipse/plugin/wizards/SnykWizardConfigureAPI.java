@@ -20,7 +20,6 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
 	private Text endpoint;
 	private Button unknownCerts;
 	private Button authenticate;
-	private Composite container;
 
 	public SnykWizardConfigureAPI(IWorkbench workbench) {
 		super("Snyk Wizard");
@@ -32,39 +31,59 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
 	
   @Override
   public void createControl(Composite parent) {
-      container = new Composite(parent, SWT.NONE);
+      Composite composite = new Composite(parent, SWT.NONE);
       GridLayout gl = new GridLayout();
       GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-      gl.numColumns = 2;
-      container.setLayout(gl);
       
-      new Label(container, SWT.NONE).setText("Path: Specify your additions to the path to find needed third party tools such as Gradle or Maven.");
-      path = new Text(container, SWT.BORDER);
+      int ncol = 2;
+      gl.numColumns = ncol;
+      composite.setLayout(gl);
+      
+      Label pathLabel = new Label(composite, SWT.NONE);
+      pathLabel.setText("Path:");
+      pathLabel.setToolTipText("Specify your additions to the path to find needed third party tools such as Gradle or Maven.");
+
+      path = new Text(composite, SWT.BORDER);
       path.setLayoutData(gd);
       
-      new Label(container, SWT.NONE).setText("Custom Endpoint: Specify the custom endpoint for Single Tenant setups instead of https://app.snyk.io.");
-      endpoint = new Text(container, SWT.BORDER);
+      Label endpointLabel = new Label(composite, SWT.NONE);
+      endpointLabel.setText("Custom Endpoint:");
+      endpointLabel.setToolTipText("Specify the custom endpoint for Single Tenant setups instead of https://app.snyk.io.");
+
+      endpoint = new Text(composite, SWT.BORDER);
       endpoint.setLayoutData(gd);
       
-      new Label(container, SWT.NONE).setText("Allow unknown certificate authorities: Disable certificate checks for SSL connections.");
-      unknownCerts = new Button(container, SWT.CHECK);
+      Label unknownCertsLabel = new Label(composite, SWT.NONE);
+      unknownCertsLabel.setText("Allow unknown certificate authorities:");
+      unknownCertsLabel.setToolTipText("Disable certificate checks for SSL connections.");
+
+      unknownCerts = new Button(composite, SWT.CHECK);
       unknownCerts.setSelection(false);
       unknownCerts.setLayoutData(gd);
       
-      new Label(container, SWT.NONE).setText("Authenticate.");
-      authenticate = new Button(container, SWT.CHECK);
+      new Label(composite, SWT.NONE);
+      authenticate = new Button(composite, SWT.PUSH);
       authenticate.setText("Authenticate");
+      authenticate.addListener(SWT.Selection, this);
+      gd = new GridData();
+      gd.horizontalAlignment = GridData.BEGINNING;
       authenticate.setLayoutData(gd);
 
       // required to avoid an error in the system
-      setControl(container);
+      setControl(composite);
       setPageComplete(false);
-      this.addListeners();
   }
   
   public void handleEvent(Event e) {
-    // TODO handle authentication event
+    if (e.widget == authenticate) {
+      // TODO handle authentication event      
+    }
+ 
     getWizard().getContainer().updateButtons();
+  }
+  
+  public boolean canFlipToNextPage() {
+    return true;
   }
   
   public IWizardPage getNextPage() {
@@ -72,11 +91,6 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
     
     // TODO get next page if auth successful
     return ((SnykWizard)getWizard()).configureProducts;
-  }
-  
-  private void addListeners() {
-    path.addListener(SWT.Selection, this);
-    endpoint.addListener(SWT.Selection, this);
   }
   
   private void updateModel() {

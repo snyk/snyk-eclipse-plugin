@@ -16,7 +16,6 @@ public class SnykWizardConfigureDependencies extends WizardPage implements Liste
   private Text languageServer;
   private Text cli;
   private Button manageDependenciesEnabled;
-  private Composite container;
 
 
   public SnykWizardConfigureDependencies() {
@@ -27,28 +26,38 @@ public class SnykWizardConfigureDependencies extends WizardPage implements Liste
   
   @Override
   public void createControl(Composite parent) {
-    container = new Composite(parent, SWT.NONE);
-    GridLayout layout = new GridLayout();
-    layout.numColumns = 2;
-    container.setLayout(layout);
-    
-    new Label(container, SWT.NONE).setText("Update and install Snyk binaries automatically: If disabled, no updates are downloaded and updates must be performed manually. Please make sure that the locations for Language Server and CLI point to an existent, current binary.");
-    manageDependenciesEnabled = new Button(container, SWT.CHECK);
-    manageDependenciesEnabled.setSelection(false);
-    
-    new Label(container, SWT.NONE).setText("Snyk Language Server: Specify the location of your language server binary.");
-    languageServer = new Text(container, SWT.NONE);
-    
-    new Label(container, SWT.NONE).setText("Snyk CLI: Specify the location of the Snyk CLI .");
-    cli = new Text(container, SWT.NONE);
-    
+    Composite composite = new Composite(parent, SWT.NONE);
+    GridLayout gl = new GridLayout();
     GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-    languageServer.setLayoutData(gd);
-    cli.setLayoutData(gd);
-    manageDependenciesEnabled.setLayoutData(gd);
+    
+    int ncol = 2;
+    gl.numColumns = ncol;
+    composite.setLayout(gl);
+    
+    Label manageDependenciesLabel = new Label(composite, SWT.NONE);
+    manageDependenciesLabel.setText("Update and install Snyk binaries automatically:");
+    manageDependenciesLabel.setToolTipText("If disabled, no updates are downloaded and updates must be performed manually. Please make sure that the locations for Language Server and CLI point to an existent, current binary.");
 
+    manageDependenciesEnabled = new Button(composite, SWT.CHECK);
+    manageDependenciesEnabled.setLayoutData(gd);
+    manageDependenciesEnabled.setSelection(true);    
+    
+    Label languageServerLabel = new Label(composite, SWT.NONE);
+    languageServerLabel.setText("Snyk Language Server:");
+    languageServerLabel.setToolTipText("Specify the location of your language server binary.");
+
+    languageServer = new Text(composite, SWT.BORDER);
+    languageServer.setLayoutData(gd);
+    
+    Label cliLabel = new Label(composite, SWT.NONE);
+    cliLabel.setText("Snyk CLI:");
+    cliLabel.setToolTipText("Specify the location of the Snyk CLI.");
+
+    cli = new Text(composite, SWT.BORDER);
+    cli.setLayoutData(gd);
+    
     // required to avoid an error in the system
-    setControl(container);
+    setControl(composite);
     setPageComplete(false);
   }
 
@@ -60,6 +69,10 @@ public class SnykWizardConfigureDependencies extends WizardPage implements Liste
     updateModel();
     
     return ((SnykWizard)getWizard()).configureAPI;
+  }
+  
+  public boolean canFlipToNextPage() {
+    return true;
   }
   
   private void updateModel() {

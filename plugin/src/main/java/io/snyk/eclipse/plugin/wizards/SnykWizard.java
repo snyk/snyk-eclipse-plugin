@@ -12,8 +12,6 @@ public class SnykWizard extends Wizard implements INewWizard {
   protected SnykWizardConfigureAdvance configureAdvance;
   
   protected SnykWizardModel model;
-    
-  protected boolean configureAdvanceCompleted = false;
   
   protected IWorkbench workbench;
   protected IStructuredSelection selection;
@@ -45,19 +43,20 @@ public class SnykWizard extends Wizard implements INewWizard {
     addPage(configureAdvance);
   }
 
-  @Override
   public void init(IWorkbench workbench, IStructuredSelection selection) {
     // TODO
     this.workbench = workbench;
     this.selection = selection;
   }
-
-  @Override
-  public boolean performFinish() {
-    // TODO set conditions for finish button to activate 
-    if (!configureAdvanceCompleted) {
-      return false;
+  
+  public boolean canFinish() {
+    if (this.getContainer().getCurrentPage() == configureAdvance) {
+      return true;
     }
+    return false;
+  }
+
+  public boolean performFinish() {
     return true;
   }
 }
