@@ -6,9 +6,10 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
 public class SnykWizard extends Wizard implements INewWizard {
-  protected SnykWizardWelcome welcome = new SnykWizardWelcome();
-  protected SnykWizardPageOne one = new SnykWizardPageOne();
-  protected SnykWizardPageTwo two = new SnykWizardPageTwo();
+  protected SnykWizardConfigureAPI configureAPI = new SnykWizardConfigureAPI();
+  protected SnykWizardConfigureProducts configureProducts = new SnykWizardConfigureProducts();
+  protected SnykWizardConfigureDependencies configureDependencies = new SnykWizardConfigureDependencies();
+  protected SnykWizardConfigureAdvance configureAdvanced= new SnykWizardConfigureAdvance();
 
   public SnykWizard() {
     super();
@@ -22,9 +23,10 @@ public class SnykWizard extends Wizard implements INewWizard {
   
   @Override
   public void addPages() {
-    addPage(welcome);
-    addPage(one);
-    addPage(two);
+    addPage(configureDependencies);
+    addPage(configureAPI);
+    addPage(configureProducts);
+    addPage(configureAdvanced);
   }
 
   @Override
@@ -35,10 +37,6 @@ public class SnykWizard extends Wizard implements INewWizard {
 
   @Override
   public boolean performFinish() {
-    // Print the result to the console
-    System.out.println(welcome.getWelcomeMsg());
-    System.out.println(one.getText1());
-    System.out.println(two.getText1());
     
     return true;
   }
