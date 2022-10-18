@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.wizards;
 
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -9,6 +10,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
+
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -16,6 +20,7 @@ import org.eclipse.swt.widgets.Listener;
 public class SnykWizardConfigureAPI extends WizardPage implements Listener {
 	IWorkbench workbench;
   
+	private Text apiToken;
     private Text path;
 	private Text endpoint;
 	private Button unknownCerts;
@@ -39,11 +44,20 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
       gl.numColumns = ncol;
       composite.setLayout(gl);
       
+      Label tokenLabel = new Label(composite, SWT.NONE);
+      tokenLabel.setText("Snyk API Token:");
+      tokenLabel.setToolTipText("Set the authentication token from Snyk.");
+      
+      apiToken = new Text(composite, SWT.BORDER|SWT.PASSWORD);
+      apiToken.setText(Preferences.getInstance().getAuthToken());
+      apiToken.setLayoutData(gd);
+      
       Label pathLabel = new Label(composite, SWT.NONE);
       pathLabel.setText("Path:");
       pathLabel.setToolTipText("Specify your additions to the path to find needed third party tools such as Gradle or Maven.");
 
       path = new Text(composite, SWT.BORDER);
+      path.setText(Preferences.getInstance().getPref(Preferences.PATH_KEY));
       path.setLayoutData(gd);
       
       Label endpointLabel = new Label(composite, SWT.NONE);
@@ -51,6 +65,7 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
       endpointLabel.setToolTipText("Specify the custom endpoint for Single Tenant setups instead of https://app.snyk.io.");
 
       endpoint = new Text(composite, SWT.BORDER);
+      endpoint.setText(Preferences.getInstance().getEndpoint());
       endpoint.setLayoutData(gd);
       
       Label unknownCertsLabel = new Label(composite, SWT.NONE);
@@ -58,7 +73,7 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
       unknownCertsLabel.setToolTipText("Disable certificate checks for SSL connections.");
 
       unknownCerts = new Button(composite, SWT.CHECK);
-      unknownCerts.setSelection(false);
+      unknownCerts.setSelection(Preferences.getInstance().isInsecure());
       unknownCerts.setLayoutData(gd);
       
       new Label(composite, SWT.NONE);
@@ -76,7 +91,9 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
   
   public void handleEvent(Event e) {
     if (e.widget == authenticate) {
-      // TODO handle authentication event      
+      // TODO handle authentication event
+      updatePreferences();
+      MessageDialog.openInformation(this.getShell(), "Authenticating", "Authenticating with Snyk...");
     }
  
     getWizard().getContainer().updateButtons();
@@ -87,26 +104,16 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
   }
   
   public IWizardPage getNextPage() {
-    updateModel();
+    updatePreferences();
     
     // TODO get next page if auth successful
     return ((SnykWizard)getWizard()).configureProducts;
   }
   
-  private void updateModel() {
-    SnykWizard wizard = (SnykWizard)getWizard();
-    SnykWizardModel model = wizard.model;
-    
-    if (path.getText().length() > 0) {
-      model.path = path.getText();
-    }
-    
-    if (endpoint.getText().length() > 0) {
-      model.endpoint = endpoint.getText();
-    }
-    
-    if (unknownCerts.isEnabled()) {
-      model.unknownCerts = unknownCerts.isEnabled();
-    }
+  private void updatePreferences() {
+    Preferences.getInstance().store(Preferences.AUTH_TOKEN_KEY, apiToken.getText());
+    Preferences.getInstance().store(Preferences.PATH_KEY, path.getText());
+    Preferences.getInstance().store(Preferences.ENDPOINT_KEY, endpoint.getText());
+    Preferences.getInstance().store(Preferences.INSECURE_KEY, Boolean.toString(unknownCerts.getSelection()));
   }
 }

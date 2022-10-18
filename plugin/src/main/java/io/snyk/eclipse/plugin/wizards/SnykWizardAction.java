@@ -24,7 +24,7 @@ public class SnykWizardAction implements IObjectActionDelegate {
         
     // Instantiates the wizard container with the wizard and opens it
     WizardDialog dialog = new WizardDialog(part.getSite().getShell(), wizard);
-    dialog.create();
+//    dialog.create();
     dialog.open();
   }
   

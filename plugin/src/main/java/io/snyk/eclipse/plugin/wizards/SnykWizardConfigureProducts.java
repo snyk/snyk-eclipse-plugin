@@ -9,6 +9,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+
 import org.eclipse.swt.widgets.Event;
 
 public class SnykWizardConfigureProducts extends WizardPage implements Listener {
@@ -25,7 +28,9 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
 	@Override
     public void createControl(Composite parent) {
         Composite composite = new Composite(parent, SWT.NONE);
+
         GridLayout layout = new GridLayout();
+        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         layout.numColumns = 2;
         composite.setLayout(layout);
 
@@ -34,25 +39,26 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
         openSourceLabel.setToolTipText("Enable/Disable Snyk Open Source Dependency Scans via Language Server.");
 
         openSourceEnabled = new Button(composite, SWT.CHECK);
-        openSourceEnabled.setSelection(true);
+        openSourceEnabled.setSelection(Preferences.getInstance().getBooleanPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+        
+        openSourceEnabled.setLayoutData(gd);
         
         Label codeLabel = new Label(composite, SWT.NONE);
         codeLabel.setText("Snyk Code enabled:");
         codeLabel.setToolTipText("Enable/Disable Snyk Code Scans via Language Server.");
 
         codeEnabled = new Button(composite, SWT.CHECK);
-        codeEnabled.setSelection(false);
+        codeEnabled.setSelection(Preferences.getInstance().getBooleanPref(Preferences.ACTIVATE_SNYK_CODE));
+        
+        codeEnabled.setLayoutData(gd);
         
         Label iacLabel = new Label(composite, SWT.NONE);
         iacLabel.setText("Snyk Infrastructure-as-Code enabled:");
         iacLabel.setToolTipText("Enable/Disable Snyk IaC Scans via Language Server.");
 
         iacEnabled = new Button(composite, SWT.CHECK);
-        iacEnabled.setSelection(false);
+        iacEnabled.setSelection(Preferences.getInstance().getBooleanPref(Preferences.ACTIVATE_SNYK_IAC));
         
-        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-        openSourceEnabled.setLayoutData(gd);
-        codeEnabled.setLayoutData(gd);
         iacEnabled.setLayoutData(gd);
         
         // required to avoid an error in the system
@@ -69,15 +75,14 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
 	}
 	
 	public IWizardPage getNextPage() {
-	  updateModel();
+	  updatePreferences();
 	    
 	  return ((SnykWizard)getWizard()).configureAdvance;
 	}
 	
-	private void updateModel() {
-	  SnykWizard wizard = (SnykWizard)getWizard();
-	  wizard.model.openSourceEnabled = openSourceEnabled.getSelection();
-	  wizard.model.codeEnabled = codeEnabled.getSelection();
-	  wizard.model.iacEnabled = iacEnabled.getSelection();
+	private void updatePreferences() {
+	  Preferences.getInstance().store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Boolean.toString(openSourceEnabled.getSelection()));
+	  Preferences.getInstance().store(Preferences.ACTIVATE_SNYK_CODE, Boolean.toString(codeEnabled.getSelection()));
+	  Preferences.getInstance().store(Preferences.ACTIVATE_SNYK_IAC, Boolean.toString(iacEnabled.getSelection()));
 	}
 }

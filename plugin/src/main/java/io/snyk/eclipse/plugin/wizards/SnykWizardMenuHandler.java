@@ -25,7 +25,6 @@ public class SnykWizardMenuHandler extends AbstractHandler {
 
     WizardDialog dialog = new WizardDialog(activeShell, wizard);
 
-    dialog.create();
     dialog.open();
 
     return null;

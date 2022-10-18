@@ -7,6 +7,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
@@ -14,6 +18,8 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
   private Text organization;
   private Text additionalParameters;
   private Text additionalEnvironment;
+  private Button telemetryEnabled;
+  private Button errorReportsEnabled;
 
 
   public SnykWizardConfigureAdvance() {
@@ -37,6 +43,7 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
     organizationLabel.setToolTipText("Specify the Snyk Organization to use for scanning.");
 
     organization = new Text(composite, SWT.BORDER);
+    organization.setText(Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY));
     organization.setLayoutData(gd);
     
     Label additionalParametersLabel = new Label(composite, SWT.NONE);
@@ -44,6 +51,7 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
     additionalParametersLabel.setToolTipText("Specify additional parameters to pass to the CLI (for example, --all-projects or -d).");
 
     additionalParameters = new Text(composite, SWT.BORDER);
+    additionalParameters.setText(Preferences.getInstance().getPref(Preferences.ADDITIONAL_PARAMETERS));
     additionalParameters.setLayoutData(gd);
     
     Label additionalEnvironmentLabel = new Label(composite, SWT.NONE);
@@ -51,7 +59,25 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
     additionalEnvironmentLabel.setToolTipText("Add environment variables to Language Server, multiple can be separated by ;. (e.g. JAVA_HOME=/usr/local/bin;GOPATH=/usr/local/bin).");
 
     additionalEnvironment = new Text(composite, SWT.BORDER);
-    additionalEnvironment.setLayoutData(gd);    
+    additionalEnvironment.setText(Preferences.getInstance().getPref(Preferences.ADDITIONAL_ENVIRONMENT));
+    additionalEnvironment.setLayoutData(gd);
+
+    Label telemeteryLabel = new Label(composite, SWT.NONE);
+    telemeteryLabel.setText("Send usage statistics to Snyk:");
+    telemeteryLabel.setToolTipText("Allow Snyk to get usage data to improve workflows.");
+    
+    
+    telemetryEnabled = new Button(composite, SWT.CHECK);
+    telemetryEnabled.setSelection(Preferences.getInstance().getBooleanPref(Preferences.ENABLE_TELEMETRY));
+    telemetryEnabled.setLayoutData(gd);
+    
+    Label errorReportsLabel = new Label(composite, SWT.NONE);
+    errorReportsLabel.setText("Send error reports to Snyk:");
+    errorReportsLabel.setToolTipText("Send errors from Language Server to Snyk to enable quicker bug fixing.");
+    
+    errorReportsEnabled = new Button(composite, SWT.CHECK);
+    errorReportsEnabled.setSelection(Preferences.getInstance().getBooleanPref(Preferences.SEND_ERROR_REPORTS));
+    errorReportsEnabled.setLayoutData(gd);
     
     // required to avoid an error in the system
     setControl(composite);
@@ -63,24 +89,15 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
   }
   
   public boolean isPageComplete() {
-    updateModel();
+    updatePreferences();
     return true;
   }
   
-  private void updateModel() {
-    SnykWizard wizard = (SnykWizard)getWizard();
-    SnykWizardModel model = wizard.model;
-    
-    if (organization.getText().length() > 0) {
-      model.organization= organization.getText();
-    }
-    
-    if (additionalParameters.getText().length() > 0) {
-      model.additionalParameters= additionalParameters.getText();
-    }
-    
-    if (additionalEnvironment.getText().length() > 0) {
-      model.additionalEnvironment= additionalEnvironment.getText();
-    }
+  private void updatePreferences() {
+    Preferences.getInstance().store(Preferences.ORGANIZATION_KEY, organization.getText());  
+    Preferences.getInstance().store(Preferences.ADDITIONAL_PARAMETERS, additionalParameters.getText());  
+    Preferences.getInstance().store(Preferences.ADDITIONAL_ENVIRONMENT, additionalEnvironment.getText());  
+    Preferences.getInstance().store(Preferences.ENABLE_TELEMETRY, Boolean.toString(telemetryEnabled.getSelection()));  
+    Preferences.getInstance().store(Preferences.SEND_ERROR_REPORTS, Boolean.toString(errorReportsEnabled.getSelection()));  
   }
 }

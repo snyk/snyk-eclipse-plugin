@@ -10,16 +10,12 @@ public class SnykWizard extends Wizard implements INewWizard {
   protected SnykWizardConfigureProducts configureProducts;
   protected SnykWizardConfigureDependencies configureDependencies;
   protected SnykWizardConfigureAdvance configureAdvance;
-  
-  protected SnykWizardModel model;
-  
+   
   protected IWorkbench workbench;
   protected IStructuredSelection selection;
 
   public SnykWizard() {
     super();
-    // TODO import preferences so wizard can update them?
-    model = new SnykWizardModel();
     setNeedsProgressMonitor(true);
   }
   
