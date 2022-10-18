@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
@@ -20,7 +21,7 @@ import org.eclipse.swt.widgets.Listener;
 public class SnykWizardConfigureAPI extends WizardPage implements Listener {
 	IWorkbench workbench;
   
-	private Text apiToken;
+//	private Text apiToken;
     private Text path;
 	private Text endpoint;
 	private Button unknownCerts;
@@ -44,13 +45,13 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
       gl.numColumns = ncol;
       composite.setLayout(gl);
       
-      Label tokenLabel = new Label(composite, SWT.NONE);
-      tokenLabel.setText("Snyk API Token:");
-      tokenLabel.setToolTipText("Set the authentication token from Snyk.");
+//      Label tokenLabel = new Label(composite, SWT.NONE);
+//      tokenLabel.setText("Snyk API Token:");
+//      tokenLabel.setToolTipText("Set the authentication token from Snyk.");
       
-      apiToken = new Text(composite, SWT.BORDER|SWT.PASSWORD);
-      apiToken.setText(Preferences.getInstance().getAuthToken());
-      apiToken.setLayoutData(gd);
+//      apiToken = new Text(composite, SWT.BORDER|SWT.PASSWORD);
+//      apiToken.setText(Preferences.getInstance().getAuthToken());
+//      apiToken.setLayoutData(gd);
       
       Label pathLabel = new Label(composite, SWT.NONE);
       pathLabel.setText("Path:");
@@ -91,8 +92,9 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
   
   public void handleEvent(Event e) {
     if (e.widget == authenticate) {
-      // TODO handle authentication event
       updatePreferences();
+      SnykExtendedLanguageClient.getInstance().triggerAuthentication();
+            
       MessageDialog.openInformation(this.getShell(), "Authenticating", "Authenticating with Snyk...");
     }
  
@@ -105,13 +107,11 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
   
   public IWizardPage getNextPage() {
     updatePreferences();
-    
-    // TODO get next page if auth successful
     return ((SnykWizard)getWizard()).configureProducts;
   }
   
   private void updatePreferences() {
-    Preferences.getInstance().store(Preferences.AUTH_TOKEN_KEY, apiToken.getText());
+//    Preferences.getInstance().store(Preferences.AUTH_TOKEN_KEY, apiToken.getText());
     Preferences.getInstance().store(Preferences.PATH_KEY, path.getText());
     Preferences.getInstance().store(Preferences.ENDPOINT_KEY, endpoint.getText());
     Preferences.getInstance().store(Preferences.INSECURE_KEY, Boolean.toString(unknownCerts.getSelection()));

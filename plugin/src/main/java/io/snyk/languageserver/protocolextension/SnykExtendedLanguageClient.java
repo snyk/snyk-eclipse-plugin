@@ -46,6 +46,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
       SnykLogger.logError(e);
     }
   }
+  
+  public void triggerAuthentication() {
+    ExecuteCommandParams params = new ExecuteCommandParams("snyk.login", new ArrayList<>());
+    try {
+      getLanguageServer().getWorkspaceService().executeCommand(params);
+    } catch (Exception e) {
+      SnykLogger.logError(e);
+    }    
+  }
 
   @JsonNotification(value = "$/snyk.hasAuthenticated")
   public void hasAuthenticated(HasAuthenticatedParam param) {

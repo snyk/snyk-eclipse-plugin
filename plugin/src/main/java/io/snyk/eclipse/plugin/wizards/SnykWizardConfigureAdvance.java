@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.wizards;
 
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -89,11 +90,10 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
   }
   
   public boolean isPageComplete() {
-    updatePreferences();
     return true;
   }
   
-  private void updatePreferences() {
+  public void updatePreferences() {
     Preferences.getInstance().store(Preferences.ORGANIZATION_KEY, organization.getText());  
     Preferences.getInstance().store(Preferences.ADDITIONAL_PARAMETERS, additionalParameters.getText());  
     Preferences.getInstance().store(Preferences.ADDITIONAL_ENVIRONMENT, additionalEnvironment.getText());  

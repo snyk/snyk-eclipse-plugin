@@ -53,6 +53,7 @@ public class SnykWizard extends Wizard implements INewWizard {
   }
 
   public boolean performFinish() {
+    this.configureAdvance.updatePreferences();
     return true;
   }
 }
