@@ -43,8 +43,8 @@ public class SnykWizardConfigureDependencies extends WizardPage implements Liste
     manageDependenciesLabel.setToolTipText("If disabled, no updates are downloaded and updates must be performed manually. Please make sure that the locations for Language Server and CLI point to an existent, current binary.");
 
     manageDependenciesEnabled = new Button(composite, SWT.CHECK);
-    manageDependenciesEnabled.setLayoutData(gd);
     manageDependenciesEnabled.setSelection(Preferences.getInstance().isManagedBinaries());
+    manageDependenciesEnabled.setLayoutData(gd);
     
     Label pathLabel = new Label(composite, SWT.NONE);
     pathLabel.setText("Path:");
@@ -59,8 +59,8 @@ public class SnykWizardConfigureDependencies extends WizardPage implements Liste
     languageServerLabel.setToolTipText("Specify the location of your language server binary.");
 
     languageServer = new Text(composite, SWT.BORDER);
-    languageServer.setLayoutData(gd);
     languageServer.setText(Preferences.getInstance().getLsBinary());
+    languageServer.setLayoutData(gd);
     
     Label cliLabel = new Label(composite, SWT.NONE);
     cliLabel.setText("Snyk CLI:");
@@ -91,7 +91,7 @@ public class SnykWizardConfigureDependencies extends WizardPage implements Liste
   
   private void updatePreferences() {    
     Preferences.getInstance().store(Preferences.PATH_KEY, path.getText());
-    Preferences.getInstance().store(Preferences.LS_BINARY_KEY, this.languageServer.getText());
+    Preferences.getInstance().store(Preferences.LS_BINARY_KEY, languageServer.getText());
     Preferences.getInstance().store(Preferences.CLI_PATH, cli.getText());
     Preferences.getInstance().store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, Boolean.toString(manageDependenciesEnabled.getSelection()));
     

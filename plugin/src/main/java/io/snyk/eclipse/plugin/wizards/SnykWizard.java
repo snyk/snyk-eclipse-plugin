@@ -10,6 +10,7 @@ public class SnykWizard extends Wizard implements INewWizard {
   protected SnykWizardConfigureProducts configureProducts;
   protected SnykWizardConfigureDependencies configureDependencies;
   protected SnykWizardConfigureAdvance configureAdvance;
+  protected SnykWizardSummary summary;
   
   protected SnykWizardModel model;
    
@@ -40,6 +41,9 @@ public class SnykWizard extends Wizard implements INewWizard {
     
     configureAdvance = new SnykWizardConfigureAdvance();
     addPage(configureAdvance);
+    
+    summary = new SnykWizardSummary();
+    addPage(summary);
   }
 
   public void init(IWorkbench workbench, IStructuredSelection selection) {
@@ -49,7 +53,7 @@ public class SnykWizard extends Wizard implements INewWizard {
   }
   
   public boolean canFinish() {
-    if (this.getContainer().getCurrentPage() == configureAdvance) {
+    if (this.getContainer().getCurrentPage() == summary) {
       return true;
     }
     return false;
@@ -61,7 +65,6 @@ public class SnykWizard extends Wizard implements INewWizard {
   }
 
   public boolean performFinish() {
-    this.configureAdvance.updatePreferences();
     return true;
   }
 }

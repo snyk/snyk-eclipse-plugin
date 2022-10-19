@@ -41,7 +41,6 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
 
         openSourceEnabled = new Button(composite, SWT.CHECK);
         openSourceEnabled.setSelection(Preferences.getInstance().getBooleanPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
-        
         openSourceEnabled.setLayoutData(gd);
         
         Label codeLabel = new Label(composite, SWT.NONE);
@@ -50,7 +49,6 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
 
         codeEnabled = new Button(composite, SWT.CHECK);
         codeEnabled.setSelection(Preferences.getInstance().getBooleanPref(Preferences.ACTIVATE_SNYK_CODE));
-        
         codeEnabled.setLayoutData(gd);
         
         Label iacLabel = new Label(composite, SWT.NONE);
@@ -59,7 +57,6 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
 
         iacEnabled = new Button(composite, SWT.CHECK);
         iacEnabled.setSelection(Preferences.getInstance().getBooleanPref(Preferences.ACTIVATE_SNYK_IAC));
-        
         iacEnabled.setLayoutData(gd);
         
         // required to avoid an error in the system
