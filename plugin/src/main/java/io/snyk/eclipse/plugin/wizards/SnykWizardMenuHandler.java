@@ -8,7 +8,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.PlatformUI;
 
 public class SnykWizardMenuHandler extends AbstractHandler {
   IWorkbenchPart part;
@@ -19,13 +19,15 @@ public class SnykWizardMenuHandler extends AbstractHandler {
   }
   
   public Object execute(ExecutionEvent event) throws ExecutionException {
-    Shell activeShell = HandlerUtil.getActiveShell(event);
-
-    SnykWizard wizard = new SnykWizard();
-
-    WizardDialog dialog = new WizardDialog(activeShell, wizard);
-
-    dialog.open();
+    Shell activeShell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+    activeShell.getDisplay().asyncExec(() -> {      
+      SnykWizard wizard = new SnykWizard();
+      
+      WizardDialog dialog = new WizardDialog(activeShell, wizard);
+      
+      dialog.setBlockOnOpen(true);
+      dialog.open();
+    });
 
     return null;
   }

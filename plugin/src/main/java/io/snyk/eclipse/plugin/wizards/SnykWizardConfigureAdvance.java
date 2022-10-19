@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.wizards;
 
-import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -10,6 +9,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.languageserver.LsConfigurationUpdater;
 
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
@@ -98,6 +98,8 @@ public class SnykWizardConfigureAdvance extends WizardPage implements Listener {
     Preferences.getInstance().store(Preferences.ADDITIONAL_PARAMETERS, additionalParameters.getText());  
     Preferences.getInstance().store(Preferences.ADDITIONAL_ENVIRONMENT, additionalEnvironment.getText());  
     Preferences.getInstance().store(Preferences.ENABLE_TELEMETRY, Boolean.toString(telemetryEnabled.getSelection()));  
-    Preferences.getInstance().store(Preferences.SEND_ERROR_REPORTS, Boolean.toString(errorReportsEnabled.getSelection()));  
+    Preferences.getInstance().store(Preferences.SEND_ERROR_REPORTS, Boolean.toString(errorReportsEnabled.getSelection())); 
+    
+    new LsConfigurationUpdater().configurationChanged();
   }
 }

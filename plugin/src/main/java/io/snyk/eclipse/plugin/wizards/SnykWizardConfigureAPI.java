@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.wizards;
 
 import org.eclipse.jface.wizard.WizardPage;
+
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.swt.SWT;
@@ -9,9 +10,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.IWorkbench;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 import org.eclipse.swt.widgets.Button;
@@ -19,20 +20,15 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
 public class SnykWizardConfigureAPI extends WizardPage implements Listener {
-	IWorkbench workbench;
-  
-//	private Text apiToken;
-    private Text path;
 	private Text endpoint;
 	private Button unknownCerts;
 	private Button authenticate;
 
-	public SnykWizardConfigureAPI(IWorkbench workbench) {
+	public SnykWizardConfigureAPI() {
 		super("Snyk Wizard");
 		setTitle("Configure Snyk API");
 		setDescription("Configure your Snyk API.");
 		
-		this.workbench = workbench;
 	}
 	
   @Override
@@ -44,22 +40,6 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
       int ncol = 2;
       gl.numColumns = ncol;
       composite.setLayout(gl);
-      
-//      Label tokenLabel = new Label(composite, SWT.NONE);
-//      tokenLabel.setText("Snyk API Token:");
-//      tokenLabel.setToolTipText("Set the authentication token from Snyk.");
-      
-//      apiToken = new Text(composite, SWT.BORDER|SWT.PASSWORD);
-//      apiToken.setText(Preferences.getInstance().getAuthToken());
-//      apiToken.setLayoutData(gd);
-      
-      Label pathLabel = new Label(composite, SWT.NONE);
-      pathLabel.setText("Path:");
-      pathLabel.setToolTipText("Specify your additions to the path to find needed third party tools such as Gradle or Maven.");
-
-      path = new Text(composite, SWT.BORDER);
-      path.setText(Preferences.getInstance().getPref(Preferences.PATH_KEY));
-      path.setLayoutData(gd);
       
       Label endpointLabel = new Label(composite, SWT.NONE);
       endpointLabel.setText("Custom Endpoint:");
@@ -94,7 +74,7 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
     if (e.widget == authenticate) {
       updatePreferences();
       SnykExtendedLanguageClient.getInstance().triggerAuthentication();
-            
+
       MessageDialog.openInformation(this.getShell(), "Authenticating", "Authenticating with Snyk...");
     }
  
@@ -111,9 +91,9 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
   }
   
   private void updatePreferences() {
-//    Preferences.getInstance().store(Preferences.AUTH_TOKEN_KEY, apiToken.getText());
-    Preferences.getInstance().store(Preferences.PATH_KEY, path.getText());
     Preferences.getInstance().store(Preferences.ENDPOINT_KEY, endpoint.getText());
     Preferences.getInstance().store(Preferences.INSECURE_KEY, Boolean.toString(unknownCerts.getSelection()));
+    
+    new LsConfigurationUpdater().configurationChanged();
   }
 }

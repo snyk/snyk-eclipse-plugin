@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.languageserver.LsConfigurationUpdater;
 
 import org.eclipse.swt.widgets.Event;
 
@@ -84,5 +85,7 @@ public class SnykWizardConfigureProducts extends WizardPage implements Listener 
 	  Preferences.getInstance().store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Boolean.toString(openSourceEnabled.getSelection()));
 	  Preferences.getInstance().store(Preferences.ACTIVATE_SNYK_CODE, Boolean.toString(codeEnabled.getSelection()));
 	  Preferences.getInstance().store(Preferences.ACTIVATE_SNYK_IAC, Boolean.toString(iacEnabled.getSelection()));
+	  
+	  new LsConfigurationUpdater().configurationChanged();
 	}
 }

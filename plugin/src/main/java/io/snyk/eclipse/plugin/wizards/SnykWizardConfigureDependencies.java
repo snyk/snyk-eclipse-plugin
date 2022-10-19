@@ -11,11 +11,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.languageserver.LsConfigurationUpdater;
 
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Event;
 
 public class SnykWizardConfigureDependencies extends WizardPage implements Listener {
+  private Text path;
   private Text languageServer;
   private Text cli;
   private Button manageDependenciesEnabled;
@@ -42,7 +44,15 @@ public class SnykWizardConfigureDependencies extends WizardPage implements Liste
 
     manageDependenciesEnabled = new Button(composite, SWT.CHECK);
     manageDependenciesEnabled.setLayoutData(gd);
-    manageDependenciesEnabled.setSelection(Preferences.getInstance().isManagedBinaries());    
+    manageDependenciesEnabled.setSelection(Preferences.getInstance().isManagedBinaries());
+    
+    Label pathLabel = new Label(composite, SWT.NONE);
+    pathLabel.setText("Path:");
+    pathLabel.setToolTipText("Specify your additions to the path to find needed third party tools such as Gradle or Maven.");
+
+    path = new Text(composite, SWT.BORDER);
+    path.setText(Preferences.getInstance().getPref(Preferences.PATH_KEY));
+    path.setLayoutData(gd);
     
     Label languageServerLabel = new Label(composite, SWT.NONE);
     languageServerLabel.setText("Snyk Language Server:");
@@ -79,9 +89,12 @@ public class SnykWizardConfigureDependencies extends WizardPage implements Liste
     return true;
   }
   
-  private void updatePreferences() {
+  private void updatePreferences() {    
+    Preferences.getInstance().store(Preferences.PATH_KEY, path.getText());
     Preferences.getInstance().store(Preferences.LS_BINARY_KEY, this.languageServer.getText());
     Preferences.getInstance().store(Preferences.CLI_PATH, cli.getText());
     Preferences.getInstance().store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, Boolean.toString(manageDependenciesEnabled.getSelection()));
+    
+    new LsConfigurationUpdater().configurationChanged();
   }
 }

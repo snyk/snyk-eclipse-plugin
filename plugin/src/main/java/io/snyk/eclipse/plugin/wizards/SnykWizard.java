@@ -10,12 +10,15 @@ public class SnykWizard extends Wizard implements INewWizard {
   protected SnykWizardConfigureProducts configureProducts;
   protected SnykWizardConfigureDependencies configureDependencies;
   protected SnykWizardConfigureAdvance configureAdvance;
+  
+  protected SnykWizardModel model;
    
   protected IWorkbench workbench;
   protected IStructuredSelection selection;
 
   public SnykWizard() {
     super();
+    model = new SnykWizardModel();
     setNeedsProgressMonitor(true);
   }
   
@@ -29,7 +32,7 @@ public class SnykWizard extends Wizard implements INewWizard {
     configureDependencies = new SnykWizardConfigureDependencies();
     addPage(configureDependencies);
     
-    configureAPI= new SnykWizardConfigureAPI(workbench); 
+    configureAPI= new SnykWizardConfigureAPI(); 
     addPage(configureAPI);
     
     configureProducts = new SnykWizardConfigureProducts();
@@ -50,6 +53,11 @@ public class SnykWizard extends Wizard implements INewWizard {
       return true;
     }
     return false;
+  }
+  
+  public boolean performCancel() {
+    model.resetPreferences();
+    return true;
   }
 
   public boolean performFinish() {
