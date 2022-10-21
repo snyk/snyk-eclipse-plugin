@@ -50,22 +50,22 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   }
 
   public void triggerScan() {
-    PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
+    // run the wizard if no token
+    if (Preferences.getInstance().getAuthToken().isBlank()) {
       SnykWizard wizard = new SnykWizard();
 
       WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
 
-      if (Preferences.getInstance().getAuthToken().isBlank()) {
-        dialog.setBlockOnOpen(true);
-        dialog.open();
-      }
-      ExecuteCommandParams params = new ExecuteCommandParams("snyk.workspace.scan", new ArrayList<>());
-      try {
-        getLanguageServer().getWorkspaceService().executeCommand(params);
-      } catch (Exception e) {
-        SnykLogger.logError(e);
-      }
-    });
+      dialog.setBlockOnOpen(true);
+      dialog.open();
+    }
+
+    ExecuteCommandParams params = new ExecuteCommandParams("snyk.workspace.scan", new ArrayList<>());
+    try {
+      getLanguageServer().getWorkspaceService().executeCommand(params);
+    } catch (Exception e) {
+      SnykLogger.logError(e);
+    }
   }
 
   public void triggerAuthentication() {

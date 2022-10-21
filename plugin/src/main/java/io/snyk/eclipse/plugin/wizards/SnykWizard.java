@@ -7,10 +7,7 @@ import org.eclipse.ui.IWorkbench;
 
 public class SnykWizard extends Wizard implements INewWizard {
   protected SnykWizardConfigureAPI configureAPI;
-  protected SnykWizardConfigureProducts configureProducts;
-  protected SnykWizardConfigureDependencies configureDependencies;
-  protected SnykWizardConfigureAdvance configureAdvance;
-  protected SnykWizardSummary summary;
+  protected SnykWizardAuthenticate authenticate;
   
   protected SnykWizardModel model;
    
@@ -30,30 +27,22 @@ public class SnykWizard extends Wizard implements INewWizard {
   
   @Override
   public void addPages() {
-    configureDependencies = new SnykWizardConfigureDependencies();
-    addPage(configureDependencies);
-    
     configureAPI= new SnykWizardConfigureAPI(); 
     addPage(configureAPI);
     
-    configureProducts = new SnykWizardConfigureProducts();
-    addPage(configureProducts);
-    
-    configureAdvance = new SnykWizardConfigureAdvance();
-    addPage(configureAdvance);
-    
-    summary = new SnykWizardSummary();
-    addPage(summary);
+    authenticate = new SnykWizardAuthenticate(); 
+    addPage(authenticate);
   }
 
   public void init(IWorkbench workbench, IStructuredSelection selection) {
-    // TODO
     this.workbench = workbench;
     this.selection = selection;
   }
   
   public boolean canFinish() {
-    if (this.getContainer().getCurrentPage() == summary) {
+    boolean isOnFinalPage = this.getContainer().getCurrentPage() == authenticate;
+    
+    if (isOnFinalPage) {
       return true;
     }
     return false;
