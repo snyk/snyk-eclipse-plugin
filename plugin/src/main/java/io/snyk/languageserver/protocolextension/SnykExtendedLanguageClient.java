@@ -58,14 +58,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
       dialog.setBlockOnOpen(true);
       dialog.open();
+    } else {      
+      ExecuteCommandParams params = new ExecuteCommandParams("snyk.workspace.scan", new ArrayList<>());
+      try {
+        getLanguageServer().getWorkspaceService().executeCommand(params);
+      } catch (Exception e) {
+        SnykLogger.logError(e);
+      }
     }
 
-    ExecuteCommandParams params = new ExecuteCommandParams("snyk.workspace.scan", new ArrayList<>());
-    try {
-      getLanguageServer().getWorkspaceService().executeCommand(params);
-    } catch (Exception e) {
-      SnykLogger.logError(e);
-    }
   }
 
   public void triggerAuthentication() {

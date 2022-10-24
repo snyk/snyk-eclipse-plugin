@@ -10,7 +10,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
@@ -20,12 +19,10 @@ public class SnykWizardAuthenticate extends WizardPage implements Listener {
   private Text endpoint;
   private Button unknownCerts;
 
-  private Button authenticate;
-
   public SnykWizardAuthenticate() {
     super("Snyk Wizard");
     setTitle("Authenticate");
-    setDescription("We must now authenticate with Snyk.");
+    setDescription("Review the endpoint configuration, clicking 'Finish' will authenticate with Snyk; this will open a new browser window.");
   }
 
   @Override
@@ -53,31 +50,15 @@ public class SnykWizardAuthenticate extends WizardPage implements Listener {
     unknownCerts = new Button(composite, SWT.CHECK);
     unknownCerts.setLayoutData(gd);
 
-    // Authenticate
-    Label authLabel = new Label(composite, SWT.NONE);
-    authLabel.setText("Authenticate with Snyk API:");
-    authLabel.setToolTipText("This will open a new webpage to authenticate with Snyk.");
-
-    authenticate = new Button(composite, SWT.PUSH);
-    authenticate.setText("Authenticate");
-    authenticate.addListener(SWT.Selection, this);
-    gd = new GridData();
-    gd.horizontalAlignment = GridData.BEGINNING;
-    authenticate.setLayoutData(gd);
-
     // required to avoid an error in the system
     setControl(composite);
     setPageComplete(false);
   }
 
   public void handleEvent(Event e) {
-    if (e.widget == authenticate) {
-      SnykExtendedLanguageClient.getInstance().triggerAuthentication();
-    }
-
     getWizard().getContainer().updateButtons();
   }
-
+  
   public boolean isPageComplete() {
     return true;
   }

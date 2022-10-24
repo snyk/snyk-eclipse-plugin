@@ -5,6 +5,9 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
+import io.snyk.languageserver.LsConfigurationUpdater;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+
 public class SnykWizard extends Wizard implements INewWizard {
   protected SnykWizardConfigureAPI configureAPI;
   protected SnykWizardAuthenticate authenticate;
@@ -40,9 +43,7 @@ public class SnykWizard extends Wizard implements INewWizard {
   }
   
   public boolean canFinish() {
-    boolean isOnFinalPage = this.getContainer().getCurrentPage() == authenticate;
-    
-    if (isOnFinalPage) {
+    if (this.getContainer().getCurrentPage() == authenticate) {
       return true;
     }
     return false;
@@ -53,7 +54,9 @@ public class SnykWizard extends Wizard implements INewWizard {
     return true;
   }
 
-  public boolean performFinish() {
+  public boolean performFinish() {    
+    new LsConfigurationUpdater().configurationChanged();
+    SnykExtendedLanguageClient.getInstance().triggerAuthentication();
     return true;
   }
 }
