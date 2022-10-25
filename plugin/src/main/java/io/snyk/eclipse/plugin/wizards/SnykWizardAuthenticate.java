@@ -36,16 +36,15 @@ public class SnykWizardAuthenticate extends WizardPage implements Listener {
     composite.setLayout(gl);
 
     Label endpointLabel = new Label(composite, SWT.NONE);
-    endpointLabel.setText("Custom Endpoint:");
-    endpointLabel
-        .setToolTipText("Specify the custom endpoint for Single Tenant setups instead of https://app.snyk.io.");
+    endpointLabel.setText("Endpoint:");
 
     endpoint = new Text(composite, SWT.BORDER | SWT.READ_ONLY);
     endpoint.setLayoutData(gd);
+    
+    createLine(composite, ncol);
 
     Label unknownCertsLabel = new Label(composite, SWT.NONE);
     unknownCertsLabel.setText("Allow unknown certificate authorities:");
-    unknownCertsLabel.setToolTipText("Disable certificate checks for SSL connections.");
 
     unknownCerts = new Button(composite, SWT.CHECK);
     unknownCerts.setLayoutData(gd);
@@ -66,5 +65,12 @@ public class SnykWizardAuthenticate extends WizardPage implements Listener {
   void onEnterPage() {
     endpoint.setText(Preferences.getInstance().getEndpoint());
     unknownCerts.setSelection(Preferences.getInstance().getBooleanPref(Preferences.INSECURE_KEY));
+  }
+  
+  private void createLine(Composite parent, int ncol) {
+    Label line = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL | SWT.BOLD);
+    GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData.horizontalSpan = ncol;
+    line.setLayoutData(gridData);
   }
 }

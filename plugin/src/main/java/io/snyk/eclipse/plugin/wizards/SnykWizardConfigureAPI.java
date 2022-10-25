@@ -20,6 +20,8 @@ import org.eclipse.swt.widgets.Listener;
 public class SnykWizardConfigureAPI extends WizardPage implements Listener {
   private Text endpoint;
   private Button unknownCerts;
+  private String defaultEndpoint = "https://app.snyk.io/api";
+  private String initialEndpoint = Preferences.getInstance().getEndpoint();
 
   public SnykWizardConfigureAPI() {
     super("Snyk Wizard");
@@ -31,25 +33,27 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
   @Override
   public void createControl(Composite parent) {
     Composite composite = new Composite(parent, SWT.NONE);
-    GridLayout gl = new GridLayout();
-    GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+    GridData gd;
 
+    GridLayout gl = new GridLayout();
     int ncol = 2;
     gl.numColumns = ncol;
     composite.setLayout(gl);
-
+    
     Label endpointLabel = new Label(composite, SWT.NONE);
-    endpointLabel.setText("Custom Endpoint:");
-    endpointLabel
-        .setToolTipText("Specify the custom endpoint for Single Tenant setups instead of https://app.snyk.io.");
+    endpointLabel.setText("Specify the custom endpoint for Single Tenant setups (default: https://app.snyk.io/api):");
 
+    String endpointValue = initialEndpoint.isBlank() ? this.defaultEndpoint : initialEndpoint;
     endpoint = new Text(composite, SWT.BORDER);
-    endpoint.setText(Preferences.getInstance().getEndpoint());
+    endpoint.setText(endpointValue);
+    gd = new GridData(GridData.FILL_HORIZONTAL);
+    gd.horizontalSpan = ncol;
     endpoint.setLayoutData(gd);
+    
+    createLine(composite, ncol);
 
     Label unknownCertsLabel = new Label(composite, SWT.NONE);
-    unknownCertsLabel.setText("Allow unknown certificate authorities:");
-    unknownCertsLabel.setToolTipText("Disable certificate checks for SSL connections.");
+    unknownCertsLabel.setText("Disable certificate checks for SSL connections:");
 
     unknownCerts = new Button(composite, SWT.CHECK);
     unknownCerts.setSelection(Preferences.getInstance().isInsecure());
@@ -70,7 +74,7 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
 
   public IWizardPage getNextPage() {
     updatePreferences();
-    SnykWizardAuthenticate page = ((SnykWizard)getWizard()).authenticate;
+    SnykWizardAuthenticate page = ((SnykWizard) getWizard()).authenticate;
     page.onEnterPage();
 
     return page;
@@ -81,5 +85,12 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
     Preferences.getInstance().store(Preferences.INSECURE_KEY, Boolean.toString(unknownCerts.getSelection()));
 
     new LsConfigurationUpdater().configurationChanged();
+  }
+
+  private void createLine(Composite parent, int ncol) {
+    Label line = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL | SWT.BOLD);
+    GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData.horizontalSpan = ncol;
+    line.setLayoutData(gridData);
   }
 }
