@@ -58,7 +58,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
       dialog.setBlockOnOpen(true);
       dialog.open();
-    } else {      
+    } else {
       ExecuteCommandParams params = new ExecuteCommandParams("snyk.workspace.scan", new ArrayList<>());
       try {
         getLanguageServer().getWorkspaceService().executeCommand(params);
@@ -66,7 +66,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
         SnykLogger.logError(e);
       }
     }
-
   }
 
   public void triggerAuthentication() {

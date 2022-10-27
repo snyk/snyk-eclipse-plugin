@@ -17,13 +17,13 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
-public class SnykWizardConfigureAPI extends WizardPage implements Listener {
+public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
   private Text endpoint;
   private Button unknownCerts;
   private String defaultEndpoint = "https://app.snyk.io/api";
   private String initialEndpoint = Preferences.getInstance().getEndpoint();
 
-  public SnykWizardConfigureAPI() {
+  public SnykWizardConfigureAPIPage() {
     super("Snyk Wizard");
     setTitle("Configure Snyk API");
     setDescription("Before scanning your code for vulnerabilities, we must first authenticate with Snyk.");
@@ -74,7 +74,7 @@ public class SnykWizardConfigureAPI extends WizardPage implements Listener {
 
   public IWizardPage getNextPage() {
     updatePreferences();
-    SnykWizardAuthenticate page = ((SnykWizard) getWizard()).authenticate;
+    SnykWizardAuthenticatePage page = ((SnykWizard) getWizard()).authenticatePage;
     page.onEnterPage();
 
     return page;

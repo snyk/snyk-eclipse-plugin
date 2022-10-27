@@ -9,8 +9,8 @@ import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class SnykWizard extends Wizard implements INewWizard {
-  protected SnykWizardConfigureAPI configureAPI;
-  protected SnykWizardAuthenticate authenticate;
+  protected SnykWizardConfigureAPIPage configureAPIPage;
+  protected SnykWizardAuthenticatePage authenticatePage;
   
   protected SnykWizardModel model;
    
@@ -30,11 +30,11 @@ public class SnykWizard extends Wizard implements INewWizard {
   
   @Override
   public void addPages() {
-    configureAPI= new SnykWizardConfigureAPI(); 
-    addPage(configureAPI);
+    configureAPIPage = new SnykWizardConfigureAPIPage(); 
+    addPage(configureAPIPage);
     
-    authenticate = new SnykWizardAuthenticate(); 
-    addPage(authenticate);
+    authenticatePage = new SnykWizardAuthenticatePage(); 
+    addPage(authenticatePage);
   }
 
   public void init(IWorkbench workbench, IStructuredSelection selection) {
@@ -43,7 +43,7 @@ public class SnykWizard extends Wizard implements INewWizard {
   }
   
   public boolean canFinish() {
-    if (this.getContainer().getCurrentPage() == authenticate) {
+    if (this.getContainer().getCurrentPage() == authenticatePage) {
       return true;
     }
     return false;

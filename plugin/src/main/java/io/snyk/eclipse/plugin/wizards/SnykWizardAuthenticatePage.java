@@ -15,11 +15,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
-public class SnykWizardAuthenticate extends WizardPage implements Listener {
+public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
   private Text endpoint;
   private Button unknownCerts;
 
-  public SnykWizardAuthenticate() {
+  public SnykWizardAuthenticatePage() {
     super("Snyk Wizard");
     setTitle("Authenticate");
     setDescription("Review the endpoint configuration, clicking 'Finish' will authenticate with Snyk; this will open a new browser window.");
