@@ -2,6 +2,10 @@
 
 
 ## [2.0.0] - Unreleased
+### Changes
+- adds configuration wizard for custom endpoints
+
+## [2.0.0] - v20221007.135736
 ### Fixed
 - malformed proxy URL
 
