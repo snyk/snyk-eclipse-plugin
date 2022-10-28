@@ -39,7 +39,7 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
     int ncol = 2;
     gl.numColumns = ncol;
     composite.setLayout(gl);
-    
+
     Label endpointLabel = new Label(composite, SWT.NONE);
     endpointLabel.setText("Specify the custom endpoint for Single Tenant setups (default: https://app.snyk.io/api):");
 
@@ -49,7 +49,7 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
     gd = new GridData(GridData.FILL_HORIZONTAL);
     gd.horizontalSpan = ncol;
     endpoint.setLayoutData(gd);
-    
+
     createLine(composite, ncol);
 
     Label unknownCertsLabel = new Label(composite, SWT.NONE);
@@ -83,8 +83,6 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
   private void updatePreferences() {
     Preferences.getInstance().store(Preferences.ENDPOINT_KEY, endpoint.getText());
     Preferences.getInstance().store(Preferences.INSECURE_KEY, Boolean.toString(unknownCerts.getSelection()));
-
-    new LsConfigurationUpdater().configurationChanged();
   }
 
   private void createLine(Composite parent, int ncol) {

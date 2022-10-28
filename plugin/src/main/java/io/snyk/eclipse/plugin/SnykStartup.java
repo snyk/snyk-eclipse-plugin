@@ -71,10 +71,9 @@ public class SnykStartup implements IStartup {
           }
           downloading = false;
           
-          SnykWizard wizard = new SnykWizard();
-          WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
-
           if (Preferences.getInstance().getAuthToken().isBlank()) {
+            SnykWizard wizard = new SnykWizard();
+            WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
             dialog.setBlockOnOpen(true);
             dialog.open();
           }

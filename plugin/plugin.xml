@@ -51,11 +51,6 @@
       id="io.snyk.eclipse.plugin.commands.execute"
       name="%command.name">
     </command>
-    <command
-          defaultHandler="io.snyk.eclipse.plugin.wizards.SnykWizardMenuHandler"
-          id="io.snyk.eclipse.plugin.commands.executewizard"
-          name="%command.wizard.name">
-    </command>
   </extension>
   <extension
     point="org.eclipse.ui.menus">
@@ -239,7 +234,7 @@
     </super>
     <persistent value="false"/>
   </extension>
-  
+
     <extension
   		id="wizard"
   		name="Snyk"
