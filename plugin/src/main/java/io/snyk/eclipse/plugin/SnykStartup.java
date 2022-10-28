@@ -3,6 +3,7 @@ package io.snyk.eclipse.plugin;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
+import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.download.HttpClientFactory;
@@ -18,6 +19,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -52,21 +54,31 @@ public class SnykStartup implements IStartup {
     Job initJob = new Job("Downloading latest Language Server release...") {
       @Override
       protected IStatus run(IProgressMonitor monitor) {
-        try {
-          logger.info("LS: Checking for needed download");
-          if (downloadLS()) {
-            logger.info("LS: Need to download");
-            downloading = true;
-            monitor.subTask("Starting download of Snyk Language Server");
-            download(monitor);
+        PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
+          try {
+            logger.info("LS: Checking for needed download");
+            if (downloadLS()) {
+              logger.info("LS: Need to download");
+              downloading = true;
+              monitor.subTask("Starting download of Snyk Language Server");
+              download(monitor);
+            }
+            
+            monitor.subTask("Starting Snyk Language Server...");
+            SnykLanguageServer.InitializeServer();
+          } catch (Exception exception) {
+            logError(exception);
           }
-
-          monitor.subTask("Starting Snyk Language Server...");
-          SnykLanguageServer.InitializeServer();
-        } catch (Exception exception) {
-          logError(exception);
-        }
-        downloading = false;
+          downloading = false;
+          
+          if (Preferences.getInstance().getAuthToken().isBlank()) {
+            SnykWizard wizard = new SnykWizard();
+            WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
+            dialog.setBlockOnOpen(true);
+            dialog.open();
+          }
+        });
+        
         return Status.OK_STATUS;
       }
     };
@@ -109,7 +121,8 @@ public class SnykStartup implements IStartup {
         Instant lastModified = basicFileAttributes.lastModifiedTime().toInstant();
         boolean needsUpdate = lastModified.isBefore(Instant.now().minus(4, ChronoUnit.DAYS))
             || !Preferences.getInstance().getLspVersion().equals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
-        logger.info(String.format("LS: Needs update? %s. Required LSP version=%s, actual version=%s", needsUpdate, LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, Preferences.getInstance().getLspVersion()));
+        logger.info(String.format("LS: Needs update? %s. Required LSP version=%s, actual version=%s", needsUpdate,
+            LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, Preferences.getInstance().getLspVersion()));
         return needsUpdate;
       } catch (IOException e) {
         SnykLogger.logError(e);

@@ -218,7 +218,7 @@ public class SnykView extends ViewPart {
         abortScanning.setEnabled(true);
 
         CompletableFuture.runAsync(() -> {
-          SnykExtendedLanguageClient.getInstance().triggerScan();
+          SnykExtendedLanguageClient.getInstance().triggerScan(null);
           alreadyRunning = true;
           List<DisplayModel> scanResult = DataProvider.INSTANCE.scanWorkspace();
           rootModel.children.clear();

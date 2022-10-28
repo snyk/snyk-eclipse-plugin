@@ -158,5 +158,8 @@ public class Preferences {
     return store.getStore();
   }
 
+  public boolean getBooleanPref(String key) {
+   return store.getBoolean(key, false);
+  }
 }
 
