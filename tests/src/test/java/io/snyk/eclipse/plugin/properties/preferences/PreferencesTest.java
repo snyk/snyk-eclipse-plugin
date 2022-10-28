@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
@@ -66,5 +67,20 @@ class PreferencesTest {
 
       assertEquals(prefs.getPref(Preferences.ORGANIZATION_KEY), "myOrg");
     }
+  }
+  
+  @Test
+  void test_GetBoolean_returnsBooleanProperty() {
+    Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+
+    assertFalse(prefs.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE));
+    assertTrue(prefs.getBooleanPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+  }
+  
+  @Test
+  void test_GetBoolean_returnsFalseForNonBooleanProperty() {
+    Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+    
+    assertFalse(prefs.getBooleanPref(Preferences.CLI_PATH));
   }
 }

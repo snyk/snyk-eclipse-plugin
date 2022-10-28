@@ -61,6 +61,7 @@ public class LsConfigurationUpdater {
     String token = preferences.getPref(Preferences.AUTH_TOKEN_KEY, "");
     String integrationName = Activator.INTEGRATION_NAME;
     String integrationVersion = Activator.PLUGIN_VERSION;
+    String automaticAuthentication = "false";
     return new Settings(activateSnykOpenSource,
         activateSnykCode,
         activateSnykIac,
@@ -76,7 +77,8 @@ public class LsConfigurationUpdater {
         cliPath,
         token,
         integrationName,
-        integrationVersion
+        integrationVersion,
+        automaticAuthentication
         );
   }
 
@@ -98,6 +100,7 @@ public class LsConfigurationUpdater {
     private final String token;
     private final String integrationName;
     private final String integrationVersion;
+    private final String automaticAuthentication;
 
     public Settings(String activateSnykOpenSource,
         String activateSnykCode,
@@ -114,7 +117,8 @@ public class LsConfigurationUpdater {
         String cliPath,
         String token,
         String integrationName,
-        String integrationVersion
+        String integrationVersion,
+        String automaticAuthentication
         ) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
@@ -132,6 +136,7 @@ public class LsConfigurationUpdater {
       this.token = token;
       this.integrationName = integrationName;
       this.integrationVersion = integrationVersion;
+      this.automaticAuthentication = automaticAuthentication;
     }
 
     public String getPath() {
@@ -196,6 +201,10 @@ public class LsConfigurationUpdater {
 
     public String getIntegrationVersion() {
       return integrationVersion;
+    }
+    
+    public String getAutomaticAuthentication() {
+    	return automaticAuthentication;
     }
   }
 }

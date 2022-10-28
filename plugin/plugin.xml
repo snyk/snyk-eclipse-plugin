@@ -234,4 +234,21 @@
     </super>
     <persistent value="false"/>
   </extension>
+
+    <extension
+  		id="wizard"
+  		name="Snyk"
+        point="org.eclipse.ui.newWizards">
+     <category
+           id="io.snyk.eclipse.plugin.wizards.category.snyk"
+           name="Snyk">
+     </category>
+     <wizard
+           category="io.snyk.eclipse.plugin.wizards.category.snyk"
+           class="io.snyk.eclipse.plugin.wizards.SnykWizard"
+           icon="icons/patch.png"
+           id="io.snyk.eclipse.plugin.wizards.snykwizard"
+           name="SnykWizard">
+     </wizard>
+  </extension>
 </plugin>
