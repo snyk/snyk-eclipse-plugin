@@ -23,17 +23,30 @@ If you encounter some issues with dependencies keep on reading.
 
 #### Sorting out dependencies
 
-If `org.eclipse.*` dependencies are causing compilation errors, open `/target-platform/target-platform.target`
-and click in the top right corner (Reload Target Platform).
+If `org.eclipse.*` dependencies are causing compilation errors, open `/target-platform/target-platform.target` and click in the top right corner (Reload Target Platform).
 
 ![](docs/target-platform.png "Target Platform Libraries")
 
-If external dependencies are not picked up: 
-- run `./mvnw package` to fetch all required jars in the repo root, 
+If external dependencies are not picked up:
+- run `./mvnw package` to fetch all required jars in the repo root,
 - reload Eclipse (F5 in `plugin`)
 - and add as external dependencies the jars under `/plugin/target/dependency`
 
 ![](docs/add-jars.png "Adding External Dependencies")
+
+#### Fix compilation errors
+Sometimes Java build path is incorrectly set when you import project into Eclipse.
+
+1. Make sure you have source folder set to `src/main/java` for `io.snyk.eclipse.plugin` and `src/test/java` for `io.snyk.eclipse.plugin.tests`.
+
+    Navigate to `Project > Properties > Java Build Path > Source` and make sure the correct folder is selected for both projects.
+
+![](docs/source-path.png "Java Build Path: Source Folder")
+
+2. Make sure "Plug-in dependencies" and "Maven managed dependencies" are also on the Classpath.
+
+    Navigate to `Project > Properties > Java Build Path > Libraries`. Select "Classpath" and "Add Library...", then select "Plug-in dependencies" and "Finish". Perform the same steps for "Maven managed dependencies".
+
 
 ### Running the plugin
 
