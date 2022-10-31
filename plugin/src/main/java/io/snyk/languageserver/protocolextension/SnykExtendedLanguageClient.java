@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,7 @@ import org.eclipse.lsp4j.ShowDocumentParams;
 import org.eclipse.lsp4j.ShowDocumentResult;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
+import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -55,9 +57,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     if (Preferences.getInstance().getAuthToken().isBlank()) {
       runSnykWizard();
     } else {
-      ExecuteCommandParams params = new ExecuteCommandParams("snyk.workspace.scan", new ArrayList<>());
       try {
-        getLanguageServer().getWorkspaceService().executeCommand(params);
+        executeCommand("snyk.workspace.scan", new ArrayList<>());
 
         if (window == null) {
           window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
@@ -87,12 +88,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   }
 
   public void triggerAuthentication() {
-    ExecuteCommandParams params = new ExecuteCommandParams("snyk.login", new ArrayList<>());
-    try {
-      getLanguageServer().getWorkspaceService().executeCommand(params);
-    } catch (Exception e) {
-      SnykLogger.logError(e);
-    }
+    executeCommand("snyk.login", new ArrayList<>());
+  }
+
+  public void trustWorkspaceFolders() {
+    executeCommand("snyk.trustWorkspaceFolders", new ArrayList<>());
   }
 
   @JsonNotification(value = "$/snyk.hasAuthenticated")
@@ -164,6 +164,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     SnykView snykView = SnykStartup.getSnykView();
     if (snykView != null) {
       snykView.testProject(projectName);
+    }
+  }
+
+  private void executeCommand(@NonNull String command, List<Object> arguments) {
+    ExecuteCommandParams params = new ExecuteCommandParams(command, arguments);
+    try {
+      getLanguageServer().getWorkspaceService().executeCommand(params);
+    } catch (Exception e) {
+      SnykLogger.logError(e);
     }
   }
 

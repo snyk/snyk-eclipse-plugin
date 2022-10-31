@@ -11,9 +11,9 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 public class SnykWizard extends Wizard implements INewWizard {
   protected SnykWizardConfigureAPIPage configureAPIPage;
   protected SnykWizardAuthenticatePage authenticatePage;
-  
+
   protected SnykWizardModel model;
-   
+
   protected IWorkbench workbench;
   protected IStructuredSelection selection;
 
@@ -22,18 +22,18 @@ public class SnykWizard extends Wizard implements INewWizard {
     model = new SnykWizardModel();
     setNeedsProgressMonitor(true);
   }
-  
+
   @Override
   public String getWindowTitle() {
     return "Snyk Wizard";
   }
-  
+
   @Override
   public void addPages() {
-    configureAPIPage = new SnykWizardConfigureAPIPage(); 
+    configureAPIPage = new SnykWizardConfigureAPIPage();
     addPage(configureAPIPage);
-    
-    authenticatePage = new SnykWizardAuthenticatePage(); 
+
+    authenticatePage = new SnykWizardAuthenticatePage();
     addPage(authenticatePage);
   }
 
@@ -41,22 +41,23 @@ public class SnykWizard extends Wizard implements INewWizard {
     this.workbench = workbench;
     this.selection = selection;
   }
-  
+
   public boolean canFinish() {
     if (this.getContainer().getCurrentPage() == authenticatePage) {
       return true;
     }
     return false;
   }
-  
+
   public boolean performCancel() {
     model.resetPreferences();
     return true;
   }
 
-  public boolean performFinish() {    
+  public boolean performFinish() {
     new LsConfigurationUpdater().configurationChanged();
     SnykExtendedLanguageClient.getInstance().triggerAuthentication();
+    SnykExtendedLanguageClient.getInstance().trustWorkspaceFolders();
     return true;
   }
 }
