@@ -43,7 +43,7 @@ This page explains supported environments, support, and giving feedback and prov
 
 If you want to verify the correct provenance of your download, please verify the signing details from the Eclipse dialog with this data.
 
-<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/image (317) (1).png" alt="The signing key details to verify the integrity and origin of the download plugin" />
+<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/image (317) (1) (1) (1).png" alt="The signing key details to verify the integrity and origin of the download plugin" />
 
 The plugin runs on
 
@@ -74,13 +74,19 @@ Navigate to the Marketplace from your running Eclipse instance. Search for Snyk 
 
 When prompted accept the license agreement add the **Snyk Security** certificate to complete the installation (this happens only once).
 
-<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (5).png" alt="Add Snyk Security certificate" />
+<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (2) (1) (2).png" alt="Add Snyk Security certificate" />
 
 Restart the Eclipse instance:
 
 <img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.16.37.png" alt="Restart Eclipse" />
 
-Once Eclipse is restarted, navigate to **Eclipse Preferences** to ensure that **Snyk** now appears in the list:
+Once Eclipse is restarted, the Snyk Wizard should run; this will setup your Snyk API endpoint and authentication token:
+
+Once the Snyk configuration wizard runs; follow the instructions to set up your Snyk API:
+
+<figure><img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/eclipseSnykWizard.png" alt="Snyk configuration wizard"><figcaption><p>Snyk configuration wizard</p></figcaption></figure>
+
+Once the Snyk is configured, navigate to **Eclipse Preferences** to ensure that **Snyk** now appears in the list:
 
 <img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-17 at 16.36.07.png" alt="Eclipse preferences showing Snyk." />
 
@@ -88,8 +94,6 @@ When you open the preferences you can opt out of downloading the CLI through the
 
 Continue with the steps to [Download the CLI and language server with the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/download-the-cli-and-language-server-with-the-eclipse-plugin).
 
-## Support and feedback
+## Support
 
 If you need help, submit a [request](https://support.snyk.io/hc/en-us/requests/new) to Snyk Support.
-
-Snyk continuously strives to improve the Snyk plugins experience. If you would you like to share your feedback about the Snyk Eclipse plugin, [schedule a meeting](https://calendly.com/snyk-georgi/45min?month=2022-01).
