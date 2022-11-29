@@ -3,7 +3,10 @@
 
 ## [2.0.0] - Unreleased
 ### Changes
-- add workspace trust feature
+- add folder trust feature
+
+## [2.0.0] - v20221115.132308
+### Changes
 - adds configuration wizard for custom endpoints
 
 ## [2.0.0] - v20221007.135736
