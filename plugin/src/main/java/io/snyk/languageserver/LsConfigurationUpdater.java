@@ -4,6 +4,7 @@ import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 
+import java.io.File;
 import java.util.Collections;
 
 import org.eclipse.core.resources.IProject;
@@ -45,23 +46,30 @@ public class LsConfigurationUpdater {
 
   Settings getCurrentSettings() {
     Preferences preferences = Preferences.getInstance();
-    String activateSnykOpenSource = preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true");
-    String activateSnykCode = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE, "false");
-    String activateSnykIac = preferences.getPref(Preferences.ACTIVATE_SNYK_IAC, "true");
-    String insecure = preferences.getPref(Preferences.INSECURE_KEY, "false");
+		String activateSnykOpenSource = preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
+				Boolean.TRUE.toString());
+		String activateSnykCode = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE, Boolean.FALSE.toString());
+		String activateSnykIac = preferences.getPref(Preferences.ACTIVATE_SNYK_IAC, Boolean.TRUE.toString());
+		String insecure = preferences.getPref(Preferences.INSECURE_KEY, Boolean.FALSE.toString());
     String endpoint = preferences.getPref(Preferences.ENDPOINT_KEY, "");
     String additionalParams = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS, "");
     String additionalEnv = preferences.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "");
     String path = preferences.getPref(Preferences.PATH_KEY, "");
     String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
-    String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, "false");
+		String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, Boolean.FALSE.toString());
     String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
-    String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true");
+    String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, Boolean.TRUE.toString());
     String cliPath = preferences.getPref(Preferences.CLI_PATH, "");
     String token = preferences.getPref(Preferences.AUTH_TOKEN_KEY, "");
     String integrationName = Activator.INTEGRATION_NAME;
     String integrationVersion = Activator.PLUGIN_VERSION;
     String automaticAuthentication = "false";
+    String trustedFoldersString = preferences.getPref(Preferences.TRUSTED_FOLDERS);
+		String[] trustedFolders = new String[0];
+		if (trustedFoldersString != null && !trustedFoldersString.isBlank()) {
+			trustedFolders = trustedFoldersString.split(File.pathSeparator);
+		}
+		String enableTrustedFolderFeature = Boolean.TRUE.toString();
     return new Settings(activateSnykOpenSource,
         activateSnykCode,
         activateSnykIac,
@@ -78,7 +86,9 @@ public class LsConfigurationUpdater {
         token,
         integrationName,
         integrationVersion,
-        automaticAuthentication
+        automaticAuthentication,
+        trustedFolders,
+				enableTrustedFolderFeature
         );
   }
 
@@ -101,6 +111,8 @@ public class LsConfigurationUpdater {
     private final String integrationName;
     private final String integrationVersion;
     private final String automaticAuthentication;
+		private final String[] trustedFolders;
+		private final String enableTrustedFoldersFeature;
 
     public Settings(String activateSnykOpenSource,
         String activateSnykCode,
@@ -118,7 +130,9 @@ public class LsConfigurationUpdater {
         String token,
         String integrationName,
         String integrationVersion,
-        String automaticAuthentication
+        String automaticAuthentication,
+        String[] trustedFolders,
+				String enableTrustedFoldersFeature
         ) {
       this.activateSnykOpenSource = activateSnykOpenSource;
       this.activateSnykCode = activateSnykCode;
@@ -137,6 +151,8 @@ public class LsConfigurationUpdater {
       this.integrationName = integrationName;
       this.integrationVersion = integrationVersion;
       this.automaticAuthentication = automaticAuthentication;
+      this.trustedFolders = trustedFolders;
+			this.enableTrustedFoldersFeature = enableTrustedFoldersFeature;
     }
 
     public String getPath() {
@@ -202,9 +218,17 @@ public class LsConfigurationUpdater {
     public String getIntegrationVersion() {
       return integrationVersion;
     }
-    
+
     public String getAutomaticAuthentication() {
     	return automaticAuthentication;
+    }
+
+    public String[] getTrustedFolders() {
+			return trustedFolders;
+		}
+
+		public String getEnableTrustedFoldersFeature() {
+			return enableTrustedFoldersFeature;
     }
   }
 }

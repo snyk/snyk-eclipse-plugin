@@ -4,7 +4,12 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.SecurePreferencesFactory;
 import org.eclipse.equinox.security.storage.StorageException;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public class SecurePreferenceStore extends ScopedPreferenceStore implements PreferenceStore {
@@ -14,7 +19,21 @@ public class SecurePreferenceStore extends ScopedPreferenceStore implements Pref
 
   public SecurePreferenceStore() {
     super(InstanceScope.INSTANCE, QUALIFIER);
-    node = SecurePreferencesFactory.getDefault().node(QUALIFIER);
+    ISecurePreferences secureStorage = SecurePreferencesFactory.getDefault();
+    if (secureStorage == null) {
+    	PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
+    		Display display = PlatformUI.getWorkbench().getDisplay();
+			Shell activeShell = display.getActiveShell();
+    		String message = "Eclipse was unable to create or access the Secure Storage mechanism. "
+    				+ "Please check your Secure Storage in Eclipse preferences under "
+    				+ "General -> Security -> Secure Storage. "
+    				+ "The Snyk plugin will not be able to work reliably and save preferences "
+    				+ "or the authentication token until Secure Storage can be used.";
+			String title = "Error accessing Eclipse Secure Storage (Snyk)";
+			MessageDialog.openError(activeShell, title, message);
+    	});
+    }
+	node = secureStorage.node(QUALIFIER);
   }
 
   @Override

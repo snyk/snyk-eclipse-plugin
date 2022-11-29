@@ -1,7 +1,12 @@
 package io.snyk.languageserver.protocolextension;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.internal.core.JavaProject;
@@ -19,6 +24,7 @@ import org.eclipse.lsp4j.ShowDocumentParams;
 import org.eclipse.lsp4j.ShowDocumentResult;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
+import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -30,6 +36,7 @@ import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -50,9 +57,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     if (Preferences.getInstance().getAuthToken().isBlank()) {
       runSnykWizard();
     } else {
-      ExecuteCommandParams params = new ExecuteCommandParams("snyk.workspace.scan", new ArrayList<>());
       try {
-        getLanguageServer().getWorkspaceService().executeCommand(params);
+        executeCommand("snyk.workspace.scan", new ArrayList<>());
 
         if (window == null) {
           window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
@@ -82,12 +88,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   }
 
   public void triggerAuthentication() {
-    ExecuteCommandParams params = new ExecuteCommandParams("snyk.login", new ArrayList<>());
-    try {
-      getLanguageServer().getWorkspaceService().executeCommand(params);
-    } catch (Exception e) {
-      SnykLogger.logError(e);
-    }
+    executeCommand("snyk.login", new ArrayList<>());
+  }
+
+  public void trustWorkspaceFolders() {
+    executeCommand("snyk.trustWorkspaceFolders", new ArrayList<>());
   }
 
   @JsonNotification(value = "$/snyk.hasAuthenticated")
@@ -104,6 +109,21 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   public void isAvailableCli(SnykIsAvailableCliParams param) {
     Preferences.getInstance().store(Preferences.CLI_PATH, param.getCliPath());
     enableSnykViewRunActions();
+  }
+
+  @JsonNotification(value = "$/snyk.addTrustedFolders")
+  public void addTrustedPaths(SnykTrustedFoldersParams param) {
+    var prefs = Preferences.getInstance();
+    var storedTrustedPaths = prefs.getPref(Preferences.TRUSTED_FOLDERS, "");
+    var trustedPaths = storedTrustedPaths.split(File.pathSeparator);
+    var pathSet = new HashSet<>(Arrays.asList(trustedPaths));
+    pathSet.addAll(Arrays.asList(param.getTrustedFolders()));
+    Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS,
+        pathSet.stream()
+        .filter(s -> !s.isBlank())
+        .map(s -> s.trim())
+        .distinct()
+        .collect(Collectors.joining(File.pathSeparator)));
   }
 
   @Override
@@ -147,6 +167,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     }
   }
 
+  private void executeCommand(@NonNull String command, List<Object> arguments) {
+    ExecuteCommandParams params = new ExecuteCommandParams(command, arguments);
+    try {
+      getLanguageServer().getWorkspaceService().executeCommand(params);
+    } catch (Exception e) {
+      SnykLogger.logError(e);
+    }
+  }
+
   // TODO: remove once LSP4e supports `showDocument` in its next release (it's
   // been merged to it already)
   @Override
@@ -163,4 +192,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
       return new ShowDocumentResult(true);
     });
   }
+
+
+
 }

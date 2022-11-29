@@ -3,21 +3,27 @@ package io.snyk.eclipse.plugin.wizards;
 import org.eclipse.jface.wizard.WizardPage;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Listener;
 
 public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
   private Text endpoint;
   private Button unknownCerts;
+  private String trustMessage = "⚠️ When scanning folder files, Snyk may automatically execute code such as invoking the package manager to get dependency information. "
+		    + "You should only scan projects you trust. <a href=\"https://docs.snyk.io/ide-tools/eclipse-plugin/folder-trust\">More Info</a>"
+		    + "\n\nOn finishing the wizard, the plugin will open a browser to authenticate you, trust the current workspace projects and trigger a scan.";
 
   public SnykWizardAuthenticatePage() {
     super("Snyk Wizard");
@@ -27,37 +33,45 @@ public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
 
   @Override
   public void createControl(Composite parent) {
-    Composite composite = new Composite(parent, SWT.NONE);
-    GridLayout gl = new GridLayout();
-    GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		Composite composite = new Composite(parent, SWT.NONE);
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 
-    int ncol = 2;
-    gl.numColumns = ncol;
-    composite.setLayout(gl);
+		GridLayout gl = new GridLayout();
+		int ncol = 2;
+		gl.numColumns = ncol;
+		composite.setLayout(gl);
 
-    Label endpointLabel = new Label(composite, SWT.NONE);
-    endpointLabel.setText("Endpoint:");
+		Group endpointGroup = SWTWidgetHelper.createGroup(composite, "");
 
-    endpoint = new Text(composite, SWT.BORDER | SWT.READ_ONLY);
-    endpoint.setLayoutData(gd);
-    
-    createLine(composite, ncol);
+		Label endpointLabel = new Label(endpointGroup, SWT.NONE);
+		endpointLabel.setText("Endpoint:");
+		endpoint = new Text(endpointGroup, SWT.BORDER | SWT.READ_ONLY);
+		endpoint.setLayoutData(gd);
 
-    Label unknownCertsLabel = new Label(composite, SWT.NONE);
-    unknownCertsLabel.setText("Allow unknown certificate authorities:");
+		Label unknownCertsLabel = new Label(endpointGroup, SWT.NONE);
+		unknownCertsLabel.setText("Allow unknown certificate authorities:");
 
-    unknownCerts = new Button(composite, SWT.CHECK);
-    unknownCerts.setLayoutData(gd);
+		unknownCerts = new Button(endpointGroup, SWT.CHECK);
+		unknownCerts.setLayoutData(gd);
 
-    // required to avoid an error in the system
-    setControl(composite);
-    setPageComplete(false);
+		Group trustGroup = SWTWidgetHelper.createGroup(composite, "");
+
+		Link trustText = new Link(trustGroup, SWT.NONE);
+		trustText.setText(trustMessage);
+		gd = new GridData(GridData.FILL_BOTH);
+		trustText.setLayoutData(gd);
+		trustText.setBackground(new Color(0, 0, 0, 0));
+		trustText.addListener(SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
+
+		// required to avoid an error in the system
+		setControl(composite);
+		setPageComplete(false);
   }
 
   public void handleEvent(Event e) {
     getWizard().getContainer().updateButtons();
   }
-  
+
   public boolean isPageComplete() {
     return true;
   }
@@ -65,12 +79,5 @@ public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
   void onEnterPage() {
     endpoint.setText(Preferences.getInstance().getEndpoint());
     unknownCerts.setSelection(Preferences.getInstance().getBooleanPref(Preferences.INSECURE_KEY));
-  }
-  
-  private void createLine(Composite parent, int ncol) {
-    Label line = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL | SWT.BOLD);
-    GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-    gridData.horizontalSpan = ncol;
-    line.setLayoutData(gridData);
   }
 }

@@ -26,6 +26,7 @@ public class Preferences {
     return preferences;
   }
 
+  public static final String TRUSTED_FOLDERS = "trustedFolders";
   public static final String AUTH_TOKEN_KEY = "authtoken";
   public static final String PATH_KEY = "path";
   public static final String ENDPOINT_KEY = "endpoint";

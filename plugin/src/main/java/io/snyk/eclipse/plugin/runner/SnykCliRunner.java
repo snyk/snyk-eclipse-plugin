@@ -17,8 +17,6 @@ public class SnykCliRunner {
   private static final String TEST_PARAMS = "test";
   private static final String FILE_PARAM = "--file=";
 
-  private static final String INSECURE = "--insecure";
-
   private static final String MONITOR_PARAM = "monitor";
 
   //	private static final String AUTH_PARAM = "auth";
@@ -59,10 +57,18 @@ public class SnykCliRunner {
 
   private ProcessResult snykRun(List<String> arguments, Optional<File> navigatePath) {
     try {
+      checkIfTrusted(navigatePath.get());
       ProcessBuilder processBuilder = createProcessBuilderByOS(arguments, Preferences.getInstance().getPath());
       return processRunner.run(processBuilder, navigatePath);
     } catch (Exception e) {
       return ProcessResult.error(e.getMessage());
+    }
+  }
+  
+  private void checkIfTrusted(File file) {
+    var trustedPaths = Preferences.getInstance().getPref(Preferences.TRUSTED_FOLDERS, "");
+    if (!trustedPaths.contains(file.getAbsolutePath())) {
+      throw new UntrustedScanRequestedException(file.getAbsolutePath() + " is not trusted.");
     }
   }
 
