@@ -9,9 +9,9 @@ public class SnykWizardModel {
   private String initialAuthToken;
 
   public SnykWizardModel() {
-    this.initialEndpoint = Preferences.getInstance().getPref(Preferences.ENDPOINT_KEY);
-    this.initialUnknownCerts = Preferences.getInstance().getPref(Preferences.INSECURE_KEY);
-    this.initialAuthToken = Preferences.getInstance().getPref(Preferences.AUTH_TOKEN_KEY);
+    this.initialEndpoint = Preferences.getInstance().getPref(Preferences.ENDPOINT_KEY, "");
+    this.initialUnknownCerts = Preferences.getInstance().getPref(Preferences.INSECURE_KEY, "");
+    this.initialAuthToken = Preferences.getInstance().getAuthToken();
   }
 
   public void resetPreferences() {
