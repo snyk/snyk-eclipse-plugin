@@ -144,6 +144,10 @@ public class Preferences {
   public boolean isInsecure() {
     return store.getBoolean(INSECURE_KEY, false);
   }
+  
+  public void setIsInsecure(boolean isInsecure) {
+	  store.put(INSECURE_KEY, Boolean.toString(isInsecure));
+  }
 
 
   public boolean isManagedBinaries() {
