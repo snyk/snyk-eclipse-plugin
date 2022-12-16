@@ -33,7 +33,7 @@ public class ApiClient {
         return false;
 
       String endpoint = prefs.getEndpoint();
-      if (endpoint.isBlank()) {
+      if (endpoint == null || endpoint.isBlank()) {
         endpoint = "https://snyk.io/api";
       }
       String url = "/cli-config/settings/sast";

@@ -119,11 +119,11 @@ public class Preferences {
   }
 
   public String getEndpoint() {
-    return getPref(ENDPOINT_KEY);
+    return getPref(ENDPOINT_KEY, "");
   }
 
   public String getLsBinary() {
-    return getPref(LS_BINARY_KEY);
+    return getPref(LS_BINARY_KEY, "");
   }
   public String getLspVersion() {
     return getPref(LSP_VERSION);
@@ -144,7 +144,7 @@ public class Preferences {
   public boolean isInsecure() {
     return store.getBoolean(INSECURE_KEY, false);
   }
-  
+
   public void setIsInsecure(boolean isInsecure) {
 	  store.put(INSECURE_KEY, Boolean.toString(isInsecure));
   }
