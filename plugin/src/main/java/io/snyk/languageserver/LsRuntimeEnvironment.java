@@ -93,7 +93,7 @@ public class LsRuntimeEnvironment {
 
   void addOrganization(Map<String, String> env) {
     String pref = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
-    if (!pref.isBlank()) {
+    if (pref != null && !pref.isBlank()) {
       env.put(Preferences.ORGANIZATION_KEY, pref);
     }
   }

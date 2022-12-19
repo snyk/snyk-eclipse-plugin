@@ -3,6 +3,11 @@
 
 ## [2.0.0] - Unreleased
 ### Changes
+- fix NPEs in Snyk Wizard
+- update jackson deps to 2.14.0
+
+## [2.0.0] - v20221130.134443
+### Changes
 - add folder trust feature
 
 ## [2.0.0] - v20221115.132308
