@@ -43,7 +43,7 @@ This page explains supported environments, support, and giving feedback and prov
 
 If you want to verify the correct provenance of your download, please verify the signing details from the Eclipse dialog with this data.
 
-<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/image (317) (1) (1) (1).png" alt="The signing key details to verify the integrity and origin of the download plugin" />
+<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/image (134) (2) (1).png" alt="The signing key details to verify the integrity and origin of the download plugin" />
 
 The plugin runs on
 
@@ -74,7 +74,7 @@ Navigate to the Marketplace from your running Eclipse instance. Search for Snyk 
 
 When prompted accept the license agreement add the **Snyk Security** certificate to complete the installation (this happens only once).
 
-<img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-13 at 09.08.52 (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (2) (1) (2).png" alt="Add Snyk Security certificate" />
+![Add Snyk Security certificate](https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot%202022-05-13%20at%2009.08.52)
 
 Restart the Eclipse instance:
 
@@ -84,7 +84,7 @@ Once Eclipse is restarted, the Snyk Wizard should run; this will setup your Snyk
 
 Once the Snyk configuration wizard runs; follow the instructions to set up your Snyk API:
 
-<figure><img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/eclipseSnykWizard.png" alt="Snyk configuration wizard"><figcaption><p>Snyk configuration wizard</p></figcaption></figure>
+<figure><img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/eclipseSnykWizard (1).png" alt="Snyk configuration wizard"><figcaption><p>Snyk configuration wizard</p></figcaption></figure>
 
 Once the Snyk is configured, navigate to **Eclipse Preferences** to ensure that **Snyk** now appears in the list:
 
