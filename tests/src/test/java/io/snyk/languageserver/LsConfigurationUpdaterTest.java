@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.Platform;
 
 class LsConfigurationUpdaterTest {
@@ -51,6 +52,10 @@ class LsConfigurationUpdaterTest {
       assertEquals("ECLIPSE", settings.getIntegrationName());
       assertEquals(Activator.PLUGIN_VERSION, settings.getIntegrationVersion());
       assertEquals("false", settings.getAutomaticAuthentication());
+      assertEquals(SystemUtils.JAVA_RUNTIME_NAME, settings.getRuntimeName());
+      assertEquals(SystemUtils.JAVA_RUNTIME_VERSION, settings.getRuntimeVersion());
+      assertEquals(SystemUtils.OS_ARCH, settings.getOsArch());
+      assertEquals(SystemUtils.OS_NAME, settings.getOsPlatform());
     }
   }
 
