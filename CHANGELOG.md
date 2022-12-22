@@ -1,7 +1,10 @@
 # Snyk Changelog
 
-
 ## [2.0.0] - Unreleased
+### Changes
+- submit runtime information of jdk and os to language server
+
+## [2.0.0] - v20221220.094322
 ### Changes
 - fix NPEs in Snyk Wizard
 - update jackson deps to 2.14.0
