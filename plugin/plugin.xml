@@ -51,6 +51,11 @@
       id="io.snyk.eclipse.plugin.commands.execute"
       name="%command.name">
     </command>
+    <command
+      defaultHandler="io.snyk.eclipse.plugin.views.ScanWorkspaceMenuHandler"
+      id="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
+      name="%scanWorkspace.name">
+    </command>
   </extension>
   <extension
     point="org.eclipse.ui.menus">
@@ -73,6 +78,12 @@
           </with>
         </visibleWhen>
       </command>
+      <command
+        commandId="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
+        icon="icons/patch.png"
+        label="%scanWorkspace.label"
+        style="push">
+      </command>
     </menuContribution>
   </extension>
   <extension point="org.eclipse.ui.menus">
@@ -92,6 +103,12 @@
             </iterate>
           </with>
         </visibleWhen>
+      </command>
+      <command
+        commandId="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
+        icon="icons/patch.png"
+        label="%scanWorkspace.label"
+        style="push">
       </command>
     </menuContribution>
   </extension>
