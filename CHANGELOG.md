@@ -2,9 +2,12 @@
 
 ## [2.0.0] - Unreleased
 ### Changes
-- Submit runtime information of jdk and os to language server
 - Snyk Test now scans the selected project 
 - Added new Snyk Test Workspace command
+
+## [2.0.0] - v20221222.164444
+### Changes
+- Submit runtime information of jdk and os to language server
 
 ### Fixed
 - NPE when finishing Snyk Wizard in empty workspace
