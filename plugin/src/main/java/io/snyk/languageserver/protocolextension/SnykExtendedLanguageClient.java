@@ -60,12 +60,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     } else {
       try {
         if (window == null) {
-          window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
           executeCommand("snyk.workspace.scan", new ArrayList<>());
-        }
-        if (window == null) {
           return;
         }
+        
         ISelectionService service = window.getSelectionService();
         IStructuredSelection structured = (IStructuredSelection) service.getSelection();
 
