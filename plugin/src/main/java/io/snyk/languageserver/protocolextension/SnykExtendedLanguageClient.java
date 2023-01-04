@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
@@ -58,27 +59,27 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
       runSnykWizard();
     } else {
       try {
-        executeCommand("snyk.workspace.scan", new ArrayList<>());
-
         if (window == null) {
-          window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        }
-        if (window == null) {
+          executeCommand("snyk.workspace.scan", new ArrayList<>());
           return;
         }
+        
         ISelectionService service = window.getSelectionService();
         IStructuredSelection structured = (IStructuredSelection) service.getSelection();
 
         Object firstElement = structured.getFirstElement();
-
+        IProject project = null;
+        if (firstElement instanceof JavaProject) {
+          project = ((JavaProject) firstElement).getProject();
+        }
+        
         if (firstElement instanceof IProject) {
-          IProject project = (IProject) firstElement;
-          runForProject(project.getName());
+          project = (IProject) firstElement;
         }
 
-        if (firstElement instanceof JavaProject) {
-          JavaProject javaproject = (JavaProject) firstElement;
-          runForProject(javaproject.getProject().getName());
+        if (project != null) {
+          runForProject(project.getName());
+          executeCommand("snyk.workspaceFolder.scan", List.of(project.getLocation().toOSString()));       
         }
       } catch (Exception e) {
         SnykLogger.logError(e);
@@ -118,12 +119,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     var trustedPaths = storedTrustedPaths.split(File.pathSeparator);
     var pathSet = new HashSet<>(Arrays.asList(trustedPaths));
     pathSet.addAll(Arrays.asList(param.getTrustedFolders()));
-    Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS,
-        pathSet.stream()
-        .filter(s -> !s.isBlank())
-        .map(s -> s.trim())
-        .distinct()
-        .collect(Collectors.joining(File.pathSeparator)));
+    Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS, pathSet.stream().filter(s -> !s.isBlank())
+        .map(s -> s.trim()).distinct().collect(Collectors.joining(File.pathSeparator)));
   }
 
   @Override
@@ -192,7 +189,5 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
       return new ShowDocumentResult(true);
     });
   }
-
-
 
 }

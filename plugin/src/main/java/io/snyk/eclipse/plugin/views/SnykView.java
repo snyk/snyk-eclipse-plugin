@@ -213,9 +213,9 @@ public class SnykView extends ViewPart {
       public void run() {
         if (alreadyRunning)
           return;
-        showMessage(RUNNING);
         scanWorkspace.setEnabled(false);
         abortScanning.setEnabled(true);
+        showMessage(RUNNING);
 
         CompletableFuture.runAsync(() -> {
           SnykExtendedLanguageClient.getInstance().triggerScan(null);
@@ -285,9 +285,9 @@ public class SnykView extends ViewPart {
   public void testProject(String projectName) {
     if (alreadyRunning)
       return;
-    showMessage(RUNNING);
     scanWorkspace.setEnabled(false);
     abortScanning.setEnabled(true);
+    showMessage(RUNNING);
 
     CompletableFuture.runAsync(() -> {
       alreadyRunning = true;
