@@ -2,7 +2,11 @@
 
 ## [2.0.0] - Unreleased
 ### Changes
-- Snyk Test now scans the selected project 
+- Increase LS version
+
+## [2.0.0] - v20230131.163308
+### Changes
+- Snyk Test now scans the selected project
 - Added new Snyk Test Workspace command
 
 ## [2.0.0] - v20221222.164444
