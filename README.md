@@ -1,5 +1,7 @@
 ---
+
 description: Use this documentation to get started with the Eclipse plugin.
+
 ---
 
 # Eclipse plugin
