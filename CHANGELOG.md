@@ -4,6 +4,10 @@
 ### Changes
 - Increase LS version
 
+## [2.1.0] - UNRELEASED
+### Changes
+- unpin LSP4e dependency - this requires running Eclipse on JDK 17+
+
 ## [2.0.0] - v20230131.163308
 ### Changes
 - Snyk Test now scans the selected project
