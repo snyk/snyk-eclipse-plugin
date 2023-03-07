@@ -18,7 +18,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'zulu'
           cache: maven
 
@@ -58,7 +58,7 @@ jobs:
         uses: 'google-github-actions/upload-cloud-storage@v0'
         with:
           path: "./update-site/target/repository/"
-          destination: "snyk-eclipse-plugin/weekly"
+          destination: "snyk-eclipse-plugin/weekly-2.1"
           predefinedAcl: publicRead
 
       - name: Extract release notes
@@ -85,6 +85,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./update-site/target/update-site-2.0.0-SNAPSHOT.zip
-          asset_name: "update-site-2.0.0-${{ steps.createTag.outputs.tagName }}.zip"
+          asset_path: ./update-site/target/update-site-2.1.0-SNAPSHOT.zip
+          asset_name: "update-site-2.1.0-${{ steps.createTag.outputs.tagName }}.zip"
           asset_content_type: application/zip

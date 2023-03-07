@@ -1,17 +1,17 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-SymbolicName: io.snyk.eclipse.plugin;singleton:=true
-Bundle-Version: 2.0.0.qualifier
+Bundle-Version: 2.1.0.qualifier
 Bundle-Activator: io.snyk.eclipse.plugin.Activator
 Bundle-Vendor: %Bundle-Vendor
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core,
  org.eclipse.core.resources,
- org.eclipse.lsp4e;bundle-version="[0.13.9,0.14.0.qualifier]",
- org.eclipse.lsp4e.jdt;bundle-version="0.10.1",
+ org.eclipse.lsp4e,
+ org.eclipse.lsp4e.jdt,
  org.eclipse.equinox.security,
  org.eclipse.equinox.security.ui,
  org.eclipse.lsp4j,

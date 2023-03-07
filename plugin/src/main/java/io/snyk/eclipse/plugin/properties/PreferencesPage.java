@@ -1,17 +1,7 @@
 package io.snyk.eclipse.plugin.properties;
 
-import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.properties.preferences.ApiClient;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.languageserver.LsConfigurationUpdater;
-import io.snyk.languageserver.LsRuntimeEnvironment;
-import io.snyk.languageserver.download.HttpClientFactory;
-import io.snyk.languageserver.download.LsBinaries;
-
 import java.io.File;
 
-import org.eclipse.core.net.proxy.IProxyData;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -20,6 +10,12 @@ import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+
+import io.snyk.eclipse.plugin.SnykStartup;
+import io.snyk.eclipse.plugin.properties.preferences.ApiClient;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.LsConfigurationUpdater;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 	private BooleanFieldEditor snykCodeCheckbox;

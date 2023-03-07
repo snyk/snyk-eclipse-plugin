@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: io.snyk.eclipse.plugin.tests
 Bundle-SymbolicName: io.snyk.eclipse.plugin.tests;singleton:=true
-Bundle-Version: 2.0.0.qualifier
+Bundle-Version: 2.1.0.qualifier
 Bundle-Vendor: Snyk
 Fragment-Host: io.snyk.eclipse.plugin
 Automatic-Module-Name: io.snyk
