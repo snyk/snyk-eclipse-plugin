@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-SymbolicName: io.snyk.eclipse.plugin;singleton:=true
 Bundle-Version: 2.1.0.qualifier
 Bundle-Activator: io.snyk.eclipse.plugin.Activator
