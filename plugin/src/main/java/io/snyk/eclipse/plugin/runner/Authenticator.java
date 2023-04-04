@@ -28,6 +28,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import static io.snyk.eclipse.plugin.utils.MockHandler.MOCK;
 
 public class Authenticator {
@@ -61,6 +62,8 @@ public class Authenticator {
   }
 
   private void auth() throws AuthException {
+    // TODO: handle error cases
+    SnykExtendedLanguageClient.getInstance().triggerAuthentication();
     // don't authenticate using 'snyk auth'
 //		ProcessResult procesResult = cliRunner.snykAuth();
 //		if (procesResult.hasError()) {

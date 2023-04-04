@@ -38,6 +38,7 @@ import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykOAuthTokenParams;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -63,7 +64,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
           executeCommand("snyk.workspace.scan", new ArrayList<>());
           return;
         }
-        
+
         ISelectionService service = window.getSelectionService();
         IStructuredSelection structured = (IStructuredSelection) service.getSelection();
 
@@ -72,14 +73,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
         if (firstElement instanceof JavaProject) {
           project = ((JavaProject) firstElement).getProject();
         }
-        
+
         if (firstElement instanceof IProject) {
           project = (IProject) firstElement;
         }
 
         if (project != null) {
           runForProject(project.getName());
-          executeCommand("snyk.workspaceFolder.scan", List.of(project.getLocation().toOSString()));       
+          executeCommand("snyk.workspaceFolder.scan", List.of(project.getLocation().toOSString()));
         }
       } catch (Exception e) {
         SnykLogger.logError(e);
@@ -121,6 +122,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     pathSet.addAll(Arrays.asList(param.getTrustedFolders()));
     Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS, pathSet.stream().filter(s -> !s.isBlank())
         .map(s -> s.trim()).distinct().collect(Collectors.joining(File.pathSeparator)));
+  }
+
+  @JsonNotification(value =  "$/snyk.token")
+  public void addSnykToken(SnykOAuthTokenParams param) {
+    Preferences.getInstance().store(Preferences.OAUTH_TOKEN_KEY, param.getToken());
   }
 
   @Override
