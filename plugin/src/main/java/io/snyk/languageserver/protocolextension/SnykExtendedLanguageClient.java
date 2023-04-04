@@ -126,7 +126,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
   @JsonNotification(value =  "$/snyk.token")
   public void addSnykToken(SnykOAuthTokenParams param) {
-    Preferences.getInstance().store(Preferences.OAUTH_TOKEN_KEY, param.getToken());
+    Preferences.getInstance().store(Preferences.INTERNAL_OAUTH_TOKEN_STORAGE, param.getToken());
   }
 
   @Override

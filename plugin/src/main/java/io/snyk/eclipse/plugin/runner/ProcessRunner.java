@@ -134,6 +134,9 @@ public class ProcessRunner {
     } else {
       pb.environment().put(Preferences.ENABLE_TELEMETRY, "1"); // default to disable telemetry
     }
+    
+    // set oauth enabled
+    pb.environment().put(EnvironmentConstants.ENV_INTERNAL_SNYK_OAUTH_ENABLED, "1");
   }
 
   public ProcessBuilder createMacProcessBuilder(List<String> params, Optional<String> path) {

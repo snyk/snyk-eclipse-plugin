@@ -28,7 +28,7 @@ public class Preferences {
 
   public static final String TRUSTED_FOLDERS = "trustedFolders";
   public static final String AUTH_TOKEN_KEY = "authtoken";
-  public static final String OAUTH_TOKEN_KEY = "oauthtoken";
+  public static final String INTERNAL_OAUTH_TOKEN_STORAGE = "oauthtokenpayload";
   public static final String PATH_KEY = "path";
   public static final String ENDPOINT_KEY = "endpoint";
   public static final String INSECURE_KEY = "insecure";
@@ -117,6 +117,10 @@ public class Preferences {
 
   public String getAuthToken() {
     return getPref(AUTH_TOKEN_KEY, "");
+  }
+  
+  public String getOAuthToken() {
+    return getPref(INTERNAL_OAUTH_TOKEN_STORAGE, "");
   }
 
   public String getEndpoint() {
