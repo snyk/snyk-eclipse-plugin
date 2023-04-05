@@ -1,9 +1,10 @@
 package io.snyk.languageserver;
 
-import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.Lists;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.List;
+
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -11,22 +12,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.lsp4e.LSPEclipseUtils;
-import org.eclipse.lsp4e.LanguageServerWrapper;
 import org.eclipse.lsp4e.LanguageServersRegistry;
 import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
-import org.eclipse.lsp4j.services.LanguageServer;
-import org.eclipse.ui.PlatformUI;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import io.snyk.eclipse.plugin.SnykStartup;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.Lists;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class SnykLanguageServer extends ProcessStreamConnectionProvider implements StreamConnectionProvider {
   public static final String LANGUAGE_SERVER_ID = "io.snyk.languageserver";

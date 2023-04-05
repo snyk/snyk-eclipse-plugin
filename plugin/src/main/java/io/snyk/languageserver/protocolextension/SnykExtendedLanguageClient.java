@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
@@ -204,6 +205,29 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
       });
       return new ShowDocumentResult(true);
     });
+  }
+
+  /**
+   * Refresh the token using language server. Waits up to 2s for the token change.
+   * @return true if token has changed, false if not
+   */
+  public boolean refreshOAuthToken() {
+    var p = Preferences.getInstance();
+    var token = p.getAuthToken();
+    executeCommand("snyk.oauthRefreshCommand", new ArrayList<>());
+    // wait until token has changed or 2s have passed
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+      while (token.equals(p.getAuthToken())) {
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+      }
+      return token;
+    });
+    var newToken = future.completeOnTimeout(token, 2, TimeUnit.SECONDS).join();
+    return !token.equals(newToken);       
   }
 
 }

@@ -1,18 +1,15 @@
 package io.snyk.eclipse.plugin;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.views.SnykView;
-import io.snyk.eclipse.plugin.wizards.SnykWizard;
-import io.snyk.languageserver.LsRuntimeEnvironment;
-import io.snyk.languageserver.SnykLanguageServer;
-import io.snyk.languageserver.download.HttpClientFactory;
-import io.snyk.languageserver.download.LsBinaries;
-import io.snyk.languageserver.download.LsDownloader;
+import static io.snyk.eclipse.plugin.utils.SnykLogger.logError;
 
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.eclipse.core.net.proxy.IProxyData;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -26,15 +23,15 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-
-import static io.snyk.eclipse.plugin.utils.SnykLogger.logError;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.eclipse.plugin.views.SnykView;
+import io.snyk.eclipse.plugin.wizards.SnykWizard;
+import io.snyk.languageserver.LsRuntimeEnvironment;
+import io.snyk.languageserver.SnykLanguageServer;
+import io.snyk.languageserver.download.HttpClientFactory;
+import io.snyk.languageserver.download.LsBinaries;
+import io.snyk.languageserver.download.LsDownloader;
 
 public class SnykStartup implements IStartup {
   private LsRuntimeEnvironment runtimeEnvironment;
