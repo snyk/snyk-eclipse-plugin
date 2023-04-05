@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.runner;
 
+import io.snyk.eclipse.plugin.EnvironmentConstants;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import io.snyk.languageserver.LsRuntimeEnvironment;
@@ -40,6 +41,7 @@ class ProcessRunnerTest {
     when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
     when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY)).thenReturn("token");
     when(preferenceMock.getPref(Preferences.ENDPOINT_KEY)).thenReturn("https://endpoint.io");
+    when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD)).thenReturn(Preferences.AUTH_METHOD_TOKEN);
     when(preferenceMock.getCliPath()).thenReturn("");
     
     environmentMock = mock(LsRuntimeEnvironment.class);
@@ -103,4 +105,21 @@ class ProcessRunnerTest {
     assertEquals(null, env.get(Preferences.ORGANIZATION_KEY));
   }
 
+  @Test
+  void testOAuthEnabled() {
+    ILog logger = mock(ILog.class);
+    Bundle bundle = mock(Bundle.class);
+    String expectedToken = "{\"access_token\":\"configAccessToken\",\"token_type\":\"Bearer\",\"refresh_token\":\"configRefreshToken\",\"expiry\":\"3023-03-29T17:47:13.714448+02:00\"}";
+    
+    when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD)).thenReturn(Preferences.AUTH_METHOD_OAUTH);
+    when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
+
+    ProcessRunner cut = new ProcessRunner(bundle, logger, environmentMock);
+    ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
+
+    var env = builder.environment();
+
+    assertEquals("1", env.get(EnvironmentConstants.ENV_INTERNAL_SNYK_OAUTH_ENABLED));
+    assertEquals(expectedToken, env.get(EnvironmentConstants.ENV_INTERNAL_OAUTH_TOKEN_STORAGE));
+  }
 }

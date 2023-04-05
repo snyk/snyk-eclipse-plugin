@@ -124,7 +124,7 @@ public class Preferences {
   public String getAuthToken() {
     return getPref(AUTH_TOKEN_KEY, "");
   }
-  
+
   public String getEndpoint() {
     return getPref(ENDPOINT_KEY, "");
   }

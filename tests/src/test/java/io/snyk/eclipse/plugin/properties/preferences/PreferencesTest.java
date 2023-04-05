@@ -33,6 +33,7 @@ class PreferencesTest {
     assertEquals("true", prefs.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
     assertEquals("true", prefs.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
     assertEquals("1", prefs.getPref(Preferences.LSP_VERSION));
+    assertEquals(prefs.getPref(Preferences.AUTH_METHOD_TOKEN), prefs.getPref(Preferences.AUTHENTICATION_METHOD));
     assertTrue(prefs.getPref(Preferences.LS_BINARY_KEY).endsWith("/.snyk/snyk-ls") || prefs.getPref(Preferences.LS_BINARY_KEY).endsWith("snyk-ls.exe"));
   }
 
