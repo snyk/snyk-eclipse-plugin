@@ -49,8 +49,6 @@ public class Preferences {
   public static final String AUTHENTICATION_METHOD = "AUTHENTICATION_METHOD";
   public static final String AUTH_METHOD_TOKEN = "token";
   public static final String AUTH_METHOD_OAUTH = "oauth";
-  public static final String NEXT_TOKEN_EXPIRY = "NEXT_TOKEN_EXPIRY";
-
 
   private final PreferenceStore store;
 

@@ -115,10 +115,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     }
     // check if its a json token and store the auth method based on that
       try {
-        var oauthToken = om.readValue(param.getToken(), OAuthToken.class);
+        om.readValue(param.getToken(), OAuthToken.class);
         p.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_OAUTH);
-        p.store(Preferences.NEXT_TOKEN_EXPIRY, oauthToken.getExpiry());
+        SnykLogger.logInfo("Using OAuth2 Authentication");
       } catch (JsonProcessingException e) {
+        SnykLogger.logInfo("Using Token Authentication");
         p.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);        
       }
   }
