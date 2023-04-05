@@ -1,6 +1,7 @@
 package io.snyk.languageserver.protocolextension;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -30,20 +31,25 @@ import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
+import io.snyk.languageserver.protocolextension.messageObjects.OAuthToken;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
-import io.snyk.languageserver.protocolextension.messageObjects.SnykOAuthTokenParams;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
   private final ProgressManager progressMgr = new ProgressManager();
   private static SnykExtendedLanguageClient instance = null;
+  private final ObjectMapper om = new ObjectMapper();
 
   @SuppressWarnings("unused") // used in lsp4e language server instantiation
   public SnykExtendedLanguageClient() {
@@ -99,12 +105,21 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
   @JsonNotification(value = "$/snyk.hasAuthenticated")
   public void hasAuthenticated(HasAuthenticatedParam param) {
-    Preferences.getInstance().store(Preferences.AUTH_TOKEN_KEY, param.getToken());
+    var p = Preferences.getInstance();
+    p.store(Preferences.AUTH_TOKEN_KEY, param.getToken());
     triggerScan(null);
     if (!param.getToken().isBlank()) {
       showAuthenticatedMessage();
       enableSnykViewRunActions();
     }
+    // check if its a json token and store the auth method based on that
+      try {
+        var oauthToken = om.readValue(param.getToken(), OAuthToken.class);
+        p.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_OAUTH);
+        p.store(Preferences.NEXT_TOKEN_EXPIRY, oauthToken.getExpiry());
+      } catch (JsonProcessingException e) {
+        p.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);        
+      }
   }
 
   @JsonNotification(value = "$/snyk.isAvailableCli")
@@ -122,11 +137,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     pathSet.addAll(Arrays.asList(param.getTrustedFolders()));
     Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS, pathSet.stream().filter(s -> !s.isBlank())
         .map(s -> s.trim()).distinct().collect(Collectors.joining(File.pathSeparator)));
-  }
-
-  @JsonNotification(value =  "$/snyk.token")
-  public void addSnykToken(SnykOAuthTokenParams param) {
-    Preferences.getInstance().store(Preferences.INTERNAL_OAUTH_TOKEN_STORAGE, param.getToken());
   }
 
   @Override

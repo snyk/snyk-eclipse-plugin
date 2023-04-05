@@ -47,6 +47,10 @@ public class Preferences {
   public static final String ENABLE_TELEMETRY = EnvironmentConstants.ENV_DISABLE_ANALYTICS;
   public static final String MANAGE_BINARIES_AUTOMATICALLY = "SNYK_CFG_MANAGE_BINARIES_AUTOMATICALLY";
   public static final String ORGANIZATION_KEY = EnvironmentConstants.ENV_SNYK_ORG;
+  public static final String AUTHENTICATION_METHOD = "AUTHENTICATION_METHOD";
+  public static final String AUTH_METHOD_TOKEN = "token";
+  public static final String AUTH_METHOD_OAUTH = "oauth";
+  public static final String NEXT_TOKEN_EXPIRY = "NEXT_TOKEN_EXPIRY";
 
 
   private final PreferenceStore store;
@@ -77,6 +81,11 @@ public class Preferences {
     if (getPref(LSP_VERSION) == null) {
       store(LSP_VERSION, "1");
     }
+    
+    if (getPref(AUTHENTICATION_METHOD) == null || getPref(AUTHENTICATION_METHOD).isBlank()) {
+      store(AUTHENTICATION_METHOD, AUTH_METHOD_TOKEN);
+    }
+    
     if (getPref(LS_BINARY_KEY) == null || getPref(LS_BINARY_KEY).equals("")) {
       store(LS_BINARY_KEY, getDefaultLsPath());
     }

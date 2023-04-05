@@ -120,9 +120,15 @@ public class ProcessRunner {
       }
     }
 
+    var authMethod = Preferences.getInstance().getPref(Preferences.AUTHENTICATION_METHOD);
     String token = Preferences.getInstance().getAuthToken();
-    if (token != null)
+    if (token != null && authMethod.equals(Preferences.AUTH_METHOD_TOKEN)) {
       pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, Preferences.getInstance().getAuthToken());
+    } else {
+      // oauth authentication
+      pb.environment().put(EnvironmentConstants.ENV_INTERNAL_SNYK_OAUTH_ENABLED, "1");
+      pb.environment().put(EnvironmentConstants.ENV_INTERNAL_OAUTH_TOKEN_STORAGE, token);
+    }
 
     String insecure = Preferences.getInstance().getPref(Preferences.INSECURE_KEY);
     if (insecure != null && insecure.equalsIgnoreCase("true"))
@@ -134,9 +140,6 @@ public class ProcessRunner {
     } else {
       pb.environment().put(Preferences.ENABLE_TELEMETRY, "1"); // default to disable telemetry
     }
-    
-    // set oauth enabled
-    pb.environment().put(EnvironmentConstants.ENV_INTERNAL_SNYK_OAUTH_ENABLED, "1");
   }
 
   public ProcessBuilder createMacProcessBuilder(List<String> params, Optional<String> path) {
