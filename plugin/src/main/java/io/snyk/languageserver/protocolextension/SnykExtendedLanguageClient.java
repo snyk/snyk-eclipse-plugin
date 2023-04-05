@@ -33,7 +33,6 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.SnykStartup;
@@ -106,22 +105,23 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
   @JsonNotification(value = "$/snyk.hasAuthenticated")
   public void hasAuthenticated(HasAuthenticatedParam param) {
-    var p = Preferences.getInstance();
-    p.store(Preferences.AUTH_TOKEN_KEY, param.getToken());
+    var prefs = Preferences.getInstance();
+    prefs.store(Preferences.AUTH_TOKEN_KEY, param.getToken());
     triggerScan(null);
     if (!param.getToken().isBlank()) {
       showAuthenticatedMessage();
       enableSnykViewRunActions();
     }
     // check if its a json token and store the auth method based on that
-      try {
-        om.readValue(param.getToken(), OAuthToken.class);
-        p.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_OAUTH);
-        SnykLogger.logInfo("Using OAuth2 Authentication");
-      } catch (JsonProcessingException e) {
-        SnykLogger.logInfo("Using Token Authentication");
-        p.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);        
-      }
+    try {
+      om.readValue(param.getToken(), OAuthToken.class);
+      prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_OAUTH);
+      SnykLogger.logInfo("Using OAuth2 Authentication");
+    } catch (JsonProcessingException e) {
+      SnykLogger.logInfo("Failed to deserialize JSON token: " + e);
+      SnykLogger.logInfo("Using Token Authentication");
+      prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);
+    }
   }
 
   @JsonNotification(value = "$/snyk.isAvailableCli")
@@ -225,10 +225,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
           Thread.currentThread().interrupt();
         }
       }
-      return token;
+      return p.getAuthToken();
     });
     var newToken = future.completeOnTimeout(token, 2, TimeUnit.SECONDS).join();
-    return !token.equals(newToken);       
+    return !token.equals(newToken);
   }
 
 }

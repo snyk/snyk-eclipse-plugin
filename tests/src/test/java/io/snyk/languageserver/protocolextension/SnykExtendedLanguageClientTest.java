@@ -43,4 +43,39 @@ class SnykExtendedLanguageClientTest {
     assertEquals("trusted/path", store.getString(Preferences.TRUSTED_FOLDERS, ""));
   }
 
+  @Test
+  void testAddApiTokenToPreferencesStore() {
+    HasAuthenticatedParam param = new HasAuthenticatedParam();
+    String expectedToken = "apitoken";
+    
+    param.setToken(expectedToken);
+
+    cut.hasAuthenticated(param);
+    
+    assertEquals(expectedToken, store.getString(Preferences.AUTH_TOKEN_KEY, ""));    
+  }
+  
+  @Test
+  void testSetsAuthenticationMethodForApiToken() {
+    HasAuthenticatedParam param = new HasAuthenticatedParam();
+    String expectedToken = "apitoken";
+    
+    param.setToken(expectedToken);
+
+    cut.hasAuthenticated(param);
+    
+    assertEquals(Preferences.AUTH_METHOD_TOKEN, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
+  }
+  
+  @Test
+  void testSetsAuthenticationMethodForOAuthToken() {
+    HasAuthenticatedParam param = new HasAuthenticatedParam();
+    String expectedToken = "{\"access_token\":\"configAccessToken\",\"token_type\":\"Bearer\",\"refresh_token\":\"configRefreshToken\",\"expiry\":\"3023-03-29T17:47:13.714448+02:00\"}";
+    
+    param.setToken(expectedToken);
+
+    cut.hasAuthenticated(param);
+    
+    assertEquals(Preferences.AUTH_METHOD_OAUTH, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
+  }
 }
