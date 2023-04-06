@@ -33,7 +33,7 @@ class PreferencesTest {
     assertEquals("true", prefs.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
     assertEquals("true", prefs.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
     assertEquals("1", prefs.getPref(Preferences.LSP_VERSION));
-    assertEquals(prefs.getPref(Preferences.AUTH_METHOD_TOKEN), prefs.getPref(Preferences.AUTHENTICATION_METHOD));
+    assertEquals("token", prefs.getPref(Preferences.AUTHENTICATION_METHOD));
     assertTrue(prefs.getPref(Preferences.LS_BINARY_KEY).endsWith("/.snyk/snyk-ls") || prefs.getPref(Preferences.LS_BINARY_KEY).endsWith("snyk-ls.exe"));
   }
 
@@ -69,7 +69,7 @@ class PreferencesTest {
       assertEquals(prefs.getPref(Preferences.ORGANIZATION_KEY), "myOrg");
     }
   }
-  
+
   @Test
   void test_GetBoolean_returnsBooleanProperty() {
     Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
@@ -77,11 +77,11 @@ class PreferencesTest {
     assertFalse(prefs.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE));
     assertTrue(prefs.getBooleanPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
   }
-  
+
   @Test
   void test_GetBoolean_returnsFalseForNonBooleanProperty() {
     Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
-    
+
     assertFalse(prefs.getBooleanPref(Preferences.CLI_PATH));
   }
 }
