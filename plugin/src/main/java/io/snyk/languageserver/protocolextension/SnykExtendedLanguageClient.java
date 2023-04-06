@@ -108,20 +108,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     var prefs = Preferences.getInstance();
     prefs.store(Preferences.AUTH_TOKEN_KEY, param.getToken());
     triggerScan(null);
+
     if (!param.getToken().isBlank()) {
       showAuthenticatedMessage();
       enableSnykViewRunActions();
     }
-    // check if its a json token and store the auth method based on that
-    try {
-      om.readValue(param.getToken(), OAuthToken.class);
-      prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_OAUTH);
-      SnykLogger.logInfo("Using OAuth2 Authentication");
-    } catch (JsonProcessingException e) {
-      SnykLogger.logInfo("Failed to deserialize JSON token: " + e);
-      SnykLogger.logInfo("Using Token Authentication");
-      prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);
-    }
+
+    setAuthenticationMethod(param, prefs);
   }
 
   @JsonNotification(value = "$/snyk.isAvailableCli")
@@ -188,6 +181,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
       getLanguageServer().getWorkspaceService().executeCommand(params);
     } catch (Exception e) {
       SnykLogger.logError(e);
+    }
+  }
+
+  protected void setAuthenticationMethod(HasAuthenticatedParam param, Preferences prefs) {
+    // check if its a json token and store the auth method based on that
+    try {
+      om.readValue(param.getToken(), OAuthToken.class);
+      prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_OAUTH);
+      SnykLogger.logInfo("Using OAuth2 Authentication");
+    } catch (JsonProcessingException e) {
+      SnykLogger.logInfo("Failed to deserialize JSON token: " + e);
+      SnykLogger.logInfo("Using Token Authentication");
+      prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);
     }
   }
 

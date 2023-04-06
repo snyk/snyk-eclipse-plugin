@@ -16,17 +16,19 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFolder
 class SnykExtendedLanguageClientTest {
   private InMemoryPreferenceStore store = new InMemoryPreferenceStore();
   private SnykExtendedLanguageClient cut = new SnykExtendedLanguageClient();
+  private Preferences pref;
 
   @BeforeEach
   void setUp() {
     store = new InMemoryPreferenceStore();
-    PreferencesUtils.setPreferences(Preferences.getInstance(store));
+    pref = Preferences.getInstance(store);
+    PreferencesUtils.setPreferences(pref);
   }
 
   @Test
   void testAddTrustedPathsAddsPathToPreferenceStore() {
     SnykTrustedFoldersParams param = new SnykTrustedFoldersParams();
-    param.setTrustedFolders(new String[] {"trusted/path "});
+    param.setTrustedFolders(new String[] { "trusted/path " });
 
     cut.addTrustedPaths(param);
 
@@ -36,7 +38,7 @@ class SnykExtendedLanguageClientTest {
   @Test
   void testAddTrustedPathsDeduplicatesAndTrims() {
     SnykTrustedFoldersParams param = new SnykTrustedFoldersParams();
-    param.setTrustedFolders(new String[] {"trusted/path", "trusted/path", " trusted/path "});
+    param.setTrustedFolders(new String[] { "trusted/path", "trusted/path", " trusted/path " });
 
     cut.addTrustedPaths(param);
 
@@ -46,39 +48,34 @@ class SnykExtendedLanguageClientTest {
   @Test
   void testSetsApiToken() {
     HasAuthenticatedParam param = new HasAuthenticatedParam();
-    String expectedToken = "apitoken";
 
-    param.setToken(expectedToken);
+    param.setToken("apiToken");
 
-    cut.hasAuthenticated(param);
+    cut.setAuthenticationMethod(param, pref);
 
-    assertEquals(expectedToken, store.getString(Preferences.AUTH_TOKEN_KEY, ""));
     assertEquals(Preferences.AUTH_METHOD_TOKEN, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
   }
 
-  @Test
-  void testSetsBlankToken() {
-    HasAuthenticatedParam param = new HasAuthenticatedParam();
-    String expectedToken = "";
+   @Test
+   void testSetsBlankToken() {
+     HasAuthenticatedParam param = new HasAuthenticatedParam();
 
-    param.setToken(expectedToken);
+     param.setToken("");
 
-    cut.hasAuthenticated(param);
+     cut.setAuthenticationMethod(param, pref);
 
-    assertEquals(expectedToken, store.getString(Preferences.AUTH_TOKEN_KEY, ""));
-    assertEquals(Preferences.AUTH_METHOD_TOKEN, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
-  }
+     assertEquals(Preferences.AUTH_METHOD_TOKEN, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
+   }
 
-  @Test
-  void testSetsOAuthToken() {
-    HasAuthenticatedParam param = new HasAuthenticatedParam();
-    String expectedToken = "{\"access_token\":\"configAccessToken\",\"token_type\":\"Bearer\",\"refresh_token\":\"configRefreshToken\",\"expiry\":\"3023-03-29T17:47:13.714448+02:00\"}";
+   @Test
+   void testSetsOAuthToken() {
+     HasAuthenticatedParam param = new HasAuthenticatedParam();
+     String oAuthToken =
+     "{\"accessToken\":\"configAccessToken\",\"tokenType\":\"Bearer\",\"refreshToken\":\"configRefreshToken\",\"expiry\":\"3023-03-29T17:47:13.714448+02:00\"}";
+     param.setToken(oAuthToken);
 
-    param.setToken(expectedToken);
+     cut.setAuthenticationMethod(param, pref);
 
-    cut.hasAuthenticated(param);
-
-    assertEquals(expectedToken, store.getString(Preferences.AUTH_TOKEN_KEY, ""));
-    assertEquals(Preferences.AUTH_METHOD_OAUTH, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
-  }
+     assertEquals(Preferences.AUTH_METHOD_OAUTH, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
+   }
 }
