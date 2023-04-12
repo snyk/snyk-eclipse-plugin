@@ -71,7 +71,7 @@ class SnykExtendedLanguageClientTest {
    void testSetsOAuthToken() {
      HasAuthenticatedParam param = new HasAuthenticatedParam();
      String oAuthToken =
-     "{\"accessToken\":\"configAccessToken\",\"tokenType\":\"Bearer\",\"refreshToken\":\"configRefreshToken\",\"expiry\":\"3023-03-29T17:47:13.714448+02:00\"}";
+     "{\"access_token\":\"configAccessToken\",\"token_type\":\"Bearer\",\"refresh_token\":\"configRefreshToken\",\"expiry\":\"3023-03-29T17:47:13.714448+02:00\"}";
      param.setToken(oAuthToken);
 
      cut.setAuthenticationMethod(param, pref);
