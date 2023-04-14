@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.download.HttpClientFactory;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import io.snyk.languageserver.protocolextension.messageObjects.OAuthToken;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -42,7 +44,14 @@ public class ApiClient {
         url += "?org=" + org;
       }
       var httpGet = new HttpGet(endpoint + url);
-      httpGet.addHeader("Authorization", "token " + prefs.getAuthToken());
+      if (prefs.getPref(Preferences.AUTHENTICATION_METHOD).equals(Preferences.AUTH_METHOD_TOKEN)) {
+        httpGet.addHeader("Authorization", "token " + prefs.getAuthToken());        
+      } else {
+        // first refresh token
+        SnykExtendedLanguageClient.getInstance().refreshOAuthToken();
+        var oauthToken = objectMapper.readValue(prefs.getAuthToken(), OAuthToken.class);
+        httpGet.addHeader("Authorization", "bearer " + oauthToken.getAccessToken());
+      }
       httpGet.addHeader("Content-Type", "application/json");
       var response = httpClient.execute(httpGet, context);
 

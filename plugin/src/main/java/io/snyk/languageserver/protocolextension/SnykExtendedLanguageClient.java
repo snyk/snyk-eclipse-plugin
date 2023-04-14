@@ -1,11 +1,13 @@
 package io.snyk.languageserver.protocolextension;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
@@ -30,12 +32,16 @@ import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
+import io.snyk.languageserver.protocolextension.messageObjects.OAuthToken;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 
@@ -43,6 +49,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFolder
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
   private final ProgressManager progressMgr = new ProgressManager();
   private static SnykExtendedLanguageClient instance = null;
+  private final ObjectMapper om = new ObjectMapper();
 
   @SuppressWarnings("unused") // used in lsp4e language server instantiation
   public SnykExtendedLanguageClient() {
@@ -63,7 +70,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
           executeCommand("snyk.workspace.scan", new ArrayList<>());
           return;
         }
-        
+
         ISelectionService service = window.getSelectionService();
         IStructuredSelection structured = (IStructuredSelection) service.getSelection();
 
@@ -72,14 +79,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
         if (firstElement instanceof JavaProject) {
           project = ((JavaProject) firstElement).getProject();
         }
-        
+
         if (firstElement instanceof IProject) {
           project = (IProject) firstElement;
         }
 
         if (project != null) {
           runForProject(project.getName());
-          executeCommand("snyk.workspaceFolder.scan", List.of(project.getLocation().toOSString()));       
+          executeCommand("snyk.workspaceFolder.scan", List.of(project.getLocation().toOSString()));
         }
       } catch (Exception e) {
         SnykLogger.logError(e);
@@ -98,12 +105,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
   @JsonNotification(value = "$/snyk.hasAuthenticated")
   public void hasAuthenticated(HasAuthenticatedParam param) {
-    Preferences.getInstance().store(Preferences.AUTH_TOKEN_KEY, param.getToken());
+    var prefs = Preferences.getInstance();
+    prefs.store(Preferences.AUTH_TOKEN_KEY, param.getToken());
     triggerScan(null);
+
     if (!param.getToken().isBlank()) {
       showAuthenticatedMessage();
       enableSnykViewRunActions();
     }
+
+    setAuthenticationMethod(param, prefs);
   }
 
   @JsonNotification(value = "$/snyk.isAvailableCli")
@@ -173,6 +184,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     }
   }
 
+  protected void setAuthenticationMethod(HasAuthenticatedParam param, Preferences prefs) {
+    // check if its a json token and store the auth method based on that
+    try {
+      om.readValue(param.getToken(), OAuthToken.class);
+      prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_OAUTH);
+    } catch (JsonProcessingException e) {
+      prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);
+    }
+  }
+
   // TODO: remove once LSP4e supports `showDocument` in its next release (it's
   // been merged to it already)
   @Override
@@ -188,6 +209,29 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
       });
       return new ShowDocumentResult(true);
     });
+  }
+
+  /**
+   * Refresh the token using language server. Waits up to 2s for the token change.
+   * @return true if token has changed, false if not
+   */
+  public boolean refreshOAuthToken() {
+    var p = Preferences.getInstance();
+    var token = p.getAuthToken();
+    executeCommand("snyk.oauthRefreshCommand", new ArrayList<>());
+    // wait until token has changed or 2s have passed
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+      while (token.equals(p.getAuthToken())) {
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+      }
+      return p.getAuthToken();
+    });
+    var newToken = future.completeOnTimeout(token, 2, TimeUnit.SECONDS).join();
+    return !token.equals(newToken);
   }
 
 }
