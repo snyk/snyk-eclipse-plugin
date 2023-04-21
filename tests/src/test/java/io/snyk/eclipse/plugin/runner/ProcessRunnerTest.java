@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.runner;
 
+import io.snyk.eclipse.plugin.EnvironmentConstants;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import io.snyk.languageserver.LsRuntimeEnvironment;
@@ -30,7 +31,7 @@ class ProcessRunnerTest {
   private IProxyService proxyServiceMock;
 
   @BeforeEach
-  void setUp()  {
+  void setUp() {
     preferenceMock = mock(Preferences.class);
     PreferencesUtils.setPreferences(preferenceMock);
 
@@ -38,10 +39,12 @@ class ProcessRunnerTest {
     when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY)).thenReturn("true");
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY)).thenReturn("organization");
     when(preferenceMock.getPref(Preferences.INSECURE_KEY)).thenReturn("true");
+    when(preferenceMock.getAuthToken()).thenReturn("token");
     when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY)).thenReturn("token");
     when(preferenceMock.getPref(Preferences.ENDPOINT_KEY)).thenReturn("https://endpoint.io");
+    when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD)).thenReturn(Preferences.AUTH_METHOD_TOKEN);
     when(preferenceMock.getCliPath()).thenReturn("");
-    
+
     environmentMock = mock(LsRuntimeEnvironment.class);
     proxyServiceMock = mock(IProxyService.class);
     when(environmentMock.getProxyService()).thenReturn(proxyServiceMock);
@@ -103,4 +106,24 @@ class ProcessRunnerTest {
     assertEquals(null, env.get(Preferences.ORGANIZATION_KEY));
   }
 
+  @Test
+  void testOAuthEnabled() {
+    String expectedToken = "{\"access_token\":\"configAccessToken\",\"token_type\":\"Bearer\",\"refresh_token\":\"configRefreshToken\",\"expiry\":\"3023-03-29T17:47:13.714448+02:00\"}";
+    
+    when(preferenceMock.getAuthToken()).thenReturn(expectedToken);
+    when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD)).thenReturn(Preferences.AUTH_METHOD_OAUTH);
+
+    ILog logger = mock(ILog.class);
+    Bundle bundle = mock(Bundle.class);
+    
+    when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
+
+    ProcessRunner cut = new ProcessRunner(bundle, logger, environmentMock);
+    ProcessBuilder builder = cut.createLinuxProcessBuilder(List.of("test"), Optional.of("good:path"));
+
+    var env = builder.environment();
+
+    assertEquals("1", env.get(EnvironmentConstants.ENV_INTERNAL_SNYK_OAUTH_ENABLED));
+    assertEquals(expectedToken, env.get(EnvironmentConstants.ENV_INTERNAL_OAUTH_TOKEN_STORAGE));
+  }
 }

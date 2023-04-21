@@ -31,7 +31,7 @@ public class ProcessRunner {
 
   private static final String HOME = System.getProperty("user.home");
   private static final String DEFAULT_MAC_PATH = "/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:" + HOME + "/bin:"
-    + HOME + "/.cargo/bin:" + System.getenv("GOPATH") + "/bin" + System.getenv("GOROOT") + "/bin";
+      + HOME + "/.cargo/bin:" + System.getenv("GOPATH") + "/bin" + System.getenv("GOROOT") + "/bin";
   private static final String DEFAULT_LINUX_PATH = DEFAULT_MAC_PATH;
   private static final String DEFAULT_WIN_PATH = "";
 
@@ -89,8 +89,8 @@ public class ProcessRunner {
     // TODO: move to runtimeEnvironment
     if (path.isPresent() && !path.get().isBlank()) {
       pb.environment().put("PATH",
-        path.map(p -> p + File.pathSeparator + defaultPathForOS).orElse(defaultPathForOS)
-          + File.pathSeparator + System.getenv("PATH"));
+          path.map(p -> p + File.pathSeparator + defaultPathForOS).orElse(defaultPathForOS)
+              + File.pathSeparator + System.getenv("PATH"));
     }
     return pb;
   }
@@ -120,9 +120,14 @@ public class ProcessRunner {
       }
     }
 
+    String authMethod = Preferences.getInstance().getPref(Preferences.AUTHENTICATION_METHOD);
     String token = Preferences.getInstance().getAuthToken();
-    if (token != null)
-      pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, Preferences.getInstance().getAuthToken());
+    if (token != null && authMethod.equals(Preferences.AUTH_METHOD_OAUTH)) {      
+      pb.environment().put(EnvironmentConstants.ENV_INTERNAL_SNYK_OAUTH_ENABLED, "1");
+      pb.environment().put(EnvironmentConstants.ENV_INTERNAL_OAUTH_TOKEN_STORAGE, token);
+    } else {      
+      pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, token);
+    }
 
     String insecure = Preferences.getInstance().getPref(Preferences.INSECURE_KEY);
     if (insecure != null && insecure.equalsIgnoreCase("true"))
@@ -150,7 +155,7 @@ public class ProcessRunner {
     ProcessBuilder pb = new ProcessBuilder(cmd);
     setupProcessBuilderBase(pb);
     pb.environment().put("PATH", path.map(p -> p + ";" + DEFAULT_WIN_PATH).orElse(DEFAULT_WIN_PATH)
-      + File.pathSeparator + System.getenv("PATH"));
+        + File.pathSeparator + System.getenv("PATH"));
 
     // debug logging on windows machines
     IStatus[] statuses = new IStatus[] {
