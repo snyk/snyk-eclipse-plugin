@@ -125,8 +125,11 @@ public class ProcessRunner {
     if (token != null && authMethod.equals(Preferences.AUTH_METHOD_OAUTH)) {      
       pb.environment().put(EnvironmentConstants.ENV_INTERNAL_SNYK_OAUTH_ENABLED, "1");
       pb.environment().put(EnvironmentConstants.ENV_INTERNAL_OAUTH_TOKEN_STORAGE, token);
+      pb.environment().remove(EnvironmentConstants.ENV_SNYK_TOKEN);
     } else {      
       pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, token);
+      pb.environment().remove(EnvironmentConstants.ENV_INTERNAL_OAUTH_TOKEN_STORAGE);
+
     }
 
     String insecure = Preferences.getInstance().getPref(Preferences.INSECURE_KEY);
