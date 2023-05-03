@@ -74,14 +74,6 @@ public class LsRuntimeEnvironment {
   }
 
   public void updateEnvironment(Map<String, String> env) {
-    String authToken = Preferences.getInstance().getAuthToken();
-    if (authToken != null && !authToken.isBlank()) {
-      env.put("SNYK_TOKEN", authToken);
-    }
-    String endpoint = Preferences.getInstance().getEndpoint();
-    if (endpoint != null && !endpoint.isEmpty()) {
-      env.put("SNYK_API", endpoint);
-    }
     addPath(env);
     addIntegrationInfoToEnv(env);
     addProxyToEnv(env);
