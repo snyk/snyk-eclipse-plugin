@@ -189,10 +189,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     try {
       om.readValue(param.getToken(), OAuthToken.class);
       prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_OAUTH);
-      SnykLogger.logInfo("Using OAuth2 Authentication");
     } catch (JsonProcessingException e) {
-      SnykLogger.logInfo("Failed to deserialize JSON token: " + e);
-      SnykLogger.logInfo("Using Token Authentication");
       prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);
     }
   }
