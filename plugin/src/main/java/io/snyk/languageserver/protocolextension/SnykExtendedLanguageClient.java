@@ -218,7 +218,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   public boolean refreshOAuthToken() {
     var p = Preferences.getInstance();
     var token = p.getAuthToken();
-    executeCommand("snyk.oauthRefreshCommand", new ArrayList<>());
+    executeCommand("snyk.getActiveUser", new ArrayList<>());
     // wait until token has changed or 2s have passed
     CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
       while (token.equals(p.getAuthToken())) {

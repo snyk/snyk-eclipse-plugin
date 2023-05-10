@@ -123,7 +123,6 @@ class ProcessRunnerTest {
 
     var env = builder.environment();
 
-    assertEquals("1", env.get(EnvironmentConstants.ENV_INTERNAL_SNYK_OAUTH_ENABLED));
-    assertEquals(expectedToken, env.get(EnvironmentConstants.ENV_INTERNAL_OAUTH_TOKEN_STORAGE));
+    assertEquals("configAccessToken", env.get(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN));
   }
 }

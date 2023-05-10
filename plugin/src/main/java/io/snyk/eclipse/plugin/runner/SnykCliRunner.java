@@ -3,6 +3,8 @@ package io.snyk.eclipse.plugin.runner;
 import io.snyk.eclipse.plugin.exception.NotSupportedException;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
@@ -58,6 +60,7 @@ public class SnykCliRunner {
   private ProcessResult snykRun(List<String> arguments, Optional<File> navigatePath) {
     try {
       checkIfTrusted(navigatePath.get());
+      SnykExtendedLanguageClient.getInstance().refreshOAuthToken();
       ProcessBuilder processBuilder = createProcessBuilderByOS(arguments, Preferences.getInstance().getPath());
       return processRunner.run(processBuilder, navigatePath);
     } catch (Exception e) {
