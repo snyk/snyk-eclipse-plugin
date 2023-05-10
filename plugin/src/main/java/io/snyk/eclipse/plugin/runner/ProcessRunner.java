@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 import io.snyk.languageserver.LsRuntimeEnvironment;
+import io.snyk.languageserver.protocolextension.messageObjects.OAuthToken;
+
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -18,6 +20,9 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.EnvironmentConstants;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
@@ -123,12 +128,17 @@ public class ProcessRunner {
     String authMethod = Preferences.getInstance().getPref(Preferences.AUTHENTICATION_METHOD);
     String token = Preferences.getInstance().getAuthToken();
     if (token != null && authMethod.equals(Preferences.AUTH_METHOD_OAUTH)) {
-      pb.environment().put(EnvironmentConstants.ENV_INTERNAL_SNYK_OAUTH_ENABLED, "1");
-      pb.environment().put(EnvironmentConstants.ENV_INTERNAL_OAUTH_TOKEN_STORAGE, token);
-      pb.environment().remove(EnvironmentConstants.ENV_SNYK_TOKEN);
+      try {
+	      ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	      var oauthToken = objectMapper.readValue(token, OAuthToken.class);
+	      pb.environment().put(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN, oauthToken.getAccessToken());
+	      pb.environment().remove(EnvironmentConstants.ENV_SNYK_TOKEN);
+      } catch (Exception e) {
+    	  SnykLogger.logError(e);
+      }
     } else {
       pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, token);
-      pb.environment().remove(EnvironmentConstants.ENV_INTERNAL_OAUTH_TOKEN_STORAGE);
+      pb.environment().remove(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN);
     }
 
     String insecure = Preferences.getInstance().getPref(Preferences.INSECURE_KEY);
