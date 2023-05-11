@@ -127,7 +127,7 @@ public class ProcessRunner {
 
     String authMethod = Preferences.getInstance().getPref(Preferences.AUTHENTICATION_METHOD);
     String token = Preferences.getInstance().getAuthToken();
-    if (token != null && authMethod.equals(Preferences.AUTH_METHOD_OAUTH)) {
+    if (token != null && !token.isBlank() && authMethod.equals(Preferences.AUTH_METHOD_OAUTH)) {
       try {
 	      ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	      var oauthToken = objectMapper.readValue(token, OAuthToken.class);
