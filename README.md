@@ -35,7 +35,7 @@ This page explains supported environments, support, and giving feedback and prov
 
 If you want to verify the correct provenance of your download, verify the signing details from the Eclipse dialog with this data.
 
-<figure><img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/image (134) (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt="The signing key details to verify the integrity and origin of the download plugin"><figcaption><p>The signing key details to verify the integrity and origin of the download plugin</p></figcaption></figure>
+<figure><img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/image (134) (2) (1) (1) (1) (1) (1) (1) (1).png" alt="The signing key details to verify the integrity and origin of the download plugin"><figcaption><p>The signing key details to verify the integrity and origin of the download plugin</p></figcaption></figure>
 
 The plugin runs on
 
@@ -43,7 +43,7 @@ The plugin runs on
 * Linux
 * Windows
 
-## Supported Eclipse Versions
+## Supported Eclipse versions
 
 * 2023-03
 * 2022-12
@@ -85,13 +85,13 @@ Once Eclipse is restarted, the Snyk Wizard should run; this will set up your Sny
 
 Once the Snyk configuration wizard runs; follow the instructions to set up your Snyk API:
 
-<figure><img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/eclipseSnykWizard.png" alt="Snyk configuration wizard"><figcaption><p>Snyk configuration wizard</p></figcaption></figure>
+<figure><img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/eclipseSnykWizard (1).png" alt="Snyk configuration wizard"><figcaption><p>Snyk configuration wizard</p></figcaption></figure>
 
 Once the Snyk is configured, navigate to **Eclipse Preferences** to ensure that **Snyk** now appears in the list:
 
 <figure><img src="https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/Screenshot 2022-05-17 at 16.36.07.png" alt="Eclipse preferences showing Snyk."><figcaption><p>Eclipse preferences showing Snyk.</p></figcaption></figure>
 
-When you open the preferences you can opt out of downloading the CLI through the plugin and thus use your own installation of the CLI.
+When you open the preferences, you can opt out of downloading the CLI through the plugin and thus use your own installation of the CLI.
 
 Continue with the steps to [Download the CLI and language server with the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/download-the-cli-and-language-server-with-the-eclipse-plugin).
 
