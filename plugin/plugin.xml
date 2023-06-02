@@ -165,7 +165,7 @@
       id="io.snyk.languageserver"
       label="Snyk Language Server"
       clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
-      lastDocumentDisconnectedTimeout="3600"
+      lastDocumentDisconnectedTimeout="3000000"
       singleton="true"
       makerType="io.snyk.languageserver.marker">
     </server>
