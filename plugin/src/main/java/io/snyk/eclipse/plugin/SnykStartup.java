@@ -17,6 +17,8 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.lsp4e.LanguageServersRegistry;
+import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -60,9 +62,6 @@ public class SnykStartup implements IStartup {
               monitor.subTask("Starting download of Snyk Language Server");
               download(monitor);
             }
-            
-            monitor.subTask("Starting Snyk Language Server...");
-            SnykLanguageServer.InitializeServer();
           } catch (Exception exception) {
             logError(exception);
           }
@@ -74,9 +73,20 @@ public class SnykStartup implements IStartup {
             dialog.setBlockOnOpen(true);
             dialog.open();
           }
+          
+          startLanguageServer();
         });
         
         return Status.OK_STATUS;
+      }
+
+      private void startLanguageServer() {
+        var definition = LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
+        try {
+          LanguageServiceAccessor.startLanguageServer(definition);
+        } catch (IOException e) {
+          logError(e);
+        }
       }
     };
     initJob.setPriority(Job.LONG);

@@ -22,6 +22,7 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 
+@SuppressWarnings("restriction")
 public class SnykLanguageServer extends ProcessStreamConnectionProvider implements StreamConnectionProvider {
   public static final String LANGUAGE_SERVER_ID = "io.snyk.languageserver";
   private final LsRuntimeEnvironment runtimeEnvironment;
@@ -46,18 +47,6 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
     setCommands(commands);
     setWorkingDirectory(workingDir);
     super.start();
-    new Job("Snyk: Sending preferences to Language Server") {
-      @Override
-      protected IStatus run(IProgressMonitor monitor) {
-        try {
-          new LsConfigurationUpdater().configurationChanged();
-          monitor.done();
-        } catch (RuntimeException e) {
-          SnykLogger.logError(e);
-        }
-        return Status.OK_STATUS;
-      }
-    }.schedule();
   }
 
   @Override
@@ -76,20 +65,5 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
       SnykLogger.logError(e);
     }
     return currentSettings;
-  }
-
-  public static void InitializeServer() {
-    var projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-    for (IProject project : projects) {
-      if (project.isAccessible()) {
-        try {
-          LanguageServiceAccessor.getLSWrapper(project,
-              LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID));
-        } catch (IOException e) {
-          SnykLogger.logError(e);
-          return;
-        }
-      }
-    }
   }
 }

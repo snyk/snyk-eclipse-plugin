@@ -3,6 +3,7 @@ package io.snyk.languageserver;
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 import java.io.File;
 import java.util.Collections;
@@ -23,27 +24,10 @@ public class LsConfigurationUpdater {
 		var params = new DidChangeConfigurationParams();
 		params.setSettings(getCurrentSettings());
 
-		var definition = LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
-
-		if (definition == null) {
-			return;
-		}
-		for (IProject project : ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
-			if (project.isAccessible()) {
-				try {
-					var servers = Collections
-							.unmodifiableCollection(LanguageServiceAccessor.getLanguageServers(project, null));
-					for (LanguageServer ls : servers) {
-						var currentDefinition = LanguageServiceAccessor.resolveServerDefinition(ls);
-						if (currentDefinition.isEmpty() || !currentDefinition.get().id.equals(definition.id))
-							continue;
-						WorkspaceService workspaceService = ls.getWorkspaceService();
-						workspaceService.didChangeConfiguration(params);
-					}
-				} catch (Exception e) {
-					SnykLogger.logError(e);
-				}
-			}
+		SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+		if (lc != null) {
+    		var languageServer = lc.getConnectedLanguageServer();
+    		languageServer.getWorkspaceService().didChangeConfiguration(params);
 		}
 	}
 
