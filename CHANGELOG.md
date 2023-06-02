@@ -1,10 +1,12 @@
 # Snyk Changelog
 
-## [2.0.0] - Unreleased
-### Changes
-- Increase LS version
-
 ## [2.1.0] - UNRELEASED
+### Changes
+- update plugin to cater to LSP4e API changes
+- cleanup redundant code
+- don't shutdown language server after some time of inactivity
+
+## [2.1.0] - v20230307.102901
 ### Changes
 - unpin LSP4e dependency - this requires running Eclipse on JDK 17+
 
