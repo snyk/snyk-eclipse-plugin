@@ -66,17 +66,20 @@ public class SnykStartup implements IStartup {
             logError(exception);
           }
           downloading = false;
-          
+
+          monitor.subTask("Starting Snyk Language Server...");
+          startLanguageServer();
+
           if (Preferences.getInstance().getAuthToken().isBlank()) {
+            monitor.subTask("Starting Snyk Wizard to configure initial settings...");
             SnykWizard wizard = new SnykWizard();
             WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
             dialog.setBlockOnOpen(true);
             dialog.open();
           }
-          
-          startLanguageServer();
+
         });
-        
+
         return Status.OK_STATUS;
       }
 
