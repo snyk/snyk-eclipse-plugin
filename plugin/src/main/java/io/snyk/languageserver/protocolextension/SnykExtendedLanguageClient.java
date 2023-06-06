@@ -1,7 +1,6 @@
 package io.snyk.languageserver.protocolextension;
 
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,23 +10,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
-import org.eclipse.lsp4e.ServerMessageHandler;
 import org.eclipse.lsp4j.ExecuteCommandParams;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ProgressParams;
-import org.eclipse.lsp4j.ShowDocumentParams;
-import org.eclipse.lsp4j.ShowDocumentResult;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
+import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -60,6 +54,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   public static SnykExtendedLanguageClient getInstance() {
     return instance; // we leave instantiation to LSP4e, no lazy construction here
   }
+
+  public LanguageServer getConnectedLanguageServer() {
+    return super.getLanguageServer();
+  }
+
+
 
   public void triggerScan(IWorkbenchWindow window) {
     if (Preferences.getInstance().getAuthToken().isBlank()) {
@@ -165,7 +165,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     MessageParams messageParams = new MessageParams();
     messageParams.setType(MessageType.Info);
     messageParams.setMessage("The authentication token has been stored in Snyk Preferences.");
-    ServerMessageHandler.showMessage("Authentication with Snyk successful", messageParams);
+    super.showMessage(messageParams);
   }
 
   private void runForProject(String projectName) {
@@ -178,7 +178,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
   private void executeCommand(@NonNull String command, List<Object> arguments) {
     ExecuteCommandParams params = new ExecuteCommandParams(command, arguments);
     try {
-      getLanguageServer().getWorkspaceService().executeCommand(params);
+      getConnectedLanguageServer().getWorkspaceService().executeCommand(params);
     } catch (Exception e) {
       SnykLogger.logError(e);
     }
@@ -192,23 +192,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     } catch (JsonProcessingException e) {
       prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);
     }
-  }
-
-  // TODO: remove once LSP4e supports `showDocument` in its next release (it's
-  // been merged to it already)
-  @Override
-  public CompletableFuture<ShowDocumentResult> showDocument(ShowDocumentParams params) {
-    return CompletableFuture.supplyAsync(() -> {
-      PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-        var location = new Location(params.getUri(), params.getSelection());
-        var window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (window != null) {
-          var page = window.getActivePage();
-          LSPEclipseUtils.openInEditor(location, page);
-        }
-      });
-      return new ShowDocumentResult(true);
-    });
   }
 
   /**
