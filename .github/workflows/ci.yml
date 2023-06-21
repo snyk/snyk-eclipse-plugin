@@ -51,7 +51,7 @@ jobs:
       id: 'auth'
       uses: 'google-github-actions/auth@v0'
       with:
-        credentials_json: '${{ secrets.gcp_credentials }}'
+        credentials_json: '${{ secrets.gcp_credentials_2 }}'
 
     - name: Publish to Marketplace bucket
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
