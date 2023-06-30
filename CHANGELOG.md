@@ -2,6 +2,10 @@
 
 ## [2.1.0] - UNRELEASED
 ### Changes
+- fix custom path configuration
+
+## [2.1.0] - v20230606.182718
+### Changes
 - update plugin to cater to LSP4e API changes
 - cleanup redundant code
 - don't shutdown language server after some time of inactivity
