@@ -74,7 +74,6 @@ public class LsRuntimeEnvironment {
   }
 
   public void updateEnvironment(Map<String, String> env) {
-    addPath(env);
     addIntegrationInfoToEnv(env);
     addProxyToEnv(env);
     addProductEnablement(env);
