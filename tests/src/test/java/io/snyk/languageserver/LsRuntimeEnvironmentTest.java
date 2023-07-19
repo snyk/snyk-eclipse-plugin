@@ -18,6 +18,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
 import java.util.HashMap;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -144,5 +145,15 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     environment.addTelemetry(env);
     // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
     assertEquals("1", env.get(Preferences.ENABLE_TELEMETRY));
+  }
+  @Test
+  void testAddPath() throws StorageException {
+	String expected = "C;/myPath/:";
+    HashMap<String, String> env = new HashMap<>();
+    when(preferenceMock.getPath()).thenReturn(Optional.of(expected));
+    
+    environment.addPath(env);
+
+    assert(env.get("PATH").startsWith(expected));
   }
 }
