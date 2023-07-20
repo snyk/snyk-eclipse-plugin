@@ -123,16 +123,9 @@ public class LsRuntimeEnvironment {
     var pathOptional = Preferences.getInstance().getPath();
     if (pathOptional.isPresent()) {
       var path = pathOptional.get();
-      String splitBy;
-      if (path.contains(";")) {
-        splitBy = ";";
-      } else {
-        splitBy = ":";
-      }
-      String newPath = path.replace(splitBy, File.pathSeparator)
-        + File.pathSeparator
+      String newPath = path + File.pathSeparator
         + System.getenv("PATH");
-      env.put("PATH", newPath);
+		env.put("PATH", newPath);
     }
   }
 
