@@ -12,10 +12,10 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.properties.preferences.ApiClient;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsConfigurationUpdater;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 	private BooleanFieldEditor snykCodeCheckbox;
@@ -120,8 +120,8 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	}
 
 	private void disableSnykCodeIfOrgDisabled() {
-		var apiClient = new ApiClient();
-		if (snykCodeCheckbox.getBooleanValue() && !apiClient.checkSnykCodeEnablement()) {
+		boolean isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
+		if (snykCodeCheckbox.getBooleanValue() && !isSastEnabled) {
 			String message = "Snyk Code disabled, because it is not enabled for your organization. After you close this preference page, it will stay disabled.";
 			snykCodeCheckbox.setLabelText(snykCodeCheckbox.getLabelText() + " (" + message + ")");
 			SnykLogger.logInfo(message);

@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.SnykStartup;
@@ -38,6 +39,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedP
 import io.snyk.languageserver.protocolextension.messageObjects.OAuthToken;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
+
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -101,6 +103,22 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
   public void trustWorkspaceFolders() {
     executeCommand("snyk.trustWorkspaceFolders", new ArrayList<>());
+  }
+  
+  public boolean getSastEnabled() {
+   ExecuteCommandParams params = new ExecuteCommandParams("snyk.getSettingsSastEnabled", new ArrayList<>());
+	try {
+	  CompletableFuture<Object> lsSastSettings =  getConnectedLanguageServer().getWorkspaceService().executeCommand(params);
+	  ObjectMapper mapper = new ObjectMapper();
+	  mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	  SastSettings sastSettings = mapper.convertValue(lsSastSettings.get(), SastSettings.class);
+
+	  return sastSettings.sastEnabled;
+	} catch (Exception e) {
+	  SnykLogger.logError(e);
+	}
+	
+	return false;
   }
 
   @JsonNotification(value = "$/snyk.hasAuthenticated")
@@ -216,5 +234,33 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     var newToken = future.completeOnTimeout(token, 2, TimeUnit.SECONDS).join();
     return !token.equals(newToken);
   }
+  
+	static class SastSettings {
+		public boolean sastEnabled;
 
+		public LocalCodeEngine localCodeEngine;
+
+		public boolean reportFalsePositivesEnabled;
+		
+		public String org;
+		
+		public boolean autofixEnabled;
+	}
+
+	/**
+	 * SAST local code engine configuration.
+	 */
+	static class LocalCodeEngine {
+		public boolean enabled;
+
+		public String url;
+	}
+	
+	public static <T> T convertInstanceOfObject(Object o, Class<T> clazz) {
+	    try {
+	        return clazz.cast(o);
+	    } catch(ClassCastException e) {
+	        return null;
+	    }
+	}
 }
