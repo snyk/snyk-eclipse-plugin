@@ -53,7 +53,8 @@ public class LsDownloaderTest extends LsBaseTest {
     when(httpClientFactory.create(any())).thenReturn(httpClient);
     when(proxyServiceMock.select(any())).thenReturn(new IProxyData[0]);
     try {
-      when(httpClient.execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class), any(HttpContext.class)))
+      when(
+          httpClient.execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class), any(HttpContext.class)))
           .thenReturn("1.1234.0");
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -62,26 +63,35 @@ public class LsDownloaderTest extends LsBaseTest {
 
   @Test
   void downloadShouldFailWhenShaWrongAndFileShouldNotBeOverwritten() throws IOException {
-    byte[] expectedLsContent = Files.readAllBytes(new File(Preferences.getInstance().getCliPath()).toPath());
+    String originalCLIPath = Preferences.getInstance().getCliPath();
+    try {
+      byte[] expectedLsContent = "original file content".getBytes();
+      String testCliPath = File.createTempFile("eclipse-test", "").toPath().toString();
+      Preferences.getInstance().store(Preferences.CLI_PATH, testCliPath);
+      Files.write(new File(testCliPath).toPath(), expectedLsContent);
+      
+      LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
+      File testFile = File.createTempFile("download-test", "tmp");
+      testFile.deleteOnExit();
+      
+      // sha corresponds to file content (`echo "test 123" | sha256sum`)
+      Files.write(testFile.toPath(), "test 123".getBytes(StandardCharsets.UTF_8));
+      InputStream shaStream = new ByteArrayInputStream("wrong sha".getBytes());
+      mockShaStream(shaStream);
+      when(httpClient.execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class),
+          any(HttpContext.class))).thenReturn(testFile);
 
-    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
-    File testFile = File.createTempFile("download-test", "tmp");
-    testFile.deleteOnExit();
-    // sha corresponds to file content (`echo "test 123" | sha256sum`)
-    Files.write(testFile.toPath(), "test 123".getBytes(StandardCharsets.UTF_8));
-    InputStream shaStream = new ByteArrayInputStream("wrong sha".getBytes());
-    mockShaStream(shaStream);
-    when(httpClient.execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class),
-        any(HttpContext.class))).thenReturn(testFile);
+      assertThrows(ChecksumVerificationException.class, () -> cut.download(mock(IProgressMonitor.class)));
 
-    assertThrows(ChecksumVerificationException.class, () -> cut.download(mock(IProgressMonitor.class)));
-
-    File lsFile = new File(Preferences.getInstance().getCliPath());
-    assertTrue(lsFile.exists());
-    assertArrayEquals(Files.readAllBytes(lsFile.toPath()), expectedLsContent);
-    verify(httpClient, times(1)).execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class),
-        any(HttpContext.class));
-    verify(httpClient, times(1)).execute(any(LsShaRequest.class), any(HttpContext.class));
+      File lsFile = new File(testCliPath);
+      assertTrue(lsFile.exists());
+      assertArrayEquals(Files.readAllBytes(lsFile.toPath()), expectedLsContent);
+      verify(httpClient, times(1)).execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class),
+          any(HttpContext.class));
+      verify(httpClient, times(1)).execute(any(LsShaRequest.class), any(HttpContext.class));
+    } finally {
+      Preferences.getInstance().store(Preferences.CLI_PATH, originalCLIPath);
+    }
   }
 
   @Test
