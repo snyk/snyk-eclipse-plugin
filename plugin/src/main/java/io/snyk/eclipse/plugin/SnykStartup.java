@@ -64,9 +64,8 @@ public class SnykStartup implements IStartup {
             }
           } catch (Exception exception) {
             logError(exception);
-          }
+          } 
           downloading = false;
-
           monitor.subTask("Starting Snyk CLI in Language Server mode...");
           startLanguageServer();
 
