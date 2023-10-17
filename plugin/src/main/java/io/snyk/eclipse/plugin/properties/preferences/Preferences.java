@@ -106,7 +106,7 @@ public class Preferences {
       store(CLI_PATH, cliPath);
     }
     if (getPref(CLI_BASE_URL) == null || getPref(CLI_BASE_URL).isBlank()) {
-      store(CLI_BASE_URL, "https://static.snyk.io/cli");
+      store(CLI_BASE_URL, "https://static.snyk.io");
     }
   }
 

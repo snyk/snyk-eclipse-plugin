@@ -78,7 +78,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 			System.out.println("managed bionaries changed");
 		});
 		addField(manageBinaries);
-		addField(new FileFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:",
+		addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:",
             getFieldEditorParent()));
 		addField(new FileFieldEditor(Preferences.CLI_PATH, "Snyk CLI (incl. Language Server):",
 				getFieldEditorParent()));

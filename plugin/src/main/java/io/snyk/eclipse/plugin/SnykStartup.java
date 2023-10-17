@@ -50,16 +50,15 @@ public class SnykStartup implements IStartup {
       logger = Platform.getLog(getClass());
     }
     runtimeEnvironment = new LsRuntimeEnvironment();
-    Job initJob = new Job("Downloading latest Language Server release...") {
+    Job initJob = new Job("Downloading latest CLI release...") {
       @Override
-      protected IStatus run(IProgressMonitor monitor) {
-        PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
+      protected IStatus run(IProgressMonitor monitor) {        
           try {
             logger.info("LS: Checking for needed download");
             if (downloadLS()) {
+              monitor.beginTask("Downloading CLI", 100);
               logger.info("LS: Need to download");
-              downloading = true;
-              monitor.subTask("Starting download of Snyk Language Server");
+              downloading = true;            
               download(monitor);
             }
           } catch (Exception exception) {
@@ -67,7 +66,7 @@ public class SnykStartup implements IStartup {
           }
           downloading = false;
 
-          monitor.subTask("Starting Snyk Language Server...");
+          monitor.subTask("Starting Snyk CLI in Language Server mode...");
           startLanguageServer();
 
           if (Preferences.getInstance().getAuthToken().isBlank()) {
@@ -77,9 +76,7 @@ public class SnykStartup implements IStartup {
             dialog.setBlockOnOpen(true);
             dialog.open();
           }
-
-        });
-
+          monitor.done();
         return Status.OK_STATUS;
       }
 

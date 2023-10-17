@@ -15,6 +15,6 @@ public class LsBinaries {
   }
 
   public static URI getAssetUri(String assetName, String version) {
-    return URI.create(String.format("%s/%s/%s", PREFERENCES.getPref(CLI_BASE_URL), version, assetName));
+    return URI.create(String.format("%s/cli/%s/%s", PREFERENCES.getPref(CLI_BASE_URL), version, assetName));
   }
 }
