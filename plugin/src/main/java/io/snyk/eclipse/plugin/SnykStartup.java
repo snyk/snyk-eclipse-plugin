@@ -117,7 +117,7 @@ public class SnykStartup implements IStartup {
   }
 
   private boolean downloadLS() {
-    File lsFile = new File(Preferences.getInstance().getLsBinary());
+    File lsFile = new File(Preferences.getInstance().getCliPath());
     logger.info("LS: Expecting file at " + lsFile.getAbsolutePath());
     if (!Preferences.getInstance().isManagedBinaries()) {
       logger.info("LS: Managed binaries disabled, skipping download");
@@ -148,7 +148,7 @@ public class SnykStartup implements IStartup {
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
   IStatus download(IProgressMonitor monitor) {
-    final File lsFile = new File(Preferences.getInstance().getLsBinary());
+    final File lsFile = new File(Preferences.getInstance().getCliPath());
     try {
       LsDownloader lsDownloader = getLsDownloader();
       lsFile.getParentFile().mkdirs();

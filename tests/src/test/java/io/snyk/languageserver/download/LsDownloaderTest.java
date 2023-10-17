@@ -22,6 +22,7 @@ import java.nio.file.StandardCopyOption;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.HttpContext;
@@ -51,12 +52,17 @@ public class LsDownloaderTest extends LsBaseTest {
 
     when(httpClientFactory.create(any())).thenReturn(httpClient);
     when(proxyServiceMock.select(any())).thenReturn(new IProxyData[0]);
-    mockMetadata();
+    try {
+      when(httpClient.execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class), any(HttpContext.class)))
+          .thenReturn("1.1234.0");
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Test
   void downloadShouldFailWhenShaWrongAndFileShouldNotBeOverwritten() throws IOException {
-    byte[] expectedLsContent = Files.readAllBytes(new File(Preferences.getInstance().getLsBinary()).toPath());
+    byte[] expectedLsContent = Files.readAllBytes(new File(Preferences.getInstance().getCliPath()).toPath());
 
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     File testFile = File.createTempFile("download-test", "tmp");
@@ -70,7 +76,7 @@ public class LsDownloaderTest extends LsBaseTest {
 
     assertThrows(ChecksumVerificationException.class, () -> cut.download(mock(IProgressMonitor.class)));
 
-    File lsFile = new File(Preferences.getInstance().getLsBinary());
+    File lsFile = new File(Preferences.getInstance().getCliPath());
     assertTrue(lsFile.exists());
     assertArrayEquals(Files.readAllBytes(lsFile.toPath()), expectedLsContent);
     verify(httpClient, times(1)).execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class),
@@ -121,7 +127,7 @@ public class LsDownloaderTest extends LsBaseTest {
     verify(httpClient, times(1)).execute(any(LsShaRequest.class), any(HttpContext.class));
     verify(httpClient, times(1)).execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class),
         any(HttpContext.class));
-    File lsFile = new File(Preferences.getInstance().getLsBinary());
+    File lsFile = new File(Preferences.getInstance().getCliPath());
     assertTrue(lsFile.exists());
     assertArrayEquals(Files.readAllBytes(lsFile.toPath()), fileContent);
   }
@@ -130,7 +136,7 @@ public class LsDownloaderTest extends LsBaseTest {
   void respectsLSBinaryPath() throws IOException {
     String lsBinaryPath = getTempFile().toString();
     Files.delete(Path.of(lsBinaryPath));
-    Preferences.getInstance().store(Preferences.LS_BINARY_KEY, lsBinaryPath);
+    Preferences.getInstance().store(Preferences.CLI_PATH, lsBinaryPath);
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     Path source = Paths.get("src/test/resources/ls-dummy-binary");
     var testFile = Files.createTempFile("download-test", "tmp").toFile();
@@ -155,28 +161,9 @@ public class LsDownloaderTest extends LsBaseTest {
   @Test
   void getVersionShouldDownloadAndExtractTheLatestVersion() {
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
-    var metadataObject = mockMetadata();
+    var expected = "1.1234.0";
     var actual = cut.getVersion();
-    assertEquals(metadataObject.getVersion(), actual);
-  }
-
-  private LsMetadata mockMetadata() {
-    String metadata = "{\"project_name\":\"snyk-ls\"," + "\"tag\":\"v20220303.140906\","
-        + "\"previous_tag\":\"v20220303.132432\"," + "\"version\":\"testVersion\","
-        + "\"commit\":\"419dbb08b663ec1d08a5bd416afcc0393703d4b7\"," + "\"date\":\"2022-03-03T14:21:22.279851+01:00\","
-        + "\"runtime\":{\"goos\":\"darwin\",\"goarch\":\"amd64\"}}";
-    ObjectMapper mapper = new ObjectMapper();
-    try {
-      var metadataObject = mapper.readValue(metadata.getBytes(), LsMetadata.class);
-
-      when(
-          httpClient.execute(any(LsVersionRequest.class), any(LsMetadataResponseHandler.class), any(HttpContext.class)))
-          .thenReturn(metadataObject);
-
-      return metadataObject;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    assertEquals(expected, actual);
   }
 
   private void mockShaStream(InputStream shaStream) throws IOException {

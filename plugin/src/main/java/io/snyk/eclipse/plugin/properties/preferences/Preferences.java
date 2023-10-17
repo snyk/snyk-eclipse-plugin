@@ -4,6 +4,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import io.snyk.eclipse.plugin.EnvironmentConstants;
+import io.snyk.languageserver.LsRuntimeEnvironment;
 
 import java.io.File;
 import java.util.Optional;
@@ -12,10 +13,11 @@ import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getBinaryDirectory;
 
 public class Preferences {
   static Preferences CURRENT_PREFERENCES;
+  static LsRuntimeEnvironment LS_RUNTIME_ENV = new LsRuntimeEnvironment();
 
   public static synchronized Preferences getInstance() {
     if (CURRENT_PREFERENCES == null) {
-      CURRENT_PREFERENCES = new Preferences(new SecurePreferenceStore());
+      CURRENT_PREFERENCES = new Preferences(new SecurePreferenceStore()); 
     }
     return CURRENT_PREFERENCES;
   }
@@ -82,34 +84,30 @@ public class Preferences {
     if (getPref(AUTHENTICATION_METHOD) == null || getPref(AUTHENTICATION_METHOD).isBlank()) {
       store(AUTHENTICATION_METHOD, AUTH_METHOD_TOKEN);
     }
-    
-    if (getPref(LS_BINARY_KEY) == null || getPref(LS_BINARY_KEY).equals("")) {
-      store(LS_BINARY_KEY, getDefaultLsPath());
-    }
 
     String token = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
     if (getPref(AUTH_TOKEN_KEY) == null && !"".equals(token)) {
       store(AUTH_TOKEN_KEY, token);
     }
+    
     String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
     if (getPref(ENDPOINT_KEY) == null && !"".equals(endpoint)) {
       store(ENDPOINT_KEY, endpoint);
     }
+    
     String org = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, "");
     if (getPref(ORGANIZATION_KEY) == null && !"".equals(org)) {
       store(ORGANIZATION_KEY, org);
     }
+    
+    String cliPath = getDefaultCliPath();
+    if (getPref(CLI_PATH) == null && !"".equals(cliPath)) {
+      store(CLI_PATH, cliPath);
+    }
   }
 
-  private String getBinaryName() {
-    var osName = SystemUtils.OS_NAME;
-    var executable = "snyk-ls";
-    if (osName.toLowerCase().startsWith("win")) executable += ".exe";
-    return executable;
-  }
-
-  private String getDefaultLsPath() {
-    File binary = new File(getBinaryDirectory(), getBinaryName());
+  private String getDefaultCliPath() {
+    File binary = new File(getBinaryDirectory(), LS_RUNTIME_ENV.getDownloadBinaryName());
     return binary.getAbsolutePath();
   }
 
@@ -129,9 +127,6 @@ public class Preferences {
     return getPref(ENDPOINT_KEY, "");
   }
 
-  public String getLsBinary() {
-    return getPref(LS_BINARY_KEY, "");
-  }
   public String getLspVersion() {
     return getPref(LSP_VERSION);
   }

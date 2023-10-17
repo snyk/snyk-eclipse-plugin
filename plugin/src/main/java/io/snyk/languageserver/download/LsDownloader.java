@@ -45,15 +45,15 @@ public class LsDownloader {
   }
 
   public void download(IProgressMonitor monitor) {
-    File destinationFile = new File(Preferences.getInstance().getLsBinary());
+    File destinationFile = new File(Preferences.getInstance().getCliPath());
     File tempFile = null;
     try {
       tempFile = File.createTempFile(destinationFile.getName(), ".tmp", destinationFile.getParentFile());
-      logger.info("LS: Starting download to "+tempFile.getAbsolutePath());
+      logger.info("LS: Starting download to " + tempFile.getAbsolutePath());
       var version = getVersion();
       var expectedSha = getSha(version);
 
-      logger.info("LS: Version: "+version+", Sha: "+expectedSha);
+      logger.info("LS: Version: " + version + ", Sha: " + expectedSha);
 
       LsDownloadRequest binaryRequest = new LsDownloadRequest(version, runtimeEnvironment);
       tempFile = httpClient.execute(binaryRequest, new FileDownloadResponseHandler(tempFile, monitor), context);
@@ -64,22 +64,24 @@ public class LsDownloader {
       logger.info("LS: Verified checksum.");
 
       try {
-        logger.info("LS: Moving file to "+destinationFile.toPath());
+        logger.info("LS: Moving file to " + destinationFile.toPath());
         Files.move(tempFile.toPath(), destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE,
-          StandardCopyOption.REPLACE_EXISTING);
+            StandardCopyOption.REPLACE_EXISTING);
         Preferences.getInstance().store(Preferences.LSP_VERSION, LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
       } catch (AtomicMoveNotSupportedException e) {
         // fallback to renameTo because of e
-        logger.warn("LS: Fallback using rename to "+destinationFile.toPath());
+        logger.warn("LS: Fallback using rename to " + destinationFile.toPath());
         if (!tempFile.renameTo(destinationFile)) {
           logger.error("LS: Rename failed: " + destinationFile.toPath());
           throw new IOException("Rename not successful");
         }
       }
-      logger.info("LS: Setting executable bit "+destinationFile.toPath());
+      logger.info("LS: Setting executable bit " + destinationFile.toPath());
       if (!destinationFile.setExecutable(true))
         throw new IOException("Could not set executable permission on " + destinationFile);
-    } catch (IOException e) {
+    } catch (ChecksumVerificationException e) {
+      throw e;
+    } catch (Exception e) {
       logger.error("IOException", e);
       throw new RuntimeException(e);
     } finally {
@@ -94,14 +96,14 @@ public class LsDownloader {
   }
 
   String getVersion() {
-    LsVersionRequest req = new LsVersionRequest();
-    LsMetadata metadata;
+    var response = "";
     try {
-      metadata = httpClient.execute(req, new LsMetadataResponseHandler(), context);
+      var req = new LsVersionRequest();
+      response = httpClient.execute(req, new LsMetadataResponseHandler(), context);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    return metadata.getVersion();
+    return response;
   }
 
   String getSha(String version) {
@@ -113,8 +115,8 @@ public class LsDownloader {
 
       var entity = response.getEntity();
       try (var buf = new BufferedReader(new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8))) {
-        String fileName = runtimeEnvironment.getDownloadBinaryName(version);
-        List<String> lines = buf.lines().filter(s -> s.contains(fileName)).collect(Collectors.toList());
+        String fileName = runtimeEnvironment.getDownloadBinaryName();
+        List<String> lines = buf.lines().filter(s -> s.endsWith(fileName)).collect(Collectors.toList());
         if (lines.size() != 1)
           throw new ChecksumVerificationException("Could not find sha for verification of file: " + fileName);
         return lines.get(0).split(" ")[0];
@@ -129,8 +131,7 @@ public class LsDownloader {
       byte[] sha = MessageDigest.getInstance("SHA-256").digest(checksumDownloadedFile);
       String actualSha = bytesToHex(sha).toLowerCase();
       if (!actualSha.equalsIgnoreCase(expectedSha)) {
-        throw new ChecksumVerificationException(
-          "Expected " + expectedSha + ", but downloaded file has " + actualSha);
+        throw new ChecksumVerificationException("Expected " + expectedSha + ", but downloaded file has " + actualSha);
       }
     } catch (NoSuchAlgorithmException e) {
       throw new ChecksumVerificationException(e);

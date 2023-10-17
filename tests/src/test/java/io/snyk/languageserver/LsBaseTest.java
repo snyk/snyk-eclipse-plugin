@@ -34,7 +34,7 @@ public class LsBaseTest {
 
     when(environment.getArch()).thenReturn("amd64");
     when(environment.getOs()).thenReturn("linux");
-    when(environment.getDownloadBinaryName(any())).thenReturn("snyk-ls_testVersion_linux_amd64");
+    when(environment.getDownloadBinaryName()).thenReturn("snyk-ls_testVersion_linux_amd64");
     proxyServiceMock = mock(IProxyService.class);
     when(environment.getProxyService()).thenReturn(proxyServiceMock);
   }

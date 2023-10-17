@@ -78,9 +78,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 			System.out.println("managed bionaries changed");
 		});
 		addField(manageBinaries);
-		addField(new FileFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.LS_BINARY_KEY,
-				"Snyk Language Server:", getFieldEditorParent()));
-		addField(new FileFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.CLI_PATH, "Snyk CLI:",
+		addField(new FileFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.CLI_PATH, "Snyk CLI (incl. Language Server):",
 				getFieldEditorParent()));
 
 		addField(space());
