@@ -35,6 +35,7 @@ public class Preferences {
   public static final String INSECURE_KEY = "insecure";
   public static final String LS_BINARY_KEY = "ls-binary";
   public static final String CLI_PATH = "cli-path";
+  public static final String CLI_BASE_URL = "cli-base-url";
   public static final String ACTIVATE_SNYK_CODE = "ACTIVATE_SNYK_CODE";
   public static final String ACTIVATE_SNYK_OPEN_SOURCE = "ACTIVATE_SNYK_OPEN_SOURCE";
   public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
@@ -103,6 +104,9 @@ public class Preferences {
     String cliPath = getDefaultCliPath();
     if (getPref(CLI_PATH) == null && !"".equals(cliPath)) {
       store(CLI_PATH, cliPath);
+    }
+    if (getPref(CLI_BASE_URL) == null || getPref(CLI_BASE_URL).isBlank()) {
+      store(CLI_BASE_URL, "https://static.snyk.io/cli");
     }
   }
 
