@@ -52,13 +52,14 @@ public class SnykStartup implements IStartup {
     runtimeEnvironment = new LsRuntimeEnvironment();
     Job initJob = new Job("Downloading latest CLI release...") {
       @Override
-      protected IStatus run(IProgressMonitor monitor) {        
+      protected IStatus run(IProgressMonitor monitor) {
+        PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
           try {
             logger.info("LS: Checking for needed download");
             if (downloadLS()) {
               monitor.beginTask("Downloading CLI", 100);
               logger.info("LS: Need to download");
-              downloading = true;            
+              downloading = true;
               download(monitor);
             }
           } catch (Exception exception) {
@@ -77,6 +78,7 @@ public class SnykStartup implements IStartup {
             dialog.open();
           }
           monitor.done();
+        });
         return Status.OK_STATUS;
       }
 
