@@ -53,22 +53,22 @@ public class SnykStartup implements IStartup {
     Job initJob = new Job("Downloading latest CLI release...") {
       @Override
       protected IStatus run(IProgressMonitor monitor) {
-        PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-          try {
-            logger.info("LS: Checking for needed download");
-            if (downloadLS()) {
-              monitor.beginTask("Downloading CLI", 100);
-              logger.info("LS: Need to download");
-              downloading = true;
-              download(monitor);
-            }
-          } catch (Exception exception) {
-            logError(exception);
-          } 
-          downloading = false;
-          monitor.subTask("Starting Snyk CLI in Language Server mode...");
-          startLanguageServer();
+        try {
+          logger.info("LS: Checking for needed download");
+          if (downloadLS()) {
+            monitor.beginTask("Downloading CLI", 100);
+            logger.info("LS: Need to download");
+            downloading = true;
+            download(monitor);
+          }
+        } catch (Exception exception) {
+          logError(exception);
+        }
+        downloading = false;
+        monitor.subTask("Starting Snyk CLI in Language Server mode...");
+        startLanguageServer();
 
+        PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
           if (Preferences.getInstance().getAuthToken().isBlank()) {
             monitor.subTask("Starting Snyk Wizard to configure initial settings...");
             SnykWizard wizard = new SnykWizard();
@@ -76,8 +76,9 @@ public class SnykStartup implements IStartup {
             dialog.setBlockOnOpen(true);
             dialog.open();
           }
-          monitor.done();
         });
+        monitor.done();
+
         return Status.OK_STATUS;
       }
 
