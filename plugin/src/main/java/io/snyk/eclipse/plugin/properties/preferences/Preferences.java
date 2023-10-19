@@ -33,7 +33,6 @@ public class Preferences {
   public static final String PATH_KEY = "path";
   public static final String ENDPOINT_KEY = "endpoint";
   public static final String INSECURE_KEY = "insecure";
-  public static final String LS_BINARY_KEY = "ls-binary";
   public static final String CLI_PATH = "cli-path";
   public static final String CLI_BASE_URL = "cli-base-url";
   public static final String ACTIVATE_SNYK_CODE = "ACTIVATE_SNYK_CODE";
