@@ -29,7 +29,6 @@ public class LsBaseTest {
     lsFile = getTempFile();
     environment = mock(LsRuntimeEnvironment.class);
     InMemoryPreferenceStore store = new InMemoryPreferenceStore();
-    store.put(Preferences.LS_BINARY_KEY, lsFile.toString());
     PreferencesUtils.setPreferences(Preferences.getInstance(store));
 
     when(environment.getArch()).thenReturn("amd64");

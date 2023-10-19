@@ -1,6 +1,8 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
 import io.snyk.eclipse.plugin.EnvironmentConstants;
+import io.snyk.languageserver.LsRuntimeEnvironment;
+
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,8 @@ class PreferencesTest {
   @Test
   void test_DefaultPreferences() {
     Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
-
+    LsRuntimeEnvironment lsRuntimeEnv = new LsRuntimeEnvironment();
+    
     assertEquals("false", prefs.getPref(Preferences.ACTIVATE_SNYK_CODE));
     assertEquals("true", prefs.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
     assertEquals("true", prefs.getPref(Preferences.ACTIVATE_SNYK_IAC));
@@ -34,6 +37,7 @@ class PreferencesTest {
     assertEquals("true", prefs.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
     assertEquals("1", prefs.getPref(Preferences.LSP_VERSION));
     assertEquals(Preferences.AUTH_METHOD_TOKEN, prefs.getPref(Preferences.AUTHENTICATION_METHOD));
+    assertTrue(prefs.getCliPath().endsWith(lsRuntimeEnv.getDownloadBinaryName()));
   }
 
   @Test
