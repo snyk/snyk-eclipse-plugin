@@ -44,7 +44,7 @@ jobs:
     - name: Build with Maven
       if: ${{ matrix.os != 'ubuntu-latest' }}
       run: |
-        ./mvnw clean verify
+        ./mvnw clean verify -DtrimStackTrace=false
 
     - name: Authenticate to GCS
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
