@@ -47,7 +47,7 @@ public class LsRuntimeEnvironment {
     String base = "snyk-%s%s";
     String os = getOs();
     String executable = String.format(base, os, getArch());
-    if (executable.toLowerCase().contains("windows"))
+    if (executable.toLowerCase().contains("win"))
       executable += ".exe";
     return executable;
   }
