@@ -47,7 +47,8 @@ public class LsDownloader {
     File destinationFile = new File(Preferences.getInstance().getCliPath());
     File tempFile = null;
     try {
-      tempFile = File.createTempFile(destinationFile.getName(), ".tmp");
+      Files.createDirectories(destinationFile.toPath().getParent());
+      tempFile = File.createTempFile(destinationFile.getName(), ".tmp", destinationFile.getParentFile());
       logger.info("LS: Starting download to " + tempFile.getAbsolutePath());
 
       monitor.subTask("Determining version to download");
