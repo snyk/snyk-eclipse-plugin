@@ -111,9 +111,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	  CompletableFuture<Object> lsSastSettings =  getConnectedLanguageServer().getWorkspaceService().executeCommand(params);
 	  ObjectMapper mapper = new ObjectMapper();
 	  mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-	  SastSettings sastSettings = mapper.convertValue(lsSastSettings.get(), SastSettings.class);
-
-	  return sastSettings.sastEnabled;
+	  SastSettings sastSettings = mapper.convertValue(lsSastSettings.get(), SastSettings.class);	  
+	  return sastSettings != null ? sastSettings.sastEnabled : false;
 	} catch (Exception e) {
 	  SnykLogger.logError(e);
 	}

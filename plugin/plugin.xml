@@ -167,7 +167,7 @@
       clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
       lastDocumentDisconnectedTimeout="3000000"
       singleton="true"
-      makerType="io.snyk.languageserver.marker">
+      markerType="io.snyk.languageserver.marker">
     </server>
 
     <!-- snyk code -->

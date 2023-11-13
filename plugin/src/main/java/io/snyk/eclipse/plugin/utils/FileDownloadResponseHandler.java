@@ -14,7 +14,6 @@ public class FileDownloadResponseHandler implements ResponseHandler<File> {
 
   private final File destinationFile;
   private final IProgressMonitor progressMonitor;
-  private static final String HEADER_CONTENT_LENGTH = "content-length";
 
   public FileDownloadResponseHandler(File file, IProgressMonitor monitor) {
     this.destinationFile = file;
