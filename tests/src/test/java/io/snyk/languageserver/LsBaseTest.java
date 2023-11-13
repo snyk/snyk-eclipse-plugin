@@ -1,6 +1,7 @@
 package io.snyk.languageserver;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearAllCaches;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +25,7 @@ public class LsBaseTest {
 
   @BeforeEach
   protected void setUp() {
+    clearAllCaches();
     if (lsFile.exists())
       lsFile.delete();
     lsFile = getTempFile();
@@ -41,6 +43,7 @@ public class LsBaseTest {
   @AfterEach
   void tearDown() {
     lsFile.delete();
+    clearAllCaches();
   }
 
   protected File getTempFile() {
