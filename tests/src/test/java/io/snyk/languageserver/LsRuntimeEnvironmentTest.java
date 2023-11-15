@@ -39,9 +39,9 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 
   @Test
   void testDownloadBinaryNameConstructions() {
-    var actual = environment.getDownloadBinaryName();
-    String expected = "snyk-"+environment.getOs() + environment.getArch();
-    if (expected.contains("win"))
+    var actual = environment.getDownloadBinaryName("testVersion");
+    String expected = "snyk-ls_testVersion_" + environment.getOs() + "_" + environment.getArch();
+    if (expected.contains("windows"))
       expected += ".exe";
     assertEquals(expected, actual);
   }
@@ -135,7 +135,6 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
     assertEquals("0", env.get(Preferences.ENABLE_TELEMETRY));
   }
-  
   @Test
   void testEnableTelemetryIsAddedToEnvironmentDisabled() throws StorageException {
     HashMap<String, String> env = new HashMap<>();
@@ -147,7 +146,6 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
     assertEquals("1", env.get(Preferences.ENABLE_TELEMETRY));
   }
-  
   @Test
   void testAddPath() throws StorageException {
 	String expected = "C;/myPath/:";
