@@ -6,6 +6,14 @@ import java.net.URI;
 import java.util.List;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.lsp4e.LanguageServersRegistry;
+import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
 
@@ -33,8 +41,8 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
       }
     }
 
-    List<String> commands = Lists.of(Preferences.getInstance().getCliPath(), "language-server", "-l", "info", "-f",
-        new File(Preferences.getInstance().getCliPath()).getParent() + File.separator + "snyk-ls.log");
+    List<String> commands = Lists.of(Preferences.getInstance().getLsBinary(), "language-server", "-l", "info", "-f",
+        new File(Preferences.getInstance().getLsBinary()).getParent() + File.separator + "snyk-ls.log");
     String workingDir = SystemUtils.USER_DIR;
     setCommands(commands);
     setWorkingDirectory(workingDir);
@@ -47,8 +55,6 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
     runtimeEnvironment.updateEnvironment(pb.environment());
     return pb;
   }
-  
-  
 
   @Override
   public Object getInitializationOptions(URI rootUri) {

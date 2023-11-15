@@ -37,14 +37,14 @@ jobs:
 
     - name: Build with Maven
       if: ${{ matrix.os == 'ubuntu-latest' }}
-      run: ./mvnw clean verify -P sign -DtrimStackTrace=false
+      run: ./mvnw clean verify -P sign
       env:
         KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
 
     - name: Build with Maven
       if: ${{ matrix.os != 'ubuntu-latest' }}
       run: |
-        ./mvnw clean verify -DtrimStackTrace=false
+        ./mvnw clean verify
 
     - name: Authenticate to GCS
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
