@@ -1,6 +1,7 @@
 package io.snyk.languageserver;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearAllCaches;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,17 +25,17 @@ public class LsBaseTest {
 
   @BeforeEach
   protected void setUp() {
+    clearAllCaches();
     if (lsFile.exists())
       lsFile.delete();
     lsFile = getTempFile();
     environment = mock(LsRuntimeEnvironment.class);
     InMemoryPreferenceStore store = new InMemoryPreferenceStore();
-    store.put(Preferences.LS_BINARY_KEY, lsFile.toString());
     PreferencesUtils.setPreferences(Preferences.getInstance(store));
 
     when(environment.getArch()).thenReturn("amd64");
     when(environment.getOs()).thenReturn("linux");
-    when(environment.getDownloadBinaryName(any())).thenReturn("snyk-ls_testVersion_linux_amd64");
+    when(environment.getDownloadBinaryName()).thenReturn("snyk-ls_testVersion_linux_amd64");
     proxyServiceMock = mock(IProxyService.class);
     when(environment.getProxyService()).thenReturn(proxyServiceMock);
   }
@@ -42,6 +43,7 @@ public class LsBaseTest {
   @AfterEach
   void tearDown() {
     lsFile.delete();
+    clearAllCaches();
   }
 
   protected File getTempFile() {

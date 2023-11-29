@@ -26,22 +26,22 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	@Override
 	public void init(IWorkbench workbench) {
-		setPreferenceStore(io.snyk.eclipse.plugin.properties.preferences.Preferences.getInstance().getStore());
+		setPreferenceStore(Preferences.getInstance().getStore());
 		setMessage("Snyk Preferences");
 	}
 
 	@Override
 	protected void createFieldEditors() {
 		TokenFieldEditor tokenField = new TokenFieldEditor(
-				io.snyk.eclipse.plugin.properties.preferences.Preferences.getInstance(),
-				io.snyk.eclipse.plugin.properties.preferences.Preferences.AUTH_TOKEN_KEY, "Snyk API Token:",
+				Preferences.getInstance(),
+				Preferences.AUTH_TOKEN_KEY, "Snyk API Token:",
 				getFieldEditorParent());
 		addField(tokenField);
-		addField(new StringFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.PATH_KEY, "Path:",
+		addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:",
 				getFieldEditorParent()));
-		addField(new StringFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.ENDPOINT_KEY,
+		addField(new StringFieldEditor(Preferences.ENDPOINT_KEY,
 				"Custom Endpoint:", getFieldEditorParent()));
-		addField(new BooleanFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.INSECURE_KEY,
+		addField(new BooleanFieldEditor(Preferences.INSECURE_KEY,
 				"Allow unknown certificate authorities", getFieldEditorParent()));
 
 		addField(space());
@@ -52,23 +52,23 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 				getFieldEditorParent()));
 		addField(space());
 		addField(new BooleanFieldEditor(
-				io.snyk.eclipse.plugin.properties.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
+				Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
 				"Snyk Open Source enabled", getFieldEditorParent()));
 		snykCodeCheckbox = new BooleanFieldEditor(
-				io.snyk.eclipse.plugin.properties.preferences.Preferences.ACTIVATE_SNYK_CODE, "Snyk Code enable" + "d",
+				Preferences.ACTIVATE_SNYK_CODE, "Snyk Code enable" + "d",
 				getFieldEditorParent());
 
 		addField(snykCodeCheckbox);
-		addField(new BooleanFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.ACTIVATE_SNYK_IAC,
+		addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC,
 				"Snyk Infrastructure-as-Code enabled", getFieldEditorParent()));
 
 		addField(space());
 		addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
-		addField(new StringFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.ORGANIZATION_KEY,
+		addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY,
 				"Organization:", getFieldEditorParent()));
-		addField(new StringFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.ADDITIONAL_PARAMETERS,
+		addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS,
 				"Additional Parameters:", getFieldEditorParent()));
-		addField(new StringFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.ADDITIONAL_ENVIRONMENT,
+		addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT,
 				"Additional Environment:", getFieldEditorParent()));
 
 		addField(space());
@@ -78,14 +78,14 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 			System.out.println("managed bionaries changed");
 		});
 		addField(manageBinaries);
-		addField(new FileFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.LS_BINARY_KEY,
-				"Snyk Language Server:", getFieldEditorParent()));
-		addField(new FileFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.CLI_PATH, "Snyk CLI:",
+		addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:",
+            getFieldEditorParent()));
+		addField(new FileFieldEditor(Preferences.CLI_PATH, "Snyk CLI (incl. Language Server):",
 				getFieldEditorParent()));
 
 		addField(space());
 
-		addField(new BooleanFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.SEND_ERROR_REPORTS,
+		addField(new BooleanFieldEditor(Preferences.SEND_ERROR_REPORTS,
 				"Send error reports to Snyk", getFieldEditorParent()));
 		addField(new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Send usage statistics to Snyk",
 				getFieldEditorParent()));
@@ -97,7 +97,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 				+ "paths are safe to scan. Every path below a given path is considered safe to scan. \n"
 				+ "Please separate entries with \"" + File.pathSeparator + "\".",
 				getFieldEditorParent()));
-		addField(new StringFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences.TRUSTED_FOLDERS,
+		addField(new StringFieldEditor(Preferences.TRUSTED_FOLDERS,
 				"Trusted Folders:", getFieldEditorParent()));
 
 		disableSnykCodeIfOrgDisabled();

@@ -1,16 +1,20 @@
 package io.snyk.languageserver.download;
 
+import static io.snyk.eclipse.plugin.properties.preferences.Preferences.CLI_BASE_URL;
+
 import java.net.URI;
 
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+
 public class LsBinaries {
-  private static final String LS_DOWNLOAD_BASE_URL = "https://static.snyk.io/snyk-ls";
+  private static final Preferences PREFERENCES = Preferences.getInstance();
   public static final String REQUIRED_LS_PROTOCOL_VERSION = "10";
 
   public static URI getBaseUri() {
-    return URI.create(String.format("%s/%s", LS_DOWNLOAD_BASE_URL, REQUIRED_LS_PROTOCOL_VERSION));
+    return URI.create(PREFERENCES.getPref(CLI_BASE_URL));
   }
 
-  public static URI getAssetUri(String assetName) {
-    return URI.create(String.format("%s/%s/%s", LS_DOWNLOAD_BASE_URL, REQUIRED_LS_PROTOCOL_VERSION, assetName));
+  public static URI getAssetUri(String assetName, String version) {
+    return URI.create(String.format("%s/cli/%s/%s", PREFERENCES.getPref(CLI_BASE_URL), version, assetName));
   }
 }
