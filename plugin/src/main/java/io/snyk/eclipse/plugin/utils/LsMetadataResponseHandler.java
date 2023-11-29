@@ -1,25 +1,27 @@
 package io.snyk.eclipse.plugin.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.snyk.languageserver.download.LsMetadata;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-public class LsMetadataResponseHandler implements ResponseHandler<LsMetadata> {
-  private final ObjectMapper om = new ObjectMapper();
+public class LsMetadataResponseHandler implements ResponseHandler<String> {
 
   public LsMetadataResponseHandler() {
   }
 
   @Override
-  public LsMetadata handleResponse(HttpResponse httpResponse) {
-    try (InputStream inputStream = httpResponse.getEntity().getContent()) {
-      return om.readValue(inputStream, LsMetadata.class);
+  public String handleResponse(HttpResponse httpResponse) {
+    String latestCliSupportingLSProtocolVersion = "10";
+    InputStream inputStream;
+    try {
+      inputStream = httpResponse.getEntity().getContent();
+      latestCliSupportingLSProtocolVersion = new String(inputStream.readAllBytes(), Charset.defaultCharset());
     } catch (UnsupportedOperationException | IOException e) {
       throw new RuntimeException(e);
     }
+    return latestCliSupportingLSProtocolVersion;
   }
 }

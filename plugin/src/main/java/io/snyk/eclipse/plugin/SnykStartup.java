@@ -50,26 +50,25 @@ public class SnykStartup implements IStartup {
       logger = Platform.getLog(getClass());
     }
     runtimeEnvironment = new LsRuntimeEnvironment();
-    Job initJob = new Job("Downloading latest Language Server release...") {
+    Job initJob = new Job("Downloading latest CLI release...") {
       @Override
       protected IStatus run(IProgressMonitor monitor) {
-        PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
-          try {
-            logger.info("LS: Checking for needed download");
-            if (downloadLS()) {
-              logger.info("LS: Need to download");
-              downloading = true;
-              monitor.subTask("Starting download of Snyk Language Server");
-              download(monitor);
-            }
-          } catch (Exception exception) {
-            logError(exception);
+        try {
+          logger.info("LS: Checking for needed download");
+          if (downloadLS()) {
+            monitor.beginTask("Downloading CLI", 100);
+            logger.info("LS: Need to download");
+            downloading = true;
+            download(monitor);
           }
-          downloading = false;
+        } catch (Exception exception) {
+          logError(exception);
+        }
+        downloading = false;
+        monitor.subTask("Starting Snyk CLI in Language Server mode...");
+        startLanguageServer();
 
-          monitor.subTask("Starting Snyk Language Server...");
-          startLanguageServer();
-
+        PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
           if (Preferences.getInstance().getAuthToken().isBlank()) {
             monitor.subTask("Starting Snyk Wizard to configure initial settings...");
             SnykWizard wizard = new SnykWizard();
@@ -77,8 +76,8 @@ public class SnykStartup implements IStartup {
             dialog.setBlockOnOpen(true);
             dialog.open();
           }
-
         });
+        monitor.done();
 
         return Status.OK_STATUS;
       }
@@ -117,7 +116,7 @@ public class SnykStartup implements IStartup {
   }
 
   private boolean downloadLS() {
-    File lsFile = new File(Preferences.getInstance().getLsBinary());
+    File lsFile = new File(Preferences.getInstance().getCliPath());
     logger.info("LS: Expecting file at " + lsFile.getAbsolutePath());
     if (!Preferences.getInstance().isManagedBinaries()) {
       logger.info("LS: Managed binaries disabled, skipping download");
@@ -148,7 +147,7 @@ public class SnykStartup implements IStartup {
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
   IStatus download(IProgressMonitor monitor) {
-    final File lsFile = new File(Preferences.getInstance().getLsBinary());
+    final File lsFile = new File(Preferences.getInstance().getCliPath());
     try {
       LsDownloader lsDownloader = getLsDownloader();
       lsFile.getParentFile().mkdirs();

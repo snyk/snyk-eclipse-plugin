@@ -2,11 +2,8 @@ package io.snyk.languageserver.download;
 
 import org.apache.http.client.methods.HttpGet;
 
-import java.net.URISyntaxException;
-
-
 public class LsVersionRequest extends HttpGet {
   public LsVersionRequest() {
-    setURI(LsBinaries.getAssetUri("metadata.json"));
+    setURI(LsBinaries.getAssetUri("ls-protocol-version-" + LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, "latest"));
   }
 }

@@ -24,42 +24,31 @@ public class LsRuntimeEnvironment {
   public static final Map<String, String> map = new HashMap<>();
 
   static {
-    map.put("win", "windows");
+    map.put("win", "win");
     map.put("lin", "linux");
-    map.put("mac", "darwin");
-    map.put("dar", "darwin");
-    map.put("macosx", "darwin");
+    map.put("mac", "macos");
+    map.put("dar", "macos");
+    map.put("macosx", "macos");
 
-    map.put("amd64", "amd64");
-    map.put("x8664", "amd64");
-    map.put("x86_64", "amd64");
-    map.put("x64", "amd64");
+    map.put("amd64", "");
+    map.put("x8664", "");
+    map.put("x86_64", "");
+    map.put("x64", "");
 
-    map.put("aarch_64", "arm64");
-    map.put("aarch64", "arm64");
-    map.put("arm64", "arm64");
-
-    map.put("arm_32", "arm");
-    map.put("arm32", "arm");
-    map.put("arm", "arm");
-
-    map.put("x8632", "386");
-    map.put("x86_32", "386");
-    map.put("x86", "386");
-    map.put("ia32", "386");
-    map.put("486", "386");
-    map.put("586", "386");
-    map.put("686", "386");
+    map.put("aarch_64", "-arm64");
+    map.put("aarch64", "-arm64");
+    map.put("arm64", "-arm64");
   }
 
   public LsRuntimeEnvironment() {
   }
 
-  public String getDownloadBinaryName(String version) {
-    String base = "snyk-ls_%s_%s_%s";
+  public String getDownloadBinaryName() {
+    String base = "snyk-%s%s";
     String os = getOs();
-    String executable = String.format(base, version, os, getArch());
-    if (executable.toLowerCase().contains("windows")) executable += ".exe";
+    String executable = String.format(base, os, getArch());
+    if (executable.toLowerCase().contains("win"))
+      executable += ".exe";
     return executable;
   }
 

@@ -2,6 +2,11 @@
 
 ## [2.1.0] - UNRELEASED
 ### Changes
+- add base URL preference for CLI download
+- use LS embedded in CLI and only download CLI as dependency
+
+## [2.1.0] - v20230720.102331
+### Changes
 - fix custom path configuration
 
 ## [2.1.0] - v20230606.182718
