@@ -51,6 +51,7 @@ public class Preferences {
   public static final String AUTHENTICATION_METHOD = "AUTHENTICATION_METHOD";
   public static final String AUTH_METHOD_TOKEN = "token";
   public static final String AUTH_METHOD_OAUTH = "oauth";
+  public static final String SCANNING_MODE_AUTOMATIC = "scanningMode";
 
   private final PreferenceStore store;
 
@@ -107,6 +108,10 @@ public class Preferences {
     
     if (getPref(CLI_BASE_URL) == null || getPref(CLI_BASE_URL).isBlank()) {
       store(CLI_BASE_URL, "https://static.snyk.io");
+    }
+    
+    if (getPref(SCANNING_MODE_AUTOMATIC) == null) {
+      store.put(SCANNING_MODE_AUTOMATIC, "true");
     }
   }
 
@@ -171,5 +176,10 @@ public class Preferences {
   public boolean getBooleanPref(String key) {
    return store.getBoolean(key, false);
   }
+  
+  public boolean getBooleanPref(String key, boolean defaultValue) {
+    return store.getBoolean(key, defaultValue);
+  }
+ 
 }
 
