@@ -19,119 +19,119 @@ import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
-  private BooleanFieldEditor snykCodeSecurityCheckbox;
+    private BooleanFieldEditor snykCodeSecurityCheckbox;
 
-  public PreferencesPage() {
-    super(GRID);
-  }
+    public PreferencesPage() {
+        super(GRID);
+    }
 
-  @Override
-  public void init(IWorkbench workbench) {
-    setPreferenceStore(Preferences.getInstance().getStore());
-    setMessage("Snyk Preferences");
-  }
+    @Override
+    public void init(IWorkbench workbench) {
+        setPreferenceStore(Preferences.getInstance().getStore());
+        setMessage("Snyk Preferences");
+    }
 
-  @Override
-  protected void createFieldEditors() {
-    TokenFieldEditor tokenField = new TokenFieldEditor(Preferences.getInstance(), Preferences.AUTH_TOKEN_KEY,
-        "Snyk API Token:", getFieldEditorParent());
-    addField(tokenField);
-    addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));
-    addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
-    addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
-        getFieldEditorParent()));
+    @Override
+    protected void createFieldEditors() {
+        TokenFieldEditor tokenField = new TokenFieldEditor(Preferences.getInstance(), Preferences.AUTH_TOKEN_KEY,
+            "Snyk API Token:", getFieldEditorParent());
+        addField(tokenField);
+        addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));
+        addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
+            getFieldEditorParent()));
 
-    addField(space());
-    addField(new LabelFieldEditor("The following options involve the Snyk Language Server.", getFieldEditorParent()));
-    addField(new LabelFieldEditor(
-        "Activating Snyk Code will cause upload of source code to Snyk or the given endpoint address.",
-        getFieldEditorParent()));
-    addField(space());
-    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "Snyk Open Source enabled",
-        getFieldEditorParent()));
-    snykCodeSecurityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE, "Snyk Code enabled",
-        getFieldEditorParent());
+        addField(space());
+        addField(new LabelFieldEditor("The following options involve the Snyk Language Server.", getFieldEditorParent()));
+        addField(new LabelFieldEditor(
+            "Activating Snyk Code will cause upload of source code to Snyk or the given endpoint address.",
+            getFieldEditorParent()));
+        addField(space());
+        addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "Snyk Open Source enabled",
+            getFieldEditorParent()));
+        snykCodeSecurityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE, "Snyk Code enabled",
+            getFieldEditorParent());
 
-    addField(snykCodeSecurityCheckbox);
+        addField(snykCodeSecurityCheckbox);
 
-    addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure-as-Code enabled",
-        getFieldEditorParent()));
+        addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure-as-Code enabled",
+            getFieldEditorParent()));
 
-    addField(space());
-    addField(new BooleanFieldEditor(Preferences.SCANNING_MODE_AUTOMATIC, "Scan automatically on start-up and save", getFieldEditorParent()));
-    addField(space());
-    addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
-    addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", getFieldEditorParent()));
-    addField(
-        new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", getFieldEditorParent()));
-    addField(
-        new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", getFieldEditorParent()));
+        addField(space());
+        addField(new BooleanFieldEditor(Preferences.SCANNING_MODE_AUTOMATIC, "Scan automatically on start-up and save", getFieldEditorParent()));
+        addField(space());
+        addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
+        addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", getFieldEditorParent()));
+        addField(
+            new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", getFieldEditorParent()));
+        addField(
+            new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", getFieldEditorParent()));
 
-    addField(space());
-    BooleanFieldEditor manageBinaries = new BooleanFieldEditor(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
-        "Update and install Snyk binaries automatically", getFieldEditorParent());
-    manageBinaries.setPropertyChangeListener((PropertyChangeEvent propertyChangeEvent) -> {
-      System.out.println("managed bionaries changed");
-    });
-    addField(manageBinaries);
-    addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", getFieldEditorParent()));
-    addField(new FileFieldEditor(Preferences.CLI_PATH, "Snyk CLI (incl. Language Server):", getFieldEditorParent()));
+        addField(space());
+        BooleanFieldEditor manageBinaries = new BooleanFieldEditor(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
+            "Update and install Snyk binaries automatically", getFieldEditorParent());
+        manageBinaries.setPropertyChangeListener((PropertyChangeEvent propertyChangeEvent) -> {
+            System.out.println("managed bionaries changed");
+        });
+        addField(manageBinaries);
+        addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", getFieldEditorParent()));
+        addField(new FileFieldEditor(Preferences.CLI_PATH, "Snyk CLI (incl. Language Server):", getFieldEditorParent()));
 
-    addField(space());
+        addField(space());
 
-    addField(
-        new BooleanFieldEditor(Preferences.SEND_ERROR_REPORTS, "Send error reports to Snyk", getFieldEditorParent()));
-    addField(
-        new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Send usage statistics to Snyk", getFieldEditorParent()));
+        addField(
+            new BooleanFieldEditor(Preferences.SEND_ERROR_REPORTS, "Send error reports to Snyk", getFieldEditorParent()));
+        addField(
+            new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Send usage statistics to Snyk", getFieldEditorParent()));
 
-    addField(space());
+        addField(space());
 
-    addField(new LabelFieldEditor(
-        "Only trusted paths are scanned by Snyk. The Trusted Folders setting allows to specify, which \n"
-            + "paths are safe to scan. Every path below a given path is considered safe to scan. \n"
-            + "Please separate entries with \"" + File.pathSeparator + "\".",
-        getFieldEditorParent()));
-    addField(new StringFieldEditor(Preferences.TRUSTED_FOLDERS, "Trusted Folders:", getFieldEditorParent()));
-    disableSnykCodeIfOrgDisabled();
-  }
+        addField(new LabelFieldEditor(
+            "Only trusted paths are scanned by Snyk. The Trusted Folders setting allows to specify, which \n"
+                + "paths are safe to scan. Every path below a given path is considered safe to scan. \n"
+                + "Please separate entries with \"" + File.pathSeparator + "\".",
+            getFieldEditorParent()));
+        addField(new StringFieldEditor(Preferences.TRUSTED_FOLDERS, "Trusted Folders:", getFieldEditorParent()));
+        disableSnykCodeIfOrgDisabled();
+    }
 
-  private FieldEditor space() {
-    return new LabelFieldEditor("", getFieldEditorParent());
-  }
+    private FieldEditor space() {
+        return new LabelFieldEditor("", getFieldEditorParent());
+    }
 
-  @Override
-  public boolean performOk() {
-    boolean superOK = super.performOk();
-    var snykView = SnykStartup.getSnykView();
-    snykView.disableRunAbortActions();
-    snykView.toggleRunActionEnablement();
-    disableSnykCodeIfOrgDisabled();
+    @Override
+    public boolean performOk() {
+        boolean superOK = super.performOk();
+        var snykView = SnykStartup.getSnykView();
+        snykView.disableRunAbortActions();
+        snykView.toggleRunActionEnablement();
+        disableSnykCodeIfOrgDisabled();
 
-    new LsConfigurationUpdater().configurationChanged();
-    return superOK;
-  }
+        new LsConfigurationUpdater().configurationChanged();
+        return superOK;
+    }
 
-  private void disableSnykCodeIfOrgDisabled() {
-    Display.getCurrent().asyncExec(new Runnable() {
-      @Override
-      public void run() {
-        boolean isSastEnabled = false;
-        try {
-          isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
-        } catch (Exception ignored) {
-          // ignore
-        }
-        String message = "Snyk Code disabled, because it is not enabled for your organization. After you close this preference page, it will stay disabled.";
-        boolean showMessage = false;
-        if (snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue() && !isSastEnabled) {
-          snykCodeSecurityCheckbox.setLabelText(snykCodeSecurityCheckbox.getLabelText() + " (" + message + ")");
-          showMessage = true;
-        }
+    private void disableSnykCodeIfOrgDisabled() {
+        Display.getCurrent().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                boolean isSastEnabled = false;
+                try {
+                    isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
+                } catch (Exception ignored) {
+                    // ignore
+                }
+                String message = "Snyk Code disabled, because it is not enabled for your organization. After you close this preference page, it will stay disabled.";
+                boolean showMessage = false;
+                if (snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue() && !isSastEnabled) {
+                    snykCodeSecurityCheckbox.setLabelText(snykCodeSecurityCheckbox.getLabelText() + " (" + message + ")");
+                    showMessage = true;
+                }
 
-        if (showMessage)
-          SnykLogger.logInfo(message);
-      }
-    });
-  }
+                if (showMessage)
+                    SnykLogger.logInfo(message);
+            }
+        });
+    }
 
 }
