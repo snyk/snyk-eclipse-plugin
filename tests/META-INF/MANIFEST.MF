@@ -9,8 +9,8 @@ Automatic-Module-Name: io.snyk
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
 Import-Package: org.eclipse.equinox.security.storage;version="1.0.0",
- org.junit.jupiter.api;version="5.9.0",
- org.junit.jupiter.api.function;version="5.9.0",
+ org.junit.jupiter.api;version="5.10.0",
+ org.junit.jupiter.api.function;version="5.10.0",
  org.mockito;version="4.5.1"
 Require-Bundle: wrapped.org.mockito.mockito-inline;bundle-version="4.5.1",
  org.mockito.mockito-core;bundle-version="4.5.1",
