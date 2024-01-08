@@ -1,6 +1,12 @@
 # Snyk Changelog
 
-## [2.1.0] - UNRELEASED
+## [2.1.0] - Unreleased
+
+### Changes
+
+- add preference for scan mode selection (automatic/manual)
+
+## [2.1.0] - v20231129.123319
 ### Changes
 - add base URL preference for CLI download
 - use LS embedded in CLI and only download CLI as dependency
