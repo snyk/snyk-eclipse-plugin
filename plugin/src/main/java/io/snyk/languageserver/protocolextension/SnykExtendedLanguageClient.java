@@ -113,7 +113,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
             SastSettings sastSettings = mapper.convertValue(lsSastSettings.get(), SastSettings.class);
             return sastSettings != null ? sastSettings.sastEnabled : false;
         } catch (Exception e) {
-            // ignore
+            SnykLogger.logError(e);
         }
 
         return false;

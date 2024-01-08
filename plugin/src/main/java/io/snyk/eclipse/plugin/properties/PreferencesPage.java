@@ -118,8 +118,8 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
                 boolean isSastEnabled = false;
                 try {
                     isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
-                } catch (Exception ignored) {
-                    // ignore
+                } catch (Exception e) {
+                    SnykLogger.logError(e);
                 }
                 String message = "Snyk Code disabled, because it is not enabled for your organization. After you close this preference page, it will stay disabled.";
                 boolean showMessage = false;
