@@ -100,7 +100,7 @@
                 <configuration>
                     <failIfNoTests/>
                     <useUIHarness>false</useUIHarness>
-                    <providerHint>junit58</providerHint>
+                    <providerHint>junit59</providerHint>
                 </configuration>
             </plugin>
         </plugins>

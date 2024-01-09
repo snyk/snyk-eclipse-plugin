@@ -4,8 +4,8 @@
 	<contentEntry url="file://$MODULE_DIR$">
 		<excludeFolder url="file://$MODULE_DIR$/target"/>
 	</contentEntry>
-	<lib name="commons-codec-1.15.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/plugin/target/dependency/commons-codec-1.15.jar!/"/>
+	<lib name="commons-codec-1.16.0.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/plugin/target/dependency/commons-codec-1.16.0.jar!/"/>
 	</lib>
 	<lib name="commons-lang3-3.12.0.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/plugin/target/dependency/commons-lang3-3.12.0.jar!/"/>
@@ -39,7 +39,7 @@
 		<level name="Maven: org.apache.httpcomponents:httpcore:4.4.16" value="project"/>
 		<level name="Maven: org.apache.httpcomponents:httpclient:4.5.14" value="project"/>
 		<level name="Maven: commons-logging:commons-logging:1.2" value="project"/>
-		<level name="Maven: commons-codec:commons-codec:1.15" value="project"/>
+		<level name="Maven: commons-codec:commons-codec:1.16.0" value="project"/>
 		<level name="Maven: javax.inject:javax.inject:1" value="project"/>
 	</levels>
 </component>
