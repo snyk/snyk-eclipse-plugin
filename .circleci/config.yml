@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   prodsec: snyk/prodsec-orb@1.0
-  
+
 workflows:
   version: 2
   CICD:
@@ -11,4 +11,4 @@ workflows:
           name: Scan repository for secrets
           context:
             - snyk-bot-slack
-          channel: hammerhead-alerts
+          channel: dx-local-alerts
