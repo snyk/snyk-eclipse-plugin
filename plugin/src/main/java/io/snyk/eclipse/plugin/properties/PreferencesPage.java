@@ -120,10 +120,18 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
                     isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
                 } catch (Exception e) {
                     SnykLogger.logError(e);
+                    return;
                 }
                 String message = "Snyk Code disabled, because it is not enabled for your organization. After you close this preference page, it will stay disabled.";
                 boolean showMessage = false;
-                if (snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue() && !isSastEnabled) {
+                boolean checkBoxValue;
+                try {
+                  checkBoxValue = snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue();
+                } catch (NullPointerException e) {
+                  // this can happen, if the UI checkbox is not initialized fully, we return then
+                  return;
+                }
+                if (checkBoxValue && !isSastEnabled) {
                     snykCodeSecurityCheckbox.setLabelText(snykCodeSecurityCheckbox.getLabelText() + " (" + message + ")");
                     showMessage = true;
                 }
