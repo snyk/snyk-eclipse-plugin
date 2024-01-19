@@ -2,6 +2,13 @@
 
 ## [2.1.0] - Unreleased
 
+### Fixes
+
+- fix an exception when checking for Snyk Code enablement in the preference page
+
+
+## [2.1.0] - v20240115.153911
+
 ### Changes
 
 - add preference for scan mode selection (automatic/manual)
