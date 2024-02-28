@@ -4,8 +4,14 @@
 
 ### Fixes
 
-- fix an exception when checking for Snyk Code enablement in the preference page
+- fix dependency declaration for lsp4e
+- bump jackson & commons-codec dependencies
 
+## [2.1.0] - v20240119.091944
+
+### Fixes
+
+- fix an exception when checking for Snyk Code enablement in the preference page
 
 ## [2.1.0] - v20240115.153911
 
