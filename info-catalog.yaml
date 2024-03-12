@@ -3,7 +3,7 @@ kind: Component
 metadata:
   annotations:
     github.com/project-slug: snyk/snyk-eclipse-plugin
-  description: Snyk Security - Code and Open Source Dependencies for Eclipse
+  description: Snyk Security
   tags:
     - typescript
     - plugin

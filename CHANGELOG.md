@@ -1,6 +1,12 @@
-# Snyk Changelog
+# Snyk Security Changelog
 
 ## [2.1.0] - Unreleased
+
+### Fixes
+
+- shortened plugin name to just Snyk Security
+
+## [2.1.0] - v20240301.083858
 
 ### Fixes
 

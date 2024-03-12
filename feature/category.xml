@@ -3,7 +3,7 @@
   <feature url="features/io.snyk.scanner_2.1.0.qualifier.jar" id="io.snyk.scanner" version="2.1.0.qualifier">
     <category name="io.snyk.scanner"/>
   </feature>
-  <category-def name="io.snyk.scanner" label="Snyk Security - Code, Open Source, IaC Configurations">
+  <category-def name="io.snyk.scanner" label="Snyk Security">
     <description>
       Secure development for developers and teams
 
