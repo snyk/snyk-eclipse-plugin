@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="io.snyk.scanner"
-      label="Snyk Security - Code, Open Source, IaC Configurations"
+      label="Snyk Security"
       version="2.1.0.qualifier"
       provider-name="Snyk">
 
