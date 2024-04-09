@@ -14,7 +14,7 @@ public class LsMetadataResponseHandler implements ResponseHandler<String> {
 
   @Override
   public String handleResponse(HttpResponse httpResponse) {
-    String latestCliSupportingLSProtocolVersion = "10";
+    String latestCliSupportingLSProtocolVersion = "11";
     InputStream inputStream;
     try {
       inputStream = httpResponse.getEntity().getContent();

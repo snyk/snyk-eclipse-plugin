@@ -1,6 +1,12 @@
 # Snyk Security Changelog
 
+
 ## [2.1.0] - Unreleased
+
+### Changes
+- bumped the LS protocol version to 11 to support new commands introduced for global ignores
+
+## [2.1.0] - v20240313.174439
 
 ### Fixes
 
