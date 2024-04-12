@@ -27,9 +27,10 @@ jobs:
         env:
           fileName: ./keystore.jks
           encodedString: ${{ secrets.KEYSTORE }}
+          sha: ${{ secrets.KEYSTORE_SHA }}
         run: |
           echo "$encodedString" | base64 -d > $fileName
-          echo "6cab9fa86689a9969097a662891fe8a1d8752ac430c18750cfa4d230744ac4a7  $fileName" > sha256.txt
+          echo "$sha $fileName" > sha256.txt
           sha256sum -c sha256.txt
 
       - name: Build with Maven
