@@ -21,7 +21,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 # shellcheck disable=SC2002
 BASE="eclipse"
 AWS_REGION="${AWS_REGION:-us-east-1}"
-export AWS_REGION
 AWS_S3_BUCKET_NAME="${AWS_S3_BUCKET_NAME:-snyk-test}"
 DRY_RUN=
 
