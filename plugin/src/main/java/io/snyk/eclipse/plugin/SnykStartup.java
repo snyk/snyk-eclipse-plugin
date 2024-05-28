@@ -86,7 +86,7 @@ public class SnykStartup implements IStartup {
         var definition = LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
         try {
           LanguageServiceAccessor.startLanguageServer(definition);
-        } catch (IOException e) {
+        } catch (RuntimeException e) {
           logError(e);
         }
       }
