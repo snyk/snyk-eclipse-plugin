@@ -35,12 +35,6 @@ if [ $# -eq 2 ]; then
   DRY_RUN=--dryrun
 fi
 
-if [ $# -gt 2 ]; then
-  echo "Too many parameters"
-  echo "Usage: upload-to-s3.sh <release-channel> <dryrun>"
-  exit 1
-fi
-
 function uploadFile() {
   FILENAME_SRC=$1
   FILENAME_DST=$2
@@ -49,11 +43,11 @@ function uploadFile() {
   [ ! -d "$FILENAME_SRC" ] && echo "Directory $FILENAME_SRC does not exist." && exit 1
 
   # shellcheck disable=SC2086
-  aws s3 cp --recursive $DRY_RUN "$FILENAME_SRC" "s3://$AWS_S3_BUCKET_NAME/$BASE/$FILENAME_DST"
+  aws s3 cp $DRY_RUN "$FILENAME_SRC" "s3://$AWS_S3_BUCKET_NAME/$BASE/$FILENAME_DST"
 }
 
 # publish repo
-FILENAME_SRC="$SCRIPT_DIR/../update-site/target/repository"
+FILENAME_SRC="$SCRIPT_DIR/../update-site/target/repository/"
 FILENAME_DST="$RELEASE_CHANNEL"
 # shellcheck disable=SC2086
 uploadFile $FILENAME_SRC $FILENAME_DST $DRY_RUN
