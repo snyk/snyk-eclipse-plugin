@@ -35,6 +35,10 @@ if [ $# -eq 2 ]; then
   DRY_RUN=--dryrun
 fi
 
+if [ $# -gt 2 ]; then
+  echo "Too many parameters\nUsage: upload-to-s3.sh <release-channel> <dryrun>" && exit 1
+fi
+
 function uploadFile() {
   FILENAME_SRC=$1
   FILENAME_DST=$2
