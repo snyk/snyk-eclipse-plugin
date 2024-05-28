@@ -2,7 +2,7 @@
 
 ## [2.2.0] - Unreleased
 ### Changes
-- require lsp4e 0.18.9 and lsp4j 0.23.1 as minimum versions
+- require lsp4e 0.18.4 and lsp4j 0.22.0 as minimum versions (Eclipse 2024-03)
 - update release process & update sites to https://static.snyk.io/eclipse/preview and https://static.snyk.io/eclipse/stable
 
 ## [2.1.0] - v20240412.114323
