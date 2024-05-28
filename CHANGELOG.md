@@ -1,7 +1,15 @@
 # Snyk Security Changelog
 
+## [2.2.0] - Unreleased
+### Changes
+- require lsp4e 0.18.9 and lsp4j 0.23.1 as minimum versions
+- update release process & update sites to https://static.snyk.io/eclipse/preview and https://static.snyk.io/eclipse/stable
 
-## [2.1.0] - Unreleased
+## [2.1.0] - v20240412.114323
+### Changes
+- bumped the LS protocol version to 11 to support new commands introduced for global ignores
+
+## [2.1.0] - v20240313.174439
 
 ### Changes
 - bumped the LS protocol version to 11 to support new commands introduced for global ignores
