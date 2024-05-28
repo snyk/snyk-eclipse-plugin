@@ -36,7 +36,9 @@ if [ $# -eq 2 ]; then
 fi
 
 if [ $# -gt 2 ]; then
-  echo "Too many parameters\nUsage: upload-to-s3.sh <release-channel> <dryrun>" && exit 1
+  echo "Too many parameters"
+  echo "Usage: upload-to-s3.sh <release-channel> <dryrun>"
+  exit 1
 fi
 
 function uploadFile() {
