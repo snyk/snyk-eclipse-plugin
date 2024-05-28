@@ -49,7 +49,7 @@ function uploadFile() {
   [ ! -d "$FILENAME_SRC" ] && echo "Directory $FILENAME_SRC does not exist." && exit 1
 
   # shellcheck disable=SC2086
-  aws s3 cp $DEBUG --recursive $DRY_RUN "$FILENAME_SRC" "s3://$AWS_S3_BUCKET_NAME/$BASE/$FILENAME_DST" --region us-east-1
+  aws s3 cp $DEBUG --recursive $DRY_RUN "$FILENAME_SRC" "s3://$AWS_S3_BUCKET_NAME/$BASE/$FILENAME_DST"
 }
 
 # publish repo

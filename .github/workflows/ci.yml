@@ -48,7 +48,7 @@ jobs:
           ./mvnw clean verify -DtrimStackTrace=false
 
       - name: Upload binaries to static.snyk.io
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
+        # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
