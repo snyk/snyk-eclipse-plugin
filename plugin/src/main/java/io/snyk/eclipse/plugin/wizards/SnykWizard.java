@@ -2,7 +2,6 @@ package io.snyk.eclipse.plugin.wizards;
 
 import java.util.Arrays;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;

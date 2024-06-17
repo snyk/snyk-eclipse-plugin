@@ -129,8 +129,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
             showAuthenticatedMessage();
             enableSnykViewRunActions();
         }
-
-        setAuthenticationMethod(param, prefs);
     }
 
     @JsonNotification(value = "$/snyk.isAvailableCli")
@@ -197,16 +195,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
             getConnectedLanguageServer().getWorkspaceService().executeCommand(params);
         } catch (Exception e) {
             SnykLogger.logError(e);
-        }
-    }
-
-    protected void setAuthenticationMethod(HasAuthenticatedParam param, Preferences prefs) {
-        // check if its a json token and store the auth method based on that
-        try {
-            om.readValue(param.getToken(), OAuthToken.class);
-            prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_OAUTH);
-        } catch (JsonProcessingException e) {
-            prefs.store(Preferences.AUTHENTICATION_METHOD, Preferences.AUTH_METHOD_TOKEN);
         }
     }
 
