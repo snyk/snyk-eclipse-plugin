@@ -139,7 +139,7 @@ public class ProgressManager {
       return;
     if (begin.getPercentage() == null) {
       monitor.beginTask(begin.getTitle(), IProgressMonitor.UNKNOWN);
-    } else {      
+    } else {
       monitor.beginTask(begin.getTitle(), 100);
     }
     String message = begin.getMessage();

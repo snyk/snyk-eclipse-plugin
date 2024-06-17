@@ -125,9 +125,8 @@ public class ProcessRunner {
       }
     }
 
-    String authMethod = Preferences.getInstance().getPref(Preferences.AUTHENTICATION_METHOD);
     String token = Preferences.getInstance().getAuthToken();
-    if (token != null && !token.isBlank() && authMethod.equals(Preferences.AUTH_METHOD_OAUTH)) {
+    if (token != null && !token.isBlank()) {
       try {
 	      ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	      var oauthToken = objectMapper.readValue(token, OAuthToken.class);
@@ -136,9 +135,6 @@ public class ProcessRunner {
       } catch (Exception e) {
     	  SnykLogger.logError(e);
       }
-    } else {
-      pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, token);
-      pb.environment().remove(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN);
     }
 
     String insecure = Preferences.getInstance().getPref(Preferences.INSECURE_KEY);

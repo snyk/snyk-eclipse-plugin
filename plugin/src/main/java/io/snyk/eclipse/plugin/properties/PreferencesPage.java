@@ -36,9 +36,9 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
         TokenFieldEditor tokenField = new TokenFieldEditor(Preferences.getInstance(), Preferences.AUTH_TOKEN_KEY,
             "Snyk API Token:", getFieldEditorParent());
         addField(tokenField);
-        addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", getFieldEditorParent()));
-        addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
+        addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", 80, getFieldEditorParent()));
+        addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", 80, getFieldEditorParent()));
+        addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities", 
             getFieldEditorParent()));
 
         addField(space());
@@ -61,11 +61,11 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
         addField(new BooleanFieldEditor(Preferences.SCANNING_MODE_AUTOMATIC, "Scan automatically on start-up and save", getFieldEditorParent()));
         addField(space());
         addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
-        addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", getFieldEditorParent()));
+        addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", 80, getFieldEditorParent()));
         addField(
-            new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", getFieldEditorParent()));
+            new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", 80, getFieldEditorParent()));
         addField(
-            new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", getFieldEditorParent()));
+            new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", 80, getFieldEditorParent()));
 
         addField(space());
         BooleanFieldEditor manageBinaries = new BooleanFieldEditor(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
@@ -74,7 +74,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
             System.out.println("managed bionaries changed");
         });
         addField(manageBinaries);
-        addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", getFieldEditorParent()));
+        addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", 80, getFieldEditorParent()));
         addField(new FileFieldEditor(Preferences.CLI_PATH, "Snyk CLI (incl. Language Server):", getFieldEditorParent()));
 
         addField(space());
@@ -91,7 +91,8 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
                 + "paths are safe to scan. Every path below a given path is considered safe to scan. \n"
                 + "Please separate entries with \"" + File.pathSeparator + "\".",
             getFieldEditorParent()));
-        addField(new StringFieldEditor(Preferences.TRUSTED_FOLDERS, "Trusted Folders:", getFieldEditorParent()));
+        StringFieldEditor trustedFoldersEditor = new StringFieldEditor(Preferences.TRUSTED_FOLDERS, "Trusted Folders:", 80, getFieldEditorParent());
+		addField(trustedFoldersEditor);
         disableSnykCodeIfOrgDisabled();
     }
 
