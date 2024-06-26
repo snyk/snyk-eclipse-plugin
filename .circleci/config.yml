@@ -11,10 +11,9 @@ jobs:
     steps:
       - checkout
       - prodsec/security_scans:
-          mode: upload
-          open-source-additional-arguments: --exclude=tests
-          open-source-additional-arguments: --file=pom.xml --maven-aggregate-project
-          open-source-scan-all-projects: false
+          mode: auto
+          open-source-scan-all-projects: true
+          open-source-additional-arguments: --maven-aggregate-project --exclude=tests
           iac-scan: disabled
           debug: true
 
