@@ -82,6 +82,7 @@ public class LsConfigurationUpdater {
         private final String osArch = SystemUtils.OS_ARCH;
         private final String osPlatform = SystemUtils.OS_NAME;
         private final String scanningMode;
+        private final String authenticationMethod = "oauth";
 
         public Settings(String activateSnykOpenSource, String activateSnykCode, String activateSnykIac, String insecure,
                         String endpoint, String additionalParams, String additionalEnv, String path, String sendErrorReports,
@@ -205,5 +206,9 @@ public class LsConfigurationUpdater {
         public String getScanningMode() {
             return scanningMode;
         }
+
+		public String getAuthenticationMethod() {
+			return authenticationMethod;
+		}
     }
 }
