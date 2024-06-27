@@ -2,6 +2,11 @@
 
 ## [2.2.0] - Unreleased
 ### Changes
+- update required protocol version to 12
+- integrate latest docs incl. troubleshooting
+
+## [2.2.0] - v20240619.131238
+### Changes
 - fixes the generated ignore id so that it is ignored during scanning  
 
 ## [2.2.0] - v20240529.110806
