@@ -2,6 +2,7 @@ package io.snyk.languageserver;
 
 import java.io.File;
 
+import io.snyk.languageserver.download.LsBinaries;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 
@@ -82,6 +83,7 @@ public class LsConfigurationUpdater {
         private final String osArch = SystemUtils.OS_ARCH;
         private final String osPlatform = SystemUtils.OS_NAME;
         private final String scanningMode;
+        private final String requiredProtocolVersion = LsBinaries.REQUIRED_LS_PROTOCOL_VERSION;
 
         public Settings(String activateSnykOpenSource, String activateSnykCode, String activateSnykIac, String insecure,
                         String endpoint, String additionalParams, String additionalEnv, String path, String sendErrorReports,
@@ -204,6 +206,10 @@ public class LsConfigurationUpdater {
 
         public String getScanningMode() {
             return scanningMode;
+        }
+
+        public String getRequiredProtocolVersion() {
+            return requiredProtocolVersion;
         }
     }
 }
