@@ -1,0 +1,10 @@
+version: v1.25.0
+ignore:
+  snyk:lic:maven:org.ow2.sat4j:org.ow2.sat4j.core:(EPL-1.0_OR_GPL-3.0):
+    - '*':
+        reason: We are using EPL
+        expires: 2025-08-18T00:00:00.000Z
+  snyk:lic:maven:org.ow2.sat4j:org.ow2.sat4j.pb:(EPL-1.0_OR_GPL-3.0):
+    - '*':
+        reason: We are using EPL
+        expires: 2025-08-18T00:00:00.000Z
