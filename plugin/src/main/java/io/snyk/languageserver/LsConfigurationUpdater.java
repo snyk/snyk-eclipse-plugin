@@ -27,7 +27,8 @@ public class LsConfigurationUpdater {
     Settings getCurrentSettings() {
         Preferences preferences = Preferences.getInstance();
         String activateSnykOpenSource = preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Boolean.TRUE.toString());
-        String activateSnykCode = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE, Boolean.FALSE.toString());
+        String activateSnykCodeSecurity = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY, Boolean.FALSE.toString());
+        String activateSnykCodeQuality = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY, Boolean.FALSE.toString());
         String activateSnykIac = preferences.getPref(Preferences.ACTIVATE_SNYK_IAC, Boolean.TRUE.toString());
         String insecure = preferences.getPref(Preferences.INSECURE_KEY, Boolean.FALSE.toString());
         String endpoint = preferences.getPref(Preferences.ENDPOINT_KEY, "");
@@ -51,7 +52,7 @@ public class LsConfigurationUpdater {
         }
         String enableTrustedFolderFeature = Boolean.TRUE.toString();
         String scanningMode = preferences.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC) ? "automatic" : "manual";
-        return new Settings(activateSnykOpenSource, activateSnykCode, activateSnykIac, insecure, endpoint, additionalParams,
+        return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac, insecure, endpoint, additionalParams,
             additionalEnv, path, sendErrorReports, enableTelemetry, organization, manageBinariesAutomatically, cliPath,
             token, integrationName, integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature,
             scanningMode);
@@ -59,7 +60,8 @@ public class LsConfigurationUpdater {
 
     static class Settings {
         private final String activateSnykOpenSource;
-        private final String activateSnykCode;
+        private final String activateSnykCodeSecurity;
+        private final String activateSnykCodeQuality;
         private final String activateSnykIac;
 
         private final String insecure;
@@ -91,7 +93,8 @@ public class LsConfigurationUpdater {
                         String integrationName, String integrationVersion, String automaticAuthentication, String[] trustedFolders,
                         String enableTrustedFoldersFeature, String scanningMode) {
             this.activateSnykOpenSource = activateSnykOpenSource;
-            this.activateSnykCode = activateSnykCode;
+            this.activateSnykCodeSecurity = activateSnykCodeSecurity;
+            this.activateSnykCodeQuality = activateSnykCodeQuality;
             this.activateSnykIac = activateSnykIac;
             this.insecure = insecure;
             this.endpoint = endpoint;
@@ -120,8 +123,11 @@ public class LsConfigurationUpdater {
             return activateSnykOpenSource;
         }
 
-        public String getActivateSnykCode() {
-            return activateSnykCode;
+        public String getActivateSnykCodeSecurity() {
+            return activateSnykCodeSecurity;
+        }
+        public String getActivateSnykCodeQuality() {
+            return activateSnykCodeQuality;
         }
 
         public String getActivateSnykIac() {

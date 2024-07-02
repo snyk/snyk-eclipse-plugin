@@ -19,7 +19,7 @@ import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
-    private BooleanFieldEditor snykCodeSecurityCheckbox;
+    private BooleanFieldEditor snykCodeSecurityCheckbox,snykCodeQualityCheckbox;
 
     public PreferencesPage() {
         super(GRID);
@@ -49,10 +49,13 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
         addField(space());
         addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "Snyk Open Source enabled",
             getFieldEditorParent()));
-        snykCodeSecurityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE, "Snyk Code enabled",
+            snykCodeSecurityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "Snyk Code Security enabled",
             getFieldEditorParent());
 
         addField(snykCodeSecurityCheckbox);
+        snykCodeQualityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "Snyk Code Quality enabled",
+            getFieldEditorParent());
+        addField(snykCodeQualityCheckbox);
 
         addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure-as-Code enabled",
             getFieldEditorParent()));
