@@ -47,7 +47,7 @@ public class SnykCliRunner {
   }
 
   public ProcessResult snykIgnore(String id, File navigatePath) {
-    String idParam = "--id='" + id + "'";
+    String idParam = "--id=" + id + "";
 
     return snykRun(Lists.of(IGNORE_PARAM, idParam), Optional.of(navigatePath));
   }

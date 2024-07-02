@@ -1,7 +1,24 @@
 # Snyk Security Changelog
 
+## [2.2.0] - Unreleased
+### Changes
+- update required protocol version to 12
+- integrate latest docs incl. troubleshooting
 
-## [2.1.0] - Unreleased
+## [2.2.0] - v20240619.131238
+### Changes
+- fixes the generated ignore id so that it is ignored during scanning  
+
+## [2.2.0] - v20240529.110806
+### Changes
+- require lsp4e 0.18.4 and lsp4j 0.22.0 as minimum versions (Eclipse 2024-03)
+- update release process & update sites to https://static.snyk.io/eclipse/preview and https://static.snyk.io/eclipse/stable
+
+## [2.1.0] - v20240412.114323
+### Changes
+- bumped the LS protocol version to 11 to support new commands introduced for global ignores
+
+## [2.1.0] - v20240313.174439
 
 ### Changes
 - bumped the LS protocol version to 11 to support new commands introduced for global ignores
