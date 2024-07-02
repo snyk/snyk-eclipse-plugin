@@ -103,8 +103,7 @@ public class LsRuntimeEnvironment {
   }
 
   void addProductEnablement(Map<String, String> env) {
-    env.put(Preferences.ACTIVATE_SNYK_CODE_SECURITY, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
-    env.put(Preferences.ACTIVATE_SNYK_CODE_QUALITY, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY));
+    env.put(Preferences.ACTIVATE_SNYK_CODE, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_CODE));
     env.put(Preferences.ACTIVATE_SNYK_IAC, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_IAC));
     env.put(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
   }
