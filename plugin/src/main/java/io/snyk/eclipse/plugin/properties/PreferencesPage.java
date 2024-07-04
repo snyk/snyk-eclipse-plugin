@@ -35,6 +35,10 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
     protected void createFieldEditors() {
         TokenFieldEditor tokenField = new TokenFieldEditor(Preferences.getInstance(), Preferences.AUTH_TOKEN_KEY,
             "Snyk API Token:", getFieldEditorParent());
+
+        addField(new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH, "Use token authentication. It is recommended to keep this turned off, as the default OAuth2 authentication is more secure.", 
+                getFieldEditorParent()));
+
         addField(tokenField);
         addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", 80, getFieldEditorParent()));
         addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", 80, getFieldEditorParent()));

@@ -51,10 +51,15 @@ public class LsConfigurationUpdater {
         }
         String enableTrustedFolderFeature = Boolean.TRUE.toString();
         String scanningMode = preferences.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC) ? "automatic" : "manual";
+        Boolean useTokenAuth = preferences.getBooleanPref(Preferences.USE_TOKEN_AUTH, false);
+        var authMethod = "oauth";
+        if (useTokenAuth) {
+        	authMethod = "token";
+        } 
         return new Settings(activateSnykOpenSource, activateSnykCode, activateSnykIac, insecure, endpoint, additionalParams,
             additionalEnv, path, sendErrorReports, enableTelemetry, organization, manageBinariesAutomatically, cliPath,
             token, integrationName, integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature,
-            scanningMode);
+            scanningMode, authMethod);
     }
 
     static class Settings {
@@ -84,13 +89,13 @@ public class LsConfigurationUpdater {
         private final String osPlatform = SystemUtils.OS_NAME;
         private final String scanningMode;
         private final String requiredProtocolVersion = LsBinaries.REQUIRED_LS_PROTOCOL_VERSION;
-        private final String authenticationMethod = "oauth";
+        private final String authenticationMethod;
 
         public Settings(String activateSnykOpenSource, String activateSnykCode, String activateSnykIac, String insecure,
                         String endpoint, String additionalParams, String additionalEnv, String path, String sendErrorReports,
                         String enableTelemetry, String organization, String manageBinariesAutomatically, String cliPath, String token,
                         String integrationName, String integrationVersion, String automaticAuthentication, String[] trustedFolders,
-                        String enableTrustedFoldersFeature, String scanningMode) {
+                        String enableTrustedFoldersFeature, String scanningMode, String authMethod) {
             this.activateSnykOpenSource = activateSnykOpenSource;
             this.activateSnykCode = activateSnykCode;
             this.activateSnykIac = activateSnykIac;
@@ -111,6 +116,7 @@ public class LsConfigurationUpdater {
             this.trustedFolders = trustedFolders;
             this.enableTrustedFoldersFeature = enableTrustedFoldersFeature;
             this.scanningMode = scanningMode;
+            this.authenticationMethod = authMethod;
         }
 
         public String getPath() {

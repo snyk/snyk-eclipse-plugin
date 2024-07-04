@@ -42,6 +42,7 @@ public class Preferences {
   public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
   public static final String SEND_ERROR_REPORTS = "SEND_ERROR_REPORTS";
   public static final String LSP_VERSION = "LSP_VERSION";
+  public static final String USE_TOKEN_AUTH = "useTokenAuth";
 
   // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so we need to revert it
   // when populating the environment
@@ -105,6 +106,10 @@ public class Preferences {
 
     if (getPref(SCANNING_MODE_AUTOMATIC) == null) {
       store.put(SCANNING_MODE_AUTOMATIC, "true");
+    }
+    
+    if (getPref(USE_TOKEN_AUTH) == null) {
+        store.put(USE_TOKEN_AUTH, "false");
     }
   }
 
