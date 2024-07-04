@@ -127,13 +127,18 @@ public class ProcessRunner {
 
     String token = Preferences.getInstance().getAuthToken();
     if (token != null && !token.isBlank()) {
-      try {
-	      ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-	      var oauthToken = objectMapper.readValue(token, OAuthToken.class);
-	      pb.environment().put(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN, oauthToken.getAccessToken());
-	      pb.environment().remove(EnvironmentConstants.ENV_SNYK_TOKEN);
-      } catch (Exception e) {
-    	  SnykLogger.logError(e);
+      if (Preferences.getInstance().getBooleanPref(Preferences.USE_TOKEN_AUTH, false)) {
+    	  pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, token);
+    	  pb.environment().remove(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN);
+      } else {
+	      try {
+		      ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		      var oauthToken = objectMapper.readValue(token, OAuthToken.class);
+		      pb.environment().put(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN, oauthToken.getAccessToken());
+		      pb.environment().remove(EnvironmentConstants.ENV_SNYK_TOKEN);
+	      } catch (Exception e) {
+	    	  SnykLogger.logInfo(token);
+	      }
       }
     }
 
