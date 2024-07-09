@@ -107,9 +107,9 @@ public class Preferences {
     if (getPref(SCANNING_MODE_AUTOMATIC) == null) {
       store.put(SCANNING_MODE_AUTOMATIC, "true");
     }
-    
+
     if (getPref(USE_TOKEN_AUTH) == null) {
-        store.put(USE_TOKEN_AUTH, "false");
+        store.put(USE_TOKEN_AUTH, "true");
     }
   }
 

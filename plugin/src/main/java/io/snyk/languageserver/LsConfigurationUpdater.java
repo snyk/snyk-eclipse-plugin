@@ -51,11 +51,11 @@ public class LsConfigurationUpdater {
         }
         String enableTrustedFolderFeature = Boolean.TRUE.toString();
         String scanningMode = preferences.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC) ? "automatic" : "manual";
-        Boolean useTokenAuth = preferences.getBooleanPref(Preferences.USE_TOKEN_AUTH, false);
+        boolean useTokenAuth = preferences.getBooleanPref(Preferences.USE_TOKEN_AUTH, true);
         var authMethod = "oauth";
         if (useTokenAuth) {
         	authMethod = "token";
-        } 
+        }
         return new Settings(activateSnykOpenSource, activateSnykCode, activateSnykIac, insecure, endpoint, additionalParams,
             additionalEnv, path, sendErrorReports, enableTelemetry, organization, manageBinariesAutomatically, cliPath,
             token, integrationName, integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature,

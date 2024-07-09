@@ -127,7 +127,7 @@ public class ProcessRunner {
 
     String token = Preferences.getInstance().getAuthToken();
     if (token != null && !token.isBlank()) {
-      if (Preferences.getInstance().getBooleanPref(Preferences.USE_TOKEN_AUTH, false)) {
+      if (Preferences.getInstance().getBooleanPref(Preferences.USE_TOKEN_AUTH, true)) {
     	  pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, token);
     	  pb.environment().remove(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN);
       } else {
