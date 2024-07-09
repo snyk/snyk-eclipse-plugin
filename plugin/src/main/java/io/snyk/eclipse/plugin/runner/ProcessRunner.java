@@ -125,20 +125,21 @@ public class ProcessRunner {
       }
     }
 
-    String authMethod = Preferences.getInstance().getPref(Preferences.AUTHENTICATION_METHOD);
     String token = Preferences.getInstance().getAuthToken();
-    if (token != null && !token.isBlank() && authMethod.equals(Preferences.AUTH_METHOD_OAUTH)) {
-      try {
-	      ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-	      var oauthToken = objectMapper.readValue(token, OAuthToken.class);
-	      pb.environment().put(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN, oauthToken.getAccessToken());
-	      pb.environment().remove(EnvironmentConstants.ENV_SNYK_TOKEN);
-      } catch (Exception e) {
-    	  SnykLogger.logError(e);
+    if (token != null && !token.isBlank()) {
+      if (Preferences.getInstance().getBooleanPref(Preferences.USE_TOKEN_AUTH, true)) {
+    	  pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, token);
+    	  pb.environment().remove(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN);
+      } else {
+	      try {
+		      ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		      var oauthToken = objectMapper.readValue(token, OAuthToken.class);
+		      pb.environment().put(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN, oauthToken.getAccessToken());
+		      pb.environment().remove(EnvironmentConstants.ENV_SNYK_TOKEN);
+	      } catch (Exception e) {
+	    	  SnykLogger.logInfo(token);
+	      }
       }
-    } else {
-      pb.environment().put(EnvironmentConstants.ENV_SNYK_TOKEN, token);
-      pb.environment().remove(EnvironmentConstants.ENV_OAUTH_ACCESS_TOKEN);
     }
 
     String insecure = Preferences.getInstance().getPref(Preferences.INSECURE_KEY);

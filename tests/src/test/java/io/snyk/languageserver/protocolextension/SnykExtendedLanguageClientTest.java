@@ -45,37 +45,4 @@ class SnykExtendedLanguageClientTest {
     assertEquals("trusted/path", store.getString(Preferences.TRUSTED_FOLDERS, ""));
   }
 
-  @Test
-  void testSetsApiToken() {
-    HasAuthenticatedParam param = new HasAuthenticatedParam();
-
-    param.setToken("apiToken");
-
-    cut.setAuthenticationMethod(param, pref);
-
-    assertEquals(Preferences.AUTH_METHOD_TOKEN, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
-  }
-
-   @Test
-   void testSetsBlankToken() {
-     HasAuthenticatedParam param = new HasAuthenticatedParam();
-
-     param.setToken("");
-
-     cut.setAuthenticationMethod(param, pref);
-
-     assertEquals(Preferences.AUTH_METHOD_TOKEN, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
-   }
-
-   @Test
-   void testSetsOAuthToken() {
-     HasAuthenticatedParam param = new HasAuthenticatedParam();
-     String oAuthToken =
-     "{\"access_token\":\"configAccessToken\",\"token_type\":\"Bearer\",\"refresh_token\":\"configRefreshToken\",\"expiry\":\"3023-03-29T17:47:13.714448+02:00\"}";
-     param.setToken(oAuthToken);
-
-     cut.setAuthenticationMethod(param, pref);
-
-     assertEquals(Preferences.AUTH_METHOD_OAUTH, store.getString(Preferences.AUTHENTICATION_METHOD, ""));
-   }
 }

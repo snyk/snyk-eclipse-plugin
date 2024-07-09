@@ -17,7 +17,7 @@ public class Preferences {
 
   public static synchronized Preferences getInstance() {
     if (CURRENT_PREFERENCES == null) {
-      CURRENT_PREFERENCES = new Preferences(new SecurePreferenceStore()); 
+      CURRENT_PREFERENCES = new Preferences(new SecurePreferenceStore());
     }
     return CURRENT_PREFERENCES;
   }
@@ -42,15 +42,13 @@ public class Preferences {
   public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
   public static final String SEND_ERROR_REPORTS = "SEND_ERROR_REPORTS";
   public static final String LSP_VERSION = "LSP_VERSION";
+  public static final String USE_TOKEN_AUTH = "useTokenAuth";
 
   // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so we need to revert it
   // when populating the environment
   public static final String ENABLE_TELEMETRY = EnvironmentConstants.ENV_DISABLE_ANALYTICS;
   public static final String MANAGE_BINARIES_AUTOMATICALLY = "SNYK_CFG_MANAGE_BINARIES_AUTOMATICALLY";
   public static final String ORGANIZATION_KEY = EnvironmentConstants.ENV_SNYK_ORG;
-  public static final String AUTHENTICATION_METHOD = "AUTHENTICATION_METHOD";
-  public static final String AUTH_METHOD_TOKEN = "token";
-  public static final String AUTH_METHOD_OAUTH = "oauth";
   public static final String SCANNING_MODE_AUTOMATIC = "scanningMode";
 
   private final PreferenceStore store;
@@ -81,37 +79,37 @@ public class Preferences {
     if (getPref(LSP_VERSION) == null) {
       store(LSP_VERSION, "1");
     }
-    
-    if (getPref(AUTHENTICATION_METHOD) == null || getPref(AUTHENTICATION_METHOD).isBlank()) {
-      store(AUTHENTICATION_METHOD, AUTH_METHOD_TOKEN);
-    }
 
     String token = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
     if (getPref(AUTH_TOKEN_KEY) == null && !"".equals(token)) {
       store(AUTH_TOKEN_KEY, token);
     }
-    
+
     String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
     if (getPref(ENDPOINT_KEY) == null && !"".equals(endpoint)) {
       store(ENDPOINT_KEY, endpoint);
     }
-    
+
     String org = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, "");
     if (getPref(ORGANIZATION_KEY) == null && !"".equals(org)) {
       store(ORGANIZATION_KEY, org);
     }
-    
+
     String cliPath = getDefaultCliPath();
     if (getPref(CLI_PATH) == null && !"".equals(cliPath)) {
       store(CLI_PATH, cliPath);
     }
-    
+
     if (getPref(CLI_BASE_URL) == null || getPref(CLI_BASE_URL).isBlank()) {
       store(CLI_BASE_URL, "https://static.snyk.io");
     }
-    
+
     if (getPref(SCANNING_MODE_AUTOMATIC) == null) {
       store.put(SCANNING_MODE_AUTOMATIC, "true");
+    }
+
+    if (getPref(USE_TOKEN_AUTH) == null) {
+        store.put(USE_TOKEN_AUTH, "true");
     }
   }
 
@@ -176,10 +174,10 @@ public class Preferences {
   public boolean getBooleanPref(String key) {
    return store.getBoolean(key, false);
   }
-  
+
   public boolean getBooleanPref(String key, boolean defaultValue) {
     return store.getBoolean(key, defaultValue);
   }
- 
+
 }
 

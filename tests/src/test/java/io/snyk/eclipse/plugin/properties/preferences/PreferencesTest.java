@@ -36,7 +36,6 @@ class PreferencesTest {
     assertEquals("true", prefs.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
     assertEquals("true", prefs.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
     assertEquals("1", prefs.getPref(Preferences.LSP_VERSION));
-    assertEquals(Preferences.AUTH_METHOD_TOKEN, prefs.getPref(Preferences.AUTHENTICATION_METHOD));
     assertTrue(prefs.getCliPath().endsWith(lsRuntimeEnv.getDownloadBinaryName()));
   }
 
