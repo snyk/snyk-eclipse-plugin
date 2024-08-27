@@ -109,7 +109,7 @@ public class Preferences {
     }
 
     if (getPref(USE_TOKEN_AUTH) == null) {
-        store.put(USE_TOKEN_AUTH, "true");
+        store.put(USE_TOKEN_AUTH, "false");
     }
   }
 

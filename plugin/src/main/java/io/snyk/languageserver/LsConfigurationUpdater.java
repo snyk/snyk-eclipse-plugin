@@ -51,7 +51,7 @@ public class LsConfigurationUpdater {
         }
         String enableTrustedFolderFeature = Boolean.TRUE.toString();
         String scanningMode = preferences.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC) ? "automatic" : "manual";
-        boolean useTokenAuth = preferences.getBooleanPref(Preferences.USE_TOKEN_AUTH, true);
+        boolean useTokenAuth = preferences.getBooleanPref(Preferences.USE_TOKEN_AUTH, false);
         var authMethod = "oauth";
         if (useTokenAuth) {
         	authMethod = "token";
