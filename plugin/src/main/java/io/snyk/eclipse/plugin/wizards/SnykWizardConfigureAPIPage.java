@@ -20,7 +20,7 @@ import org.eclipse.swt.widgets.Listener;
 public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
   private Text endpoint;
   private Button unknownCerts;
-  private String defaultEndpoint = "https://app.snyk.io/api";
+  private String defaultEndpoint = "https://api.snyk.io";
   private String initialEndpoint = Preferences.getInstance().getEndpoint();
 
   public SnykWizardConfigureAPIPage() {
@@ -41,7 +41,7 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
     composite.setLayout(gl);
 
     Label endpointLabel = new Label(composite, SWT.NONE);
-    endpointLabel.setText("Specify the custom endpoint for Single Tenant setups (default: https://app.snyk.io/api):");
+    endpointLabel.setText("Specify the custom endpoint for Single Tenant setups (default: https://api.snyk.io):");
 
     String endpointValue = initialEndpoint == null || initialEndpoint.isBlank() ? this.defaultEndpoint : initialEndpoint;
     endpoint = new Text(composite, SWT.BORDER);

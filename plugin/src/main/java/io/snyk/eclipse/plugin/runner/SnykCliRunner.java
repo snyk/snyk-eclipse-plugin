@@ -67,7 +67,7 @@ public class SnykCliRunner {
       return ProcessResult.error(e.getMessage());
     }
   }
-  
+
   private void checkIfTrusted(File file) {
     var trustedPaths = Preferences.getInstance().getPref(Preferences.TRUSTED_FOLDERS, "");
     if (!trustedPaths.contains(file.getAbsolutePath())) {

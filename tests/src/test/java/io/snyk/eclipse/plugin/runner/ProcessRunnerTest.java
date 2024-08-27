@@ -42,7 +42,6 @@ class ProcessRunnerTest {
     when(preferenceMock.getAuthToken()).thenReturn("token");
     when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY)).thenReturn("token");
     when(preferenceMock.getPref(Preferences.ENDPOINT_KEY)).thenReturn("https://endpoint.io");
-    when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD)).thenReturn(Preferences.AUTH_METHOD_TOKEN);
     when(preferenceMock.getCliPath()).thenReturn("");
 
     environmentMock = mock(LsRuntimeEnvironment.class);
@@ -109,13 +108,12 @@ class ProcessRunnerTest {
   @Test
   void testOAuthEnabled() {
     String expectedToken = "{\"access_token\":\"configAccessToken\",\"token_type\":\"Bearer\",\"refresh_token\":\"configRefreshToken\",\"expiry\":\"3023-03-29T17:47:13.714448+02:00\"}";
-    
+
     when(preferenceMock.getAuthToken()).thenReturn(expectedToken);
-    when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD)).thenReturn(Preferences.AUTH_METHOD_OAUTH);
 
     ILog logger = mock(ILog.class);
     Bundle bundle = mock(Bundle.class);
-    
+
     when(bundle.getVersion()).thenReturn(new Version(2, 0, 0));
 
     ProcessRunner cut = new ProcessRunner(bundle, logger, environmentMock);

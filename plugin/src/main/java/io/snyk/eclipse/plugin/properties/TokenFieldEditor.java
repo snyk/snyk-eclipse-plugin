@@ -11,7 +11,7 @@ public class TokenFieldEditor extends StringFieldEditor {
 
   protected TokenFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences store, String name, String labelText,
                              Composite parent) {
-    super(name, labelText, parent);
+    super(name, labelText, 80, parent);
     this.store = store;
     getTextControl().setEchoChar('*');
   }
