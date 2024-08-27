@@ -2,8 +2,9 @@
 
 ## [2.2.0] - Unreleased
 ### Changes
-- update required protocol version to 12
+- update required protocol version to 14
 - integrate latest docs incl. troubleshooting
+- default to oauth2 when authenticating
 
 ## [2.2.0] - v20240619.131238
 ### Changes
