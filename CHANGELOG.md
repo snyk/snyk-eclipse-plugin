@@ -2,9 +2,17 @@
 
 ## [2.2.0] - Unreleased
 ### Changes
+- remove keystore decoding from PR checks
+- update jackson dependencies
+- allow to select/deselect code quality findings
+
+
+## [2.2.0] - v20240829.120828
+### Changes
 - update required protocol version to 14
 - integrate latest docs incl. troubleshooting
 - default to oauth2 when authenticating
+- rename token field
 
 ## [2.2.0] - v20240619.131238
 ### Changes
