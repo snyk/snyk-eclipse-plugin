@@ -35,7 +35,8 @@ public class Preferences {
   public static final String INSECURE_KEY = "insecure";
   public static final String CLI_PATH = "cli-path";
   public static final String CLI_BASE_URL = "cli-base-url";
-  public static final String ACTIVATE_SNYK_CODE = "ACTIVATE_SNYK_CODE";
+  public static final String ACTIVATE_SNYK_CODE_SECURITY = "ACTIVATE_SNYK_CODE_SECURITY";
+  public static final String ACTIVATE_SNYK_CODE_QUALITY = "ACTIVATE_SNYK_CODE_QUALITY";
   public static final String ACTIVATE_SNYK_OPEN_SOURCE = "ACTIVATE_SNYK_OPEN_SOURCE";
   public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
   public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
@@ -55,8 +56,11 @@ public class Preferences {
 
   Preferences(PreferenceStore store) {
     this.store = store;
-    if (getPref(ACTIVATE_SNYK_CODE) == null) {
-      store(ACTIVATE_SNYK_CODE, "false");
+    if (getPref(ACTIVATE_SNYK_CODE_SECURITY) == null) {
+      store(ACTIVATE_SNYK_CODE_SECURITY, "false");
+    }
+    if (getPref(ACTIVATE_SNYK_CODE_QUALITY) == null) {
+      store(ACTIVATE_SNYK_CODE_QUALITY, "false");
     }
     if (getPref(ACTIVATE_SNYK_OPEN_SOURCE) == null) {
       store(ACTIVATE_SNYK_OPEN_SOURCE, "true");
