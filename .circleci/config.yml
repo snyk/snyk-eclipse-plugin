@@ -12,8 +12,8 @@ jobs:
       - checkout
       - prodsec/security_scans:
           mode: auto
-          open-source-scan-all-projects: false
-          open-source-additional-arguments: --maven-aggregate-project -- -pl '!tests'
+          open-source-scan-all-projects: true
+          open-source-additional-arguments: -- -pl '!tests'
           iac-scan: disabled
 
 workflows:
