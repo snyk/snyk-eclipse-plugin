@@ -101,7 +101,7 @@ public class Preferences {
     }
 
     if (getPref(CLI_BASE_URL) == null || getPref(CLI_BASE_URL).isBlank()) {
-      store(CLI_BASE_URL, "https://static.snyk.io");
+      store(CLI_BASE_URL, "https://downloads.snyk.io");
     }
 
     if (getPref(SCANNING_MODE_AUTOMATIC) == null) {

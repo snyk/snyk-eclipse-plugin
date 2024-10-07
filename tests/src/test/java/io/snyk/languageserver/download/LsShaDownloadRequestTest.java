@@ -18,7 +18,7 @@ class LsShaDownloadRequestTest extends LsBaseTest {
 
     LsShaRequest cut = new LsShaRequest(version);
 
-    URI expectedUri = new URI("https://static.snyk.io/cli/v" + version
+    URI expectedUri = new URI("https:///downloads.snyk.io/cli/v" + version
         + "/sha256sums.txt.asc");
     assertEquals(expectedUri, cut.getURI());
   }
