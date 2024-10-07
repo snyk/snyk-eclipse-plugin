@@ -13,7 +13,7 @@ jobs:
       - prodsec/security_scans:
           mode: auto
           open-source-scan-all-projects: true
-          open-source-additional-arguments: -- -pl '!tests'
+          open-source-additional-arguments: --exclude=tests
           iac-scan: disabled
 
 workflows:
