@@ -41,7 +41,7 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
     composite.setLayout(gl);
 
     Label endpointLabel = new Label(composite, SWT.NONE);
-    endpointLabel.setText("Specify the custom endpoint for Single Tenant setups (default: https://api.snyk.io):");
+    endpointLabel.setText("Specify the Snyk API endpoint. Useful for custom Multi Tenant or Single Tenant setup (default: https://api.snyk.io):");
 
     String endpointValue = initialEndpoint == null || initialEndpoint.isBlank() ? this.defaultEndpoint : initialEndpoint;
     endpoint = new Text(composite, SWT.BORDER);
