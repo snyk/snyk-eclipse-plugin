@@ -37,7 +37,7 @@ class LsConfigurationUpdaterTest {
       var settings = new LsConfigurationUpdater().getCurrentSettings();
 
       assertEquals("iac", settings.getActivateSnykIac());
-      assertEquals("code", settings.getActivateSnykCode());
+      assertEquals("code", settings.getActivateSnykCodeSecurity());
       assertEquals("oss", settings.getActivateSnykOpenSource());
       assertEquals("true", settings.getInsecure());
       assertEquals("endpoint", settings.getEndpoint());
@@ -63,9 +63,9 @@ class LsConfigurationUpdaterTest {
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC, "true")).thenReturn("iac");
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC, "false")).thenReturn("iac");
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC, "")).thenReturn("iac");
-    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE, "true")).thenReturn("code");
-    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE, "false")).thenReturn("code");
-    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE, "")).thenReturn("code");
+    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true")).thenReturn("code");
+    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "false")).thenReturn("code");
+    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "")).thenReturn("code");
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true")).thenReturn("oss");
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "false")).thenReturn("oss");
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "")).thenReturn("oss");
