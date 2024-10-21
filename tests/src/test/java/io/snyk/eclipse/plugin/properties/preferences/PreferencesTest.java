@@ -28,7 +28,7 @@ class PreferencesTest {
     Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
     LsRuntimeEnvironment lsRuntimeEnv = new LsRuntimeEnvironment();
     
-    assertEquals("false", prefs.getPref(Preferences.ACTIVATE_SNYK_CODE));
+    assertEquals("false", prefs.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
     assertEquals("true", prefs.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
     assertEquals("true", prefs.getPref(Preferences.ACTIVATE_SNYK_IAC));
     assertEquals("true", prefs.getPref(Preferences.SEND_ERROR_REPORTS));
@@ -76,7 +76,7 @@ class PreferencesTest {
   void test_GetBoolean_returnsBooleanProperty() {
     Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
 
-    assertFalse(prefs.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE));
+    assertFalse(prefs.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
     assertTrue(prefs.getBooleanPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
   }
 

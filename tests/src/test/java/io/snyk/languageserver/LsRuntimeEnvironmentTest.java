@@ -78,14 +78,14 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
     HashMap<String, String> env = new HashMap<>();
 
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC)).thenReturn("iac");
-    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE)).thenReturn("code");
+    when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)).thenReturn("code");
     when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn("oss");
 
     environment.addProductEnablement(env);
 
     assertEquals("oss", env.get(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
     assertEquals("iac", env.get(Preferences.ACTIVATE_SNYK_IAC));
-    assertEquals("code", env.get(Preferences.ACTIVATE_SNYK_CODE));
+    assertEquals("code", env.get(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
   }
 
   @Test
