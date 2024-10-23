@@ -8,7 +8,7 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 public class LsBinaries {
   private static final Preferences PREFERENCES = Preferences.getInstance();
-  public static final String REQUIRED_LS_PROTOCOL_VERSION = "14";
+  public static final String REQUIRED_LS_PROTOCOL_VERSION = "16";
 
   public static URI getBaseUri() {
     return URI.create(PREFERENCES.getPref(CLI_BASE_URL));

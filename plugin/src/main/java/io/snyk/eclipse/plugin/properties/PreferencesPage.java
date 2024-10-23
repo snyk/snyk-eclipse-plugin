@@ -19,7 +19,7 @@ import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
-    private BooleanFieldEditor snykCodeSecurityCheckbox;
+    private BooleanFieldEditor snykCodeSecurityCheckbox, snykCodeQualityCheckbox;
 
     public PreferencesPage() {
         super(GRID);
@@ -34,69 +34,81 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
     @Override
     protected void createFieldEditors() {
         TokenFieldEditor tokenField = new TokenFieldEditor(Preferences.getInstance(), Preferences.AUTH_TOKEN_KEY,
-            "Token:", getFieldEditorParent());
+                "Token:", getFieldEditorParent());
 
-        addField(new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH, "Use token authentication. It is recommended to keep this turned off, as the default OAuth2 authentication is more secure.", 
+        addField(new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH,
+                "Use token authentication. It is recommended to keep this turned off, as the default OAuth2 authentication is more secure.",
                 getFieldEditorParent()));
 
         addField(tokenField);
         addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", 80, getFieldEditorParent()));
         addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", 80, getFieldEditorParent()));
-        addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities", 
-            getFieldEditorParent()));
+        addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
+                getFieldEditorParent()));
 
         addField(space());
-        addField(new LabelFieldEditor("The following options involve the Snyk Language Server.", getFieldEditorParent()));
+        addField(new LabelFieldEditor("The following options involve the Snyk Language Server.",
+                getFieldEditorParent()));
         addField(new LabelFieldEditor(
-            "Activating Snyk Code will cause upload of source code to Snyk or the given endpoint address.",
-            getFieldEditorParent()));
+                "Activating Snyk Code will cause upload of source code to Snyk or the given endpoint address.",
+                getFieldEditorParent()));
         addField(space());
         addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "Snyk Open Source enabled",
-            getFieldEditorParent()));
-        snykCodeSecurityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE, "Snyk Code enabled",
-            getFieldEditorParent());
-
+                getFieldEditorParent()));
+        snykCodeSecurityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "Snyk Code Security enabled",
+                getFieldEditorParent());
         addField(snykCodeSecurityCheckbox);
+        snykCodeQualityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "Snyk Code Quality enabled",
+                getFieldEditorParent());
+        addField(snykCodeQualityCheckbox);
 
         addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure-as-Code enabled",
-            getFieldEditorParent()));
+                getFieldEditorParent()));
 
         addField(space());
-        addField(new BooleanFieldEditor(Preferences.SCANNING_MODE_AUTOMATIC, "Scan automatically on start-up and save", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(Preferences.SCANNING_MODE_AUTOMATIC, "Scan automatically on start-up and save",
+                getFieldEditorParent()));
         addField(space());
         addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
         addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", 80, getFieldEditorParent()));
         addField(
-            new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", 80, getFieldEditorParent()));
+                new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", 80,
+                        getFieldEditorParent()));
         addField(
-            new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", 80, getFieldEditorParent()));
+                new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", 80,
+                        getFieldEditorParent()));
 
         addField(space());
         BooleanFieldEditor manageBinaries = new BooleanFieldEditor(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
-            "Update and install Snyk binaries automatically", getFieldEditorParent());
+                "Update and install Snyk binaries automatically", getFieldEditorParent());
         manageBinaries.setPropertyChangeListener((PropertyChangeEvent propertyChangeEvent) -> {
             System.out.println("managed bionaries changed");
         });
         addField(manageBinaries);
-        addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", 80, getFieldEditorParent()));
-        addField(new FileFieldEditor(Preferences.CLI_PATH, "Snyk CLI (incl. Language Server):", getFieldEditorParent()));
+        addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", 80,
+                getFieldEditorParent()));
+        addField(
+                new FileFieldEditor(Preferences.CLI_PATH, "Snyk CLI (incl. Language Server):", getFieldEditorParent()));
 
         addField(space());
 
         addField(
-            new BooleanFieldEditor(Preferences.SEND_ERROR_REPORTS, "Send error reports to Snyk", getFieldEditorParent()));
+                new BooleanFieldEditor(Preferences.SEND_ERROR_REPORTS, "Send error reports to Snyk",
+                        getFieldEditorParent()));
         addField(
-            new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Send usage statistics to Snyk", getFieldEditorParent()));
+                new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Send usage statistics to Snyk",
+                        getFieldEditorParent()));
 
         addField(space());
 
         addField(new LabelFieldEditor(
-            "Only trusted paths are scanned by Snyk. The Trusted Folders setting allows to specify, which \n"
-                + "paths are safe to scan. Every path below a given path is considered safe to scan. \n"
-                + "Please separate entries with \"" + File.pathSeparator + "\".",
-            getFieldEditorParent()));
-        StringFieldEditor trustedFoldersEditor = new StringFieldEditor(Preferences.TRUSTED_FOLDERS, "Trusted Folders:", 80, getFieldEditorParent());
-		addField(trustedFoldersEditor);
+                "Only trusted paths are scanned by Snyk. The Trusted Folders setting allows to specify, which \n"
+                        + "paths are safe to scan. Every path below a given path is considered safe to scan. \n"
+                        + "Please separate entries with \"" + File.pathSeparator + "\".",
+                getFieldEditorParent()));
+        StringFieldEditor trustedFoldersEditor = new StringFieldEditor(Preferences.TRUSTED_FOLDERS, "Trusted Folders:",
+                80, getFieldEditorParent());
+        addField(trustedFoldersEditor);
         disableSnykCodeIfOrgDisabled();
     }
 
@@ -131,13 +143,14 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
                 boolean showMessage = false;
                 boolean checkBoxValue;
                 try {
-                  checkBoxValue = snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue();
+                    checkBoxValue = snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue();
                 } catch (NullPointerException e) {
-                  // this can happen, if the UI checkbox is not initialized fully, we return then
-                  return;
+                    // this can happen, if the UI checkbox is not initialized fully, we return then
+                    return;
                 }
                 if (checkBoxValue && !isSastEnabled) {
-                    snykCodeSecurityCheckbox.setLabelText(snykCodeSecurityCheckbox.getLabelText() + " (" + message + ")");
+                    snykCodeSecurityCheckbox
+                            .setLabelText(snykCodeSecurityCheckbox.getLabelText() + " (" + message + ")");
                     showMessage = true;
                 }
 
