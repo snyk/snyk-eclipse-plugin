@@ -15,8 +15,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4j.ExecuteCommandParams;
-import org.eclipse.lsp4j.MessageParams;
-import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
@@ -26,7 +24,6 @@ import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,7 +33,6 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
-import io.snyk.languageserver.protocolextension.messageObjects.OAuthToken;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 
@@ -45,14 +41,13 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFolder
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
     private final ProgressManager progressMgr = new ProgressManager();
     private static SnykExtendedLanguageClient instance = null;
-    private final ObjectMapper om = new ObjectMapper();
+    // we overwrite the super-class field, so we can mock it
 
-    @SuppressWarnings("unused") // used in lsp4e language server instantiation
     public SnykExtendedLanguageClient() {
         super();
         instance = this;
     }
-
+    
     public static SnykExtendedLanguageClient getInstance() {
         return instance; // we leave instantiation to LSP4e, no lazy construction here
     }
@@ -122,12 +117,27 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     @JsonNotification(value = "$/snyk.hasAuthenticated")
     public void hasAuthenticated(HasAuthenticatedParam param) {
         var prefs = Preferences.getInstance();
-        prefs.store(Preferences.AUTH_TOKEN_KEY, param.getToken());
-        triggerScan(null);
-
-        if (!param.getToken().isBlank()) {
-            showAuthenticatedMessage();
-            enableSnykViewRunActions();
+        
+        var oldToken = prefs.getAuthToken();
+        var oldApi = prefs.getEndpoint();
+        
+        if (param.getApiUrl() != null && !param.getApiUrl().isBlank() && !param.getApiUrl().equals(oldApi)) {
+        	prefs.store(Preferences.ENDPOINT_KEY, param.getApiUrl());
+        }
+      
+        String newToken = param.getToken();
+		boolean differentToken = newToken != oldToken;
+		
+		if (differentToken) {
+          prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
+        }
+        
+		if (!newToken.isBlank()) {
+			enableSnykViewRunActions();
+		}
+		
+        if (differentToken && !newToken.isBlank()) {
+        	triggerScan(null);
         }
     }
 
@@ -175,13 +185,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
         });
     }
 
-    private void showAuthenticatedMessage() {
-        MessageParams messageParams = new MessageParams();
-        messageParams.setType(MessageType.Info);
-        messageParams.setMessage("The authentication token has been stored in Snyk Preferences.");
-        super.showMessage(messageParams);
-    }
-
     private void runForProject(String projectName) {
         SnykView snykView = SnykStartup.getSnykView();
         if (snykView != null) {
@@ -197,6 +200,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
             SnykLogger.logError(e);
         }
     }
+    
+    
 
     /**
      * Refresh the token using language server. Waits up to 2s for the token change.

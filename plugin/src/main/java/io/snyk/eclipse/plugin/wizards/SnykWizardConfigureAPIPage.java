@@ -20,7 +20,6 @@ import org.eclipse.swt.widgets.Listener;
 public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
   private Text endpoint;
   private Button unknownCerts;
-  private String defaultEndpoint = "https://api.snyk.io";
   private String initialEndpoint = Preferences.getInstance().getEndpoint();
 
   public SnykWizardConfigureAPIPage() {
@@ -41,9 +40,9 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
     composite.setLayout(gl);
 
     Label endpointLabel = new Label(composite, SWT.NONE);
-    endpointLabel.setText("Specify the Snyk API endpoint. Useful for custom Multi Tenant or Single Tenant setup (default: https://api.snyk.io):");
+    endpointLabel.setText("Specify the Snyk API endpoint. Useful for custom Multi Tenant or Single Tenant setup (default: "+Preferences.DEFAULT_ENDPOINT+":");
 
-    String endpointValue = initialEndpoint == null || initialEndpoint.isBlank() ? this.defaultEndpoint : initialEndpoint;
+    String endpointValue = initialEndpoint == null || initialEndpoint.isBlank() ? Preferences.DEFAULT_ENDPOINT : initialEndpoint;
     endpoint = new Text(composite, SWT.BORDER);
     endpoint.setText(endpointValue);
     gd = new GridData(GridData.FILL_HORIZONTAL);
