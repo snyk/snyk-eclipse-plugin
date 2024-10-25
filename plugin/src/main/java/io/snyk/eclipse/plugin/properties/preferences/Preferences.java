@@ -51,6 +51,7 @@ public class Preferences {
   public static final String MANAGE_BINARIES_AUTOMATICALLY = "SNYK_CFG_MANAGE_BINARIES_AUTOMATICALLY";
   public static final String ORGANIZATION_KEY = EnvironmentConstants.ENV_SNYK_ORG;
   public static final String SCANNING_MODE_AUTOMATIC = "scanningMode";
+  public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
 
   private final PreferenceStore store;
 
@@ -90,8 +91,11 @@ public class Preferences {
     }
 
     String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
-    if (getPref(ENDPOINT_KEY) == null && !"".equals(endpoint)) {
-      store(ENDPOINT_KEY, endpoint);
+    if (getPref(ENDPOINT_KEY) == null) {
+    	if ("".equals(endpoint)) {
+    		endpoint = DEFAULT_ENDPOINT;
+    	}
+    	store(ENDPOINT_KEY, endpoint);
     }
 
     String org = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, "");

@@ -1,7 +1,12 @@
 # Snyk Security Changelog
 
-## [2.2.0] - Unreleased
+## [Unreleased]
 ### Changes
+- process api URL from hasAuthenticated message
+
+## [2.2.0] - v20241024.154007
+### Changes
+- switch download URL to downloads.snyk.io
 - remove keystore decoding from PR checks
 - update jackson dependencies
 - allow to select/deselect code quality findings
