@@ -132,7 +132,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
           prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
         }
         
-		if (!newToken.isBlank()) {
+		if (!newToken.isBlank() && PlatformUI.isWorkbenchRunning()) {
 			enableSnykViewRunActions();
 		}
 		
