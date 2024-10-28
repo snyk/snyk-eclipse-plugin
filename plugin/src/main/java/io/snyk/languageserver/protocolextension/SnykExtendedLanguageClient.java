@@ -17,6 +17,7 @@ import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -29,10 +30,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.SdkHelper;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
+import io.snyk.languageserver.protocolextension.messageObjects.LsSdk;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 
@@ -140,6 +143,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
         	triggerScan(null);
         }
     }
+    
+    @JsonNotification(value = "workspace/snyk.sdks")
+    public CompletableFuture<List<LsSdk>> getConfiguredSdks(WorkspaceFolder folder) {
+            return CompletableFuture.completedFuture(SdkHelper.getSdks());
+    }
 
     @JsonNotification(value = "$/snyk.isAvailableCli")
     public void isAvailableCli(SnykIsAvailableCliParams param) {
@@ -152,7 +160,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
         var prefs = Preferences.getInstance();
         var storedTrustedPaths = prefs.getPref(Preferences.TRUSTED_FOLDERS, "");
         var trustedPaths = storedTrustedPaths.split(File.pathSeparator);
-        var pathSet = new HashSet<>(Arrays.asList(trustedPaths));
+        var pathSet = new HashSet<>(Arrays.asList(trustedPaths));,hh
+        
+        
         pathSet.addAll(Arrays.asList(param.getTrustedFolders()));
         Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS, pathSet.stream().filter(s -> !s.isBlank())
             .map(s -> s.trim()).distinct().collect(Collectors.joining(File.pathSeparator)));
