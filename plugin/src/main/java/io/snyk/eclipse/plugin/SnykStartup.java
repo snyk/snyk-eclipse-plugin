@@ -36,10 +36,10 @@ import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.download.LsDownloader;
 
 public class SnykStartup implements IStartup {
-  private LsRuntimeEnvironment runtimeEnvironment;
+  private static LsRuntimeEnvironment runtimeEnvironment;
   private SnykView snykView = null;
   private static boolean downloading = true;
-  private ILog logger;
+  private static ILog logger;
 
   private static SnykStartup instance;
 
@@ -141,12 +141,12 @@ public class SnykStartup implements IStartup {
     return true;
   }
 
-  LsDownloader getLsDownloader() throws URISyntaxException {
+  static LsDownloader getLsDownloader() throws URISyntaxException {
     return new LsDownloader(HttpClientFactory.getInstance(), runtimeEnvironment, logger);
   }
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
-  IStatus download(IProgressMonitor monitor) {
+  public static IStatus download(IProgressMonitor monitor) {
     final File lsFile = new File(Preferences.getInstance().getCliPath());
     try {
       LsDownloader lsDownloader = getLsDownloader();

@@ -56,6 +56,7 @@ public class Preferences {
 	public static final String SCANNING_MODE_AUTOMATIC = "scanningMode";
 	public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
 	public static final String DEVICE_ID = "deviceId";
+	public static final String RELEASE_CHANNEL = "releaseChannel";
 
 	private final PreferenceStore store;
 
@@ -128,8 +129,14 @@ public class Preferences {
 			store.put(ANALYTICS_PLUGIN_INSTALLED_SENT, "false");
 		}
 
-		if (getPref(DEVICE_ID) == null) {
+		String deviceId = getPref(DEVICE_ID);
+		if (deviceId == null || deviceId.isBlank()) {
 			store.put(DEVICE_ID, UUID.randomUUID().toString());
+		}
+		
+		String releaseChannel = getPref(RELEASE_CHANNEL);
+		if (releaseChannel == null || releaseChannel.isBlank()) {
+			store.put(RELEASE_CHANNEL, "stable");
 		}
 	}
 
@@ -196,6 +203,10 @@ public class Preferences {
 
 	public boolean getBooleanPref(String key, boolean defaultValue) {
 		return store.getBoolean(key, defaultValue);
+	}
+
+	public String getReleaseChannel() {
+		return getPref(RELEASE_CHANNEL, "stable");
 	}
 
 }

@@ -49,6 +49,7 @@ public class AnalyticsSender {
 			for (Pair<AbstractAnalyticsEvent, Consumer<Void>> event : copyForSending) {
 				try {
 					SnykExtendedLanguageClient.getInstance().reportAnalytics(event.getLeft());
+					event.getRight().accept(null);
 				} catch (Exception e) {
 					SnykLogger.logError(e);
 				} finally {
