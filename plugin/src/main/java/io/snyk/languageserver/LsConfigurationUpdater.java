@@ -36,7 +36,6 @@ public class LsConfigurationUpdater {
         String additionalEnv = preferences.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "");
         String path = preferences.getPref(Preferences.PATH_KEY, "");
         String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
-        String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, Boolean.FALSE.toString());
         String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
         String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
             Boolean.TRUE.toString());
@@ -58,7 +57,7 @@ public class LsConfigurationUpdater {
         	authMethod = "token";
         }
         return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac, insecure, endpoint, additionalParams,
-            additionalEnv, path, sendErrorReports, enableTelemetry, organization, manageBinariesAutomatically, cliPath,
+            additionalEnv, path, sendErrorReports, organization, manageBinariesAutomatically, cliPath,
             token, integrationName, integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature,
             scanningMode, authMethod);
     }
@@ -75,7 +74,6 @@ public class LsConfigurationUpdater {
         private final String additionalEnv;
         private final String path;
         private final String sendErrorReports;
-        private final String enableTelemetry;
         private final String organization;
         private final String manageBinariesAutomatically;
         private final String cliPath;
@@ -95,7 +93,7 @@ public class LsConfigurationUpdater {
 
         public Settings(String activateSnykOpenSource, String activateSnykCodeSecurity, String activateSnykCodeQuality, String activateSnykIac, String insecure,
                         String endpoint, String additionalParams, String additionalEnv, String path, String sendErrorReports,
-                        String enableTelemetry, String organization, String manageBinariesAutomatically, String cliPath, String token,
+                        String organization, String manageBinariesAutomatically, String cliPath, String token,
                         String integrationName, String integrationVersion, String automaticAuthentication, String[] trustedFolders,
                         String enableTrustedFoldersFeature, String scanningMode, String authMethod) {
             this.activateSnykOpenSource = activateSnykOpenSource;
@@ -108,7 +106,6 @@ public class LsConfigurationUpdater {
             this.additionalEnv = additionalEnv;
             this.path = path;
             this.sendErrorReports = sendErrorReports;
-            this.enableTelemetry = enableTelemetry;
             this.organization = organization;
             this.manageBinariesAutomatically = manageBinariesAutomatically;
             this.cliPath = cliPath;
@@ -160,10 +157,6 @@ public class LsConfigurationUpdater {
 
         public String getSendErrorReports() {
             return this.sendErrorReports;
-        }
-
-        public String getEnableTelemetry() {
-            return this.enableTelemetry;
         }
 
         public String getOrganization() {

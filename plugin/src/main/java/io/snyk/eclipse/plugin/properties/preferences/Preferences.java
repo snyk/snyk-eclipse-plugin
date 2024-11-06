@@ -45,9 +45,6 @@ public class Preferences {
   public static final String LSP_VERSION = "LSP_VERSION";
   public static final String USE_TOKEN_AUTH = "useTokenAuth";
 
-  // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so we need to revert it
-  // when populating the environment
-  public static final String ENABLE_TELEMETRY = EnvironmentConstants.ENV_DISABLE_ANALYTICS;
   public static final String MANAGE_BINARIES_AUTOMATICALLY = "SNYK_CFG_MANAGE_BINARIES_AUTOMATICALLY";
   public static final String ORGANIZATION_KEY = EnvironmentConstants.ENV_SNYK_ORG;
   public static final String SCANNING_MODE_AUTOMATIC = "scanningMode";
@@ -71,9 +68,6 @@ public class Preferences {
     }
     if (getPref(SEND_ERROR_REPORTS) == null) {
       store(SEND_ERROR_REPORTS, "true");
-    }
-    if (getPref(ENABLE_TELEMETRY) == null) {
-      store(ENABLE_TELEMETRY, "true");
     }
     if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
       store(MANAGE_BINARIES_AUTOMATICALLY, "true");

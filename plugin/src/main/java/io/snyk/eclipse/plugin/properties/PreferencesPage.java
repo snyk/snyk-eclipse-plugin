@@ -95,9 +95,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
         addField(
                 new BooleanFieldEditor(Preferences.SEND_ERROR_REPORTS, "Send error reports to Snyk",
                         getFieldEditorParent()));
-        addField(
-                new BooleanFieldEditor(Preferences.ENABLE_TELEMETRY, "Send usage statistics to Snyk",
-                        getFieldEditorParent()));
 
         addField(space());
 

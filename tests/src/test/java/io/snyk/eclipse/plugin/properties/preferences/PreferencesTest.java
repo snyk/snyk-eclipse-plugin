@@ -32,7 +32,6 @@ class PreferencesTest {
     assertEquals("true", prefs.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
     assertEquals("true", prefs.getPref(Preferences.ACTIVATE_SNYK_IAC));
     assertEquals("true", prefs.getPref(Preferences.SEND_ERROR_REPORTS));
-    assertEquals("true", prefs.getPref(Preferences.ENABLE_TELEMETRY));
     assertEquals("true", prefs.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
     assertEquals("true", prefs.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
     assertEquals("1", prefs.getPref(Preferences.LSP_VERSION));

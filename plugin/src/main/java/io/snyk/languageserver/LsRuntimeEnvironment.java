@@ -68,7 +68,6 @@ public class LsRuntimeEnvironment {
     addProductEnablement(env);
     addOrganization(env);
     addAdditionalParamsAndEnv(env);
-    addTelemetry(env);
   }
 
   void addOrganization(Map<String, String> env) {
@@ -173,17 +172,5 @@ public class LsRuntimeEnvironment {
   public void addIntegrationInfoToEnv(Map<String, String> env) {
     env.put("SNYK_INTEGRATION_NAME", Activator.INTEGRATION_NAME);
     env.put("SNYK_INTEGRATION_VERSION", Activator.PLUGIN_VERSION);
-  }
-
-  void addTelemetry(Map<String, String> env) {
-    String sendErrorReports = Preferences.getInstance().getPref(Preferences.SEND_ERROR_REPORTS, "true");
-    env.put("SEND_ERROR_REPORTS", sendErrorReports);
-    String enableTelemetry = Preferences.getInstance().getPref(Preferences.ENABLE_TELEMETRY, "false");
-    // This is a bit confusing - CLI takes DISABLE as env variable, but we ask for ENABLE, so it's reverted
-    if (Boolean.parseBoolean(enableTelemetry)) {
-      env.put(Preferences.ENABLE_TELEMETRY, "0");
-    } else {
-      env.put(Preferences.ENABLE_TELEMETRY, "1");
-    }
   }
 }

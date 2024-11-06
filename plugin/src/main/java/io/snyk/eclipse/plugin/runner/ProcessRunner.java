@@ -146,12 +146,6 @@ public class ProcessRunner {
     if (insecure != null && insecure.equalsIgnoreCase("true"))
       pb.command().add("--insecure");
 
-    String enableTelemetry = Preferences.getInstance().getPref(Preferences.ENABLE_TELEMETRY);
-    if (!enableTelemetry.isBlank() && Boolean.parseBoolean(enableTelemetry)) {
-      pb.environment().put(Preferences.ENABLE_TELEMETRY, "0");
-    } else {
-      pb.environment().put(Preferences.ENABLE_TELEMETRY, "1"); // default to disable telemetry
-    }
   }
 
   public ProcessBuilder createMacProcessBuilder(List<String> params, Optional<String> path) {

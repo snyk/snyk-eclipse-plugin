@@ -46,7 +46,6 @@ class LsConfigurationUpdaterTest {
       assertEquals("path", settings.getPath());
       assertEquals("true", settings.getSendErrorReports());
       assertEquals("organization", settings.getOrganization());
-      assertEquals("true", settings.getEnableTelemetry());
       assertEquals("true", settings.getManageBinariesAutomatically());
       assertEquals("/path", settings.getCliPath());
       assertEquals("ECLIPSE", settings.getIntegrationName());
@@ -79,9 +78,6 @@ class LsConfigurationUpdaterTest {
     when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "true")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "false")).thenReturn("true");
-    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("true");
-    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "true")).thenReturn("true");
-    when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true")).thenReturn("true");
     when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("organization");
     when(preferenceMock.getPref(Preferences.CLI_PATH, "")).thenReturn("/path");
