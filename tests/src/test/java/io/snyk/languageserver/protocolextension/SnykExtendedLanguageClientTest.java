@@ -22,6 +22,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	protected void setUp() {
 		store = new InMemoryPreferenceStore();
 		pref = Preferences.getInstance(store);
+		
+		// we don't want the wizard to pop up, so we set a dummy token
+		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
 		PreferencesUtils.setPreferences(pref);
 		
 		cut = new SnykExtendedLanguageClient();

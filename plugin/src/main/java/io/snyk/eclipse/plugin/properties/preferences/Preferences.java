@@ -209,4 +209,12 @@ public class Preferences {
 		return getPref(RELEASE_CHANNEL, "stable");
 	}
 
+	public void setTest(boolean b) {
+		store.put("isTesting", Boolean.toString(b));
+	}
+	
+	public boolean isTest() {
+		return getBooleanPref("isTesting");
+	}
+
 }

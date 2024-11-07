@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -267,9 +268,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public boolean refreshOAuthToken() {
 		var p = Preferences.getInstance();
 		var token = p.getAuthToken();
-		executeCommand("snyk.getActiveUser", new ArrayList<>());
-		// wait until token has changed or 2s have passed
+		final int timeout = 5;
 		CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+			var result = executeCommand("snyk.getActiveUser", new ArrayList<>());
+			// we don't wait forever, and if we can't get a user name (refresh token), we're done.
+			try {
+				result.get(timeout-1, TimeUnit.SECONDS);
+			} catch (InterruptedException | ExecutionException | TimeoutException e) {
+				return "";
+			}
 			while (token.equals(p.getAuthToken())) {
 				try {
 					Thread.sleep(10);
@@ -279,7 +286,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 			return p.getAuthToken();
 		});
-		var newToken = future.completeOnTimeout(token, 2, TimeUnit.SECONDS).join();
+		
+		// wait until token has changed or 2s have passed
+		var newToken = future.completeOnTimeout(token, 5, TimeUnit.SECONDS).join();
 		return !token.equals(newToken);
 	}
 
