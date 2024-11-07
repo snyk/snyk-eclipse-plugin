@@ -14,12 +14,12 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 public class LsConfigurationUpdater {
 
     public void configurationChanged() {
-        var params = new DidChangeConfigurationParams();
-        params.setSettings(getCurrentSettings());
-
         SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
         if (lc != null) {
+        	lc.ensureLanguageServerRunning();
             var languageServer = lc.getConnectedLanguageServer();
+            var params = new DidChangeConfigurationParams();
+            params.setSettings(getCurrentSettings());
             languageServer.getWorkspaceService().didChangeConfiguration(params);
         }
     }

@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -36,6 +37,7 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
+import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
@@ -112,18 +114,43 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		executeCommand("snyk.login", new ArrayList<>());
 	}
 
+	public void ensureLanguageServerRunning() {
+		boolean wait = true;
+		while (wait && !Thread.interrupted()) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				SnykLogger.logInfo("waiting for language server startup was interrupted");
+				break;
+			}
+			
+			try {
+				SnykLanguageServer.startSnykLanguageServer();
+			} catch (Exception e) {
+				SnykLogger.logError(e);
+			}
+			wait = getConnectedLanguageServer() == null;
+		}
+	}
+
 	public void trustWorkspaceFolders() {
 		executeCommand("snyk.trustWorkspaceFolders", new ArrayList<>());
 	}
 
 	public boolean getSastEnabled() {
-		ExecuteCommandParams params = new ExecuteCommandParams("snyk.getSettingsSastEnabled", new ArrayList<>());
 		try {
-			CompletableFuture<Object> lsSastSettings = getConnectedLanguageServer().getWorkspaceService()
-					.executeCommand(params);
+			CompletableFuture<Object> lsSastSettings = executeCommand("snyk.getSettingsSastEnabled", new ArrayList<>());
+			Object result;
+			try {
+				result = lsSastSettings.get(5, TimeUnit.SECONDS);
+			} catch (TimeoutException e) {
+				SnykLogger.logInfo("did not get a response for sast settings, disabling Snyk Code");
+				return false;
+			}
+			
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			SastSettings sastSettings = mapper.convertValue(lsSastSettings.get(), SastSettings.class);
+			SastSettings sastSettings = mapper.convertValue(result, SastSettings.class);
 			return sastSettings != null ? sastSettings.sastEnabled : false;
 		} catch (Exception e) {
 			SnykLogger.logError(e);
@@ -178,12 +205,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public void reportAnalytics(AbstractAnalyticsEvent event) {
 		try {
-
 			var eventString = om.writeValueAsString(event);
-			var param = new ExecuteCommandParams();
-			param.setCommand("snyk.reportAnalytics");
-			param.setArguments(List.of(eventString));
-			getConnectedLanguageServer().getWorkspaceService().executeCommand(param);
+			executeCommand("snyk.reportAnalytics", List.of(eventString));
 		} catch (Exception e) {
 			SnykLogger.logError(e);
 		}
@@ -224,13 +247,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private void executeCommand(@NonNull String command, List<Object> arguments) {
+	private CompletableFuture<Object> executeCommand(@NonNull String command, List<Object> arguments) {
+		ensureLanguageServerRunning();
 		ExecuteCommandParams params = new ExecuteCommandParams(command, arguments);
 		try {
-			getConnectedLanguageServer().getWorkspaceService().executeCommand(params);
+			return getLanguageServer().getWorkspaceService().executeCommand(params);
 		} catch (Exception e) {
 			SnykLogger.logError(e);
 		}
+		return CompletableFuture.completedFuture(null);
 	}
 
 	/**
