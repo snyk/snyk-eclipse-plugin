@@ -12,6 +12,7 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
+import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
@@ -66,6 +67,15 @@ public class SnykWizard extends Wizard implements INewWizard {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				monitor.beginTask("starting", 60);
+				while (SnykStartup.isDownloading()) {
+					monitor.subTask("waiting for download");
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						return Status.error(e.getMessage());
+					}
+				}
 				monitor.subTask("updating language server configuration");
 				new LsConfigurationUpdater().configurationChanged();
 				monitor.worked(20);
