@@ -267,6 +267,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	 */
 	public boolean refreshOAuthToken() {
 		var p = Preferences.getInstance();
+		if (p.isTest()) { 
+			return true; 
+		}
 		var token = p.getAuthToken();
 		final int timeout = 5;
 		CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
