@@ -37,7 +37,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
       }
     }
 
-	List<String> commands = Lists.of(prefs.getCliPath(), "language-server", "-l", "debug");
+	List<String> commands = Lists.of(prefs.getCliPath(), "language-server", "-l", "info");
     String workingDir = SystemUtils.USER_DIR;
     setCommands(commands);
     setWorkingDirectory(workingDir);
