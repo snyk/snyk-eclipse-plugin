@@ -47,20 +47,24 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFolder
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private final ProgressManager progressMgr = new ProgressManager();
 	private final ObjectMapper om = new ObjectMapper();
+	private AnalyticsSender analyticsSender;
+	
 	private static SnykExtendedLanguageClient instance = null;
 	// we overwrite the super-class field, so we can mock it
 
 	public SnykExtendedLanguageClient() {
 		super();
 		instance = this;
-
 		sendPluginInstalledEvent();
 	}
 
 	private void sendPluginInstalledEvent() {
 		if (!Preferences.getInstance().getBooleanPref(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, false)) {
+			if (analyticsSender == null) {
+				analyticsSender = AnalyticsSender.getInstance();
+			}
 			var pluginInstalledEvent = new AnalyticsEvent("plugin installed", List.of("install"));
-			AnalyticsSender.getInstance().logEvent(pluginInstalledEvent, new Consumer<Void>() {
+			analyticsSender.logEvent(pluginInstalledEvent, new Consumer<Void>() {
 				@Override
 				public void accept(Void t) {
 					Preferences.getInstance().store(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, "true");
