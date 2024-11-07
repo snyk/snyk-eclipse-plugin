@@ -109,4 +109,17 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			assertEquals("plugin installed", captor.getValue().getInteractionType());
 		}
 	}
+	
+	@Test
+	void testDoesNotSendPluginInstalledEventOnSecondStart() {
+		try (MockedStatic<AnalyticsSender> mockedAnalyticsSender = mockStatic(AnalyticsSender.class)) {
+			var asMock = Mockito.mock(AnalyticsSender.class);
+			mockedAnalyticsSender.when(() -> AnalyticsSender.getInstance()).thenReturn(asMock);
+			pref.store(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, "true");
+
+			cut = new SnykExtendedLanguageClient();
+
+			verifyNoMoreInteractions(asMock);
+		}
+	}
 }
