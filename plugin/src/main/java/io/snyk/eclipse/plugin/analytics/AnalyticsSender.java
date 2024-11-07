@@ -1,9 +1,8 @@
 package io.snyk.eclipse.plugin.analytics;
 
 import java.util.LinkedList;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,10 +14,9 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 public class AnalyticsSender {
 	// left = event, right = callback function
 	private final ConcurrentLinkedQueue<Pair<AbstractAnalyticsEvent, Consumer<Void>>> eventQueue = new ConcurrentLinkedQueue<>();
-	private final ExecutorService pool = Executors.newCachedThreadPool();
 
 	private AnalyticsSender() {
-		pool.submit(() -> start());
+		CompletableFuture.runAsync(() -> { start(); });
 	}
 
 	private static AnalyticsSender instance;
@@ -37,18 +35,19 @@ public class AnalyticsSender {
 	private void start() {
 		while (true) {
 			String authToken = Preferences.getInstance().getAuthToken();
-			if (eventQueue.isEmpty() || authToken == null || authToken.isBlank()) {
+			var lc = SnykExtendedLanguageClient.getInstance();
+			if (eventQueue.isEmpty() || authToken == null || authToken.isBlank() || lc == null ) {
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
-					// swallow interruption
+					Thread.currentThread().interrupt();
 				}
 				continue;
 			}
 			LinkedList<Pair<AbstractAnalyticsEvent, Consumer<Void>>> copyForSending = new LinkedList<>(eventQueue);
 			for (Pair<AbstractAnalyticsEvent, Consumer<Void>> event : copyForSending) {
 				try {
-					SnykExtendedLanguageClient.getInstance().reportAnalytics(event.getLeft());
+					lc.reportAnalytics(event.getLeft());
 					event.getRight().accept(null);
 				} catch (Exception e) {
 					SnykLogger.logError(e);

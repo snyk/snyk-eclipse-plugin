@@ -77,37 +77,38 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void triggerScan(IWorkbenchWindow window) {
-		if (Preferences.getInstance().getAuthToken().isBlank()) {
-			runSnykWizard();
-		} else {
-			try {
-				if (window == null) {
-					executeCommand("snyk.workspace.scan", new ArrayList<>());
-					return;
+		CompletableFuture.runAsync(() -> {			
+			if (Preferences.getInstance().getAuthToken().isBlank()) {
+				runSnykWizard();
+			} else {
+				try {
+					if (window == null) {
+						executeCommand("snyk.workspace.scan", new ArrayList<>());
+						return;
+					}
+	
+					ISelectionService service = window.getSelectionService();
+					IStructuredSelection structured = (IStructuredSelection) service.getSelection();
+	
+					Object firstElement = structured.getFirstElement();
+					IProject project = null;
+					if (firstElement instanceof JavaProject) {
+						project = ((JavaProject) firstElement).getProject();
+					}
+	
+					if (firstElement instanceof IProject) {
+						project = (IProject) firstElement;
+					}
+	
+					if (project != null) {
+						runForProject(project.getName());
+						executeCommand("snyk.workspaceFolder.scan", List.of(project.getLocation().toOSString()));
+					}
+				} catch (Exception e) {
+					SnykLogger.logError(e);
 				}
-
-				ISelectionService service = window.getSelectionService();
-				IStructuredSelection structured = (IStructuredSelection) service.getSelection();
-
-				Object firstElement = structured.getFirstElement();
-				IProject project = null;
-				if (firstElement instanceof JavaProject) {
-					project = ((JavaProject) firstElement).getProject();
-				}
-
-				if (firstElement instanceof IProject) {
-					project = (IProject) firstElement;
-				}
-
-				if (project != null) {
-					runForProject(project.getName());
-					executeCommand("snyk.workspaceFolder.scan", List.of(project.getLocation().toOSString()));
-				}
-			} catch (Exception e) {
-				SnykLogger.logError(e);
 			}
-
-		}
+		});
 	}
 
 	public void triggerAuthentication() {
@@ -123,7 +124,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				SnykLogger.logInfo("waiting for language server startup was interrupted");
 				break;
 			}
-			
+
 			try {
 				SnykLanguageServer.startSnykLanguageServer();
 			} catch (Exception e) {
@@ -147,7 +148,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				SnykLogger.logInfo("did not get a response for sast settings, disabling Snyk Code");
 				return false;
 			}
-			
+
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			SastSettings sastSettings = mapper.convertValue(result, SastSettings.class);

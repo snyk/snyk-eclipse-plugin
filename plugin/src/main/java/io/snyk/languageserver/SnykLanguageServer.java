@@ -1,6 +1,5 @@
 package io.snyk.languageserver;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
@@ -21,7 +20,6 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 @SuppressWarnings("restriction")
 public class SnykLanguageServer extends ProcessStreamConnectionProvider implements StreamConnectionProvider {
   public static final String LANGUAGE_SERVER_ID = "io.snyk.languageserver";
-  public static final LanguageServerDefinition definition = LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
   private final LsRuntimeEnvironment runtimeEnvironment;
 
   public SnykLanguageServer() {
@@ -39,7 +37,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
       }
     }
 
-	List<String> commands = Lists.of(prefs.getCliPath(), "language-server", "-l", "info");
+	List<String> commands = Lists.of(prefs.getCliPath(), "language-server", "-l", "debug");
     String workingDir = SystemUtils.USER_DIR;
     setCommands(commands);
     setWorkingDirectory(workingDir);
@@ -47,6 +45,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
   }
   
   public static void startSnykLanguageServer() {
+	  LanguageServerDefinition definition = LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
 	  LanguageServiceAccessor.startLanguageServer(definition);
   }
 
