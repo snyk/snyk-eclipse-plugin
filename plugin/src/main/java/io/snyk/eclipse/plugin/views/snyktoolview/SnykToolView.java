@@ -3,8 +3,16 @@
  */
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Base64;
+
 import javax.inject.Inject;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -23,6 +31,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.ViewPart;
+import org.osgi.framework.Bundle;
 
 /**
  * The view will replace the old SnykView. TODO move the snyktoolview classes
@@ -101,21 +110,26 @@ public class SnykToolView extends ViewPart {
 	}
 
 	private String generateHtmlContent(String text) {
-		return "<html><body><h1>" + "</h1><p>Content for " + "</p></body></html>";
+		return "<html><body<p>" + text + "</p></body></html>";
 	}
 
 	private void initBrowserText() {
+		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
+				"%snyk.trust.dialog.warning.text");
 
-		browser.setText("<!DOCTYPE html>\n" + "<html lang=\"en\">\n" + "<head>\n" + "    <meta charset=\"UTF-8\">\n"
-				+ "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-				+ "    <title>Snyk for JetBrains</title>\n" + "</head>\n" + "<body>\n"
-				+ "    <p><strong>Welcome to Snyk for JetBrains</strong></p>\n" + "\n" + "    <ol>\n"
-				+ "        <li align=\"left\">Authenticate to Snyk.io</li>\n"
-				+ "        <li align=\"left\">Analyze code for issues and vulnerabilities</li>\n"
-				+ "        <li align=\"left\">Improve your code and upgrade dependencies</li>\n" + "    </ol>\n" + "\n"
-				+ "    <p>\n"
-				+ "        When scanning project files for vulnerabilities, Snyk may automatically execute code such as invoking the package manager to get dependency information.<br><br>You should only scan projects you trust.<br><br>\n"
-				+ "</body>\n" + "</html>");
+		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
+		URL imageUrl = FileLocator.find(bundle, new Path("icons/logo_snyk.png"), null);
+
+		byte[] imageData = getImageDataFromUrl(imageUrl);
+
+		String base64Image = Base64.getEncoder().encodeToString(imageData);
+
+		browser.setText("<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\"> "
+				+ "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> "
+				+ "<title>Snyk for JetBrains</title> <style> .container { display: flex; align-items: center; } .logo { margin-right: 20px; } "
+				+ "</style> </head> <body> <div class=\"container\"> " + "<img src='data:image/png;base64,"
+				+ base64Image + "' alt='Snyk Logo'>" + "<div> <p><strong>Welcome to Snyk for JetBrains</strong></p>"
+				+ "    <p>\n" + snykWarningText + "</body>\n" + "</html>");
 	}
 
 	private Object createTreeInput() {
@@ -151,6 +165,25 @@ public class SnykToolView extends ViewPart {
 		};
 		openPrefPage.setText("Preferences");
 
+	}
+
+	public byte[] getImageDataFromUrl(URL imageUrl) {
+		try {
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+			try (InputStream inputStream = imageUrl.openStream()) {
+				int n = 0;
+				byte[] buffer = new byte[1024];
+				while (-1 != (n = inputStream.read(buffer))) {
+					output.write(buffer, 0, n);
+				}
+			}
+
+			return output.toByteArray();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	private static Shell getShell() {
