@@ -3,6 +3,8 @@
 ## [Unreleased]
 ### Changes
 - process api URL from hasAuthenticated message
+- add release channel preference to select which CLI is downloaded
+- added plugin installed event and analytics sender
 
 ## [2.2.0] - v20241024.154007
 ### Changes

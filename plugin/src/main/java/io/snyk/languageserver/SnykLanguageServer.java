@@ -1,11 +1,14 @@
 package io.snyk.languageserver;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.lsp4e.LanguageServersRegistry;
+import org.eclipse.lsp4e.LanguageServersRegistry.LanguageServerDefinition;
+import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
 
@@ -25,7 +28,8 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 
   @Override
   public void start() throws IOException {
-    while (SnykStartup.isDownloading()) {
+	Preferences prefs = Preferences.getInstance();
+    while (SnykStartup.isDownloading() || !Paths.get(prefs.getCliPath()).toFile().exists()) {
       try {
         Thread.sleep(100);
       } catch (InterruptedException e) {
@@ -33,12 +37,16 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
       }
     }
 
-    List<String> commands = Lists.of(Preferences.getInstance().getCliPath(), "language-server", "-l", "info", "-f",
-        new File(Preferences.getInstance().getCliPath()).getParent() + File.separator + "snyk-ls.log");
+	List<String> commands = Lists.of(prefs.getCliPath(), "language-server", "-l", "info");
     String workingDir = SystemUtils.USER_DIR;
     setCommands(commands);
     setWorkingDirectory(workingDir);
     super.start();
+  }
+  
+  public static void startSnykLanguageServer() {
+	  LanguageServerDefinition definition = LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
+	  LanguageServiceAccessor.startLanguageServer(definition);
   }
 
   @Override

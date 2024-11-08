@@ -36,10 +36,10 @@ import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.download.LsDownloader;
 
 public class SnykStartup implements IStartup {
-  private LsRuntimeEnvironment runtimeEnvironment;
+  private static LsRuntimeEnvironment runtimeEnvironment;
   private SnykView snykView = null;
   private static boolean downloading = true;
-  private ILog logger;
+  private static ILog logger;
 
   private static SnykStartup instance;
 
@@ -69,7 +69,8 @@ public class SnykStartup implements IStartup {
         startLanguageServer();
 
         PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-          if (Preferences.getInstance().getAuthToken().isBlank()) {
+          Preferences prefs = Preferences.getInstance();
+		if (prefs.getAuthToken().isBlank() && !prefs.isTest()) {
             monitor.subTask("Starting Snyk Wizard to configure initial settings...");
             SnykWizard wizard = new SnykWizard();
             WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
@@ -83,9 +84,8 @@ public class SnykStartup implements IStartup {
       }
 
       private void startLanguageServer() {
-        var definition = LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
         try {
-          LanguageServiceAccessor.startLanguageServer(definition);
+          SnykLanguageServer.startSnykLanguageServer();
         } catch (RuntimeException e) {
           logError(e);
         }
@@ -141,12 +141,12 @@ public class SnykStartup implements IStartup {
     return true;
   }
 
-  LsDownloader getLsDownloader() throws URISyntaxException {
+  static LsDownloader getLsDownloader() throws URISyntaxException {
     return new LsDownloader(HttpClientFactory.getInstance(), runtimeEnvironment, logger);
   }
 
   @SuppressWarnings("ResultOfMethodCallIgnored")
-  IStatus download(IProgressMonitor monitor) {
+  public static IStatus download(IProgressMonitor monitor) {
     final File lsFile = new File(Preferences.getInstance().getCliPath());
     try {
       LsDownloader lsDownloader = getLsDownloader();
