@@ -120,9 +120,9 @@ public class SnykToolView extends ViewPart {
 
 		browser.setText("<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\"> "
 				+ "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> "
-				+ "<title>Snyk for JetBrains</title> <style> .container { display: flex; align-items: center; } .logo { margin-right: 20px; } "
+				+ "<title>Snyk for Eclipse</title> <style> .container { display: flex; align-items: center; } .logo { margin-right: 20px; } "
 				+ "</style> </head> <body> <div class=\"container\"> " + "<img src='data:image/png;base64,"
-				+ base64Image + "' alt='Snyk Logo'>" + "<div> <p><strong>Welcome to Snyk for JetBrains</strong></p>"
+				+ base64Image + "' alt='Snyk Logo'>" + "<div> <p><strong>Welcome to Snyk for Eclipse</strong></p>"
 				+ "    <p>\n" + snykWarningText + "</body>\n" + "</html>");
 	}
 
