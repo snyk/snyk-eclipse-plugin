@@ -9,7 +9,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 
 import io.snyk.eclipse.plugin.utils.SnykMessageDialog;
 
-public class FilterHandler extends AbstractHandler {
+public class EnableProductHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 
@@ -19,19 +19,13 @@ public class FilterHandler extends AbstractHandler {
 		SnykMessageDialog.showOkDialog(shell, commandId);
 
 		switch (commandId) {
-		case "io.snyk.eclipse.plugin.commands.snykFilterCritical":
+		case "io.snyk.eclipse.plugin.commands.enableOSS":
 			// Implement behavior for command1
 			break;
-		case "io.snyk.eclipse.plugin.commands.snykFilterHigh":
+		case "io.snyk.eclipse.plugin.commands.enableCode":
 			// Implement behavior for command2
 			break;
-		case "io.snyk.eclipse.plugin.commands.snykFilterMedium":
-			// Implement behavior for command3
-			break;
-		case "io.snyk.eclipse.plugin.commands.snykFilterLow":
-			// Implement behavior for command3
-			break;
-		case "io.snyk.eclipse.plugin.commands.filter":
+		case "io.snyk.eclipse.plugin.commands.enableIac":
 			// Implement behavior for command3
 			break;
 		}

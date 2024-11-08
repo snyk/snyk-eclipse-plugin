@@ -73,23 +73,38 @@
 		</command>
 		<command
 			id="io.snyk.eclipse.plugin.commands.snykFilterCritical"
-			name="Filter"
+			name="Critical"
 			defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.providers.FilterHandler">
 		</command>
 		<command
 			id="io.snyk.eclipse.plugin.commands.snykFilterHigh"
-			name="Filter"
+			name="High"
 			defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.providers.FilterHandler">
 		</command>
 		<command
 			id="io.snyk.eclipse.plugin.commands.snykFilterMedium"
-			name="Filter"
+			name="Medium"
 			defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.providers.FilterHandler">
 		</command>
 		<command
 			id="io.snyk.eclipse.plugin.commands.snykFilterLow"
-			name="Filter"
+			name="Low"
 			defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.providers.FilterHandler">
+		</command>
+		<command
+			id="io.snyk.eclipse.plugin.commands.enableOSS"
+			name="OSS"
+			defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.providers.EnableProductHandler">
+		</command>
+		<command
+			id="io.snyk.eclipse.plugin.commands.enableCode"
+			name="Code"
+			defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.providers.EnableProductHandler">
+		</command>
+		<command
+			id="io.snyk.eclipse.plugin.commands.enableIAC"
+			name="IAC"
+			defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.providers.EnableProductHandler">
 		</command>
 		<command
 			defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.providers.ViewMenuHandler"
@@ -165,16 +180,35 @@
 			<separator
 				name="FilterSeparator"
 				visible="true"> </separator>
-			<command
-				commandId="io.snyk.eclipse.plugin.commands.filter"
-				icon="platform:/plugin/org.eclipse.ui.views/icons/full/elcl16/filter_ps.png"
+		    <command
+				commandId="io.snyk.eclipse.plugin.commands.enableOSS"
+				icon="platform:/plugin/io.snyk.eclipse.plugin/icons/oss.png"
 				style="push"
-				tooltip="Set Snyk Filters"> </command>				
+				tooltip="Enable/disable OSS scans"> </command>
+			<command
+				commandId="io.snyk.eclipse.plugin.commands.enableCode"
+				icon="platform:/plugin/io.snyk.eclipse.plugin/icons/code.png"
+				style="push"
+				tooltip="Enable/disable Code scans"> </command>
+			<command
+				commandId="io.snyk.eclipse.plugin.commands.enableIAC"
+				icon="platform:/plugin/io.snyk.eclipse.plugin/icons/iac.png"
+				style="push"
+				tooltip="Enable/disable IAC scans"> </command>
+				<!-- Add a separator -->
+			<separator
+				name="ProductChooserSeparator"
+				visible="true"> </separator>
 			<command
 				commandId="io.snyk.eclipse.plugin.properties.preferencespage"
 				icon="platform:/plugin/org.eclipse.jdt.debug.ui/icons/full/elcl16/thread_view.gif"
 				style="push"
 				tooltip="Open Snyk Preferences"> </command>
+		    <command
+				commandId="io.snyk.eclipse.plugin.commands.filter"
+				icon="platform:/plugin/org.eclipse.ui.views/icons/full/elcl16/filter_ps.png"
+				style="push"
+				tooltip="Set Snyk Filters"> </command>	
 			<command
 				commandId="io.snyk.eclipse.plugin.commands.viewmenu"
 				icon="platform:/plugin/org.eclipse.e4.ui.workbench.renderers.swt/icons/full/elcl16/view_menu.png"

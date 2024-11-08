@@ -8,8 +8,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Base64;
 
-import javax.inject.Inject;
-
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -27,14 +25,15 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
-import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.ViewPart;
 import org.osgi.framework.Bundle;
 
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
+
 /**
- * The view will replace the old SnykView. TODO move the snyktoolview classes
+ * TODO This view will replace the old SnykView. Move the snyktoolview classes
  * and packages to io.snyk.eclipse.plugin.views, when the original SnykView is
  * removed.
  */
@@ -45,8 +44,7 @@ public class SnykToolView extends ViewPart {
 	 */
 	public static final String ID = "io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView";
 
-	@Inject
-	IWorkbench workbench;
+	ResourceUtils data = new ResourceUtils();
 
 	private Action openPrefPage;
 
@@ -118,11 +116,7 @@ public class SnykToolView extends ViewPart {
 				"%snyk.trust.dialog.warning.text");
 
 		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
-		URL imageUrl = FileLocator.find(bundle, new Path("icons/logo_snyk.png"), null);
-
-		byte[] imageData = getImageDataFromUrl(imageUrl);
-
-		String base64Image = Base64.getEncoder().encodeToString(imageData);
+		String base64Image = ResourceUtils.getBase64Image( bundle, "logo_snyk.png" );
 
 		browser.setText("<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\"> "
 				+ "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> "
@@ -164,28 +158,9 @@ public class SnykToolView extends ViewPart {
 			}
 		};
 		openPrefPage.setText("Preferences");
-
 	}
 
-	public byte[] getImageDataFromUrl(URL imageUrl) {
-		try {
-			ByteArrayOutputStream output = new ByteArrayOutputStream();
-
-			try (InputStream inputStream = imageUrl.openStream()) {
-				int n = 0;
-				byte[] buffer = new byte[1024];
-				while (-1 != (n = inputStream.read(buffer))) {
-					output.write(buffer, 0, n);
-				}
-			}
-
-			return output.toByteArray();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
+	
 	private static Shell getShell() {
 		var activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		if (activeWorkbenchWindow == null)
