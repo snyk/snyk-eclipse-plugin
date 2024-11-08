@@ -70,7 +70,7 @@ public class SnykStartup implements IStartup {
 
         PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
           Preferences prefs = Preferences.getInstance();
-		if (prefs.getAuthToken().isBlank() && prefs.isTest()) {
+		if (prefs.getAuthToken().isBlank() && !prefs.isTest()) {
             monitor.subTask("Starting Snyk Wizard to configure initial settings...");
             SnykWizard wizard = new SnykWizard();
             WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
