@@ -1,32 +1,41 @@
 package io.snyk.languageserver.protocolextension;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.ProgressParams;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,13 +51,19 @@ import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.SnykScanParam;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private final ProgressManager progressMgr = new ProgressManager();
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
-	
+
+    private final ConcurrentHashMap<File, Collection<Issue>> snykCodeIssueDictionary = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<File, Collection<Issue>> snykOssIssueDictionary = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<File, Collection<Issue>> snykIaCIssueDictionary = new ConcurrentHashMap<>();
+    
 	private static SnykExtendedLanguageClient instance = null;
 	// we overwrite the super-class field, so we can mock it
 
@@ -82,7 +97,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void triggerScan(IWorkbenchWindow window) {
-		CompletableFuture.runAsync(() -> {			
+		CompletableFuture.runAsync(() -> {
 			if (Preferences.getInstance().getAuthToken().isBlank()) {
 				runSnykWizard();
 			} else {
@@ -91,20 +106,20 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 						executeCommand("snyk.workspace.scan", new ArrayList<>());
 						return;
 					}
-	
+
 					ISelectionService service = window.getSelectionService();
 					IStructuredSelection structured = (IStructuredSelection) service.getSelection();
-	
+
 					Object firstElement = structured.getFirstElement();
 					IProject project = null;
 					if (firstElement instanceof JavaProject) {
 						project = ((JavaProject) firstElement).getProject();
 					}
-	
+
 					if (firstElement instanceof IProject) {
 						project = (IProject) firstElement;
 					}
-	
+
 					if (project != null) {
 						runForProject(project.getName());
 						executeCommand("snyk.workspaceFolder.scan", List.of(project.getLocation().toOSString()));
@@ -209,6 +224,82 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				.map(s -> s.trim()).distinct().collect(Collectors.joining(File.pathSeparator)));
 	}
 
+	@JsonNotification(value = "$/snyk.scan")
+	public void snykScan(SnykScanParam param) {
+
+	}
+
+	@JsonNotification(value = "$/snyk.publishDiagnostics316")
+	public void publishDiagnostics316(PublishDiagnosticsParams param) {
+		CompletableFuture.runAsync(() -> {
+			var uri = param.getUri();
+			if(StringUtils.isEmpty(uri)) {
+				return;
+			}
+			var file = LSPEclipseUtils.fromUri(URI.create(uri));
+			if (file == null) {
+				SnykLogger.logError(new RuntimeException("couldn't resolve uri "+uri+" to file"));
+				return;
+			}
+			List<Diagnostic> diagnostics = param.getDiagnostics();
+			if(diagnostics.isEmpty()) {
+				snykCodeIssueDictionary.remove(file);
+				snykOssIssueDictionary.remove(file);
+				snykIaCIssueDictionary.remove(file);
+				return;
+			}
+			var source = diagnostics.get(0).getSource();
+			if(StringUtils.isEmpty(source)) {
+				return;
+			}
+			var snykProduct = lspSourceToProduct(source);
+	        List<Issue> issueList = new ArrayList<>();
+	        
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			for (var diagnostic : diagnostics) {
+				Issue issue;
+				if(diagnostic.getData() == null) {
+					continue;
+				}
+				try {
+					issue = mapper.readValue(diagnostic.getData().toString(), Issue.class);
+                } catch (JsonProcessingException e) {
+                    SnykLogger.logError(e);
+                    continue;
+                }
+
+				issue.setProduct(snykProduct);
+				issueList.add(issue);
+			}
+			
+			switch(snykProduct) {
+            case "code":
+                snykCodeIssueDictionary.put(file, issueList);
+                break;
+            case "oss":
+                snykOssIssueDictionary.put(file, issueList);
+                break;
+            case "iac":
+                snykIaCIssueDictionary.put(file, issueList);
+                break;
+			}
+		});
+	}
+	
+    private String lspSourceToProduct(String source) {
+        switch(source) {
+        case "Snyk Code": 
+        	return "code";
+        case "Snyk Open Source":
+        	return "oss";
+        case "Snyk IaC": 
+        	return "iac";
+        default: 
+        	return "";
+        }
+    }
+    
 	public void reportAnalytics(AbstractAnalyticsEvent event) {
 		try {
 			var eventString = om.writeValueAsString(event);
@@ -271,16 +362,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	 */
 	public boolean refreshOAuthToken() {
 		var p = Preferences.getInstance();
-		if (p.isTest()) { 
-			return true; 
+		if (p.isTest()) {
+			return true;
 		}
 		var token = p.getAuthToken();
 		final int timeout = 5;
 		CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
 			var result = executeCommand("snyk.getActiveUser", new ArrayList<>());
-			// we don't wait forever, and if we can't get a user name (refresh token), we're done.
+			// we don't wait forever, and if we can't get a user name (refresh token), we're
+			// done.
 			try {
-				result.get(timeout-1, TimeUnit.SECONDS);
+				result.get(timeout - 1, TimeUnit.SECONDS);
 			} catch (InterruptedException | ExecutionException | TimeoutException e) {
 				return "";
 			}
@@ -293,7 +385,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 			return p.getAuthToken();
 		});
-		
+
 		// wait until token has changed or 2s have passed
 		var newToken = future.completeOnTimeout(token, 5, TimeUnit.SECONDS).join();
 		return !token.equals(newToken);
