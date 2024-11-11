@@ -146,8 +146,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var diagnostic = new Diagnostic();
 		diagnostic.setSource("Snyk Code");
 
-        var issue = new Issue();
-        issue.setTitle("myIssue");
+        var issue = new Issue("myId", null, null, null, false, null, false, null, null, null);
         ObjectMapper objectMapper = new ObjectMapper();
 		String res;
 		try {
@@ -167,12 +166,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		}
 		var actualIssueList = issueCache.getCodeIssuesForPath(filePath);
 		assertEquals(1, actualIssueList.size());
-		assertEquals("code", actualIssueList.stream().findFirst().get().getProduct());
+		assertEquals("myId", actualIssueList.stream().findFirst().get().id());
 		
 		// Test remove from cache
-		var issueList = List.of(new Issue());
-		issueCache.addCodeIssues(filePath, issueList);
-
 		param = new PublishDiagnosticsParams();
 		param.setUri(uri);
 

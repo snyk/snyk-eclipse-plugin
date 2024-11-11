@@ -292,13 +292,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				}
 				try {
 					issue = om.readValue(diagnostic.getData().toString(), Issue.class);
+					issueList.add(issue);
                 } catch (JsonProcessingException e) {
                     SnykLogger.logError(e);
                     continue;
                 }
-
-				issue.setProduct(snykProduct);
-				issueList.add(issue);
 			}
 
 			switch(snykProduct) {
