@@ -114,7 +114,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					if (firstElement instanceof JavaProject) {
 						project = ((JavaProject) firstElement).getProject();
 					}
-					
+
 					if (firstElement instanceof IProject) {
 						project = (IProject) firstElement;
 					}
@@ -159,7 +159,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public boolean getSastEnabled() {
 		try {
-			CompletableFuture<String> lsSastSettings = executeCommand("snyk.getSettingsSastEnabled", new ArrayList<>());
+			CompletableFuture<Object> lsSastSettings = executeCommand("snyk.getSettingsSastEnabled", new ArrayList<>());
 			Object result;
 			try {
 				result = lsSastSettings.get(5, TimeUnit.SECONDS);
@@ -187,14 +187,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			result = issueDescription.get(5, TimeUnit.SECONDS);
 		}
 		catch(Exception ex) {
-			SnykLogger.logInfo("did not get issue description for issue "+ issueId + "\n" 
+			SnykLogger.logInfo("did not get issue description for issue "+ issueId + "\n"
 								+ ExceptionUtils.getStackTrace(ex));
 			return "";
 		}
-		
+
 		return String.valueOf(result);
 	}
-	
+
 	@JsonNotification(value = "$/snyk.hasAuthenticated")
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();
@@ -256,9 +256,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			scanStateHashMap.put(cacheKey, false);
 			// Show error state
 			break;
-		}	
+		}
 	}
-		
+
 	@JsonNotification(value = "$/snyk.publishDiagnostics316")
 	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnosticsParams param) {
 		return CompletableFuture.runAsync(() -> {
@@ -286,7 +286,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 			var snykProduct = lspSourceToProduct(source);
 	        List<Issue> issueList = new ArrayList<>();
-	        
+
 			for (var diagnostic : diagnostics) {
 				Issue issue;
 				if(diagnostic.getData() == null) {
@@ -302,7 +302,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				issue.setProduct(snykProduct);
 				issueList.add(issue);
 			}
-			
+
 			switch(snykProduct) {
             case "code":
             	snykIssueCache.getSnykCodeIssueHashMap().put(filePath, issueList);
@@ -316,20 +316,20 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 		});
 	}
-	
+
     private String lspSourceToProduct(String source) {
         switch(source) {
-        case "Snyk Code": 
+        case "Snyk Code":
         	return "code";
         case "Snyk Open Source":
         	return "oss";
-        case "Snyk IaC": 
+        case "Snyk IaC":
         	return "iac";
-        default: 
+        default:
         	return "";
         }
     }
-    
+
 	public void reportAnalytics(AbstractAnalyticsEvent event) {
 		try {
 			var eventString = om.writeValueAsString(event);
