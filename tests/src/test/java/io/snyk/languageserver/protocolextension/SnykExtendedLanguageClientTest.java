@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
 import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
+import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.properties.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.languageserver.LsBaseTest;
@@ -188,7 +189,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var scanState = ScanState.getInstance();
 		var param = new SnykScanParam();
 		param.setStatus("inProgress");
-		param.setProduct("code");
+		param.setProduct(ProductConstants.CODE);
 		param.setFolderPath("a/b/c");
 		
 		cut = new SnykExtendedLanguageClient();
@@ -200,7 +201,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		
 		param = new SnykScanParam();
 		param.setStatus("success");
-		param.setProduct("code");
+		param.setProduct(ProductConstants.CODE);
 		param.setFolderPath("a/b/c");
 		
 		cut = new SnykExtendedLanguageClient();
