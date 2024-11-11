@@ -195,7 +195,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykScan(param);
 		
 		var expectedKey = new ScanInProgressKey("a/b/c", "code");
-		var actualState = scanState.getScanInProgress().get(expectedKey);
+		var actualState = scanState.isScanInProgress(expectedKey);
 		assertEquals(true, actualState);
 		
 		param = new SnykScanParam();
@@ -207,7 +207,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykScan(param);
 		
 		expectedKey = new ScanInProgressKey("a/b/c", "code");
-		actualState = scanState.getScanInProgress().get(expectedKey);
+		actualState = scanState.isScanInProgress(expectedKey);
 		assertEquals(false, actualState);
 	}
 }

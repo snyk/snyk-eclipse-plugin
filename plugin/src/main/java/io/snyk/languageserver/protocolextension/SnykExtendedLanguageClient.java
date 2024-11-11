@@ -241,19 +241,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@JsonNotification(value = "$/snyk.scan")
 	public void snykScan(SnykScanParam param) {
-		var cacheKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
-		var scanStateHashMap = ScanState.getInstance().getScanInProgress();
+		var inProgressKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
+		var scanState = ScanState.getInstance();
 		switch(param.getStatus()) {
 		case "inProgress":
-			scanStateHashMap.put(cacheKey, true);
+			scanState.setScanInProgress(inProgressKey, true);
 			// Show scanning view state
 			break;
 		case "success":
-			scanStateHashMap.put(cacheKey, false);
+			scanState.setScanInProgress(inProgressKey, false);
 			// Show scanning finished state
 			break;
 		case "error":
-			scanStateHashMap.put(cacheKey, false);
+			scanState.setScanInProgress(inProgressKey, false);
 			// Show error state
 			break;
 		}
