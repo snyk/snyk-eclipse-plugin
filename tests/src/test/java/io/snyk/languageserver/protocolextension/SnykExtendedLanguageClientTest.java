@@ -6,7 +6,6 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import java.io.File;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +39,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private SnykExtendedLanguageClient cut;
 	private Preferences pref;
 	private SnykIssueCache issueCache;
-	private ScanState scanState;
 	@BeforeEach
 	protected void setUp() {
 		store = new InMemoryPreferenceStore();
@@ -52,9 +50,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		issueCache.getSnykCodeIssueHashMap().clear();
 		issueCache.getSnykOssIssueHashMap().clear();
 		issueCache.getSnykIaCIssueHashMap().clear();
-		
-		scanState = ScanState.getInstance();
-		scanState.getScanInProgress().clear();
 	}
 
 	@Test
@@ -211,7 +206,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykScan(param);
 		
 		var expectedKey = new ScanInProgressKey("a/b/c", "code");
-		var actualState = scanState.getScanInProgress().get(expectedKey);
+		var actualState = ScanState.getInstance().getScanInProgress().get(expectedKey);
 		assertEquals(true, actualState);
 		
 		param = new ScanParams();
@@ -223,7 +218,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykScan(param);
 		
 		expectedKey = new ScanInProgressKey("a/b/c", "code");
-		actualState = scanState.getScanInProgress().get(expectedKey);
+		actualState = ScanState.getInstance().getScanInProgress().get(expectedKey);
 		assertEquals(false, actualState);
 	}
 }
