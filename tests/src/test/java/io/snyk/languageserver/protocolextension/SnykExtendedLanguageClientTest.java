@@ -38,18 +38,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private InMemoryPreferenceStore store = new InMemoryPreferenceStore();
 	private SnykExtendedLanguageClient cut;
 	private Preferences pref;
-	private SnykIssueCache issueCache;
 	@BeforeEach
 	protected void setUp() {
 		store = new InMemoryPreferenceStore();
 		pref = Preferences.getInstance(store);
 		// we don't want the wizard to pop up, so we set a dummy token
 		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
-		
-		issueCache = SnykIssueCache.getInstance();
-		issueCache.getSnykCodeIssueHashMap().clear();
-		issueCache.getSnykOssIssueHashMap().clear();
-		issueCache.getSnykIaCIssueHashMap().clear();
 	}
 
 	@Test
@@ -141,28 +135,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 	
 	@Test
-	void testPublishDiagnosticsShouldClearOnEmpty() {
-		var uri = "file:///a/b/c/";
-		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
-		var issueList = List.of(new Issue());
-		issueCache.getSnykCodeIssueHashMap().put(filePath, issueList);
-
-		var param = new PublishDiagnosticsParams();
-		param.setUri(uri);
-
-		cut = new SnykExtendedLanguageClient();
-		var future = cut.publishDiagnostics316(param);
-		try {
-			future.get(5, TimeUnit.SECONDS);
-		}
-		catch (Exception ex){
-
-		}
-		assertEquals(true, issueCache.getSnykCodeIssueHashMap().isEmpty());
-	}
-
-	@Test
-	void testPublishDiagnosticsShouldAddToIssueCacheForProductCode() {
+	void testPublishDiagnosticsShouldChangeCache() {
+		// Test Add to cache
+		var issueCache = SnykIssueCache.getInstance();
 		var uri = "file:///a/b/c/";
 		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
 
@@ -193,6 +168,28 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var actualIssueList = issueCache.getSnykCodeIssueHashMap().get(filePath);
 		assertEquals(1, actualIssueList.size());
 		assertEquals("code", actualIssueList.stream().findFirst().get().getProduct());
+		
+		// Test remove from cache
+		var issueList = List.of(new Issue());
+		issueCache.getSnykCodeIssueHashMap().put(filePath, issueList);
+
+		param = new PublishDiagnosticsParams();
+		param.setUri(uri);
+
+		cut = new SnykExtendedLanguageClient();
+		future = cut.publishDiagnostics316(param);
+		try {
+			future.get(5, TimeUnit.SECONDS);
+		}
+		catch (Exception ex){
+
+		}
+		assertEquals(true, issueCache.getSnykCodeIssueHashMap().isEmpty());
+	}
+
+	@Test
+	void testPublishDiagnosticsShouldAddToIssueCacheForProductCode() {
+
 	}
 	
 	@Test
