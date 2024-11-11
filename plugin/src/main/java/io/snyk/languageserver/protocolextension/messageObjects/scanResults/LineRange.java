@@ -1,10 +1,10 @@
 package io.snyk.languageserver.protocolextension.messageObjects.scanResults;
 
 public class LineRange {
-	public LineRange() {
-		
-	}
-	
+    public LineRange() {
+
+    }
+
     private int line;
     private int character;
 
