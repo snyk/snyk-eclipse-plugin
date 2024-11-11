@@ -275,9 +275,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 			List<Diagnostic> diagnostics = param.getDiagnostics();
 			if(diagnostics.isEmpty()) {
-				snykIssueCache.getSnykCodeIssueHashMap().remove(filePath);
-				snykIssueCache.getSnykOssIssueHashMap().remove(filePath);
-				snykIssueCache.getSnykIaCIssueHashMap().remove(filePath);
+				snykIssueCache.removeAllIssuesForPath(filePath);
 				return;
 			}
 			var source = diagnostics.get(0).getSource();
@@ -305,13 +303,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 			switch(snykProduct) {
             case "code":
-            	snykIssueCache.getSnykCodeIssueHashMap().put(filePath, issueList);
+            	snykIssueCache.addCodeIssues(filePath, issueList);
                 break;
             case "oss":
-            	snykIssueCache.getSnykOssIssueHashMap().put(filePath, issueList);
+            	snykIssueCache.addOssIssues(filePath, issueList);
                 break;
             case "iac":
-            	snykIssueCache.getSnykIaCIssueHashMap().put(filePath, issueList);
+            	snykIssueCache.addIacIssues(filePath, issueList);
                 break;
 			}
 		});

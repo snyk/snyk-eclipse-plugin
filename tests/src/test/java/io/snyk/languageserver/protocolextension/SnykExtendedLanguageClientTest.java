@@ -165,13 +165,13 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		catch (Exception ex){
 
 		}
-		var actualIssueList = issueCache.getSnykCodeIssueHashMap().get(filePath);
+		var actualIssueList = issueCache.getCodeIssuesForPath(filePath);
 		assertEquals(1, actualIssueList.size());
 		assertEquals("code", actualIssueList.stream().findFirst().get().getProduct());
 		
 		// Test remove from cache
 		var issueList = List.of(new Issue());
-		issueCache.getSnykCodeIssueHashMap().put(filePath, issueList);
+		issueCache.addCodeIssues(filePath, issueList);
 
 		param = new PublishDiagnosticsParams();
 		param.setUri(uri);
@@ -184,7 +184,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		catch (Exception ex){
 
 		}
-		assertEquals(true, issueCache.getSnykCodeIssueHashMap().isEmpty());
+		assertEquals(true, issueCache.getCodeIssuesForPath(filePath).isEmpty());
 	}
 	
 	@Test
