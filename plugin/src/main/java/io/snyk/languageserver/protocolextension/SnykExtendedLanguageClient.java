@@ -243,17 +243,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@JsonNotification(value = "$/snyk.scan")
 	public void snykScan(ScanParams param) {
-		if(!PlatformUI.isWorkbenchRunning()) {
-			return;
-		}
-		
-		processSnykScan(param);
-	}
-	
-	private void processSnykScan(ScanParams snykScan) {
-		var cacheKey = new ScanInProgressKey(snykScan.getFolderPath(), snykScan.getProduct());
+		var cacheKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
 		var scanStateHashMap = ScanState.getInstance().getScanInProgress();
-		switch(snykScan.getStatus()) {
+		switch(param.getStatus()) {
 		case "inProgress":
 			scanStateHashMap.put(cacheKey, true);
 			// Show scanning view state
@@ -266,9 +258,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			scanStateHashMap.put(cacheKey, false);
 			// Show error state
 			break;
-		}
+		}	
 	}
-	
+		
 	@JsonNotification(value = "$/snyk.publishDiagnostics316")
 	public CompletableFuture<?> publishDiagnostics316(PublishDiagnosticsParams param) {
 		return CompletableFuture.runAsync(() -> {

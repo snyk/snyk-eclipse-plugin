@@ -186,14 +186,10 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		}
 		assertEquals(true, issueCache.getSnykCodeIssueHashMap().isEmpty());
 	}
-
-	@Test
-	void testPublishDiagnosticsShouldAddToIssueCacheForProductCode() {
-
-	}
 	
 	@Test
 	void testSnykScanAddsToScanStateHashMap() {
+		var scanState = ScanState.getInstance();
 		var param = new ScanParams();
 		param.setStatus("inProgress");
 		param.setProduct("code");
@@ -203,7 +199,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykScan(param);
 		
 		var expectedKey = new ScanInProgressKey("a/b/c", "code");
-		var actualState = ScanState.getInstance().getScanInProgress().get(expectedKey);
+		var actualState = scanState.getScanInProgress().get(expectedKey);
 		assertEquals(true, actualState);
 		
 		param = new ScanParams();
@@ -215,7 +211,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykScan(param);
 		
 		expectedKey = new ScanInProgressKey("a/b/c", "code");
-		actualState = ScanState.getInstance().getScanInProgress().get(expectedKey);
+		actualState = scanState.getScanInProgress().get(expectedKey);
 		assertEquals(false, actualState);
 	}
 }
