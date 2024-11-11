@@ -277,16 +277,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if(StringUtils.isEmpty(uri)) {
 				return;
 			}
-			var file = LSPEclipseUtils.fromUri(URI.create(uri));
-			if (file == null) {
+			var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
+			if (filePath == null) {
 				SnykLogger.logError(new RuntimeException("couldn't resolve uri "+uri+" to file"));
 				return;
 			}
 			List<Diagnostic> diagnostics = param.getDiagnostics();
 			if(diagnostics.isEmpty()) {
-				snykIssueCache.getSnykCodeIssueHashMap().remove(file);
-				snykIssueCache.getSnykOssIssueHashMap().remove(file);
-				snykIssueCache.getSnykIaCIssueHashMap().remove(file);
+				snykIssueCache.getSnykCodeIssueHashMap().remove(filePath);
+				snykIssueCache.getSnykOssIssueHashMap().remove(filePath);
+				snykIssueCache.getSnykIaCIssueHashMap().remove(filePath);
 				return;
 			}
 			var source = diagnostics.get(0).getSource();
@@ -316,13 +316,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			
 			switch(snykProduct) {
             case "code":
-            	snykIssueCache.getSnykCodeIssueHashMap().put(file, issueList);
+            	snykIssueCache.getSnykCodeIssueHashMap().put(filePath, issueList);
                 break;
             case "oss":
-            	snykIssueCache.getSnykOssIssueHashMap().put(file, issueList);
+            	snykIssueCache.getSnykOssIssueHashMap().put(filePath, issueList);
                 break;
             case "iac":
-            	snykIssueCache.getSnykIaCIssueHashMap().put(file, issueList);
+            	snykIssueCache.getSnykIaCIssueHashMap().put(filePath, issueList);
                 break;
 			}
 		});

@@ -11,9 +11,9 @@ public class SnykIssueCache {
 		
 	}
 	
-	private final ConcurrentHashMap<File, Collection<Issue>> snykCodeIssueHashMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<File, Collection<Issue>> snykOssIssueHashMap = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<File, Collection<Issue>> snykIaCIssueHashMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Collection<Issue>> snykCodeIssueHashMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Collection<Issue>> snykOssIssueHashMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Collection<Issue>> snykIaCIssueHashMap = new ConcurrentHashMap<>();
     
     private static SnykIssueCache instance = new SnykIssueCache();    
 	public static SnykIssueCache getInstance() {
@@ -27,13 +27,13 @@ public class SnykIssueCache {
 		return instance;
 	}
     
-    public ConcurrentHashMap<File, Collection<Issue>> getSnykCodeIssueHashMap() {
+    public ConcurrentHashMap<String, Collection<Issue>> getSnykCodeIssueHashMap() {
 		return snykCodeIssueHashMap;
 	}
-	public ConcurrentHashMap<File, Collection<Issue>> getSnykOssIssueHashMap() {
+	public ConcurrentHashMap<String, Collection<Issue>> getSnykOssIssueHashMap() {
 		return snykOssIssueHashMap;
 	}
-	public ConcurrentHashMap<File, Collection<Issue>> getSnykIaCIssueHashMap() {
+	public ConcurrentHashMap<String, Collection<Issue>> getSnykIaCIssueHashMap() {
 		return snykIaCIssueHashMap;
 	}
 

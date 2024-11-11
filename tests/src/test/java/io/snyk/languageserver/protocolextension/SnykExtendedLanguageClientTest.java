@@ -20,7 +20,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
@@ -149,13 +148,13 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@Test
 	void testPublishDiagnosticsShouldClearOnEmpty() {
 		var uri = "file:///a/b/c/";
-		var file = new File(uri);
+		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
 		var issueList = List.of(new Issue());
-		issueCache.getSnykCodeIssueHashMap().put(file, issueList);
-		
+		issueCache.getSnykCodeIssueHashMap().put(filePath, issueList);
+
 		var param = new PublishDiagnosticsParams();
 		param.setUri(uri);
-		
+
 		cut = new SnykExtendedLanguageClient();
 		var future = cut.publishDiagnostics316(param);
 		try {
@@ -166,19 +165,17 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		}
 		assertEquals(true, issueCache.getSnykCodeIssueHashMap().isEmpty());
 	}
-	
+
 	@Test
 	void testPublishDiagnosticsShouldAddToIssueCacheForProductCode() {
 		var uri = "file:///a/b/c/";
-		var file = new File(uri);
-		var issueList = List.of(new Issue());
-		issueCache.getSnykCodeIssueHashMap().put(file, issueList);
-		
+		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
+
 		var param = new PublishDiagnosticsParams();
 		param.setUri(uri);
 		var diagnostic = new Diagnostic();
 		diagnostic.setSource("Snyk Code");
-		
+
         var issue = new Issue();
         issue.setTitle("myIssue");
         ObjectMapper objectMapper = new ObjectMapper();
@@ -198,7 +195,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		catch (Exception ex){
 
 		}
-		var actualIssueList = issueCache.getSnykCodeIssueHashMap().get(file);
+		var actualIssueList = issueCache.getSnykCodeIssueHashMap().get(filePath);
 		assertEquals(1, actualIssueList.size());
 		assertEquals("code", actualIssueList.stream().findFirst().get().getProduct());
 	}
