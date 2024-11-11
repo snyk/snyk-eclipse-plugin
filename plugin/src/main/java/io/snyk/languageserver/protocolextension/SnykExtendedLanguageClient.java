@@ -47,12 +47,15 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
+import io.snyk.languageserver.ScanInProgressKey;
+import io.snyk.languageserver.ScanState;
+import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
+import io.snyk.languageserver.protocolextension.messageObjects.ScanParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
-import io.snyk.languageserver.protocolextension.messageObjects.scanResults.SnykScanParam;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -60,10 +63,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
 
-    private final ConcurrentHashMap<File, Collection<Issue>> snykCodeIssueDictionary = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<File, Collection<Issue>> snykOssIssueDictionary = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<File, Collection<Issue>> snykIaCIssueDictionary = new ConcurrentHashMap<>();
-    
 	private static SnykExtendedLanguageClient instance = null;
 	// we overwrite the super-class field, so we can mock it
 
@@ -115,7 +114,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					if (firstElement instanceof JavaProject) {
 						project = ((JavaProject) firstElement).getProject();
 					}
-
+					
 					if (firstElement instanceof IProject) {
 						project = (IProject) firstElement;
 					}
@@ -180,6 +179,24 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return false;
 	}
 
+	public String getIssueDescription(String issueId) {
+		if(StringUtils.isEmpty(issueId)) {
+			SnykLogger.logInfo("issueId is empty");
+			return "";
+		}
+		CompletableFuture<Object> issueDescription = executeCommand("snyk.generateIssueDescription", List.of(issueId));
+		Object result;
+		try {
+			result = issueDescription.get(5, TimeUnit.SECONDS);
+		}
+		catch(Exception ex) {
+			SnykLogger.logInfo("did not get issue description for issue "+ issueId);
+			return "";
+		}
+		
+		return String.valueOf(result);
+	}
+	
 	@JsonNotification(value = "$/snyk.hasAuthenticated")
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();
@@ -225,13 +242,37 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	@JsonNotification(value = "$/snyk.scan")
-	public void snykScan(SnykScanParam param) {
-
+	public void snykScan(ScanParams param) {
+		if(!PlatformUI.isWorkbenchRunning()) {
+			return;
+		}
+		
+		processSnykScan(param);
 	}
-
+	
+	private void processSnykScan(ScanParams snykScan) {
+		var cacheKey = new ScanInProgressKey(snykScan.getFolderPath(), snykScan.getProduct());
+		var scanStateHashMap = ScanState.getInstance().getScanInProgress();
+		switch(snykScan.getStatus()) {
+		case "inProgress":
+			scanStateHashMap.put(cacheKey, true);
+			// Show scanning view state
+			break;
+		case "success":
+			scanStateHashMap.put(cacheKey, false);
+			// Show scanning finished state
+			break;
+		case "error":
+			scanStateHashMap.put(cacheKey, false);
+			// Show error state
+			break;
+		}
+	}
+	
 	@JsonNotification(value = "$/snyk.publishDiagnostics316")
-	public void publishDiagnostics316(PublishDiagnosticsParams param) {
-		CompletableFuture.runAsync(() -> {
+	public CompletableFuture<?> publishDiagnostics316(PublishDiagnosticsParams param) {
+		return CompletableFuture.runAsync(() -> {
+			var snykIssueCache = SnykIssueCache.getInstance();
 			var uri = param.getUri();
 			if(StringUtils.isEmpty(uri)) {
 				return;
@@ -243,9 +284,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 			List<Diagnostic> diagnostics = param.getDiagnostics();
 			if(diagnostics.isEmpty()) {
-				snykCodeIssueDictionary.remove(file);
-				snykOssIssueDictionary.remove(file);
-				snykIaCIssueDictionary.remove(file);
+				snykIssueCache.getSnykCodeIssueHashMap().remove(file);
+				snykIssueCache.getSnykOssIssueHashMap().remove(file);
+				snykIssueCache.getSnykIaCIssueHashMap().remove(file);
 				return;
 			}
 			var source = diagnostics.get(0).getSource();
@@ -275,13 +316,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			
 			switch(snykProduct) {
             case "code":
-                snykCodeIssueDictionary.put(file, issueList);
+            	snykIssueCache.getSnykCodeIssueHashMap().put(file, issueList);
                 break;
             case "oss":
-                snykOssIssueDictionary.put(file, issueList);
+            	snykIssueCache.getSnykOssIssueHashMap().put(file, issueList);
                 break;
             case "iac":
-                snykIaCIssueDictionary.put(file, issueList);
+            	snykIssueCache.getSnykIaCIssueHashMap().put(file, issueList);
                 break;
 			}
 		});
