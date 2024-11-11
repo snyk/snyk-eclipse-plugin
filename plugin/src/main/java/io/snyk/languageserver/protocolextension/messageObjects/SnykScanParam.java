@@ -7,7 +7,7 @@ public class SnykScanParam {
 
     }
 
-	private String status;
+    private String status;
     private String product;
     private String folderPath;
     private String errorMessage;
@@ -38,26 +38,26 @@ public class SnykScanParam {
     }
 
     @Override
-	public String toString() {
-		return "SnykScanParam [status=" + status + ", product=" + product + ", folderPath=" + folderPath
-				+ ", errorMessage=" + errorMessage + "]";
-	}
+    public String toString() {
+        return "SnykScanParam [status=" + status + ", product=" + product + ", folderPath=" + folderPath
+                + ", errorMessage=" + errorMessage + "]";
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(errorMessage, folderPath, product, status);
-	}
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		SnykScanParam other = (SnykScanParam) obj;
-		return Objects.equals(errorMessage, other.errorMessage) && Objects.equals(folderPath, other.folderPath)
-				&& Objects.equals(product, other.product) && Objects.equals(status, other.status);
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(errorMessage, folderPath, product, status);
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SnykScanParam other = (SnykScanParam) obj;
+        return Objects.equals(errorMessage, other.errorMessage) && Objects.equals(folderPath, other.folderPath)
+                && Objects.equals(product, other.product) && Objects.equals(status, other.status);
+    }
 }
 
