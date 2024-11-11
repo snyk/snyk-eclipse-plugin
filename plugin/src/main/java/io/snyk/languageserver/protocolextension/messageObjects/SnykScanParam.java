@@ -1,4 +1,4 @@
-package io.snyk.languageserver.protocolextension.messageObjects.scanResults;
+package io.snyk.languageserver.protocolextension.messageObjects;
 
 public class SnykScanParam {
     public SnykScanParam() {
@@ -9,7 +9,6 @@ public class SnykScanParam {
     private String product;
     private String folderPath;
     private String errorMessage;
-    private Issue[] issues;
 
     public String getStatus() {
         return status;
@@ -34,12 +33,6 @@ public class SnykScanParam {
     }
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
-    }
-    public Issue[] getIssues() {
-        return issues;
-    }
-    public void setIssues(Issue[] issues) {
-        this.issues = issues;
     }
 }
 

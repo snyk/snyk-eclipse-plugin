@@ -31,6 +31,7 @@ import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanParams;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
@@ -190,7 +191,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@Test
 	void testSnykScanAddsToScanStateHashMap() {
 		var scanState = ScanState.getInstance();
-		var param = new ScanParams();
+		var param = new SnykScanParam();
 		param.setStatus("inProgress");
 		param.setProduct("code");
 		param.setFolderPath("a/b/c");
@@ -202,7 +203,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var actualState = scanState.getScanInProgress().get(expectedKey);
 		assertEquals(true, actualState);
 		
-		param = new ScanParams();
+		param = new SnykScanParam();
 		param.setStatus("success");
 		param.setProduct("code");
 		param.setFolderPath("a/b/c");

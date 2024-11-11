@@ -2,13 +2,12 @@ package io.snyk.languageserver.protocolextension;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -16,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -30,7 +30,6 @@ import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -52,8 +51,8 @@ import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
-import io.snyk.languageserver.protocolextension.messageObjects.ScanParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
@@ -70,6 +69,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		super();
 		instance = this;
 		sendPluginInstalledEvent();
+		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
 	private void sendPluginInstalledEvent() {
@@ -159,7 +159,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public boolean getSastEnabled() {
 		try {
-			CompletableFuture<Object> lsSastSettings = executeCommand("snyk.getSettingsSastEnabled", new ArrayList<>());
+			CompletableFuture<String> lsSastSettings = executeCommand("snyk.getSettingsSastEnabled", new ArrayList<>());
 			Object result;
 			try {
 				result = lsSastSettings.get(5, TimeUnit.SECONDS);
@@ -167,10 +167,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				SnykLogger.logInfo("did not get a response for sast settings, disabling Snyk Code");
 				return false;
 			}
-
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			SastSettings sastSettings = mapper.convertValue(result, SastSettings.class);
+			SastSettings sastSettings = om.convertValue(result, SastSettings.class);
 			return sastSettings != null ? sastSettings.sastEnabled : false;
 		} catch (Exception e) {
 			SnykLogger.logError(e);
@@ -190,7 +187,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			result = issueDescription.get(5, TimeUnit.SECONDS);
 		}
 		catch(Exception ex) {
-			SnykLogger.logInfo("did not get issue description for issue "+ issueId);
+			SnykLogger.logInfo("did not get issue description for issue "+ issueId + "\n" 
+								+ ExceptionUtils.getStackTrace(ex));
 			return "";
 		}
 		
@@ -242,7 +240,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	@JsonNotification(value = "$/snyk.scan")
-	public void snykScan(ScanParams param) {
+	public void snykScan(SnykScanParam param) {
 		var cacheKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
 		var scanStateHashMap = ScanState.getInstance().getScanInProgress();
 		switch(param.getStatus()) {
@@ -262,16 +260,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 		
 	@JsonNotification(value = "$/snyk.publishDiagnostics316")
-	public CompletableFuture<?> publishDiagnostics316(PublishDiagnosticsParams param) {
+	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnosticsParams param) {
 		return CompletableFuture.runAsync(() -> {
 			var snykIssueCache = SnykIssueCache.getInstance();
 			var uri = param.getUri();
 			if(StringUtils.isEmpty(uri)) {
+				SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
 				return;
 			}
 			var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
 			if (filePath == null) {
-				SnykLogger.logError(new RuntimeException("couldn't resolve uri "+uri+" to file"));
+				SnykLogger.logError(new InvalidPathException(uri,"couldn't resolve uri "+uri+" to file"));
 				return;
 			}
 			List<Diagnostic> diagnostics = param.getDiagnostics();
@@ -288,15 +287,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			var snykProduct = lspSourceToProduct(source);
 	        List<Issue> issueList = new ArrayList<>();
 	        
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			for (var diagnostic : diagnostics) {
 				Issue issue;
 				if(diagnostic.getData() == null) {
 					continue;
 				}
 				try {
-					issue = mapper.readValue(diagnostic.getData().toString(), Issue.class);
+					issue = om.readValue(diagnostic.getData().toString(), Issue.class);
                 } catch (JsonProcessingException e) {
                     SnykLogger.logError(e);
                     continue;
