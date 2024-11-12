@@ -13,6 +13,13 @@ public class TreeLabelProvider implements ILabelProvider {
 
 	public static final ImageDescriptor OSS = Activator.getImageDescriptor("/icons/oss.png");
 
+	private Image ossImage;
+
+	public TreeLabelProvider() {
+		// Create the image once
+		ossImage = OSS.createImage();
+	}
+
 	@Override
 	public String getText(Object element) {
 		// Return the text to display for each tree item
@@ -28,7 +35,7 @@ public class TreeLabelProvider implements ILabelProvider {
 		// You can return null if you don't want to display images
 		// TODO return the right image for the type of object we represent.
 
-		return OSS.createImage();
+		return ossImage;
 	}
 
 	@Override
@@ -38,7 +45,10 @@ public class TreeLabelProvider implements ILabelProvider {
 
 	@Override
 	public void dispose() {
-		// Clean up resources if needed
+		if (ossImage != null && !ossImage.isDisposed()) {
+			ossImage.dispose();
+			ossImage = null;
+		}
 	}
 
 	@Override
