@@ -17,9 +17,6 @@ public class RootObject {
 		children = new ArrayList<>();
 		// Initialize with some data
 		TreeNode node = new TreeNode("Open Source");
-
-//        node.setImage(OSS);
-
 		children.add(node);
 		children.add(new TreeNode("Code Security"));
 		children.add(new TreeNode("Configuration"));

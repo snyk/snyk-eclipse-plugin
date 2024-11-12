@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.providers;
 
-import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.viewers.Viewer;
