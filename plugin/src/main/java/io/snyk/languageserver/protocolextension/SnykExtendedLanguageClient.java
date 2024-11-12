@@ -60,13 +60,12 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 
 @SuppressWarnings("restriction")
-public class SnykExtendedLanguageClient extends LanguageClientImpl implements LsCommandID, LsNotificationID {
+public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private final ProgressManager progressMgr = new ProgressManager();
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
-
+	
 	private static SnykExtendedLanguageClient instance = null;
-	// we overwrite the super-class field, so we can mock it
 
 	public SnykExtendedLanguageClient() {
 		super();
@@ -105,7 +104,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 			} else {
 				try {
 					if (window == null) {
-						executeCommand(SNYK_WORKSPACE_SCAN, new ArrayList<>());
+						executeCommand(LsCommandID.SNYK_WORKSPACE_SCAN, new ArrayList<>());
 						return;
 					}
 
@@ -124,7 +123,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 
 					if (project != null) {
 						runForProject(project.getName());
-						executeCommand(SNYK_WORKSPACE_FOLDER_SCAN, List.of(project.getLocation().toOSString()));
+						executeCommand(LsCommandID.SNYK_WORKSPACE_FOLDER_SCAN, List.of(project.getLocation().toOSString()));
 					}
 				} catch (Exception e) {
 					SnykLogger.logError(e);
@@ -134,7 +133,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 	}
 
 	public void triggerAuthentication() {
-		executeCommand(SNYK_LOGIN, new ArrayList<>());
+		executeCommand(LsCommandID.SNYK_LOGIN, new ArrayList<>());
 	}
 
 	public void ensureLanguageServerRunning() {
@@ -157,12 +156,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 	}
 
 	public void trustWorkspaceFolders() {
-		executeCommand(SNYK_TRUST_WORKSPACE_FOLDERS, new ArrayList<>());
+		executeCommand(LsCommandID.SNYK_TRUST_WORKSPACE_FOLDERS, new ArrayList<>());
 	}
 
 	public boolean getSastEnabled() {
 		try {
-			CompletableFuture<Object> lsSastSettings = executeCommand(SNYK_SAST_ENABLED, new ArrayList<>());
+			CompletableFuture<Object> lsSastSettings = executeCommand(LsCommandID.SNYK_SAST_ENABLED, new ArrayList<>());
 			Object result;
 			try {
 				result = lsSastSettings.get(5, TimeUnit.SECONDS);
@@ -184,7 +183,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 			SnykLogger.logInfo("issueId is empty");
 			return "";
 		}
-		CompletableFuture<Object> issueDescription = executeCommand(SNYK_GENERATE_ISSUE_DESCRIPTION, List.of(issueId));
+		CompletableFuture<Object> issueDescription = executeCommand(LsCommandID.SNYK_GENERATE_ISSUE_DESCRIPTION, List.of(issueId));
 		Object result;
 		try {
 			result = issueDescription.get(5, TimeUnit.SECONDS);
@@ -198,7 +197,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 		return String.valueOf(result);
 	}
 
-	@JsonNotification(value = SNYK_HAS_AUTHENTICATED)
+	@JsonNotification(value = LsNotificationID.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();
 
@@ -225,13 +224,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 		}
 	}
 
-	@JsonNotification(value = SNYK_IS_AVAILABLE_CLI)
+	@JsonNotification(value = LsNotificationID.SNYK_IS_AVAILABLE_CLI)
 	public void isAvailableCli(SnykIsAvailableCliParams param) {
 		Preferences.getInstance().store(Preferences.CLI_PATH, param.getCliPath());
 		enableSnykViewRunActions();
 	}
 
-	@JsonNotification(value = SNYK_ADD_TRUSTED_FOLDERS)
+	@JsonNotification(value = LsNotificationID.SNYK_ADD_TRUSTED_FOLDERS)
 	public void addTrustedPaths(SnykTrustedFoldersParams param) {
 		var prefs = Preferences.getInstance();
 		var storedTrustedPaths = prefs.getPref(Preferences.TRUSTED_FOLDERS, "");
@@ -242,7 +241,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 				.map(s -> s.trim()).distinct().collect(Collectors.joining(File.pathSeparator)));
 	}
 
-	@JsonNotification(value = SNYK_SCAN)
+	@JsonNotification(value = LsNotificationID.SNYK_SCAN)
 	public void snykScan(SnykScanParam param) {
 		var inProgressKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
 		var scanState = ScanState.getInstance();
@@ -262,7 +261,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 		}
 	}
 
-	@JsonNotification(value = SNYK_PUBLISH_DIAGNOSTICS_316)
+	@JsonNotification(value = LsNotificationID.SNYK_PUBLISH_DIAGNOSTICS_316)
 	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnosticsParams param) {
 		return CompletableFuture.runAsync(() -> {
 			var snykIssueCache = SnykIssueCache.getInstance();
@@ -332,7 +331,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 	public void reportAnalytics(AbstractAnalyticsEvent event) {
 		try {
 			var eventString = om.writeValueAsString(event);
-			executeCommand(SNYK_REPORT_ANALYTICS, List.of(eventString));
+			executeCommand(LsCommandID.SNYK_REPORT_ANALYTICS, List.of(eventString));
 		} catch (Exception e) {
 			SnykLogger.logError(e);
 		}
@@ -397,7 +396,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl implements Ls
 		var token = p.getAuthToken();
 		final int timeout = 5;
 		CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-			var result = executeCommand(SNYK_GET_ACTIVE_USER, new ArrayList<>());
+			var result = executeCommand(LsCommandID.SNYK_GET_ACTIVE_USER, new ArrayList<>());
 			// we don't wait forever, and if we can't get a user name (refresh token), we're
 			// done.
 			try {
