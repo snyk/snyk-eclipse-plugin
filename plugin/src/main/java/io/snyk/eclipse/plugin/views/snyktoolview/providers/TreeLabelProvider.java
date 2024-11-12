@@ -1,12 +1,17 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.providers;
 
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.swt.graphics.Image;
 
+import io.snyk.eclipse.plugin.Activator;
+
 //TODO move this provider into a provider package
 public class TreeLabelProvider implements ILabelProvider {
+
+	public static final ImageDescriptor OSS = Activator.getImageDescriptor("/icons/oss.png");
 
 	@Override
 	public String getText(Object element) {
@@ -21,7 +26,9 @@ public class TreeLabelProvider implements ILabelProvider {
 	public Image getImage(Object element) {
 		// Return an image for each tree item (optional)
 		// You can return null if you don't want to display images
-		return null;
+		// TODO return the right image for the type of object we represent.
+
+		return OSS.createImage();
 	}
 
 	@Override

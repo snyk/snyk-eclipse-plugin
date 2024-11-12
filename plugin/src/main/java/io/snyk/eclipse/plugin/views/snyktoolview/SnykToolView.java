@@ -3,15 +3,9 @@
  */
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Base64;
-
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -22,7 +16,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.PlatformUI;
@@ -31,6 +28,9 @@ import org.eclipse.ui.part.ViewPart;
 import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.eclipse.plugin.views.SnykView;
+import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
+import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
@@ -42,7 +42,7 @@ public class SnykToolView extends ViewPart {
 	/**
 	 * The ID of the view as specified by the extension.
 	 */
-	public static final String ID = "io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView";
+	public static final String ID = "io.snyk.eclipse.plugin.views.snyktoolview";
 
 	ResourceUtils data = new ResourceUtils();
 
@@ -61,13 +61,21 @@ public class SnykToolView extends ViewPart {
 		// Create TreeViewer
 		treeViewer = new TreeViewer(sashForm, SWT.BORDER);
 		Tree tree = treeViewer.getTree();
-		tree.setHeaderVisible(true);
-		tree.setLinesVisible(true);
+		tree.setHeaderVisible(false);
+		tree.setLinesVisible(false);
+		tree.setLayout(new GridLayout());
+		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		// Set up the tree content (replace with your own content provider)
-//		treeViewer.setContentProvider(new TreeContentProvider());
-//		treeViewer.setLabelProvider(new TreeLabelProvider());
+		treeViewer.setContentProvider(new TreeContentProvider());
+		treeViewer.setLabelProvider(new TreeLabelProvider());
 //		treeViewer.setInput(createTreeInput());
+
+		// Create and set the root object
+		RootObject rootObject = new RootObject();
+		treeViewer.setInput(rootObject);
+
+		registerTreeContextMeny(parent);
 
 		// Create Browser
 		browser = new Browser(sashForm, SWT.NONE);
@@ -89,6 +97,13 @@ public class SnykToolView extends ViewPart {
 		});
 
 		makeActions();
+	}
+
+	private void registerTreeContextMeny(Composite parent) {
+		MenuManager menuMgr = new MenuManager("treemenu");
+		Menu menu = menuMgr.createContextMenu(parent);
+		getSite().registerContextMenu(menuMgr, null);
+		parent.setMenu(menu);
 	}
 
 	private void updateBrowserContent(TreeNode node) {
@@ -116,7 +131,7 @@ public class SnykToolView extends ViewPart {
 				"%snyk.trust.dialog.warning.text");
 
 		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
-		String base64Image = ResourceUtils.getBase64Image( bundle, "logo_snyk.png" );
+		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
 
 		browser.setText("<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\"> "
 				+ "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> "
@@ -160,7 +175,6 @@ public class SnykToolView extends ViewPart {
 		openPrefPage.setText("Preferences");
 	}
 
-	
 	private static Shell getShell() {
 		var activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		if (activeWorkbenchWindow == null)

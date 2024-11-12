@@ -1,4 +1,4 @@
-package io.snyk.eclipse.plugin.views.snyktoolview.providers;
+package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;

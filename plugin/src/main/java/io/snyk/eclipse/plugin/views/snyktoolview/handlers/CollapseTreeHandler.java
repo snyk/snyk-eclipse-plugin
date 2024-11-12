@@ -1,15 +1,14 @@
-package io.snyk.eclipse.plugin.views.snyktoolview.providers;
+package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.dialogs.PreferencesUtil;
 
 import io.snyk.eclipse.plugin.utils.SnykMessageDialog;
 
-public class EnableProductHandler extends AbstractHandler {
+public class CollapseTreeHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 
@@ -19,14 +18,11 @@ public class EnableProductHandler extends AbstractHandler {
 		SnykMessageDialog.showOkDialog(shell, commandId);
 
 		switch (commandId) {
-		case "io.snyk.eclipse.plugin.commands.enableOSS":
+		case "io.snyk.eclipse.plugin.commands.TreeCollapse":
 			// Implement behavior for command1
 			break;
-		case "io.snyk.eclipse.plugin.commands.enableCode":
+		case "io.snyk.eclipse.plugin.commands.TreeExpand":
 			// Implement behavior for command2
-			break;
-		case "io.snyk.eclipse.plugin.commands.enableIac":
-			// Implement behavior for command3
 			break;
 		}
 
