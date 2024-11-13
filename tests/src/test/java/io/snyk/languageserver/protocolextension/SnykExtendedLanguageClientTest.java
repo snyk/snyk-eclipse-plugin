@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
 import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
-import io.snyk.eclipse.plugin.properties.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.languageserver.LsBaseTest;
@@ -40,15 +39,18 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFolder
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 class SnykExtendedLanguageClientTest extends LsBaseTest {
-	private InMemoryPreferenceStore store = new InMemoryPreferenceStore();
 	private SnykExtendedLanguageClient cut;
 	private Preferences pref;
+	private ISnykToolView toolWindowMock;
+
 	@BeforeEach
+	@Override
 	protected void setUp() {
-		store = new InMemoryPreferenceStore();
-		pref = Preferences.getInstance(store);
+		super.setUp();
+		pref = Preferences.getInstance();
 		// we don't want the wizard to pop up, so we set a dummy token
 		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
+		toolWindowMock = mock(ISnykToolView.class);
 	}
 
 	@Test
@@ -59,7 +61,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut = new SnykExtendedLanguageClient();
 		cut.addTrustedPaths(param);
 
-		assertEquals("trusted/path", store.getString(Preferences.TRUSTED_FOLDERS, ""));
+		assertEquals("trusted/path", pref.getPref(Preferences.TRUSTED_FOLDERS, ""));
 	}
 
 	@Test
@@ -70,7 +72,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut = new SnykExtendedLanguageClient();
 		cut.addTrustedPaths(param);
 
-		assertEquals("trusted/path", store.getString(Preferences.TRUSTED_FOLDERS, ""));
+		assertEquals("trusted/path", pref.getPref(Preferences.TRUSTED_FOLDERS, ""));
 	}
 
 	@Test
@@ -121,11 +123,11 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			var captor = ArgumentCaptor.forClass(AnalyticsEvent.class);
 			verify(asMock).logEvent(captor.capture(), any());
 			verifyNoMoreInteractions(asMock);
-			
+
 			assertEquals("plugin installed", captor.getValue().getInteractionType());
 		}
 	}
-	
+
 	@Test
 	void testDoesNotSendPluginInstalledEventOnSecondStart() {
 		try (MockedStatic<AnalyticsSender> mockedAnalyticsSender = mockStatic(AnalyticsSender.class)) {
@@ -138,7 +140,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			verifyNoMoreInteractions(asMock);
 		}
 	}
-	
+
 	@Test
 	void testPublishDiagnosticsShouldChangeCache() {
 		// Test Add to cache
@@ -151,8 +153,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var diagnostic = new Diagnostic();
 		diagnostic.setSource("Snyk Code");
 
-        var issue = new Issue("myId", null, null, null, false, null, false, null, null, null);
-        ObjectMapper objectMapper = new ObjectMapper();
+		var issue = new Issue("myId", null, null, null, false, null, false, null, null, null);
+		ObjectMapper objectMapper = new ObjectMapper();
 		String res;
 		try {
 			res = objectMapper.writeValueAsString(issue);
@@ -165,14 +167,13 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var future = cut.publishDiagnostics316(param);
 		try {
 			future.get(5, TimeUnit.SECONDS);
-		}
-		catch (Exception ex){
+		} catch (Exception ex) {
 
 		}
 		var actualIssueList = issueCache.getCodeIssuesForPath(filePath);
 		assertEquals(1, actualIssueList.size());
 		assertEquals("myId", actualIssueList.stream().findFirst().get().id());
-		
+
 		// Test remove from cache
 		param = new PublishDiagnosticsParams();
 		param.setUri(uri);
@@ -181,32 +182,30 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		future = cut.publishDiagnostics316(param);
 		try {
 			future.get(5, TimeUnit.SECONDS);
-		}
-		catch (Exception ex){
+		} catch (Exception ex) {
 
 		}
 		assertEquals(true, issueCache.getCodeIssuesForPath(filePath).isEmpty());
 	}
-	
+
 	@Test
-    void testSnykScanUpdatesRootNodeStatus() {
+	void testSnykScanUpdatesRootNodeStatus() {
 		var param = new SnykScanParam();
 		param.setStatus("inProgress");
 		param.setProduct(ProductConstants.CODE);
 		param.setFolderPath("a/b/c");
-		ISnykToolView toolWindowMock = mock(ISnykToolView.class);
 		TreeNode productNode = new TreeNode("Code Issues");
 		when(toolWindowMock.getProductNode(param.getProduct())).thenReturn(productNode);
-		
+
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 		cut.snykScan(param);
-		
+
 		// expect "scanning..."
 		verify(toolWindowMock).getProductNode(param.getProduct());
 		verify(toolWindowMock).setNodeText(productNode, "Scanning...");
 	}
-	
+
 	@Test
 	void testSnykScanAddsToScanStateHashMap() {
 		var scanState = ScanState.getInstance();
@@ -214,22 +213,23 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus("inProgress");
 		param.setProduct(ProductConstants.CODE);
 		param.setFolderPath("a/b/c");
-		
+
 		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
 		cut.snykScan(param);
-		
+
 		var expectedKey = new ScanInProgressKey("a/b/c", "code");
 		var actualState = scanState.isScanInProgress(expectedKey);
 		assertEquals(true, actualState);
-		
+
 		param = new SnykScanParam();
 		param.setStatus("success");
 		param.setProduct(ProductConstants.CODE);
 		param.setFolderPath("a/b/c");
-		
+
 		cut = new SnykExtendedLanguageClient();
 		cut.snykScan(param);
-		
+
 		expectedKey = new ScanInProgressKey("a/b/c", "code");
 		actualState = scanState.isScanInProgress(expectedKey);
 		assertEquals(false, actualState);

@@ -253,7 +253,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		switch(param.getStatus()) {
 		case "inProgress":
 			scanState.setScanInProgress(inProgressKey, true);
-			if (toolView == null) {
+			if (toolView == null && !Preferences.getInstance().isTest()) {
 				try {
 					toolView = (ISnykToolView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(SnykToolView.ID);
 				} catch (PartInitException e) {
