@@ -1,25 +1,24 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
 
+import java.util.Map;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.IElementUpdater;
+import org.eclipse.ui.menus.UIElement;
 
-import io.snyk.eclipse.plugin.utils.SnykMessageDialog;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
-public class FilterHandler extends AbstractHandler {
+public class FilterHandler extends AbstractHandler implements IElementUpdater {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 
 		String commandId = event.getCommand().getId();
 
-		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-		SnykMessageDialog.showOkDialog(shell, commandId);
-
 		switch (commandId) {
 		case "io.snyk.eclipse.plugin.commands.snykFilterCritical":
-			// Implement behavior for command1
+			toggleFilter(Preferences.FILTER_CRITICAL);
 			break;
 		case "io.snyk.eclipse.plugin.commands.snykFilterHigh":
 			// Implement behavior for command2
@@ -40,4 +39,27 @@ public class FilterHandler extends AbstractHandler {
 
 		return null;
 	}
+
+	@Override
+	public void updateElement(UIElement element, @SuppressWarnings("rawtypes") Map map) {
+		// TODO update the filter buttons when state changed.
+	}
+
+	private void toggleFilter(String filter) {
+		String preference = getPreference(filter);
+
+		// Toggle the value, if it was true, it should be set to false
+		if (Boolean.parseBoolean(preference)) {
+			Preferences.getInstance().store(filter, "false");
+
+		} else {
+			Preferences.getInstance().store(filter, "true");
+
+		}
+	}
+
+	private String getPreference(String preference) {
+		return Preferences.getInstance().getPref(preference);
+	}
+
 }

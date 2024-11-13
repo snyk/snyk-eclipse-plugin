@@ -140,26 +140,6 @@ public class SnykToolView extends ViewPart {
 				+ "    <p>\n" + snykWarningText + "</body>\n" + "</html>");
 	}
 
-	private Object createTreeInput() {
-		// Create and return your tree structure here
-		TreeNode root = new TreeNode("Root");
-
-		TreeNode[] nodeList = new TreeNode[10];
-
-		nodeList[0] = new TreeNode("Node 1");
-		nodeList[1] = new TreeNode("Node 2");
-		nodeList[2] = new TreeNode("Node 3");
-		nodeList[3] = new TreeNode("Node 4");
-		nodeList[4] = new TreeNode("Node 5");
-		nodeList[5] = new TreeNode("Node 6");
-		nodeList[6] = new TreeNode("Node 7");
-		nodeList[7] = new TreeNode("Node 8");
-		nodeList[8] = new TreeNode("Node 9");
-		nodeList[9] = new TreeNode("Node 10");
-
-		return root;
-	}
-
 	private void makeActions() {
 		openPrefPage = new Action() {
 

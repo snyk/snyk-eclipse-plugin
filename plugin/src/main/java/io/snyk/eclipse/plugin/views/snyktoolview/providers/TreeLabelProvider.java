@@ -8,15 +8,15 @@ import org.eclipse.swt.graphics.Image;
 
 import io.snyk.eclipse.plugin.Activator;
 
-//TODO move this provider into a provider package
 public class TreeLabelProvider implements ILabelProvider {
 
 	public static final ImageDescriptor OSS = Activator.getImageDescriptor("/icons/oss.png");
+	public static final ImageDescriptor Code = Activator.getImageDescriptor("/icons/code.png");
+	public static final ImageDescriptor IAC = Activator.getImageDescriptor("/icons/iac.png");
 
 	private Image ossImage;
 
 	public TreeLabelProvider() {
-		// Create the image once
 		ossImage = OSS.createImage();
 	}
 
