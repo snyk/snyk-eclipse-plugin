@@ -70,29 +70,24 @@
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.OpenSnykPreferencesHandler">
         </command>
         <command
-            id="io.snyk.eclipse.plugin.commands.filter"
-            name="Filter"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHandler">
-        </command>
-        <command
             id="io.snyk.eclipse.plugin.commands.snykFilterCritical"
             name="Critical Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHandler">
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterCriticalHandler">
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterHigh"
             name="High Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHandler">
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHighHandler">
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterMedium"
             name="Medium Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHandler">
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterMediumHandler">
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterLow"
             name="Low Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHandler">
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterLowHandler">
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.enableOSS"
@@ -127,7 +122,7 @@
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterDelta"
             name="Delta findings"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHandler">
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaHandler">
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.snykHideIgnored"
