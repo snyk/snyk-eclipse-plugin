@@ -1,54 +1,18 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
 
-import java.util.Map;
-
-import org.eclipse.core.commands.AbstractHandler;
-import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.commands.IElementUpdater;
-import org.eclipse.ui.menus.UIElement;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
-public class FilterLowHandler extends AbstractHandler implements IElementUpdater {
-
-	// TODO should we replace the filter button with a filter applied button icon?
-	protected static ImageDescriptor FILTER_ENABLE = Activator.getImageDescriptor("/icons/severity-low.png");
-	protected static ImageDescriptor FILTER_DISABLE = Activator.getImageDescriptor("/icons/oss_disabled.png");
-	protected static String FILTER = Preferences.FILTER_LOW;
-
-	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
-		String commandId = event.getCommand().getId();
-
-		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
-		if (commandService != null) {
-			commandService.refreshElements(commandId, null);
-		}
-
-		return null;
+public class FilterLowHandler extends BaseHandler implements IElementUpdater {
+	
+	public FilterLowHandler() {
+		super();
+		// TODO should we replace the filter button with a filter applied button icon?
+		iconEnabled = Activator.getImageDescriptor("/icons/severity-low.png");
+		iconDisabled = Activator.getImageDescriptor("/icons/severity-low.png");
+		preferenceKey = Preferences.FILTER_LOW;
 	}
 
-	@Override
-	public void updateElement(UIElement element, @SuppressWarnings("rawtypes") Map map) {
-
-		String preference = Preferences.getInstance().getPref(FILTER);
-
-		// Toggle the value, if it was true, it should be set to false
-		if (Boolean.parseBoolean(preference)) {
-//				element.setIcon(FILTER_DISABLE);
-			Preferences.getInstance().store(FILTER, "false");
-
-		} else {
-
-//				element.setIcon(FILTER_ENABLE);
-			Preferences.getInstance().store(FILTER, "true");
-
-		}
-
-	}
 }

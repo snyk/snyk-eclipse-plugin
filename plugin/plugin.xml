@@ -34,12 +34,14 @@
                 relationship="right"
                 ratio="0.5">
             </view>
+            <!--
             <view
                 id="io.snyk.eclipse.plugin.views.snyktoolview"
                 relative="org.eclipse.ui.views.ProblemView"
                 relationship="right"
                 ratio="0.5">
             </view>
+            -->
         </perspectiveExtension>
     </extension>
     <extension point="org.eclipse.help.contexts">
@@ -117,7 +119,7 @@
         <command
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.providers.ViewMenuHandler"
             id="io.snyk.eclipse.plugin.commands.viewmenu"
-            name="snykViewMenuHandler">
+            name="Show View Menu">
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterDelta"
