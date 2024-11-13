@@ -4,15 +4,15 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.viewers.Viewer;
 
-import io.snyk.eclipse.plugin.views.snyktoolview.RootObject;
+import io.snyk.eclipse.plugin.views.snyktoolview.RootNode;
 
 public class TreeContentProvider implements ITreeContentProvider {
 	@Override
 	public Object[] getElements(Object inputElement) {
 		// Return the root elements of your tree
 		// This method is called to get the top-level items
-		if (inputElement instanceof RootObject) {
-			return ((RootObject) inputElement).getChildren();
+		if (inputElement instanceof RootNode) {
+			return ((RootNode) inputElement).getChildren().toArray();
 		}
 		return new Object[0];
 	}

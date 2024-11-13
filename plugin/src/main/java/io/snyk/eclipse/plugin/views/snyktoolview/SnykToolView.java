@@ -51,7 +51,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	private TreeViewer treeViewer;
 	private Browser browser;
-	private RootObject rootObject = new RootObject();
+	private RootNode rootObject = new RootNode();
 
 	private final static Shell SHELL = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 

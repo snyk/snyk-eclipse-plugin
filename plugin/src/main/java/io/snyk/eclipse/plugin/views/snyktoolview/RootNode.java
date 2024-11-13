@@ -2,7 +2,7 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import org.eclipse.jface.viewers.TreeNode;
 
-public class RootObject extends TreeNode {
+public class RootNode extends TreeNode {
 	public static final String CONFIGURATION = "Configuration";
 	public static final String CODE_SECURITY = "Code Security";
 	public static final String OPEN_SOURCE = "Open Source";
@@ -12,7 +12,7 @@ public class RootObject extends TreeNode {
 	private TreeNode codeQualityRootNode;
 	private TreeNode iacRootNode;
 
-	public RootObject() {
+	public RootNode() {
 		super("");
 		
 		ossRootNode = new TreeNode(OPEN_SOURCE);
