@@ -69,7 +69,6 @@ public class SnykToolView extends ViewPart {
 		// Set up the tree content (replace with your own content provider)
 		treeViewer.setContentProvider(new TreeContentProvider());
 		treeViewer.setLabelProvider(new TreeLabelProvider());
-//		treeViewer.setInput(createTreeInput());
 
 		// Create and set the root object
 		RootObject rootObject = new RootObject();
