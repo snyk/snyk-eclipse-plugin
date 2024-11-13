@@ -2,14 +2,17 @@ package io.snyk.languageserver.protocolextension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -26,6 +29,7 @@ import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.properties.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.languageserver.LsBaseTest;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
@@ -182,6 +186,25 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		}
 		assertEquals(true, issueCache.getCodeIssuesForPath(filePath).isEmpty());
+	}
+	
+	@Test
+    void testSnykScanUpdatesRootNodeStatus() {
+		var param = new SnykScanParam();
+		param.setStatus("inProgress");
+		param.setProduct(ProductConstants.CODE);
+		param.setFolderPath("a/b/c");
+		ISnykToolView toolWindowMock = mock(ISnykToolView.class);
+		TreeNode productNode = new TreeNode("Code Issues");
+		when(toolWindowMock.getProductNode(param.getProduct())).thenReturn(productNode);
+		
+		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
+		cut.snykScan(param);
+		
+		// expect "scanning..."
+		verify(toolWindowMock).getProductNode(param.getProduct());
+		verify(toolWindowMock).setNodeText(productNode, "Scanning...");
 	}
 	
 	@Test

@@ -12,7 +12,7 @@ public class TreeContentProvider implements ITreeContentProvider {
 		// Return the root elements of your tree
 		// This method is called to get the top-level items
 		if (inputElement instanceof RootObject) {
-			return ((RootObject) inputElement).getChildren().toArray();
+			return ((RootObject) inputElement).getChildren();
 		}
 		return new Object[0];
 	}

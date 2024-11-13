@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -37,7 +38,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
  * and packages to io.snyk.eclipse.plugin.views, when the original SnykView is
  * removed.
  */
-public class SnykToolView extends ViewPart {
+public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	/**
 	 * The ID of the view as specified by the extension.
@@ -50,6 +51,7 @@ public class SnykToolView extends ViewPart {
 
 	private TreeViewer treeViewer;
 	private Browser browser;
+	private RootObject rootObject = new RootObject();
 
 	private final static Shell SHELL = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
@@ -71,7 +73,6 @@ public class SnykToolView extends ViewPart {
 		treeViewer.setLabelProvider(new TreeLabelProvider());
 
 		// Create and set the root object
-		RootObject rootObject = new RootObject();
 		treeViewer.setInput(rootObject);
 
 		registerTreeContextMeny(parent);
@@ -164,5 +165,46 @@ public class SnykToolView extends ViewPart {
 	@Override
 	public void setFocus() {
 		treeViewer.getControl().setFocus();
+	}
+
+	@Override
+	public void setNodeText(TreeNode node, String text) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setNodeIcon(ImageDescriptor icon) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addIssueNode(TreeNode parent, TreeNode toBeAdded) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addFileNode(TreeNode parent, TreeNode toBeAdded) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addInfoNode(TreeNode parent, TreeNode toBeAdded) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public TreeNode getProductNode(String product) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public TreeNode getRoot() {
+		return this.rootObject;
 	}
 }

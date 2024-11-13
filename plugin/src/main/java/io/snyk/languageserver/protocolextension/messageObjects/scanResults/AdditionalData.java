@@ -1,6 +1,9 @@
 package io.snyk.languageserver.protocolextension.messageObjects.scanResults;
 
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+
 public record AdditionalData(
+	String key,
 	// Code
     String message,
     String[] cwe,
@@ -9,7 +12,6 @@ public record AdditionalData(
     boolean hasAIFix,
     // OSS + Code    
     String ruleId,
-    String details,
     String license,
     String description,
     String language,
@@ -21,7 +23,9 @@ public record AdditionalData(
     String projectName,
     String displayTargetFile,
     // IaC    
-    String publicId,
-    String customUIContent
+    String publicId
 ) {
+	public String customUIContent() {
+		return SnykExtendedLanguageClient.getInstance().getIssueDescription(key);
+	}
 }

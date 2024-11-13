@@ -19,6 +19,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
@@ -32,6 +33,7 @@ import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -45,6 +47,8 @@ import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
+import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
+import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.LsCommandID;
 import io.snyk.languageserver.LsNotificationID;
@@ -64,6 +68,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private final ProgressManager progressMgr = new ProgressManager();
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
+	private ISnykToolView toolView;
 	
 	private static SnykExtendedLanguageClient instance = null;
 
@@ -248,7 +253,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		switch(param.getStatus()) {
 		case "inProgress":
 			scanState.setScanInProgress(inProgressKey, true);
-			// Show scanning view state
+			if (toolView == null) {
+				try {
+					toolView = (ISnykToolView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(SnykToolView.ID);
+				} catch (PartInitException e) {
+					SnykLogger.logError(e);
+					return;
+				}
+			}
+			TreeNode productNode = toolView.getProductNode(param.getProduct());
+			toolView.setNodeText(productNode, "Scanning...");
 			break;
 		case "success":
 			scanState.setScanInProgress(inProgressKey, false);
@@ -446,5 +460,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		} catch (ClassCastException e) {
 			return null;
 		}
+	}
+
+	public void setToolWindow(ISnykToolView toolView) {
+		this.toolView = toolView;
 	}
 }

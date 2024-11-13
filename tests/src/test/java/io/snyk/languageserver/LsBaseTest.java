@@ -43,7 +43,7 @@ public class LsBaseTest {
   }
 
   @AfterEach
-  void tearDown() {
+  protected void tearDown() {
     lsFile.delete();
     clearAllCaches();
   }

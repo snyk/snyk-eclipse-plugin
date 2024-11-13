@@ -1,7 +1,8 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
-import io.snyk.eclipse.plugin.EnvironmentConstants;
-import io.snyk.languageserver.LsRuntimeEnvironment;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,11 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
+import io.snyk.eclipse.plugin.EnvironmentConstants;
+import io.snyk.languageserver.LsRuntimeEnvironment;
 
 @SuppressWarnings("restriction")
 class PreferencesTest {
