@@ -479,14 +479,4 @@
             name="SnykWizard">
         </wizard>
     </extension>
-    <extension point="org.eclipse.ui.handlers">
-        <handler
-            class="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresIgnoredIssuesHandler"
-            commandId="io.snyk.eclipse.plugin.commands.snykShowIgnored">
-        </handler>
-        <handler
-            class="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaOpenIssuesHandler"
-            commandId="io.snyk.eclipse.plugin.commands.snykHideIgnored">
-        </handler>
-    </extension>
 </plugin>

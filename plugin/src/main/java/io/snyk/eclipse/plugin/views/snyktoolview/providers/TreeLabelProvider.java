@@ -51,10 +51,10 @@ public class TreeLabelProvider implements ILabelProvider {
 			case ProductConstants.CONFIGURATION:
 				return configurationImage;
 			default:
-				return null; // or a default image if you prefer
+				return null; 
 			}
 		}
-		return null; // or a default image for non-TreeNode elements
+		return null;
 	}
 
 	@Override
