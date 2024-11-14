@@ -44,6 +44,7 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractAnalyticsEvent;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
 import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
+import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
@@ -61,7 +62,6 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCl
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
-import io.snyk.eclipse.plugin.domain.ProductConstants;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -69,7 +69,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
 	private ISnykToolView toolView;
-	
+
 	private static SnykExtendedLanguageClient instance = null;
 
 	public SnykExtendedLanguageClient() {
@@ -250,28 +250,55 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void snykScan(SnykScanParam param) {
 		var inProgressKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
 		var scanState = ScanState.getInstance();
+
+		if (toolView == null && !Preferences.getInstance().isTest()) {
+			try {
+				toolView = (ISnykToolView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(SnykToolView.ID);
+			} catch (PartInitException e) {
+				SnykLogger.logError(e);
+				return;
+			}
+		}
+
 		switch(param.getStatus()) {
 		case "inProgress":
 			scanState.setScanInProgress(inProgressKey, true);
-			if (toolView == null && !Preferences.getInstance().isTest()) {
-				try {
-					toolView = (ISnykToolView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(SnykToolView.ID);
-				} catch (PartInitException e) {
-					SnykLogger.logError(e);
-					return;
-				}
-			}
-			TreeNode productNode = toolView.getProductNode(param.getProduct());
-			toolView.setNodeText(productNode, "Scanning...");
+			updateProductNode(param);
 			break;
 		case "success":
 			scanState.setScanInProgress(inProgressKey, false);
+			var displayProduct = ProductConstants.SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+			if (displayProduct != null) {
+				addInfoNodes(displayProduct);
+			} else {
+				// if we don't have a direct mapping, it can only be code, as the code scan bundles
+				// quality issues and security issues. We then have to update both root nodes.
+				addInfoNodes(ProductConstants.DISPLAYED_CODE_SECURITY);
+				addInfoNodes(ProductConstants.DISPLAYED_CODE_QUALITY);
+			}
 			// Show scanning finished state
 			break;
 		case "error":
 			scanState.setScanInProgress(inProgressKey, false);
 			// Show error state
 			break;
+		}
+	}
+
+	private void updateProductNode(SnykScanParam param) {
+		TreeNode productNode = toolView.getProductNode(param.getProduct());
+		toolView.setNodeText(productNode, "Scanning...");
+	}
+
+	private void addInfoNodes(String displayProduct) {
+		TreeNode productNode = toolView.getProductNode(displayProduct);
+		toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.CONGRATS_NO_ISSUES_FOUND));
+		SnykIssueCache cache = SnykIssueCache.getInstance();
+
+		long totalCount = cache.getTotalCount(displayProduct);
+		long fixableCount = cache.getFixableCount(displayProduct);
+		if (totalCount > 0 && fixableCount == 0) {
+			toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.NO_FIXABLE_ISSUES));
 		}
 	}
 
@@ -298,7 +325,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if(StringUtils.isEmpty(source)) {
 				return;
 			}
-			var snykProduct = lspSourceToProduct(source);
+			var snykProduct = ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS.get(source);
 	        List<Issue> issueList = new ArrayList<>();
 
 			for (var diagnostic : diagnostics) {
@@ -314,33 +341,20 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
                     continue;
                 }
 			}
-			
+
 			switch(snykProduct) {
-            case ProductConstants.CODE:
+            case ProductConstants.SCAN_PARAMS_CODE:
             	snykIssueCache.addCodeIssues(filePath, issueList);
                 break;
-            case ProductConstants.OSS:
+            case ProductConstants.SCAN_PARAMS_OSS:
             	snykIssueCache.addOssIssues(filePath, issueList);
                 break;
-            case ProductConstants.IAC:
+            case ProductConstants.SCAN_PARAMS_IAC:
             	snykIssueCache.addIacIssues(filePath, issueList);
                 break;
 			}
 		});
 	}
-
-    private String lspSourceToProduct(String source) {
-        switch(source) {
-        case "Snyk Code":
-        	return ProductConstants.CODE;
-        case "Snyk Open Source":
-        	return ProductConstants.OSS;
-        case "Snyk IaC":
-        	return ProductConstants.IAC;
-        default:
-        	return "";
-        }
-    }
 
 	public void reportAnalytics(AbstractAnalyticsEvent event) {
 		try {

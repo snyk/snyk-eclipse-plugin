@@ -4,18 +4,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
+import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.instancio.Instancio;
+import org.instancio.Select;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -36,6 +43,7 @@ import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.AdditionalData;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 class SnykExtendedLanguageClientTest extends LsBaseTest {
@@ -50,6 +58,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		pref = Preferences.getInstance();
 		// we don't want the wizard to pop up, so we set a dummy token
 		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
+		pref.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "false");
 		toolWindowMock = mock(ISnykToolView.class);
 	}
 
@@ -153,7 +162,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var diagnostic = new Diagnostic();
 		diagnostic.setSource("Snyk Code");
 
-		var issue = new Issue("myId", null, null, null, false, null, false, null, null, null);
+		var issue = Instancio.of(Issue.class).create();
 		ObjectMapper objectMapper = new ObjectMapper();
 		String res;
 		try {
@@ -170,9 +179,15 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		} catch (Exception ex) {
 
 		}
-		var actualIssueList = issueCache.getCodeIssuesForPath(filePath);
+
+		Collection<Issue> actualIssueList = null;
+		if (issue.additionalData().isSecurityType()) {
+			actualIssueList = issueCache.getCodeSecurityIssuesForPath(filePath);
+		} else  {
+			actualIssueList = issueCache.getCodeQualityIssuesForPath(filePath);
+		}
 		assertEquals(1, actualIssueList.size());
-		assertEquals("myId", actualIssueList.stream().findFirst().get().id());
+		assertEquals(issue.id(), actualIssueList.stream().findFirst().get().id());
 
 		// Test remove from cache
 		param = new PublishDiagnosticsParams();
@@ -185,14 +200,14 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		} catch (Exception ex) {
 
 		}
-		assertEquals(true, issueCache.getCodeIssuesForPath(filePath).isEmpty());
+		assertEquals(true, issueCache.getCodeSecurityIssuesForPath(filePath).isEmpty());
 	}
 
 	@Test
 	void testSnykScanUpdatesRootNodeStatus() {
 		var param = new SnykScanParam();
 		param.setStatus("inProgress");
-		param.setProduct(ProductConstants.CODE);
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
 		TreeNode productNode = new TreeNode("Code Issues");
 		when(toolWindowMock.getProductNode(param.getProduct())).thenReturn(productNode);
@@ -207,30 +222,107 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
+	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound() {
+		var param = new SnykScanParam();
+		param.setStatus("success");
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
+		param.setFolderPath("a/b/c");
+		TreeNode codeSecurityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_SECURITY);
+		TreeNode codeQualityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_QUALITY);
+
+		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY)).thenReturn(codeSecurityProductNode);
+		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY)).thenReturn(codeQualityProductNode);
+		var infoNodeCaptor = ArgumentCaptor.forClass(TreeNode.class);
+		var parentCaptor= ArgumentCaptor.forClass(TreeNode.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
+		cut.snykScan(param);
+
+		// expect "scanning..."
+		verify(toolWindowMock).getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY);
+		verify(toolWindowMock).getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY);
+
+		// if no issues found, we don't need to display the "no fixable issues" node
+		verify(toolWindowMock, times(2)).addInfoNode(parentCaptor.capture(), infoNodeCaptor.capture());
+
+		assertEquals(codeSecurityProductNode.getValue(), parentCaptor.getAllValues().get(0).getValue());
+		assertEquals(codeQualityProductNode.getValue(), parentCaptor.getAllValues().get(1).getValue());
+
+		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(0).getValue());
+		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(1).getValue());
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_IssuesFound() {
+		var param = new SnykScanParam();
+		param.setStatus("success");
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
+		param.setFolderPath("a/b/c");
+		TreeNode codeSecurityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_SECURITY);
+		TreeNode codeQualityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_QUALITY);
+
+		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY)).thenReturn(codeSecurityProductNode);
+		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY)).thenReturn(codeQualityProductNode);
+		var infoNodeCaptor = ArgumentCaptor.forClass(TreeNode.class);
+		var parentCaptor= ArgumentCaptor.forClass(TreeNode.class);
+
+		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
+		var additionalData = Instancio.of(AdditionalData.class)
+				.set(Select.field(AdditionalData::isSecurityType), true)
+				.set(Select.field(AdditionalData::hasAIFix), true).create();
+
+		Set<Issue> issues = Instancio.of(Issue.class)
+		        .set(Select.field(Issue::additionalData), additionalData)
+		        .stream()
+		        .limit(3)
+		        .collect(Collectors.toSet());
+		SnykIssueCache.getInstance().addCodeIssues(dummyFilePath, issues);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
+		cut.snykScan(param);
+
+		// expect "scanning..."
+		verify(toolWindowMock).getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY);
+		verify(toolWindowMock).getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY);
+
+		// if no issues found, we don't need to display the "no fixable issues" node
+		verify(toolWindowMock, times(3)).addInfoNode(parentCaptor.capture(), infoNodeCaptor.capture());
+
+		assertEquals(codeSecurityProductNode.getValue(), parentCaptor.getAllValues().get(0).getValue());
+		assertEquals(codeQualityProductNode.getValue(), parentCaptor.getAllValues().get(1).getValue());
+
+		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(0).getValue());
+		assertEquals("a", infoNodeCaptor.getAllValues().get(1).getValue());
+		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(1).getValue());
+	}
+
+	@Test
 	void testSnykScanAddsToScanStateHashMap() {
 		var scanState = ScanState.getInstance();
 		var param = new SnykScanParam();
 		param.setStatus("inProgress");
-		param.setProduct(ProductConstants.CODE);
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
 
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 		cut.snykScan(param);
 
-		var expectedKey = new ScanInProgressKey("a/b/c", "code");
+		var expectedKey = new ScanInProgressKey("a/b/c", ProductConstants.SCAN_PARAMS_CODE);
 		var actualState = scanState.isScanInProgress(expectedKey);
 		assertEquals(true, actualState);
 
 		param = new SnykScanParam();
 		param.setStatus("success");
-		param.setProduct(ProductConstants.CODE);
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
 
 		cut = new SnykExtendedLanguageClient();
 		cut.snykScan(param);
 
-		expectedKey = new ScanInProgressKey("a/b/c", "code");
+		expectedKey = new ScanInProgressKey("a/b/c", ProductConstants.SCAN_PARAMS_CODE);
 		actualState = scanState.isScanInProgress(expectedKey);
 		assertEquals(false, actualState);
 	}
