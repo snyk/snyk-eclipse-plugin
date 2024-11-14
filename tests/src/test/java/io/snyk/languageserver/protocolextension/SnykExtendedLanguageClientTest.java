@@ -66,7 +66,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@AfterEach
-	protected void tearDown() {		
+	protected void tearDown() {
 		reset(toolWindowMock);
 		super.tearDown();
 	}
@@ -281,19 +281,18 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var parentCaptor = ArgumentCaptor.forClass(TreeNode.class);
 
 		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
-		var additionalData = Instancio.of(AdditionalData.class)
-				.set(Select.field(AdditionalData::isSecurityType), true)
+		var additionalData = Instancio.of(AdditionalData.class).set(Select.field(AdditionalData::isSecurityType), true)
 				.set(Select.field(AdditionalData::isUpgradable), false)
 				.set(Select.field(AdditionalData::hasAIFix), false).create();
 
-		var cache = new SnykIssueCache();		
+		var cache = new SnykIssueCache();
 		Set<Issue> issues = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), additionalData).stream()
 				.limit(3).collect(Collectors.toSet());
 		cache.addCodeIssues(dummyFilePath, issues);
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 		cut.setIssueCache(cache);
-		
+
 		cut.snykScan(param);
 
 		// expect "scanning..."
@@ -306,7 +305,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		assertTrue(parentCaptor.getAllValues().contains(codeQualityProductNode), "Quality Node was not updated");
 		assertTrue(parentCaptor.getAllValues().contains(codeSecurityProductNode), "Security Node was not updated");
 
-		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(0).getValue());
+		assertEquals("✋ 3 issues found by Snyk", infoNodeCaptor.getAllValues().get(0).getValue());
 		assertEquals(ISnykToolView.NO_FIXABLE_ISSUES, infoNodeCaptor.getAllValues().get(1).getValue());
 		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(2).getValue());
 	}

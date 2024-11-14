@@ -129,7 +129,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 					if (project != null) {
 						runForProject(project.getName());
-						executeCommand(LsCommandID.SNYK_WORKSPACE_FOLDER_SCAN, List.of(project.getLocation().toOSString()));
+						executeCommand(LsCommandID.SNYK_WORKSPACE_FOLDER_SCAN,
+								List.of(project.getLocation().toOSString()));
 					}
 				} catch (Exception e) {
 					SnykLogger.logError(e);
@@ -185,18 +186,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public String getIssueDescription(String issueId) {
-		if(StringUtils.isEmpty(issueId)) {
+		if (StringUtils.isEmpty(issueId)) {
 			SnykLogger.logInfo("issueId is empty");
 			return "";
 		}
-		CompletableFuture<Object> issueDescription = executeCommand(LsCommandID.SNYK_GENERATE_ISSUE_DESCRIPTION, List.of(issueId));
+		CompletableFuture<Object> issueDescription = executeCommand(LsCommandID.SNYK_GENERATE_ISSUE_DESCRIPTION,
+				List.of(issueId));
 		Object result;
 		try {
 			result = issueDescription.get(5, TimeUnit.SECONDS);
-		}
-		catch(Exception ex) {
-			SnykLogger.logInfo("did not get issue description for issue "+ issueId + "\n"
-								+ ExceptionUtils.getStackTrace(ex));
+		} catch (Exception ex) {
+			SnykLogger.logInfo(
+					"did not get issue description for issue " + issueId + "\n" + ExceptionUtils.getStackTrace(ex));
 			return "";
 		}
 
@@ -254,14 +255,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		if (toolView == null && !Preferences.getInstance().isTest()) {
 			try {
-				toolView = (ISnykToolView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(SnykToolView.ID);
+				toolView = (ISnykToolView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+						.showView(SnykToolView.ID);
 			} catch (PartInitException e) {
 				SnykLogger.logError(e);
 				return;
 			}
 		}
 
-		switch(param.getStatus()) {
+		switch (param.getStatus()) {
 		case "inProgress":
 			scanState.setScanInProgress(inProgressKey, true);
 			updateProductNode(param);
@@ -272,7 +274,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (displayProduct != null) {
 				addInfoNodes(displayProduct);
 			} else {
-				// if we don't have a direct mapping, it can only be code, as the code scan bundles
+				// if we don't have a direct mapping, it can only be code, as the code scan
+				// bundles
 				// quality issues and security issues. We then have to update both root nodes.
 				addInfoNodes(ProductConstants.DISPLAYED_CODE_SECURITY);
 				addInfoNodes(ProductConstants.DISPLAYED_CODE_QUALITY);
@@ -293,10 +296,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private void addInfoNodes(String displayProduct) {
 		TreeNode productNode = toolView.getProductNode(displayProduct);
-		toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.CONGRATS_NO_ISSUES_FOUND));		
 
 		long totalCount = issueCache.getTotalCount(displayProduct);
+		String plural = totalCount > 1 ? "s" : "";
 		long fixableCount = issueCache.getFixableCount(displayProduct);
+		if (totalCount == 0) {
+			toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.CONGRATS_NO_ISSUES_FOUND));
+		} else {
+			toolView.addInfoNode(productNode, new TreeNode("✋ " + totalCount + " issue" + plural + " found by Snyk"));
+		}
 		if (totalCount > 0 && fixableCount == 0) {
 			toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.NO_FIXABLE_ISSUES));
 		}
@@ -306,51 +314,51 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnosticsParams param) {
 		return CompletableFuture.runAsync(() -> {
 			var uri = param.getUri();
-			if(StringUtils.isEmpty(uri)) {
+			if (StringUtils.isEmpty(uri)) {
 				SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
 				return;
 			}
 			var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
 			if (filePath == null) {
-				SnykLogger.logError(new InvalidPathException(uri,"couldn't resolve uri "+uri+" to file"));
+				SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
 				return;
 			}
 			List<Diagnostic> diagnostics = param.getDiagnostics();
-			if(diagnostics.isEmpty()) {
+			if (diagnostics.isEmpty()) {
 				issueCache.removeAllIssuesForPath(filePath);
 				return;
 			}
 			var source = diagnostics.get(0).getSource();
-			if(StringUtils.isEmpty(source)) {
+			if (StringUtils.isEmpty(source)) {
 				return;
 			}
 			var snykProduct = ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS.get(source);
-	        List<Issue> issueList = new ArrayList<>();
+			List<Issue> issueList = new ArrayList<>();
 
 			for (var diagnostic : diagnostics) {
 				Issue issue;
-				if(diagnostic.getData() == null) {
+				if (diagnostic.getData() == null) {
 					continue;
 				}
 				try {
 					issue = om.readValue(diagnostic.getData().toString(), Issue.class);
 					issueList.add(issue);
-                } catch (JsonProcessingException e) {
-                    SnykLogger.logError(e);
-                    continue;
-                }
+				} catch (JsonProcessingException e) {
+					SnykLogger.logError(e);
+					continue;
+				}
 			}
 
-			switch(snykProduct) {
-            case ProductConstants.SCAN_PARAMS_CODE:
-            	issueCache.addCodeIssues(filePath, issueList);
-                break;
-            case ProductConstants.SCAN_PARAMS_OSS:
-            	issueCache.addOssIssues(filePath, issueList);
-                break;
-            case ProductConstants.SCAN_PARAMS_IAC:
-            	issueCache.addIacIssues(filePath, issueList);
-                break;
+			switch (snykProduct) {
+			case ProductConstants.SCAN_PARAMS_CODE:
+				issueCache.addCodeIssues(filePath, issueList);
+				break;
+			case ProductConstants.SCAN_PARAMS_OSS:
+				issueCache.addOssIssues(filePath, issueList);
+				break;
+			case ProductConstants.SCAN_PARAMS_IAC:
+				issueCache.addIacIssues(filePath, issueList);
+				break;
 			}
 		});
 	}
