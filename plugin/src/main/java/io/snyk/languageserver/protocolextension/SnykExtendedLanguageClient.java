@@ -1,5 +1,7 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
+
 import java.io.File;
 import java.net.URI;
 import java.nio.file.InvalidPathException;
@@ -19,7 +21,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
@@ -31,7 +32,9 @@ import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -48,6 +51,7 @@ import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
+import io.snyk.eclipse.plugin.views.snyktoolview.BaseTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
@@ -253,60 +257,77 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var inProgressKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
 		var scanState = ScanState.getInstance();
 
-		if (toolView == null && !Preferences.getInstance().isTest()) {
-			try {
-				toolView = (ISnykToolView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-						.showView(SnykToolView.ID);
-			} catch (PartInitException e) {
-				SnykLogger.logError(e);
-				return;
+		Display.getDefault().asyncExec(() -> {
+			if (toolView == null && !Preferences.getInstance().isTest()) {
+				IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+				toolView = (ISnykToolView) activePage.findView(SnykToolView.ID);
 			}
-		}
 
-		switch (param.getStatus()) {
-		case "inProgress":
-			scanState.setScanInProgress(inProgressKey, true);
-			updateProductNode(param);
-			break;
-		case "success":
-			scanState.setScanInProgress(inProgressKey, false);
-			var displayProduct = ProductConstants.SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
-			if (displayProduct != null) {
-				addInfoNodes(displayProduct);
-			} else {
-				// if we don't have a direct mapping, it can only be code, as the code scan
-				// bundles
-				// quality issues and security issues. We then have to update both root nodes.
-				addInfoNodes(ProductConstants.DISPLAYED_CODE_SECURITY);
-				addInfoNodes(ProductConstants.DISPLAYED_CODE_QUALITY);
+			switch (param.getStatus()) {
+			case "inProgress":
+				scanState.setScanInProgress(inProgressKey, true);
+				updateProductNode(param);
+				break;
+			case "success":
+				scanState.setScanInProgress(inProgressKey, false);
+				var displayProduct = ProductConstants.SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+				if (displayProduct != null) {
+					addInfoNodes(displayProduct);
+				} else {
+					// if we don't have a direct mapping, it can only be code, as the code scan
+					// bundles
+					// quality issues and security issues. We then have to update both root nodes.
+					addInfoNodes(ProductConstants.DISPLAYED_CODE_SECURITY);
+					addInfoNodes(ProductConstants.DISPLAYED_CODE_QUALITY);
+				}
+				// Show scanning finished state
+				break;
+			case "error":
+				scanState.setScanInProgress(inProgressKey, false);
+				// Show error state
+				break;
 			}
-			// Show scanning finished state
-			break;
-		case "error":
-			scanState.setScanInProgress(inProgressKey, false);
-			// Show error state
-			break;
-		}
+		});
 	}
 
 	private void updateProductNode(SnykScanParam param) {
-		TreeNode productNode = toolView.getProductNode(param.getProduct());
+		BaseTreeNode productNode = toolView.getProductNode(ProductConstants.SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct()));
 		toolView.setNodeText(productNode, "Scanning...");
 	}
 
 	private void addInfoNodes(String displayProduct) {
-		TreeNode productNode = toolView.getProductNode(displayProduct);
+		BaseTreeNode productNode = toolView.getProductNode(displayProduct);
 
 		long totalCount = issueCache.getTotalCount(displayProduct);
-		String plural = totalCount > 1 ? "s" : "";
 		long fixableCount = issueCache.getFixableCount(displayProduct);
+		long ignoredCount = issueCache.getIgnoredCount(displayProduct);
 		if (totalCount == 0) {
-			toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.CONGRATS_NO_ISSUES_FOUND));
+			toolView.addInfoNode(productNode, new BaseTreeNode(ISnykToolView.CONGRATS_NO_ISSUES_FOUND));
 		} else {
-			toolView.addInfoNode(productNode, new TreeNode("✋ " + totalCount + " issue" + plural + " found by Snyk"));
+			String text = "✋ " + totalCount + " issue" + getPlural(totalCount) + " found by Snyk";
+			if (ignoredCount > 0) {
+				text += ", " + ignoredCount + " ignored";
+			}
+			toolView.addInfoNode(productNode, new BaseTreeNode(text));
 		}
 		if (totalCount > 0 && fixableCount == 0) {
-			toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.NO_FIXABLE_ISSUES));
+			toolView.addInfoNode(productNode, new BaseTreeNode(ISnykToolView.NO_FIXABLE_ISSUES));
+		}
+
+		if (totalCount > 0 && fixableCount > 0) {
+			toolView.addInfoNode(productNode, new BaseTreeNode(
+					"⚡️ " + fixableCount + " issue" + getPlural(fixableCount) + " can be fixed automatically"));
+		}
+
+		if (totalCount > 0 && ignoredCount == totalCount
+				&& Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_OPEN_ISSUES)) {
+			toolView.addInfoNode(productNode,
+					new BaseTreeNode("Adjust your Issue View Options to see ignored issues."));
+		}
+
+		if (totalCount > 0 && ignoredCount == 0
+				&& Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_IGNORED_ISSUES)) {
+			toolView.addInfoNode(productNode, new BaseTreeNode("Adjust your Issue View Options to see open issues."));
 		}
 	}
 

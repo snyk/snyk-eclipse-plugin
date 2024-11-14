@@ -28,6 +28,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.ViewPart;
 import org.osgi.framework.Bundle;
 
+import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
@@ -51,7 +52,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	private TreeViewer treeViewer;
 	private Browser browser;
-	private RootNode rootObject = new RootNode();
+	private BaseTreeNode rootObject = new RootNode();
 
 	private final static Shell SHELL = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
@@ -168,9 +169,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void setNodeText(TreeNode node, String text) {
-		// TODO Auto-generated method stub
-		
+	public void setNodeText(BaseTreeNode node, String text) {
+		node.setValue(text);
 	}
 
 	@Override
@@ -180,31 +180,40 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void addIssueNode(TreeNode parent, TreeNode toBeAdded) {
+	public void addIssueNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void addFileNode(TreeNode parent, TreeNode toBeAdded) {
+	public void addFileNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void addInfoNode(TreeNode parent, TreeNode toBeAdded) {
-		// TODO Auto-generated method stub
-		
+	public void addInfoNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
+		toBeAdded.setParent(parent);
+		parent.addChild(toBeAdded);
 	}
 
 	@Override
-	public TreeNode getProductNode(String product) {
-		// TODO Auto-generated method stub
+	public BaseTreeNode getProductNode(String product) {
+		switch (product) {
+		case ProductConstants.DISPLAYED_OSS:
+			return (BaseTreeNode) this.rootObject.getChildren()[0];
+		case ProductConstants.DISPLAYED_CODE_SECURITY:
+			return (BaseTreeNode) this.rootObject.getChildren()[1];
+		case ProductConstants.DISPLAYED_CODE_QUALITY:
+			return (BaseTreeNode) this.rootObject.getChildren()[2];
+		case ProductConstants.DISPLAYED_IAC:
+			return (BaseTreeNode) this.rootObject.getChildren()[3];
+		}
 		return null;
 	}
 
 	@Override
-	public TreeNode getRoot() {
+	public BaseTreeNode getRoot() {
 		return this.rootObject;
 	}
 }

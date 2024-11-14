@@ -1,5 +1,6 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,12 +15,11 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
-import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -38,13 +38,13 @@ import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
 import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.views.snyktoolview.BaseTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.languageserver.LsBaseTest;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
-import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.AdditionalData;
@@ -220,7 +220,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus("inProgress");
 		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-		TreeNode productNode = new TreeNode("Code Issues");
+		BaseTreeNode productNode = new BaseTreeNode("Code Issues");
 		when(toolWindowMock.getProductNode(param.getProduct())).thenReturn(productNode);
 
 		cut = new SnykExtendedLanguageClient();
@@ -238,31 +238,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus("success");
 		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-		TreeNode codeSecurityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_SECURITY);
-		TreeNode codeQualityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_QUALITY);
 
-		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY))
-				.thenReturn(codeSecurityProductNode);
-		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY)).thenReturn(codeQualityProductNode);
-		var infoNodeCaptor = ArgumentCaptor.forClass(TreeNode.class);
-		var parentCaptor = ArgumentCaptor.forClass(TreeNode.class);
+		int issueCount = 0;
+		String expectedFirstInfoNode = ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
+		String expectedSecondInfoNode = ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
 
-		cut = new SnykExtendedLanguageClient();
-		cut.setToolWindow(toolWindowMock);
-		cut.snykScan(param);
-
-		// expect "scanning..."
-		verify(toolWindowMock).getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY);
-		verify(toolWindowMock).getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY);
-
-		// if no issues found, we don't need to display the "no fixable issues" node
-		verify(toolWindowMock, times(2)).addInfoNode(parentCaptor.capture(), infoNodeCaptor.capture());
-
-		assertEquals(codeSecurityProductNode.getValue(), parentCaptor.getAllValues().get(0).getValue());
-		assertEquals(codeQualityProductNode.getValue(), parentCaptor.getAllValues().get(1).getValue());
-
-		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(0).getValue());
-		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(1).getValue());
+		runInfoNodeTest(param, issueCount, 0, 0, 2, expectedFirstInfoNode, expectedSecondInfoNode, null);
 	}
 
 	@Test
@@ -271,23 +252,122 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus("success");
 		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-		TreeNode codeSecurityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_SECURITY);
-		TreeNode codeQualityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_QUALITY);
+
+		int issueCount = 3;
+		String expectedFirstInfoNode = "✋ " + issueCount + " issue" + getPlural(issueCount) + " found by Snyk";
+		String expectedSecondInfoNode = ISnykToolView.NO_FIXABLE_ISSUES;
+		String expectedThirdInfoNode = ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
+
+		runInfoNodeTest(param, issueCount, 0, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode,
+				expectedThirdInfoNode);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_IssuesFound_singleFixable() {
+		var param = new SnykScanParam();
+		param.setStatus("success");
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
+		param.setFolderPath("a/b/c");
+		String expectedFirstInfoNode = "✋ 1 issue found by Snyk";
+		String expectedSecondInfoNode = "⚡️ 1 issue can be fixed automatically";
+		String expectedThirdInfoNode = ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
+
+		runInfoNodeTest(param, 1, 1, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_IssuesFound_multipleFixable() {
+		var param = new SnykScanParam();
+		param.setStatus("success");
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
+		param.setFolderPath("a/b/c");
+		String expectedFirstInfoNode = "✋ 4 issues found by Snyk";
+		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
+		String expectedThirdInfoNode = ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
+
+		runInfoNodeTest(param, 4, 2, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_IssuesFound_oneIgnored() {
+		var param = new SnykScanParam();
+		param.setStatus("success");
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
+		param.setFolderPath("a/b/c");
+		String expectedFirstInfoNode = "✋ 4 issues found by Snyk, 1 ignored";
+		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
+		String expectedThirdInfoNode = ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
+
+		runInfoNodeTest(param, 4, 2, 1, 3, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_IssuesFound_onlyIgnoredDisplayed() {
+		var param = new SnykScanParam();
+		param.setStatus("success");
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
+		param.setFolderPath("a/b/c");
+
+		pref.store(Preferences.FILTER_IGNORES_OPEN_ISSUES, "true");
+		pref.store(Preferences.FILTER_IGNORES_IGNORED_ISSUES, "false");
+
+		String expectedFirstInfoNode = "✋ 4 issues found by Snyk, 4 ignored";
+		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
+		String expectedThirdInfoNode = "Adjust your Issue View Options to see ignored issues.";
+
+		runInfoNodeTest(param, 4, 2, 4, 4, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+	}
+	
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_IssuesFound_onlyOpenDisplayed() {
+		var param = new SnykScanParam();
+		param.setStatus("success");
+		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
+		param.setFolderPath("a/b/c");
+
+		pref.store(Preferences.FILTER_IGNORES_OPEN_ISSUES, "false");
+		pref.store(Preferences.FILTER_IGNORES_IGNORED_ISSUES, "true");
+
+		String expectedFirstInfoNode = "✋ 4 issues found by Snyk";
+		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
+		String expectedThirdInfoNode = "Adjust your Issue View Options to see open issues.";
+
+		runInfoNodeTest(param, 4, 2, 0, 4, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+	}
+
+	private void runInfoNodeTest(SnykScanParam param, int issueCount, int fixableCount, int ignoredCount,
+			int expectedInfoNodeUpdateCount, String expectedFirstInfoNode, String expectedSecondInfoNode,
+			String expectedThirdInfoNode) {
+		BaseTreeNode codeSecurityProductNode = new BaseTreeNode(ProductConstants.DISPLAYED_CODE_SECURITY);
+		BaseTreeNode codeQualityProductNode = new BaseTreeNode(ProductConstants.DISPLAYED_CODE_QUALITY);
 
 		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY))
 				.thenReturn(codeSecurityProductNode);
 		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY)).thenReturn(codeQualityProductNode);
-		var infoNodeCaptor = ArgumentCaptor.forClass(TreeNode.class);
-		var parentCaptor = ArgumentCaptor.forClass(TreeNode.class);
+		var infoNodeCaptor = ArgumentCaptor.forClass(BaseTreeNode.class);
+		var parentCaptor = ArgumentCaptor.forClass(BaseTreeNode.class);
 
 		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
-		var additionalData = Instancio.of(AdditionalData.class).set(Select.field(AdditionalData::isSecurityType), true)
-				.set(Select.field(AdditionalData::isUpgradable), false)
-				.set(Select.field(AdditionalData::hasAIFix), false).create();
+
+		Set<Issue> issues = new HashSet<Issue>(issueCount);
+		int setAsFixable = 0;
+		int setAsIgnored = 0;
+		for (int i = 0; i < issueCount; i++) {
+			boolean fixable = fixableCount > setAsFixable++;
+			boolean ignored = ignoredCount > setAsIgnored++;
+			var additionalData = Instancio.of(AdditionalData.class)
+					.set(Select.field(AdditionalData::isSecurityType), true)
+					.set(Select.field(AdditionalData::isUpgradable), fixable)
+					.set(Select.field(AdditionalData::hasAIFix), fixable).create();
+
+			Issue issue = Instancio.of(Issue.class)
+					.set(Select.field(Issue::additionalData), additionalData)
+					.set(Select.field(Issue::isIgnored), ignored)
+					.create();
+			issues.add(issue);
+		}
 
 		var cache = new SnykIssueCache();
-		Set<Issue> issues = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), additionalData).stream()
-				.limit(3).collect(Collectors.toSet());
 		cache.addCodeIssues(dummyFilePath, issues);
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
@@ -295,19 +375,20 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		cut.snykScan(param);
 
-		// expect "scanning..."
 		verify(toolWindowMock).getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY);
 		verify(toolWindowMock).getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY);
 
 		// if no issues found, we don't need to display the "no fixable issues" node
-		verify(toolWindowMock, times(3)).addInfoNode(parentCaptor.capture(), infoNodeCaptor.capture());
+		verify(toolWindowMock, times(expectedInfoNodeUpdateCount)).addInfoNode(parentCaptor.capture(),
+				infoNodeCaptor.capture());
 
 		assertTrue(parentCaptor.getAllValues().contains(codeQualityProductNode), "Quality Node was not updated");
 		assertTrue(parentCaptor.getAllValues().contains(codeSecurityProductNode), "Security Node was not updated");
-
-		assertEquals("✋ 3 issues found by Snyk", infoNodeCaptor.getAllValues().get(0).getValue());
-		assertEquals(ISnykToolView.NO_FIXABLE_ISSUES, infoNodeCaptor.getAllValues().get(1).getValue());
-		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(2).getValue());
+		assertEquals(expectedFirstInfoNode, infoNodeCaptor.getAllValues().get(0).getValue());
+		assertEquals(expectedSecondInfoNode, infoNodeCaptor.getAllValues().get(1).getValue());
+		if (expectedInfoNodeUpdateCount > 2) {
+			assertEquals(expectedThirdInfoNode, infoNodeCaptor.getAllValues().get(2).getValue());
+		}
 	}
 
 	@Test

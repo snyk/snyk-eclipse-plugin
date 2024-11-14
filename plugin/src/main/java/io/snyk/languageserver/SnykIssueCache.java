@@ -224,4 +224,12 @@ public class SnykIssueCache {
 		}).count();
 		return count;
 	}
+
+	public long getIgnoredCount(String displayProduct) {
+		var cache = getCacheByDisplayProduct(displayProduct);
+		var count = cache.values().stream().flatMap(Collection::stream).filter((issue) -> {
+			return issue.isIgnored();
+		}).count();
+		return count;
+	}
 }
