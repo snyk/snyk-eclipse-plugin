@@ -19,7 +19,8 @@ public class RootNode extends BaseTreeNode {
 		codeQualityRootNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
 		iacRootNode = new ProductTreeNode(DISPLAYED_IAC);
 
-		BaseTreeNode[] children = new BaseTreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode, iacRootNode, };
+		BaseTreeNode[] children = new BaseTreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode,
+				iacRootNode, };
 		setChildren(children);
 	}
 }

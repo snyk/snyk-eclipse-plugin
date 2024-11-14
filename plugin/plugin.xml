@@ -332,21 +332,6 @@
                 </command>
             </menu>
         </menuContribution>
-        <menuContribution
-              locationURI="popup:io.snyk.eclipse.plugin.views.snyktoolview#PopupTreeMenu">
-           <command
-                 commandId="io.snyk.eclipse.plugin.commands.TreeExpand"
-                 icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/expandall.png"
-                 style="push"
-                 tooltip="Expand Issue Tree">
-           </command>
-           <command
-                 commandId="io.snyk.eclipse.plugin.commands.TreeCollapse"
-                 icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/collapseall.png"
-                 style="push"
-                 tooltip="Collapse Issue Tree">
-           </command>
-        </menuContribution>
     </extension>
     <extension point="org.eclipse.ui.startup">
         <startup class="io.snyk.eclipse.plugin.SnykStartup" />
