@@ -94,8 +94,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				}
 			}
 		});
-
-		makeActions();
 	}
 
 	private void registerTreeContextMeny(Composite parent) {
@@ -138,27 +136,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				+ "</style> </head> <body> <div class=\"container\"> " + "<img src='data:image/png;base64,"
 				+ base64Image + "' alt='Snyk Logo'>" + "<div> <p><strong>Welcome to Snyk for Eclipse</strong></p>"
 				+ "    <p>\n" + snykWarningText + "</body>\n" + "</html>");
-	}
-
-	private void makeActions() {
-		openPrefPage = new Action() {
-
-			@Override
-			public void run() {
-				PreferenceDialog pref = PreferencesUtil.createPreferenceDialogOn(getShell(),
-						"io.snyk.eclipse.plugin.properties.preferencespage", null, null);
-				if (pref != null)
-					pref.open();
-			}
-		};
-		openPrefPage.setText("Preferences");
-	}
-
-	private static Shell getShell() {
-		var activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-		if (activeWorkbenchWindow == null)
-			return SHELL;
-		return activeWorkbenchWindow.getShell();
 	}
 
 	@Override
