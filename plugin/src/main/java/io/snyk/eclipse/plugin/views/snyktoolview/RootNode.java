@@ -2,11 +2,9 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import org.eclipse.jface.viewers.TreeNode;
 
+import io.snyk.eclipse.plugin.domain.ProductConstants;
+
 public class RootNode extends TreeNode {
-	public static final String CONFIGURATION = "Configuration";
-	public static final String CODE_SECURITY = "Code Security";
-	public static final String OPEN_SOURCE = "Open Source";
-	public static final String CODE_QUALITY = "Code Quality";
 	private TreeNode ossRootNode;
 	private TreeNode codeSecurityRootNode;
 	private TreeNode codeQualityRootNode;
@@ -15,10 +13,10 @@ public class RootNode extends TreeNode {
 	public RootNode() {
 		super("");
 
-		ossRootNode = new TreeNode(OPEN_SOURCE);
-		codeSecurityRootNode = new TreeNode(CODE_SECURITY);
-		codeQualityRootNode = new TreeNode(CODE_QUALITY);
-		iacRootNode = new TreeNode(CONFIGURATION);
+		ossRootNode = new TreeNode(ProductConstants.OPEN_SOURCE);
+		codeSecurityRootNode = new TreeNode(ProductConstants.CODE_SECURITY);
+		codeQualityRootNode = new TreeNode(ProductConstants.CODE_QUALITY);
+		iacRootNode = new TreeNode(ProductConstants.CONFIGURATION);
 
 		TreeNode[] children = new TreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode, iacRootNode, };
 		setChildren(children);

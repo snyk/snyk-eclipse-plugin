@@ -29,7 +29,6 @@ import org.eclipse.ui.part.ViewPart;
 import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
-import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
 

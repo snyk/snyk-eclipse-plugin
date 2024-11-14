@@ -7,17 +7,25 @@ import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.swt.graphics.Image;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.domain.ProductConstants;
 
 public class TreeLabelProvider implements ILabelProvider {
 
 	public static final ImageDescriptor OSS = Activator.getImageDescriptor("/icons/oss.png");
-	public static final ImageDescriptor Code = Activator.getImageDescriptor("/icons/code.png");
+	public static final ImageDescriptor CodeSecurity = Activator.getImageDescriptor("/icons/code.png");
+	public static final ImageDescriptor CodeQuality = Activator.getImageDescriptor("/icons/code.png");
 	public static final ImageDescriptor IAC = Activator.getImageDescriptor("/icons/iac.png");
 
 	private Image ossImage;
+	private Image codeSecurityImage;
+	private Image configurationImage;
+	private Image codeQualityImage;
 
 	public TreeLabelProvider() {
 		ossImage = OSS.createImage();
+		codeSecurityImage = CodeSecurity.createImage();
+		codeQualityImage = CodeQuality.createImage();
+		configurationImage = IAC.createImage();
 	}
 
 	@Override
@@ -31,11 +39,22 @@ public class TreeLabelProvider implements ILabelProvider {
 
 	@Override
 	public Image getImage(Object element) {
-		// Return an image for each tree item (optional)
-		// You can return null if you don't want to display images
-		// TODO return the right image for the type of object we represent.
-
-		return ossImage;
+		if (element instanceof TreeNode) {
+			String elementNode = ((TreeNode) element).getValue().toString();
+			switch (elementNode) {
+			case ProductConstants.OPEN_SOURCE:
+				return ossImage;
+			case ProductConstants.CODE_SECURITY:
+				return codeSecurityImage;
+			case ProductConstants.CODE_QUALITY:
+				return codeQualityImage;
+			case ProductConstants.CONFIGURATION:
+				return configurationImage;
+			default:
+				return null; // or a default image if you prefer
+			}
+		}
+		return null; // or a default image for non-TreeNode elements
 	}
 
 	@Override
