@@ -8,11 +8,15 @@ import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.utils.SnykMessageDialog;
 
-public class HideIgnoredHandler extends AbstractHandler {
+public class StopScanHandler extends AbstractHandler {
+
+	public StopScanHandler() {
+		super();
+
+	}
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		// TODO Auto-generated method stub
 		String commandId = event.getCommand().getId();
 
 		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();

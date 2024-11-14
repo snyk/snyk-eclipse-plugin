@@ -14,18 +14,13 @@ public class RootNode extends TreeNode {
 
 	public RootNode() {
 		super("");
-		
+
 		ossRootNode = new TreeNode(OPEN_SOURCE);
 		codeSecurityRootNode = new TreeNode(CODE_SECURITY);
 		codeQualityRootNode = new TreeNode(CODE_QUALITY);
 		iacRootNode = new TreeNode(CONFIGURATION);
-		
-		TreeNode[] children = new TreeNode[] {
-			ossRootNode,
-			codeSecurityRootNode,
-			codeQualityRootNode,
-			iacRootNode,
-		};
+
+		TreeNode[] children = new TreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode, iacRootNode, };
 		setChildren(children);
 	}
 }

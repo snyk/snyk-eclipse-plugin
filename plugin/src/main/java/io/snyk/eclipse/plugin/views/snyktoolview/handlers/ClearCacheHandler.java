@@ -8,7 +8,12 @@ import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.utils.SnykMessageDialog;
 
-public class ShowIgnoredHandler extends AbstractHandler {
+public class ClearCacheHandler extends AbstractHandler {
+
+	public ClearCacheHandler() {
+		super();
+
+	}
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
