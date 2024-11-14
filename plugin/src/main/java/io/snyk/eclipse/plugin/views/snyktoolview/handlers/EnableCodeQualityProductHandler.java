@@ -10,9 +10,9 @@ public class EnableCodeQualityProductHandler extends BaseHandler implements IEle
 	public EnableCodeQualityProductHandler() {
 		super();
 		// TODO should we replace the filter button with a filter applied button icon?
-		iconEnabled = Activator.getImageDescriptor("/icons/oss.png");
-		iconDisabled = Activator.getImageDescriptor("/icons/oss_disabled.png");
-		preferenceKey = Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
+		iconEnabled = Activator.getImageDescriptor("/icons/code.png");
+		iconDisabled = Activator.getImageDescriptor("/icons/code_disabled.png");
+		preferenceKey = Preferences.ACTIVATE_SNYK_CODE_QUALITY;
 	}
 
 }
