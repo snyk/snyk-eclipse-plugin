@@ -17,7 +17,10 @@ public class SnykIssueCache {
 	private final Map<String, Collection<Issue>> ossIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> iacIssues = new ConcurrentHashMap<>();
 
-	private SnykIssueCache() {
+	/**
+	 * This is public for testing purposes
+	 */
+	public SnykIssueCache() {
 	}
 
 	public static SnykIssueCache getInstance() {
@@ -195,7 +198,7 @@ public class SnykIssueCache {
 	 * @return
 	 */
 	public long getTotalCount(String product) {
-		return getCacheByDisplayProduct(product).values().size();
+		return getCacheByDisplayProduct(product).values().stream().flatMap(Collection::stream).count();
 	}
 
 	private Map<String, Collection<Issue>> getCacheByDisplayProduct(String displayProduct) {

@@ -69,6 +69,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
 	private ISnykToolView toolView;
+	private SnykIssueCache issueCache = SnykIssueCache.getInstance();
 
 	private static SnykExtendedLanguageClient instance = null;
 
@@ -292,11 +293,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private void addInfoNodes(String displayProduct) {
 		TreeNode productNode = toolView.getProductNode(displayProduct);
-		toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.CONGRATS_NO_ISSUES_FOUND));
-		SnykIssueCache cache = SnykIssueCache.getInstance();
+		toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.CONGRATS_NO_ISSUES_FOUND));		
 
-		long totalCount = cache.getTotalCount(displayProduct);
-		long fixableCount = cache.getFixableCount(displayProduct);
+		long totalCount = issueCache.getTotalCount(displayProduct);
+		long fixableCount = issueCache.getFixableCount(displayProduct);
 		if (totalCount > 0 && fixableCount == 0) {
 			toolView.addInfoNode(productNode, new TreeNode(ISnykToolView.NO_FIXABLE_ISSUES));
 		}
@@ -305,7 +305,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonNotification(value = LsNotificationID.SNYK_PUBLISH_DIAGNOSTICS_316)
 	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnosticsParams param) {
 		return CompletableFuture.runAsync(() -> {
-			var snykIssueCache = SnykIssueCache.getInstance();
 			var uri = param.getUri();
 			if(StringUtils.isEmpty(uri)) {
 				SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
@@ -318,7 +317,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 			List<Diagnostic> diagnostics = param.getDiagnostics();
 			if(diagnostics.isEmpty()) {
-				snykIssueCache.removeAllIssuesForPath(filePath);
+				issueCache.removeAllIssuesForPath(filePath);
 				return;
 			}
 			var source = diagnostics.get(0).getSource();
@@ -344,13 +343,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 			switch(snykProduct) {
             case ProductConstants.SCAN_PARAMS_CODE:
-            	snykIssueCache.addCodeIssues(filePath, issueList);
+            	issueCache.addCodeIssues(filePath, issueList);
                 break;
             case ProductConstants.SCAN_PARAMS_OSS:
-            	snykIssueCache.addOssIssues(filePath, issueList);
+            	issueCache.addOssIssues(filePath, issueList);
                 break;
             case ProductConstants.SCAN_PARAMS_IAC:
-            	snykIssueCache.addIacIssues(filePath, issueList);
+            	issueCache.addIacIssues(filePath, issueList);
                 break;
 			}
 		});
@@ -478,5 +477,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public void setToolWindow(ISnykToolView toolView) {
 		this.toolView = toolView;
+	}
+
+	public void setIssueCache(SnykIssueCache cache) {
+		this.issueCache = cache;
 	}
 }

@@ -1,9 +1,11 @@
 package io.snyk.languageserver.protocolextension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -23,6 +25,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.instancio.Instancio;
 import org.instancio.Select;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -41,6 +44,7 @@ import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.AdditionalData;
@@ -52,7 +56,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private ISnykToolView toolWindowMock;
 
 	@BeforeEach
-	@Override
 	protected void setUp() {
 		super.setUp();
 		pref = Preferences.getInstance();
@@ -60,6 +63,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
 		pref.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "false");
 		toolWindowMock = mock(ISnykToolView.class);
+	}
+
+	@AfterEach
+	protected void tearDown() {		
+		reset(toolWindowMock);
+		super.tearDown();
 	}
 
 	@Test
@@ -153,7 +162,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@Test
 	void testPublishDiagnosticsShouldChangeCache() {
 		// Test Add to cache
-		var issueCache = SnykIssueCache.getInstance();
+		var issueCache = new SnykIssueCache();
 		var uri = "file:///a/b/c/";
 		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
 
@@ -173,6 +182,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		diagnostic.setData(res);
 		param.setDiagnostics(List.of(diagnostic));
 		cut = new SnykExtendedLanguageClient();
+		cut.setIssueCache(issueCache);
 		var future = cut.publishDiagnostics316(param);
 		try {
 			future.get(5, TimeUnit.SECONDS);
@@ -183,7 +193,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		Collection<Issue> actualIssueList = null;
 		if (issue.additionalData().isSecurityType()) {
 			actualIssueList = issueCache.getCodeSecurityIssuesForPath(filePath);
-		} else  {
+		} else {
 			actualIssueList = issueCache.getCodeQualityIssuesForPath(filePath);
 		}
 		assertEquals(1, actualIssueList.size());
@@ -194,6 +204,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setUri(uri);
 
 		cut = new SnykExtendedLanguageClient();
+		cut.setIssueCache(issueCache);
 		future = cut.publishDiagnostics316(param);
 		try {
 			future.get(5, TimeUnit.SECONDS);
@@ -230,10 +241,11 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		TreeNode codeSecurityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_SECURITY);
 		TreeNode codeQualityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_QUALITY);
 
-		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY)).thenReturn(codeSecurityProductNode);
+		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY))
+				.thenReturn(codeSecurityProductNode);
 		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY)).thenReturn(codeQualityProductNode);
 		var infoNodeCaptor = ArgumentCaptor.forClass(TreeNode.class);
-		var parentCaptor= ArgumentCaptor.forClass(TreeNode.class);
+		var parentCaptor = ArgumentCaptor.forClass(TreeNode.class);
 
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
@@ -254,7 +266,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFound() {
+	void testSnykScanSuccessAddsInfoNodes_IssuesFound_nothingFixable() {
 		var param = new SnykScanParam();
 		param.setStatus("success");
 		param.setProduct(ProductConstants.SCAN_PARAMS_CODE);
@@ -262,25 +274,26 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		TreeNode codeSecurityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_SECURITY);
 		TreeNode codeQualityProductNode = new TreeNode(ProductConstants.DISPLAYED_CODE_QUALITY);
 
-		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY)).thenReturn(codeSecurityProductNode);
+		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY))
+				.thenReturn(codeSecurityProductNode);
 		when(toolWindowMock.getProductNode(ProductConstants.DISPLAYED_CODE_QUALITY)).thenReturn(codeQualityProductNode);
 		var infoNodeCaptor = ArgumentCaptor.forClass(TreeNode.class);
-		var parentCaptor= ArgumentCaptor.forClass(TreeNode.class);
+		var parentCaptor = ArgumentCaptor.forClass(TreeNode.class);
 
 		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
 		var additionalData = Instancio.of(AdditionalData.class)
 				.set(Select.field(AdditionalData::isSecurityType), true)
-				.set(Select.field(AdditionalData::hasAIFix), true).create();
+				.set(Select.field(AdditionalData::isUpgradable), false)
+				.set(Select.field(AdditionalData::hasAIFix), false).create();
 
-		Set<Issue> issues = Instancio.of(Issue.class)
-		        .set(Select.field(Issue::additionalData), additionalData)
-		        .stream()
-		        .limit(3)
-		        .collect(Collectors.toSet());
-		SnykIssueCache.getInstance().addCodeIssues(dummyFilePath, issues);
-
+		var cache = new SnykIssueCache();		
+		Set<Issue> issues = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), additionalData).stream()
+				.limit(3).collect(Collectors.toSet());
+		cache.addCodeIssues(dummyFilePath, issues);
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
+		cut.setIssueCache(cache);
+		
 		cut.snykScan(param);
 
 		// expect "scanning..."
@@ -290,12 +303,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		// if no issues found, we don't need to display the "no fixable issues" node
 		verify(toolWindowMock, times(3)).addInfoNode(parentCaptor.capture(), infoNodeCaptor.capture());
 
-		assertEquals(codeSecurityProductNode.getValue(), parentCaptor.getAllValues().get(0).getValue());
-		assertEquals(codeQualityProductNode.getValue(), parentCaptor.getAllValues().get(1).getValue());
+		assertTrue(parentCaptor.getAllValues().contains(codeQualityProductNode), "Quality Node was not updated");
+		assertTrue(parentCaptor.getAllValues().contains(codeSecurityProductNode), "Security Node was not updated");
 
 		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(0).getValue());
-		assertEquals("a", infoNodeCaptor.getAllValues().get(1).getValue());
-		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(1).getValue());
+		assertEquals(ISnykToolView.NO_FIXABLE_ISSUES, infoNodeCaptor.getAllValues().get(1).getValue());
+		assertEquals(ISnykToolView.CONGRATS_NO_ISSUES_FOUND, infoNodeCaptor.getAllValues().get(2).getValue());
 	}
 
 	@Test
@@ -320,6 +333,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setFolderPath("a/b/c");
 
 		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
 		cut.snykScan(param);
 
 		expectedKey = new ScanInProgressKey("a/b/c", ProductConstants.SCAN_PARAMS_CODE);
