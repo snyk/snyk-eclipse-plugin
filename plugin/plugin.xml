@@ -65,90 +65,90 @@
             name="%scanWorkspace.name">
         </command>
          <command
-               defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.StopScanHandler"
-               id="io.snyk.eclipse.plugin.commands.snykStopScan"
-               name="Stop Scan">
-        </command>
-        <command
-              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.ClearCacheHandler"
-              id="io.snyk.eclipse.plugin.commands.snykEmptyScanResults"
-              name="Clear Cache">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.properties.preferencespage"
-            name="Open Snyk Preferences"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.OpenSnykPreferencesHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.snykFilterCritical"
-            name="Critical Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterCriticalHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.snykFilterHigh"
-            name="High Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHighHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.snykFilterMedium"
-            name="Medium Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterMediumHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.snykFilterLow"
-            name="Low Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterLowHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.enableOSS"
-            name="Open Source"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableOssProductHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.enableCodeSecurity"
-            name="Code Security"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableCodeSecurityProductHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.enableCodeQuality"
-            name="Code Quality"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableCodeQualityProductHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.enableIAC"
-            name="Infrastructure as Code"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableIacProductHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.TreeCollapse"
-            name="Collapse Tree"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.CollapseTreeHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.TreeExpand"
-            name="Collapse Tree"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.CollapseTreeHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.snykFilterAllIssues"
-            name="All Issues"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaAllIssuesHandler">
-        </command>
-        <command
-            id="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
-            name="Net New Issues"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresOpenIssuesHandler">
-        </command>
-        <command
-              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaOpenIssuesHandler"
-              id="io.snyk.eclipse.plugin.commands.snykHideIgnored"
-              name="Open Issues">
-        </command>
-        <command
-              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresIgnoredIssuesHandler"
-              id="io.snyk.eclipse.plugin.commands.snykShowIgnored"
-              name="Ignored Issues">
-        </command>
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.StopScanHandler"
+		    id="io.snyk.eclipse.plugin.commands.snykStopScan"
+		    name="%command.stopScan">
+		</command>
+		<command
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.ClearCacheHandler"
+		    id="io.snyk.eclipse.plugin.commands.snykEmptyScanResults"
+		    name="%command.clearCache">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.properties.preferencespage"
+		    name="%command.openSnykPreferences"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.OpenSnykPreferencesHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.snykFilterCritical"
+		    name="%command.criticalSeverity"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterCriticalHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.snykFilterHigh"
+		    name="%command.highSeverity"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHighHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.snykFilterMedium"
+		    name="%command.mediumSeverity"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterMediumHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.snykFilterLow"
+		    name="%command.lowSeverity"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterLowHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.enableOSS"
+		    name="%command.openSource"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableOssProductHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.enableCodeSecurity"
+		    name="%command.codeSecurity"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableCodeSecurityProductHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.enableCodeQuality"
+		    name="%command.codeQuality"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableCodeQualityProductHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.enableIAC"
+		    name="%command.infrastructureAsCode"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableIacProductHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.TreeCollapse"
+		    name="%command.collapseTree"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.CollapseTreeHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.TreeExpand"
+		    name="%command.expandTree"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.CollapseTreeHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.snykFilterAllIssues"
+		    name="%command.allIssues"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaAllIssuesHandler">
+		</command>
+		<command
+		    id="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
+		    name="%command.netNewIssues"
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresOpenIssuesHandler">
+		</command>
+		<command
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaOpenIssuesHandler"
+		    id="io.snyk.eclipse.plugin.commands.snykHideIgnored"
+		    name="%command.openIssues">
+		</command>
+		<command
+		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresIgnoredIssuesHandler"
+		    id="io.snyk.eclipse.plugin.commands.snykShowIgnored"
+		    name="%command.ignoredIssues">
+		</command>
     </extension>
     <extension point="org.eclipse.ui.menus">
        <menuContribution
@@ -202,136 +202,139 @@
             </command>
         </menuContribution>
         <menuContribution
-            locationURI="toolbar:io.snyk.eclipse.plugin.views.snyktoolview">
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
-                icon="platform:/plugin/org.eclipse.ui.browser/icons/clcl16/nav_go.png"
-                style="push"
-                tooltip="Scan">
-            </command>
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.snykStopScan"
-                icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/progress_stop.png"
-                style="push"
-                tooltip="Stop Scan">
-            </command>
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.TreeCollapse"
-                icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/collapseall.png"
-                style="push"
-                tooltip="Collapse all tree nodes">
-            </command>
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.TreeExpand"
-                icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/expandall.png"
-                style="push"
-                tooltip="Expand all tree nodes">
-            </command>
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.snykEmptyScanResults"
-                icon="platform:/plugin/org.eclipse.ui.console/icons/full/clcl16/clear_co.png"
-                style="push"
-                tooltip="Empty Scan Results Cache">
-            </command>
-            <!-- Add a separator -->
-            <separator
-                name="RunScanSeparator"
-                visible="true">
-            </separator>
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.snykFilterCritical"
-                icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-critical.png"
-                style="push"
-                tooltip="Critical Severity">
-            </command>
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.snykFilterHigh"
-                icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-high.png"
-                style="push"
-                tooltip="High Severity">
-            </command>
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.snykFilterMedium"
-                icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-medium.png"
-                style="push"
-                tooltip="Medium Severity">
-            </command>
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.snykFilterLow"
-                icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-low.png"
-                style="push"
-                tooltip="Low Severity">
-            </command>
-            <separator
-                name="io.snyk.eclipse.plugin.filter"
-                visible="true">
-            </separator>
-            <command
-                commandId="io.snyk.eclipse.plugin.properties.preferencespage"
-                icon="platform:/plugin/org.eclipse.jdt.debug.ui/icons/full/elcl16/thread_view.gif"
-                style="push"
-                tooltip="Open Snyk Preferences">
-            </command>
-        </menuContribution>
-        <menuContribution
-            allPopups="false"
-            locationURI="menu:io.snyk.eclipse.plugin.views.snyktoolview">
-            <menu id="io.snyk.eclipse.plugin.views.snyktoolview.filterProductTypeMenu"
-                label="Filter Product Type">
-               <command
-                  commandId="io.snyk.eclipse.plugin.commands.enableOSS"
-                  icon="platform:/plugin/io.snyk.eclipse.plugin/icons/oss.png"
-                  style="push"
-                  tooltip="Enable/disable OSS scans">
-            </command>
-            <command
-                  commandId="io.snyk.eclipse.plugin.commands.enableCodeSecurity"
-                  icon="icons/code.png"
-                  style="push"
-                  tooltip="Enable/disable Code scans">
-            </command>
-             <command
-                  commandId="io.snyk.eclipse.plugin.commands.enableCodeQuality"
-                  icon="icons/code.png"
-                  style="push"
-                  tooltip="Enable/disable Code scans">
-            </command>
-            <command
-                  commandId="io.snyk.eclipse.plugin.commands.enableIAC"
-                  icon="platform:/plugin/io.snyk.eclipse.plugin/icons/iac.png"
-                  style="push"
-                  tooltip="Enable/disable IAC scans">
-            </command>
-            </menu>
-            <menu id="io.snyk.eclipse.plugin.views.snyktoolview.filterIgnoreMenu"
-                label="Filter Ignores">
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.snykHideIgnored"
-                icon="platform:/plugin/org.eclipse.jdt.ui/icons/full/elcl16/hide_ignored.png"
-                style="push"
-                tooltip="Hide Ignored">
-            </command>
-            <command
-                commandId="io.snyk.eclipse.plugin.commands.snykShowIgnored"
-                icon="platform:/plugin/org.eclipse.jdt.ui/icons/full/obj16/ignore.png"
-                style="push"
-                tooltip="Show Ignored">
-            </command>
-            </menu>
-             <menu id="io.snyk.eclipse.plugin.views.snyktoolview.filterDeltaMenu"
-                label="Filter Net New Issues">
-                <command
-                      commandId="io.snyk.eclipse.plugin.commands.snykFilterAllIssues"
-                      style="push"
-                      tooltip="Show All Issues">
-                </command>
-                <command
-                      commandId="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
-                      style="push"
-                      tooltip="Show Only Net New Issues">
-                </command>
-            </menu>
-        </menuContribution>
+		    locationURI="toolbar:io.snyk.eclipse.plugin.views.snyktoolview">
+		    <command
+		        commandId="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
+		        icon="platform:/plugin/org.eclipse.ui.browser/icons/clcl16/nav_go.png"
+		        style="push"
+		        tooltip="%tooltip.scan">
+		    </command>
+		    <command
+		        commandId="io.snyk.eclipse.plugin.commands.snykStopScan"
+		        icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/progress_stop.png"
+		        style="push"
+		        tooltip="%tooltip.stopScan">
+		    </command>
+		    <command
+		        commandId="io.snyk.eclipse.plugin.commands.TreeCollapse"
+		        icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/collapseall.png"
+		        style="push"
+		        tooltip="%tooltip.collapseAll">
+		    </command>
+		    <command
+		        commandId="io.snyk.eclipse.plugin.commands.TreeExpand"
+		        icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/expandall.png"
+		        style="push"
+		        tooltip="%tooltip.expandAll">
+		    </command>
+		    <command
+		        commandId="io.snyk.eclipse.plugin.commands.snykEmptyScanResults"
+		        icon="platform:/plugin/org.eclipse.ui.console/icons/full/clcl16/clear_co.png"
+		        style="push"
+		        tooltip="%tooltip.emptyScanResults">
+		    </command>
+		    <!-- Add a separator -->
+		    <separator
+		        name="RunScanSeparator"
+		        visible="true">
+		    </separator>
+		    <command
+		        commandId="io.snyk.eclipse.plugin.commands.snykFilterCritical"
+		        icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-critical.png"
+		        style="push"
+		        tooltip="%tooltip.criticalSeverity">
+		    </command>
+		    <command
+		        commandId="io.snyk.eclipse.plugin.commands.snykFilterHigh"
+		        icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-high.png"
+		        style="push"
+		        tooltip="%tooltip.highSeverity">
+		    </command>
+		    <command
+		        commandId="io.snyk.eclipse.plugin.commands.snykFilterMedium"
+		        icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-medium.png"
+		        style="push"
+		        tooltip="%tooltip.mediumSeverity">
+		    </command>
+		    <command
+		        commandId="io.snyk.eclipse.plugin.commands.snykFilterLow"
+		        icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-low.png"
+		        style="push"
+		        tooltip="%tooltip.lowSeverity">
+		    </command>
+		    <separator
+		        name="io.snyk.eclipse.plugin.filter"
+		        visible="true">
+		    </separator>
+		    <command
+		        commandId="io.snyk.eclipse.plugin.properties.preferencespage"
+		        icon="platform:/plugin/org.eclipse.jdt.debug.ui/icons/full/elcl16/thread_view.gif"
+		        style="push"
+		        tooltip="%tooltip.openPreferences">
+		    </command>
+		</menuContribution>
+		<menuContribution
+		    allPopups="false"
+		    locationURI="menu:io.snyk.eclipse.plugin.views.snyktoolview">
+		    <menu
+		        id="io.snyk.eclipse.plugin.views.snyktoolview.filterProductTypeMenu"
+		        label="Filter Product Type">
+		        <command
+		            commandId="io.snyk.eclipse.plugin.commands.enableOSS"
+		            icon="platform:/plugin/io.snyk.eclipse.plugin/icons/oss.png"
+		            style="push"
+		            tooltip="%tooltip.enableOSS">
+		        </command>
+		        <command
+		            commandId="io.snyk.eclipse.plugin.commands.enableCodeSecurity"
+		            icon="icons/code.png"
+		            style="push"
+		            tooltip="%tooltip.enableCodeSecurity">
+		        </command>
+		        <command
+		            commandId="io.snyk.eclipse.plugin.commands.enableCodeQuality"
+		            icon="icons/code.png"
+		            style="push"
+		            tooltip="%tooltip.enableCodeQuality">
+		        </command>
+		        <command
+		            commandId="io.snyk.eclipse.plugin.commands.enableIAC"
+		            icon="platform:/plugin/io.snyk.eclipse.plugin/icons/iac.png"
+		            style="push"
+		            tooltip="%tooltip.enableIAC">
+		        </command>
+		    </menu>
+		    <menu
+		        id="io.snyk.eclipse.plugin.views.snyktoolview.filterIgnoreMenu"
+		        label="Filter Ignores">
+		        <command
+		            commandId="io.snyk.eclipse.plugin.commands.snykHideIgnored"
+		            icon="platform:/plugin/org.eclipse.jdt.ui/icons/full/elcl16/hide_ignored.png"
+		            style="push"
+		            tooltip="%tooltip.hideIgnored">
+		        </command>
+		        <command
+		            commandId="io.snyk.eclipse.plugin.commands.snykShowIgnored"
+		            icon="platform:/plugin/org.eclipse.jdt.ui/icons/full/obj16/ignore.png"
+		            style="push"
+		            tooltip="%tooltip.showIgnored">
+		        </command>
+		    </menu>
+		    <menu
+		        id="io.snyk.eclipse.plugin.views.snyktoolview.filterDeltaMenu"
+		        label="Filter Net New Issues">
+		        <command
+		            commandId="io.snyk.eclipse.plugin.commands.snykFilterAllIssues"
+		            style="push"
+		            tooltip="%tooltip.showAllIssues">
+		        </command>
+		        <command
+		            commandId="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
+		            style="push"
+		            tooltip="%tooltip.showNetNewIssues">
+		        </command>
+		    </menu>
+		</menuContribution>
     </extension>
     <extension point="org.eclipse.ui.startup">
         <startup class="io.snyk.eclipse.plugin.SnykStartup" />
