@@ -50,7 +50,10 @@ public class Preferences {
 	public static final String FILTER_HIGH = "FILTER_SNYK_HIGH";
 	public static final String FILTER_MEDIUM = "FILTER_SNYK_MEDIUM";
 	public static final String FILTER_LOW = "FILTER_SNYK_LOW";
-	public static final String FILTER_DELTA = "FILTER_SNYK_DELTA";
+	public static final String FILTER_DELTA_OPEN_ISSUES = "FILTER_SNYK_OPEN_ISSUES";
+	public static final String FILTER_DELTA_ALL_ISSUES = "FILTER_SNYK_ALL_ISSUES";
+	public static final String FILTER_IGNORES_OPEN_ISSUES = "FILTER_IGNORES_OPEN_ISSUES";
+	public static final String FILTER_IGNORES_IGNORED_ISSUES = "FILTER_IGNORES_IGNORED_ISSUES";
 
 	// This is a bit confusing - CLI takes DISABLE as env variable, but we ask for
 	// ENABLE, so we need to revert it

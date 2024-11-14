@@ -11,12 +11,11 @@ import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 
-import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 public class BaseHandler extends AbstractHandler implements IElementUpdater {
 
-	//TODO should we replace the filter button with a filter applied button icon?
+	// TODO should we replace the filter button with a filter applied button icon?
 	protected ImageDescriptor iconEnabled = null;
 	protected ImageDescriptor iconDisabled = null;
 	protected String preferenceKey = null;
@@ -37,14 +36,14 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater {
 	public void updateElement(UIElement element, @SuppressWarnings("rawtypes") Map map) {
 
 		String preference = Preferences.getInstance().getPref(preferenceKey);
+		boolean bool = Boolean.parseBoolean(preference);
 
 		// Toggle the value, if it was true, it should be set to false
-		if (Boolean.parseBoolean(preference)) {
+		if (bool) {
 			element.setIcon(iconDisabled);
 			Preferences.getInstance().store(preferenceKey, "false");
 
 		} else {
-
 			element.setIcon(iconEnabled);
 			Preferences.getInstance().store(preferenceKey, "true");
 

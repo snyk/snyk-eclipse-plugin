@@ -6,7 +6,7 @@ import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 public class FilterCriticalHandler extends BaseHandler implements IElementUpdater {
-	
+
 	public FilterCriticalHandler() {
 		super();
 		// TODO should we replace the filter button with a filter applied button icon?
