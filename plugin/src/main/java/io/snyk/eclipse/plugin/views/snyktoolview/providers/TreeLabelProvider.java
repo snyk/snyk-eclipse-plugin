@@ -1,41 +1,47 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.providers;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
-import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.swt.graphics.Image;
 
-import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.views.snyktoolview.BaseTreeNode;
 
 public class TreeLabelProvider implements ILabelProvider {
-
-	public static final ImageDescriptor OSS = Activator.getImageDescriptor("/icons/oss.png");
-	public static final ImageDescriptor Code = Activator.getImageDescriptor("/icons/code.png");
-	public static final ImageDescriptor IAC = Activator.getImageDescriptor("/icons/iac.png");
-
-	private Image ossImage;
+	private static Map<ImageDescriptor, Image> images = new ConcurrentHashMap<ImageDescriptor, Image>();
 
 	public TreeLabelProvider() {
-		ossImage = OSS.createImage();
 	}
 
 	@Override
 	public String getText(Object element) {
 		// Return the text to display for each tree item
-		if (element instanceof TreeNode) {
-			return ((TreeNode) element).getValue().toString();
+		if (element instanceof BaseTreeNode) {
+			return ((BaseTreeNode) element).getText();
 		}
 		return element.toString();
 	}
 
 	@Override
 	public Image getImage(Object element) {
-		// Return an image for each tree item (optional)
-		// You can return null if you don't want to display images
-		// TODO return the right image for the type of object we represent.
+		if (!(element instanceof BaseTreeNode)) {
+			return null;
+		}
 
-		return ossImage;
+		var node = (BaseTreeNode) element;
+		ImageDescriptor imageDescriptor = node.getImageDescriptor();
+
+		if (imageDescriptor == null) {
+			return null;
+		}
+
+		if (images.get(imageDescriptor) == null) {
+			images.put(imageDescriptor, imageDescriptor.createImage());
+		}
+		return images.get(imageDescriptor);
 	}
 
 	@Override
@@ -45,10 +51,11 @@ public class TreeLabelProvider implements ILabelProvider {
 
 	@Override
 	public void dispose() {
-		if (ossImage != null && !ossImage.isDisposed()) {
-			ossImage.dispose();
-			ossImage = null;
+		for (ImageDescriptor descriptor : images.keySet()) {
+			var image = images.get(descriptor);
+			image.dispose();
 		}
+		images.clear();
 	}
 
 	@Override

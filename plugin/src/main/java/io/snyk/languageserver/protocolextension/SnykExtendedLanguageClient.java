@@ -1,5 +1,22 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_QUALITY;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_IAC;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_OSS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_TO_DISPLAYED;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_ERROR;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
+import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_IGNORED_ISSUES;
+import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_OPEN_ISSUES;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NODE_TEXT_SCANNING;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_FIXABLE_ISSUES;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
+
 import java.io.File;
 import java.net.URI;
 import java.nio.file.InvalidPathException;
@@ -19,7 +36,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
@@ -31,7 +47,9 @@ import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -47,6 +65,7 @@ import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
+import io.snyk.eclipse.plugin.views.snyktoolview.BaseTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
@@ -61,7 +80,6 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCl
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
-import io.snyk.eclipse.plugin.domain.ProductConstants;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -69,7 +87,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
 	private ISnykToolView toolView;
-	
+	private SnykIssueCache issueCache = SnykIssueCache.getInstance();
+
 	private static SnykExtendedLanguageClient instance = null;
 
 	public SnykExtendedLanguageClient() {
@@ -128,7 +147,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 					if (project != null) {
 						runForProject(project.getName());
-						executeCommand(LsCommandID.SNYK_WORKSPACE_FOLDER_SCAN, List.of(project.getLocation().toOSString()));
+						executeCommand(LsCommandID.SNYK_WORKSPACE_FOLDER_SCAN,
+								List.of(project.getLocation().toOSString()));
 					}
 				} catch (Exception e) {
 					SnykLogger.logError(e);
@@ -184,18 +204,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public String getIssueDescription(String issueId) {
-		if(StringUtils.isEmpty(issueId)) {
+		if (StringUtils.isEmpty(issueId)) {
 			SnykLogger.logInfo("issueId is empty");
 			return "";
 		}
-		CompletableFuture<Object> issueDescription = executeCommand(LsCommandID.SNYK_GENERATE_ISSUE_DESCRIPTION, List.of(issueId));
+		CompletableFuture<Object> issueDescription = executeCommand(LsCommandID.SNYK_GENERATE_ISSUE_DESCRIPTION,
+				List.of(issueId));
 		Object result;
 		try {
 			result = issueDescription.get(5, TimeUnit.SECONDS);
-		}
-		catch(Exception ex) {
-			SnykLogger.logInfo("did not get issue description for issue "+ issueId + "\n"
-								+ ExceptionUtils.getStackTrace(ex));
+		} catch (Exception ex) {
+			SnykLogger.logInfo(
+					"did not get issue description for issue " + issueId + "\n" + ExceptionUtils.getStackTrace(ex));
 			return "";
 		}
 
@@ -250,97 +270,151 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void snykScan(SnykScanParam param) {
 		var inProgressKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
 		var scanState = ScanState.getInstance();
-		switch(param.getStatus()) {
-		case "inProgress":
-			scanState.setScanInProgress(inProgressKey, true);
+
+		Display.getDefault().syncExec(() -> {
 			if (toolView == null && !Preferences.getInstance().isTest()) {
+				IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				try {
-					toolView = (ISnykToolView) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(SnykToolView.ID);
+					toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
 				} catch (PartInitException e) {
 					SnykLogger.logError(e);
 					return;
 				}
 			}
-			TreeNode productNode = toolView.getProductNode(param.getProduct());
-			toolView.setNodeText(productNode, "Scanning...");
+		});
+		switch (param.getStatus()) {
+		case SCAN_STATE_IN_PROGRESS:
+			scanState.setScanInProgress(inProgressKey, true);
+			setScanningState(param);
 			break;
-		case "success":
+		case SCAN_STATE_SUCCESS:
 			scanState.setScanInProgress(inProgressKey, false);
+			var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+			if (displayProduct != null) {
+				addInfoNodes(displayProduct);
+			} else {
+				// if we don't have a direct mapping, it can only be code, as the code scan
+				// bundles
+				// quality issues and security issues. We then have to update both root nodes.
+				addInfoNodes(DISPLAYED_CODE_SECURITY);
+				addInfoNodes(DISPLAYED_CODE_QUALITY);
+			}
 			// Show scanning finished state
 			break;
-		case "error":
+		case SCAN_STATE_ERROR:
 			scanState.setScanInProgress(inProgressKey, false);
 			// Show error state
 			break;
 		}
 	}
 
+	private void setScanningState(SnykScanParam param) {
+		String displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+		var productNode = toolView.getProductNode(displayProduct);
+		if (displayProduct != null) {
+			toolView.resetNode(productNode);
+			toolView.setNodeText(productNode, NODE_TEXT_SCANNING);
+		} else {
+			toolView.resetNode(productNode);
+			var secNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY);
+			var qualNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY);
+			
+			toolView.resetNode(secNode);
+			toolView.resetNode(qualNode);
+			toolView.setNodeText(secNode, NODE_TEXT_SCANNING);
+			toolView.setNodeText(qualNode, NODE_TEXT_SCANNING);
+		}
+	}
+
+	private void addInfoNodes(String displayProduct) {
+		BaseTreeNode productNode = toolView.getProductNode(displayProduct);
+		toolView.resetNode(productNode);
+
+		long totalCount = issueCache.getTotalCount(displayProduct);
+		long fixableCount = issueCache.getFixableCount(displayProduct);
+		long ignoredCount = issueCache.getIgnoredCount(displayProduct);
+		if (totalCount == 0) {
+			toolView.addInfoNode(productNode, new BaseTreeNode(CONGRATS_NO_ISSUES_FOUND));
+		} else {
+			String text = "✋ " + totalCount + " issue" + getPlural(totalCount) + " found by Snyk";
+			if (ignoredCount > 0) {
+				text += ", " + ignoredCount + " ignored";
+			}
+			toolView.addInfoNode(productNode, new BaseTreeNode(text));
+		}
+		if (totalCount > 0 && fixableCount == 0) {
+			toolView.addInfoNode(productNode, new BaseTreeNode(NO_FIXABLE_ISSUES));
+		}
+
+		if (totalCount > 0 && fixableCount > 0) {
+			toolView.addInfoNode(productNode, new BaseTreeNode(
+					"⚡️ " + fixableCount + " issue" + getPlural(fixableCount) + " can be fixed automatically"));
+		}
+
+		if (totalCount > 0 && ignoredCount == totalCount
+				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_OPEN_ISSUES)) {
+			toolView.addInfoNode(productNode,
+					new BaseTreeNode("Adjust your Issue View Options to see ignored issues."));
+		}
+
+		if (totalCount > 0 && ignoredCount == 0
+				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_IGNORED_ISSUES)) {
+			toolView.addInfoNode(productNode, new BaseTreeNode("Adjust your Issue View Options to see open issues."));
+		}
+	}
+
 	@JsonNotification(value = LsNotificationID.SNYK_PUBLISH_DIAGNOSTICS_316)
 	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnosticsParams param) {
 		return CompletableFuture.runAsync(() -> {
-			var snykIssueCache = SnykIssueCache.getInstance();
 			var uri = param.getUri();
-			if(StringUtils.isEmpty(uri)) {
+			if (StringUtils.isEmpty(uri)) {
 				SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
 				return;
 			}
 			var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
 			if (filePath == null) {
-				SnykLogger.logError(new InvalidPathException(uri,"couldn't resolve uri "+uri+" to file"));
+				SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
 				return;
 			}
 			List<Diagnostic> diagnostics = param.getDiagnostics();
-			if(diagnostics.isEmpty()) {
-				snykIssueCache.removeAllIssuesForPath(filePath);
+			if (diagnostics.isEmpty()) {
+				issueCache.removeAllIssuesForPath(filePath);
 				return;
 			}
 			var source = diagnostics.get(0).getSource();
-			if(StringUtils.isEmpty(source)) {
+			if (StringUtils.isEmpty(source)) {
 				return;
 			}
-			var snykProduct = lspSourceToProduct(source);
-	        List<Issue> issueList = new ArrayList<>();
+			var snykProduct = LSP_SOURCE_TO_SCAN_PARAMS.get(source);
+			List<Issue> issueList = new ArrayList<>();
 
 			for (var diagnostic : diagnostics) {
 				Issue issue;
-				if(diagnostic.getData() == null) {
+				if (diagnostic.getData() == null) {
 					continue;
 				}
 				try {
 					issue = om.readValue(diagnostic.getData().toString(), Issue.class);
 					issueList.add(issue);
-                } catch (JsonProcessingException e) {
-                    SnykLogger.logError(e);
-                    continue;
-                }
+				} catch (JsonProcessingException e) {
+					SnykLogger.logError(e);
+					continue;
+				}
 			}
-			
-			switch(snykProduct) {
-            case ProductConstants.CODE:
-            	snykIssueCache.addCodeIssues(filePath, issueList);
-                break;
-            case ProductConstants.OSS:
-            	snykIssueCache.addOssIssues(filePath, issueList);
-                break;
-            case ProductConstants.IAC:
-            	snykIssueCache.addIacIssues(filePath, issueList);
-                break;
+
+			switch (snykProduct) {
+			case SCAN_PARAMS_CODE:
+				issueCache.addCodeIssues(filePath, issueList);
+				break;
+			case SCAN_PARAMS_OSS:
+				issueCache.addOssIssues(filePath, issueList);
+				break;
+			case SCAN_PARAMS_IAC:
+				issueCache.addIacIssues(filePath, issueList);
+				break;
 			}
 		});
 	}
-
-    private String lspSourceToProduct(String source) {
-        switch(source) {
-        case "Snyk Code":
-        	return ProductConstants.CODE;
-        case "Snyk Open Source":
-        	return ProductConstants.OSS;
-        case "Snyk IaC":
-        	return ProductConstants.IAC;
-        default:
-        	return "";
-        }
-    }
 
 	public void reportAnalytics(AbstractAnalyticsEvent event) {
 		try {
@@ -464,5 +538,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public void setToolWindow(ISnykToolView toolView) {
 		this.toolView = toolView;
+	}
+
+	public void setIssueCache(SnykIssueCache cache) {
+		this.issueCache = cache;
 	}
 }

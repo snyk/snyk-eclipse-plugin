@@ -1,20 +1,89 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.TreeNode;
 
+/**
+ * This interface captures the externally used methods with the tool window.
+ * Having it, should allow for easier testing of the business logic apart from
+ * UI.
+ */
 public interface ISnykToolView {
-	abstract void setNodeText(TreeNode node, String text);
+	String CONGRATS_NO_ISSUES_FOUND = "✅ Congrats! No issues found!";
+	String NO_FIXABLE_ISSUES = "There are no issues automatically fixable.";
+	String IGNORED_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to see ignored issues.";
+	String OPEN_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to open issues.";
+	
+	String NODE_TEXT_SCANNING = "Scanning...";
+	String NODE_TEXT_NO_ISSUES_FOUND = "No issues found";
+	String NODE_TEXT_EROR = "An error occurred";
 
+	/**
+	 * Updates the text of the given node
+	 * 
+	 * @param node
+	 * @param text
+	 */
+	abstract void setNodeText(BaseTreeNode node, String text);
+
+	/**
+	 * Sets the icon of the given node
+	 * 
+	 * @param icon
+	 */
 	abstract void setNodeIcon(ImageDescriptor icon);
 
-	abstract void addIssueNode(TreeNode parent, TreeNode toBeAdded);
+	/**
+	 * Adds an issue node to the parent (usually a file node)
+	 * 
+	 * @param parent
+	 * @param toBeAdded
+	 */
+	abstract void addIssueNode(BaseTreeNode parent, BaseTreeNode toBeAdded);
 
-	abstract void addFileNode(TreeNode parent, TreeNode toBeAdded);
+	/**
+	 * Adds a file node (usually below the product node)
+	 * 
+	 * @param parent
+	 * @param toBeAdded
+	 */
+	abstract void addFileNode(BaseTreeNode parent, BaseTreeNode toBeAdded);
 
-	abstract void addInfoNode(TreeNode parent, TreeNode toBeAdded);
+	/**
+	 * Adds an info node (usually below the product node)
+	 * 
+	 * @param parent
+	 * @param toBeAdded
+	 */
+	abstract void addInfoNode(BaseTreeNode parent, BaseTreeNode toBeAdded);
 
-	abstract TreeNode getProductNode(String product);
+	/**
+	 * Returns the product node
+	 * 
+	 * @param product the product. ProductConstants#DISPLAY_*
+	 * @return
+	 */
+	abstract BaseTreeNode getProductNode(String product);
+	
+	/**
+	 * Resets a product node
+	 */
+	abstract void resetNode(BaseTreeNode node);
 
-	abstract TreeNode getRoot();
+
+	/**
+	 * Refreshes the tree display
+	 */
+	abstract void refreshTree();
+	
+	/**
+	 * Returns the tree root
+	 * 
+	 * @return
+	 */
+	abstract BaseTreeNode getRoot();
+
+	static String getPlural(long count) {
+		return count > 1 ? "s" : "";
+	}
+	
 }

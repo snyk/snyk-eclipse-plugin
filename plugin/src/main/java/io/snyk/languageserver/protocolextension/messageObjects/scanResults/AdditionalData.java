@@ -10,7 +10,7 @@ public record AdditionalData(
     String text,
     boolean isSecurityType,
     boolean hasAIFix,
-    // OSS + Code    
+    // OSS + Code
     String ruleId,
     String license,
     String description,
@@ -22,7 +22,8 @@ public record AdditionalData(
     String exploit,
     String projectName,
     String displayTargetFile,
-    // IaC    
+    boolean isUpgradable,
+    // IaC
     String publicId
 ) {
 	public String customUIContent() {
