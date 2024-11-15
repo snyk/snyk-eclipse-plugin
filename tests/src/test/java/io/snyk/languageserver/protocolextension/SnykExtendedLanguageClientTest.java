@@ -45,13 +45,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
 import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.views.snyktoolview.BaseTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
+import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
+import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsBaseTest;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
-import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
@@ -171,8 +171,10 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@Test
 	void testPublishDiagnosticsShouldChangeCache() {
 		// Test Add to cache
-		var issueCache = new SnykIssueCache();
-		var uri = "file:///a/b/c/";
+		String folderPath = "/a/b";
+		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(folderPath);
+
+		var uri = "file://" + folderPath + "/c/";
 		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
 
 		var param = new PublishDiagnosticsParams();
@@ -191,7 +193,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		diagnostic.setData(res);
 		param.setDiagnostics(List.of(diagnostic));
 		cut = new SnykExtendedLanguageClient();
-		cut.setIssueCache(issueCache);
 		var future = cut.publishDiagnostics316(param);
 		try {
 			future.get(5, TimeUnit.SECONDS);
@@ -213,7 +214,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setUri(uri);
 
 		cut = new SnykExtendedLanguageClient();
-		cut.setIssueCache(issueCache);
 		future = cut.publishDiagnostics316(param);
 		try {
 			future.get(5, TimeUnit.SECONDS);
@@ -363,22 +363,21 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		var productNodes = setupProductNodes(param);
 
-		var infoNodeCaptor = ArgumentCaptor.forClass(BaseTreeNode.class);
-		var parentCaptor = ArgumentCaptor.forClass(BaseTreeNode.class);
+		var infoNodeCaptor = ArgumentCaptor.forClass(InfoTreeNode.class);
+		var parentCaptor = ArgumentCaptor.forClass(ProductTreeNode.class);
 
 		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
 
 		Set<Issue> issues = getIssues(issueCount, fixableCount, ignoredCount);
 
-		var cache = new SnykIssueCache();
+		var cache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
 		cache.addCodeIssues(dummyFilePath, issues);
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
-		cut.setIssueCache(cache);
 		cut.snykScan(param);
 
 		for (ProductTreeNode node : productNodes) {
-			verify(toolWindowMock, times(2)).getProductNode(node.getProduct(), param.getFolderPath());
+			verify(toolWindowMock).getProductNode(node.getProduct(), param.getFolderPath());
 		}
 
 		verify(toolWindowMock, times(expectedInfoNodeUpdateCount)).addInfoNode(any(), any());
@@ -429,8 +428,10 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			ProductTreeNode codeQualityProductNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
 			productNodes.add(codeSecurityProductNode);
 			productNodes.add(codeQualityProductNode);
-			when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath())).thenReturn(codeSecurityProductNode);
-			when(toolWindowMock.getProductNode(DISPLAYED_CODE_QUALITY, param.getFolderPath())).thenReturn(codeQualityProductNode);
+			when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath()))
+					.thenReturn(codeSecurityProductNode);
+			when(toolWindowMock.getProductNode(DISPLAYED_CODE_QUALITY, param.getFolderPath()))
+					.thenReturn(codeQualityProductNode);
 		}
 		return productNodes;
 	}
@@ -442,15 +443,13 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setProduct(SCAN_PARAMS_IAC);
 		param.setFolderPath("a/b/c");
 		setupProductNodes(param);
-		var cache = new SnykIssueCache();
+		var cache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
 		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
 		int issueCount = 3;
 		cache.addIacIssues(dummyFilePath, getIssues(issueCount, 2, 1));
 
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
-		cut.setIssueCache(cache);
-
 		cut.snykScan(param);
 
 		verify(toolWindowMock).addFileNode(any(), any());

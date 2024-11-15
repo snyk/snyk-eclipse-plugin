@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -302,80 +303,79 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				}
 			}
 		});
+
+		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param);
+
 		switch (param.getStatus()) {
 		case SCAN_STATE_IN_PROGRESS:
 			scanState.setScanInProgress(inProgressKey, true);
-			var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
-			if (displayProduct != null) {
-				toolView.resetNode(toolView.getProductNode(displayProduct, param.getFolderPath()));
-			} else {
-				toolView.resetNode(toolView.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath()));
-				toolView.resetNode(toolView.getProductNode(DISPLAYED_CODE_QUALITY, param.getFolderPath()));
+			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+				toolView.resetNode(productTreeNode);
 			}
 			break;
 		case SCAN_STATE_SUCCESS:
 			scanState.setScanInProgress(inProgressKey, false);
-			displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
-			if (displayProduct != null) {
-				addInfoNodes(displayProduct, param.getFolderPath(), issueCache);
-			} else {
-				// if we don't have a direct mapping, it can only be code, as the code scan
-				// bundles
-				// quality issues and security issues. We then have to update both root nodes.
-				addInfoNodes(DISPLAYED_CODE_SECURITY, param.getFolderPath(), issueCache);
-				addInfoNodes(DISPLAYED_CODE_QUALITY, param.getFolderPath(), issueCache);
+			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+				addInfoNodes(productTreeNode, param.getFolderPath(), issueCache);
 			}
-			// Show scanning finished state
 			break;
 		case SCAN_STATE_ERROR:
 			scanState.setScanInProgress(inProgressKey, false);
 			// Show error state
 			break;
 		}
-		setNodeState(param, issueCache);
+		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
 	}
 
-	private void setNodeState(SnykScanParam param, SnykIssueCache cache) {
-		var nodeText = "";
-		String displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
-		String folderPath = param.getFolderPath();
+	private Set<ProductTreeNode> getAffectedProductNodes(SnykScanParam param) {
+		Set<ProductTreeNode> affectedProductTreeNodes = new HashSet<>();
+		var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+		if (displayProduct != null) {
+			ProductTreeNode productNode = toolView.getProductNode(displayProduct, param.getFolderPath());
+			if (productNode != null) {
+				affectedProductTreeNodes.add(productNode);				
+			}
+		} else {
+			ProductTreeNode productNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath());
+			if (productNode != null) {
+				affectedProductTreeNodes.add(productNode);				
+			}
+			productNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY, param.getFolderPath());
+			if (productNode != null) {
+				affectedProductTreeNodes.add(productNode);				
+			}
+		}
+		return affectedProductTreeNodes;
+	}
 
-		if (param.getStatus().equals(SCAN_STATE_IN_PROGRESS)) {
+	private void setNodeState(String status, Set<ProductTreeNode> affectedProductTreeNodes, SnykIssueCache cache) {
+		if (affectedProductTreeNodes.isEmpty()) {
+			return;
+		}
+		var nodeText = "";
+
+		if (status.equals(SCAN_STATE_IN_PROGRESS)) {
 			nodeText = NODE_TEXT_SCANNING;
-			setProductNodeText(displayProduct, folderPath, nodeText);
-		} else if (param.getStatus().equals(SCAN_STATE_ERROR)) {
+			setProductNodeText(affectedProductTreeNodes, nodeText);
+		} else if (status.equals(SCAN_STATE_ERROR)) {
 			nodeText = ISnykToolView.NODE_TEXT_ERROR;
-			setProductNodeText(displayProduct, folderPath, nodeText);
-		} else if (param.getStatus().equals(SCAN_STATE_SUCCESS)) {
-			Map<String, String> displayCounts = getCountsSuffix(param, cache);
-			for (String product : displayCounts.keySet()) {
-				setProductNodeText(product, folderPath, nodeText);
+			setProductNodeText(affectedProductTreeNodes, nodeText);
+		} else if (status.equals(SCAN_STATE_SUCCESS)) {
+			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+				var displayCounts = getCountsSuffix(productTreeNode, cache);
+				setProductNodeText(Set.of(productTreeNode), displayCounts);
 			}
 		}
 	}
 
-	private void setProductNodeText(String displayProduct, String folderPath, String nodeText) {
-		if (displayProduct != null) {
-			toolView.setNodeText(toolView.getProductNode(displayProduct, folderPath), nodeText);
-		} else {
-			var secNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY, folderPath);
-			var qualNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY, folderPath);
-
-			toolView.setNodeText(secNode, nodeText);
-			toolView.setNodeText(qualNode, nodeText);
+	private void setProductNodeText(Set<ProductTreeNode> nodes, String nodeText) {
+		for (ProductTreeNode productTreeNode : nodes) {
+			toolView.setNodeText(productTreeNode, nodeText);
 		}
 	}
 
-	public Map<String, String> getCountsSuffix(SnykScanParam param, SnykIssueCache issueCache) {
-		var productMap = new HashMap<String, String>();
-		String displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
-		if (displayProduct != null) {
-			productMap.put(displayProduct, String.valueOf(issueCache.getTotalCount(displayProduct)));
-		} else {
-			productMap.put(DISPLAYED_CODE_QUALITY, String.valueOf(issueCache.getTotalCount(DISPLAYED_CODE_QUALITY)));
-			productMap.put(DISPLAYED_CODE_SECURITY, String.valueOf(issueCache.getTotalCount(DISPLAYED_CODE_SECURITY)));
-		}
-		return productMap;
+	public String getCountsSuffix(ProductTreeNode productTreeNode, SnykIssueCache issueCache) {
+		return "Total: " + String.valueOf(issueCache.getTotalCount(productTreeNode.getProduct()));
 	}
 
 	private SnykIssueCache getIssueCache(String filePath) {
@@ -386,13 +386,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return issueCache;
 	}
 
-	private void addInfoNodes(String displayProduct, String folderPath, SnykIssueCache issueCache) {
-		ProductTreeNode productNode = toolView.getProductNode(displayProduct, folderPath);
+	private void addInfoNodes(ProductTreeNode productNode, String folderPath, SnykIssueCache issueCache) {
+		if (productNode == null) {
+			SnykLogger.logInfo("given product node is null, not adding info nodes. folderPath: "+folderPath);
+			return;
+		}
 		toolView.removeInfoNodes(productNode);
 
-		long totalCount = issueCache.getTotalCount(displayProduct);
-		long fixableCount = issueCache.getFixableCount(displayProduct);
-		long ignoredCount = issueCache.getIgnoredCount(displayProduct);
+		long totalCount = issueCache.getTotalCount(productNode.getProduct());
+		long fixableCount = issueCache.getFixableCount(productNode.getProduct());
+		long ignoredCount = issueCache.getIgnoredCount(productNode.getProduct());
 
 		if (totalCount == 0) {
 			toolView.addInfoNode(productNode, new InfoTreeNode(CONGRATS_NO_ISSUES_FOUND));

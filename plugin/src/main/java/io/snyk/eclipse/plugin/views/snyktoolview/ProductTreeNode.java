@@ -16,11 +16,11 @@ public class ProductTreeNode extends BaseTreeNode {
 	
 	private String product;
 
-	public ProductTreeNode(Object value) {
+	public ProductTreeNode(String value) {
 		super(value);
-		this.setProduct(value.toString());
+		this.setProduct(value);
 		
-		switch (value.toString()) {
+		switch (value) {
 		case ProductConstants.DISPLAYED_OSS:
 			setImageDescriptor(OSS);
 			break;
