@@ -20,6 +20,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
@@ -30,7 +31,6 @@ import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
-import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
 
@@ -170,7 +170,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public void setNodeText(BaseTreeNode node, String text) {
-		node.setValue(text);
+		node.setText(text);
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(node, true);	
+		});
 	}
 
 	@Override
@@ -195,19 +198,22 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void addInfoNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
 		toBeAdded.setParent(parent);
 		parent.addChild(toBeAdded);
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(parent, true);	
+		});
 	}
 
 	@Override
 	public BaseTreeNode getProductNode(String product) {
 		switch (product) {
 		case ProductConstants.DISPLAYED_OSS:
-			return (BaseTreeNode) this.rootObject.getChildren()[0];
+			return (ProductTreeNode) this.rootObject.getChildren()[0];
 		case ProductConstants.DISPLAYED_CODE_SECURITY:
-			return (BaseTreeNode) this.rootObject.getChildren()[1];
+			return (ProductTreeNode) this.rootObject.getChildren()[1];
 		case ProductConstants.DISPLAYED_CODE_QUALITY:
-			return (BaseTreeNode) this.rootObject.getChildren()[2];
+			return (ProductTreeNode) this.rootObject.getChildren()[2];
 		case ProductConstants.DISPLAYED_IAC:
-			return (BaseTreeNode) this.rootObject.getChildren()[3];
+			return (ProductTreeNode) this.rootObject.getChildren()[3];
 		}
 		return null;
 	}
@@ -215,5 +221,20 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public BaseTreeNode getRoot() {
 		return this.rootObject;
+	}
+
+	@Override
+	public void refreshTree() {
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(true);	
+		});
+	}
+
+	@Override
+	public void resetNode(BaseTreeNode node) {
+		node.reset();
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(node, true);	
+		});
 	}
 }

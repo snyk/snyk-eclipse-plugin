@@ -3,6 +3,10 @@ package io.snyk.eclipse.plugin.domain;
 import java.util.Map;
 
 public interface ProductConstants {
+	String SCAN_STATE_IN_PROGRESS="inProgress";
+	String SCAN_STATE_SUCCESS="success";
+	String SCAN_STATE_ERROR="error";
+		
 	String SCAN_PARAMS_OSS = "oss";
 	String SCAN_PARAMS_CODE = "code";
 	String SCAN_PARAMS_IAC = "iac";

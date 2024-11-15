@@ -1,5 +1,20 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_QUALITY;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_IAC;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_OSS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_TO_DISPLAYED;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_ERROR;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
+import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_IGNORED_ISSUES;
+import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_OPEN_ISSUES;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NODE_TEXT_SCANNING;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_FIXABLE_ISSUES;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 
 import java.io.File;
@@ -36,7 +51,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -47,7 +61,6 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractAnalyticsEvent;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
 import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
-import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
@@ -257,52 +270,65 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var inProgressKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
 		var scanState = ScanState.getInstance();
 
-		Display.getDefault().asyncExec(() -> {
+		Display.getDefault().syncExec(() -> {
 			if (toolView == null && !Preferences.getInstance().isTest()) {
 				IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				toolView = (ISnykToolView) activePage.findView(SnykToolView.ID);
 			}
-
-			switch (param.getStatus()) {
-			case "inProgress":
-				scanState.setScanInProgress(inProgressKey, true);
-				updateProductNode(param);
-				break;
-			case "success":
-				scanState.setScanInProgress(inProgressKey, false);
-				var displayProduct = ProductConstants.SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
-				if (displayProduct != null) {
-					addInfoNodes(displayProduct);
-				} else {
-					// if we don't have a direct mapping, it can only be code, as the code scan
-					// bundles
-					// quality issues and security issues. We then have to update both root nodes.
-					addInfoNodes(ProductConstants.DISPLAYED_CODE_SECURITY);
-					addInfoNodes(ProductConstants.DISPLAYED_CODE_QUALITY);
-				}
-				// Show scanning finished state
-				break;
-			case "error":
-				scanState.setScanInProgress(inProgressKey, false);
-				// Show error state
-				break;
-			}
 		});
+		switch (param.getStatus()) {
+		case SCAN_STATE_IN_PROGRESS:
+			scanState.setScanInProgress(inProgressKey, true);
+			setScanningState(param);
+			break;
+		case SCAN_STATE_SUCCESS:
+			scanState.setScanInProgress(inProgressKey, false);
+			var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+			if (displayProduct != null) {
+				addInfoNodes(displayProduct);
+			} else {
+				// if we don't have a direct mapping, it can only be code, as the code scan
+				// bundles
+				// quality issues and security issues. We then have to update both root nodes.
+				addInfoNodes(DISPLAYED_CODE_SECURITY);
+				addInfoNodes(DISPLAYED_CODE_QUALITY);
+			}
+			// Show scanning finished state
+			break;
+		case SCAN_STATE_ERROR:
+			scanState.setScanInProgress(inProgressKey, false);
+			// Show error state
+			break;
+		}
 	}
 
-	private void updateProductNode(SnykScanParam param) {
-		BaseTreeNode productNode = toolView.getProductNode(ProductConstants.SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct()));
-		toolView.setNodeText(productNode, "Scanning...");
+	private void setScanningState(SnykScanParam param) {
+		String displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+		var productNode = toolView.getProductNode(displayProduct);
+		if (displayProduct != null) {
+			toolView.resetNode(productNode);
+			toolView.setNodeText(productNode, NODE_TEXT_SCANNING);
+		} else {
+			toolView.resetNode(productNode);
+			var secNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY);
+			var qualNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY);
+			
+			toolView.resetNode(secNode);
+			toolView.resetNode(qualNode);
+			toolView.setNodeText(secNode, NODE_TEXT_SCANNING);
+			toolView.setNodeText(qualNode, NODE_TEXT_SCANNING);
+		}
 	}
 
 	private void addInfoNodes(String displayProduct) {
 		BaseTreeNode productNode = toolView.getProductNode(displayProduct);
+		toolView.resetNode(productNode);
 
 		long totalCount = issueCache.getTotalCount(displayProduct);
 		long fixableCount = issueCache.getFixableCount(displayProduct);
 		long ignoredCount = issueCache.getIgnoredCount(displayProduct);
 		if (totalCount == 0) {
-			toolView.addInfoNode(productNode, new BaseTreeNode(ISnykToolView.CONGRATS_NO_ISSUES_FOUND));
+			toolView.addInfoNode(productNode, new BaseTreeNode(CONGRATS_NO_ISSUES_FOUND));
 		} else {
 			String text = "✋ " + totalCount + " issue" + getPlural(totalCount) + " found by Snyk";
 			if (ignoredCount > 0) {
@@ -311,7 +337,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			toolView.addInfoNode(productNode, new BaseTreeNode(text));
 		}
 		if (totalCount > 0 && fixableCount == 0) {
-			toolView.addInfoNode(productNode, new BaseTreeNode(ISnykToolView.NO_FIXABLE_ISSUES));
+			toolView.addInfoNode(productNode, new BaseTreeNode(NO_FIXABLE_ISSUES));
 		}
 
 		if (totalCount > 0 && fixableCount > 0) {
@@ -320,13 +346,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		if (totalCount > 0 && ignoredCount == totalCount
-				&& Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_OPEN_ISSUES)) {
+				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_OPEN_ISSUES)) {
 			toolView.addInfoNode(productNode,
 					new BaseTreeNode("Adjust your Issue View Options to see ignored issues."));
 		}
 
 		if (totalCount > 0 && ignoredCount == 0
-				&& Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_IGNORED_ISSUES)) {
+				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_IGNORED_ISSUES)) {
 			toolView.addInfoNode(productNode, new BaseTreeNode("Adjust your Issue View Options to see open issues."));
 		}
 	}
@@ -353,7 +379,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (StringUtils.isEmpty(source)) {
 				return;
 			}
-			var snykProduct = ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS.get(source);
+			var snykProduct = LSP_SOURCE_TO_SCAN_PARAMS.get(source);
 			List<Issue> issueList = new ArrayList<>();
 
 			for (var diagnostic : diagnostics) {
@@ -371,13 +397,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 
 			switch (snykProduct) {
-			case ProductConstants.SCAN_PARAMS_CODE:
+			case SCAN_PARAMS_CODE:
 				issueCache.addCodeIssues(filePath, issueList);
 				break;
-			case ProductConstants.SCAN_PARAMS_OSS:
+			case SCAN_PARAMS_OSS:
 				issueCache.addOssIssues(filePath, issueList);
 				break;
-			case ProductConstants.SCAN_PARAMS_IAC:
+			case SCAN_PARAMS_IAC:
 				issueCache.addIacIssues(filePath, issueList);
 				break;
 			}

@@ -14,10 +14,10 @@ public class RootNode extends BaseTreeNode {
 	public RootNode() {
 		super("");
 
-		ossRootNode = new BaseTreeNode(DISPLAYED_OSS);
-		codeSecurityRootNode = new BaseTreeNode(DISPLAYED_CODE_SECURITY);
-		codeQualityRootNode = new BaseTreeNode(DISPLAYED_CODE_QUALITY);
-		iacRootNode = new BaseTreeNode(DISPLAYED_IAC);
+		ossRootNode = new ProductTreeNode(DISPLAYED_OSS);
+		codeSecurityRootNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
+		codeQualityRootNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
+		iacRootNode = new ProductTreeNode(DISPLAYED_IAC);
 
 		BaseTreeNode[] children = new BaseTreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode, iacRootNode, };
 		setChildren(children);

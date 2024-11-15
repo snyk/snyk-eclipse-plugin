@@ -12,6 +12,10 @@ public interface ISnykToolView {
 	String NO_FIXABLE_ISSUES = "There are no issues automatically fixable.";
 	String IGNORED_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to see ignored issues.";
 	String OPEN_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to open issues.";
+	
+	String NODE_TEXT_SCANNING = "Scanning...";
+	String NODE_TEXT_NO_ISSUES_FOUND = "No issues found";
+	String NODE_TEXT_EROR = "An error occurred";
 
 	/**
 	 * Updates the text of the given node
@@ -59,7 +63,18 @@ public interface ISnykToolView {
 	 * @return
 	 */
 	abstract BaseTreeNode getProductNode(String product);
+	
+	/**
+	 * Resets a product node
+	 */
+	abstract void resetNode(BaseTreeNode node);
 
+
+	/**
+	 * Refreshes the tree display
+	 */
+	abstract void refreshTree();
+	
 	/**
 	 * Returns the tree root
 	 * 
@@ -70,4 +85,5 @@ public interface ISnykToolView {
 	static String getPlural(long count) {
 		return count > 1 ? "s" : "";
 	}
+	
 }
