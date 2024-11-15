@@ -51,6 +51,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -273,7 +274,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		Display.getDefault().syncExec(() -> {
 			if (toolView == null && !Preferences.getInstance().isTest()) {
 				IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-				toolView = (ISnykToolView) activePage.findView(SnykToolView.ID);
+				try {
+					toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
+				} catch (PartInitException e) {
+					SnykLogger.logError(e);
+					return;
+				}
 			}
 		});
 		switch (param.getStatus()) {
