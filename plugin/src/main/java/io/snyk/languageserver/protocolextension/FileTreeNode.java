@@ -15,14 +15,16 @@ public class FileTreeNode extends BaseTreeNode {
 
 	public FileTreeNode(String value) {
 		super(value);
-		this.path = Paths.get(value);
+		this.setPath(Paths.get(value));
 	}
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
+		// TODO: this does not display the file icon. Why?
 		WorkbenchLabelProvider labelProvider = new WorkbenchLabelProvider();
 		try {
-			var object = ResourcesPlugin.getWorkspace().getRoot().findMember(this.path.toAbsolutePath().toString(), false);
+			var files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(getPath().toUri());
+			var object = files[0];
 			if (object == null) {
 				return null;
 			}
@@ -40,6 +42,14 @@ public class FileTreeNode extends BaseTreeNode {
 	public String getText() {
 		// TODO Auto-generated method stub
 		return super.getText();
+	}
+
+	public Path getPath() {
+		return path;
+	}
+
+	public void setPath(Path path) {
+		this.path = path;
 	}
 	
 	

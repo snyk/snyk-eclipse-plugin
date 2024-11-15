@@ -14,6 +14,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
@@ -88,12 +89,18 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		// Add selection listener to the tree
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@SuppressWarnings("restriction")
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				IStructuredSelection selection = (IStructuredSelection) event.getSelection();
 				if (!selection.isEmpty()) {
 					TreeNode node = (TreeNode) selection.getFirstElement();
 					updateBrowserContent(node);
+					if (node instanceof IssueTreeNode) {
+						IssueTreeNode issueTreeNode = (IssueTreeNode)node;
+						FileTreeNode fileNode = (FileTreeNode) issueTreeNode.getParent();
+						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(), issueTreeNode.getIssue().getLSP4JRange());
+					}
 				}
 			}
 		});
