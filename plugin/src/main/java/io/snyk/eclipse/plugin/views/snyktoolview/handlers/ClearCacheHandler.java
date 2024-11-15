@@ -7,6 +7,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.utils.SnykMessageDialog;
+import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
 
 public class ClearCacheHandler extends AbstractHandler {
@@ -24,6 +25,9 @@ public class ClearCacheHandler extends AbstractHandler {
 		SnykMessageDialog.showOkDialog(shell, commandId);
 		
 		SnykIssueCache.getInstance().clearAll();
+		ScanState.getInstance().clearAllScanStates();
+
+		//TODO update TreeView and reset UI
 
 		return null;
 	}
