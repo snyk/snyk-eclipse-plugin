@@ -5,13 +5,15 @@ import org.eclipse.ui.commands.IElementUpdater;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 
-public class FilterDeltaOpenIssuesHandler extends BaseHandler implements IElementUpdater {
+public class FilterDeltaNewIssuesHandler extends BaseHandler implements IElementUpdater {
 
-	public FilterDeltaOpenIssuesHandler() {
+	public FilterDeltaNewIssuesHandler() {
 		super();
 
 		iconEnabled = SnykIcons.ENABLED;
-		preferenceKey = Preferences.FILTER_DELTA_OPEN_ISSUES;
+		preferenceKey = Preferences.FILTER_DELTA_NEW_ISSUES;
+
+		// TODO filter to only show the issues on local branch
 	}
 
 }
