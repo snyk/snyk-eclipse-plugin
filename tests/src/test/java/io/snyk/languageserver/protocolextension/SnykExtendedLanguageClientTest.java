@@ -404,7 +404,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 		cut.setIssueCache(cache);
-
 		cut.snykScan(param);
 
 		for (ProductTreeNode node : productNodes) {

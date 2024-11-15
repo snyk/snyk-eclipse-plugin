@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
@@ -16,6 +17,20 @@ public class SnykIssueCache {
 	private final Map<String, Collection<Issue>> codeQualityIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> ossIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> iacIssues = new ConcurrentHashMap<>();
+
+	private Predicate<? super Issue> fixablePredicate = new Predicate<Issue>() {
+		@Override
+		public boolean test(Issue issue) {
+			return issue != null && (issue.additionalData().hasAIFix() || issue.additionalData().isUpgradable());
+		}
+	};
+
+	private Predicate<? super Issue> ignoredPredicate = new Predicate<Issue>() {
+		@Override
+		public boolean test(Issue issue) {
+			return issue != null && issue.isIgnored();
+		}
+	};
 
 	/**
 	 * This is public for testing purposes
@@ -216,20 +231,18 @@ public class SnykIssueCache {
 		}
 	}
 
-	public long getFixableCount(String displayProduct) {
+	public Collection<Issue> getFilteredIssue(String displayProduct, Predicate<? super Issue> filter) {
 		var cache = getCacheByDisplayProduct(displayProduct);
-		var count = cache.values().stream().flatMap(Collection::stream).filter((issue) -> {
-			boolean fixable = issue.additionalData().hasAIFix() || issue.additionalData().isUpgradable();
-			return fixable;
-		}).count();
-		return count;
+		return cache.values().stream().flatMap(Collection::stream).filter(filter).toList();
+	}
+
+	public long getFixableCount(String displayProduct) {
+		var issues = getFilteredIssue(displayProduct, fixablePredicate);
+		return issues.size();
 	}
 
 	public long getIgnoredCount(String displayProduct) {
-		var cache = getCacheByDisplayProduct(displayProduct);
-		var count = cache.values().stream().flatMap(Collection::stream).filter((issue) -> {
-			return issue.isIgnored();
-		}).count();
-		return count;
+		var issues = getFilteredIssue(displayProduct, ignoredPredicate);
+		return issues.size();
 	}
 }
