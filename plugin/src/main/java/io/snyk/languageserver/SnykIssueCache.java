@@ -56,9 +56,14 @@ public class SnykIssueCache {
 		iacIssues.remove(path);
 	}
 
-	private Collection<Issue> getIssueCollectionForPath(String path, Map<String, Collection<Issue>> cache) {
+	private Collection<Issue> getIssuesForPath(String path, Map<String, Collection<Issue>> cache) {
 		Collection<Issue> issues = cache.get(path);
 		return issues != null ? Collections.unmodifiableCollection(issues) : Collections.emptyList();
+	}
+	
+	public Collection<Issue> getIssues(String path, String displayProduct) {
+		var cache = getCacheByDisplayProduct(displayProduct);
+		return getIssuesForPath(path, cache);
 	}
 
 	// ----- Methods for Snyk Code Issues -----
@@ -99,7 +104,7 @@ public class SnykIssueCache {
 	 * @return An unmodifiable collection of issues, or an empty list if none exist
 	 */
 	public Collection<Issue> getCodeSecurityIssuesForPath(String path) {
-		return getIssueCollectionForPath(path, codeSecurityIssues);
+		return getIssuesForPath(path, codeSecurityIssues);
 	}
 
 	/**
@@ -109,7 +114,7 @@ public class SnykIssueCache {
 	 * @return An unmodifiable collection of issues, or an empty list if none exist
 	 */
 	public Collection<Issue> getCodeQualityIssuesForPath(String path) {
-		return getIssueCollectionForPath(path, codeQualityIssues);
+		return getIssuesForPath(path, codeQualityIssues);
 	}
 
 	/**
@@ -146,7 +151,7 @@ public class SnykIssueCache {
 	 * @return An unmodifiable collection of issues, or an empty list if none exist
 	 */
 	public Collection<Issue> getOssIssuesForPath(String path) {
-		return getIssueCollectionForPath(path, ossIssues);
+		return getIssuesForPath(path, ossIssues);
 	}
 
 	/**
@@ -181,7 +186,7 @@ public class SnykIssueCache {
 	 * @return An unmodifiable collection of issues, or an empty list if none exist
 	 */
 	public Collection<Issue> getIacIssuesForPath(String path) {
-		return getIssueCollectionForPath(path, iacIssues);
+		return getIssuesForPath(path, iacIssues);
 	}
 
 	/**

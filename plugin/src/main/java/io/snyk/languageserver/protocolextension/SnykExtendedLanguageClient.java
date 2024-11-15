@@ -72,6 +72,7 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
+import io.snyk.eclipse.plugin.views.snyktoolview.IssueTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
@@ -304,7 +305,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 		});
 
-		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param);
+		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(), param.getFolderPath());
 
 		switch (param.getStatus()) {
 		case SCAN_STATE_IN_PROGRESS:
@@ -327,22 +328,22 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
 	}
 
-	private Set<ProductTreeNode> getAffectedProductNodes(SnykScanParam param) {
+	private Set<ProductTreeNode> getAffectedProductNodes(String snykScanProduct, String folderPath) {
 		Set<ProductTreeNode> affectedProductTreeNodes = new HashSet<>();
-		var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+		var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(snykScanProduct);
 		if (displayProduct != null) {
-			ProductTreeNode productNode = toolView.getProductNode(displayProduct, param.getFolderPath());
+			ProductTreeNode productNode = toolView.getProductNode(displayProduct, folderPath);
 			if (productNode != null) {
-				affectedProductTreeNodes.add(productNode);				
+				affectedProductTreeNodes.add(productNode);
 			}
 		} else {
-			ProductTreeNode productNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath());
+			ProductTreeNode productNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY, folderPath);
 			if (productNode != null) {
-				affectedProductTreeNodes.add(productNode);				
+				affectedProductTreeNodes.add(productNode);
 			}
-			productNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY, param.getFolderPath());
+			productNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY, folderPath);
 			if (productNode != null) {
-				affectedProductTreeNodes.add(productNode);				
+				affectedProductTreeNodes.add(productNode);
 			}
 		}
 		return affectedProductTreeNodes;
@@ -388,7 +389,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private void addInfoNodes(ProductTreeNode productNode, String folderPath, SnykIssueCache issueCache) {
 		if (productNode == null) {
-			SnykLogger.logInfo("given product node is null, not adding info nodes. folderPath: "+folderPath);
+			SnykLogger.logInfo("given product node is null, not adding info nodes. folderPath: " + folderPath);
 			return;
 		}
 		toolView.removeInfoNodes(productNode);
@@ -436,49 +437,68 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				return;
 			}
 			var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
-			var issueCache = getIssueCache(filePath);
 			if (filePath == null) {
 				SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
 				return;
 			}
-			List<Diagnostic> diagnostics = param.getDiagnostics();
-			if (diagnostics.isEmpty()) {
-				issueCache.removeAllIssuesForPath(filePath);
-				return;
-			}
-			var source = diagnostics.get(0).getSource();
-			if (StringUtils.isEmpty(source)) {
-				return;
-			}
-			var snykProduct = LSP_SOURCE_TO_SCAN_PARAMS.get(source);
-			List<Issue> issueList = new ArrayList<>();
 
-			for (var diagnostic : diagnostics) {
-				Issue issue;
-				if (diagnostic.getData() == null) {
-					continue;
-				}
-				try {
-					issue = om.readValue(diagnostic.getData().toString(), Issue.class);
-					issueList.add(issue);
-				} catch (JsonProcessingException e) {
-					SnykLogger.logError(e);
-					continue;
-				}
-			}
-
-			switch (snykProduct) {
-			case SCAN_PARAMS_CODE:
-				issueCache.addCodeIssues(filePath, issueList);
-				break;
-			case SCAN_PARAMS_OSS:
-				issueCache.addOssIssues(filePath, issueList);
-				break;
-			case SCAN_PARAMS_IAC:
-				issueCache.addIacIssues(filePath, issueList);
-				break;
-			}
+			var productTreeNodes = populateIssueCache(param, filePath);
+			populateFileAndIssueNodes(filePath, productTreeNodes);
 		});
+	}
+
+	private void populateFileAndIssueNodes(String filePath, Set<ProductTreeNode> nodes) { 
+		for (ProductTreeNode productTreeNode : nodes) {
+			var issueCache = IssueCacheHolder.getInstance().getCacheInstance(filePath);
+			var issues = issueCache.getIssues(filePath, productTreeNode.getProduct());
+			FileTreeNode fileNode = new FileTreeNode(filePath);
+			toolView.addFileNode(productTreeNode, fileNode);
+			for (Issue issue : issues) {
+				toolView.addIssueNode(fileNode, new IssueTreeNode(issue));
+			}
+		}
+	}
+
+	private Set<ProductTreeNode> populateIssueCache(PublishDiagnosticsParams param, String filePath) {
+		var issueCache = getIssueCache(filePath);
+		List<Diagnostic> diagnostics = param.getDiagnostics();
+		if (diagnostics.isEmpty()) {
+			issueCache.removeAllIssuesForPath(filePath);
+			return Set.of();
+		}
+		var source = diagnostics.get(0).getSource();
+		if (StringUtils.isEmpty(source)) {
+			return Set.of();
+		}
+		var snykProduct = LSP_SOURCE_TO_SCAN_PARAMS.get(source);
+		List<Issue> issueList = new ArrayList<>();
+
+		for (var diagnostic : diagnostics) {
+			Issue issue;
+			if (diagnostic.getData() == null) {
+				continue;
+			}
+			try {
+				issue = om.readValue(diagnostic.getData().toString(), Issue.class);
+				issueList.add(issue);
+			} catch (JsonProcessingException e) {
+				SnykLogger.logError(e);
+				continue;
+			}
+		}
+
+		switch (snykProduct) {
+		case SCAN_PARAMS_CODE:
+			issueCache.addCodeIssues(filePath, issueList);
+			break;
+		case SCAN_PARAMS_OSS:
+			issueCache.addOssIssues(filePath, issueList);
+			break;
+		case SCAN_PARAMS_IAC:
+			issueCache.addIacIssues(filePath, issueList);
+			break;
+		}
+		return getAffectedProductNodes(snykProduct, filePath);
 	}
 
 	public void reportAnalytics(AbstractAnalyticsEvent event) {

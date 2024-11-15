@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -438,22 +439,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 	@Test
 	void testFileNodesAndIssueNodesAreAdded() {
-		var param = new SnykScanParam();
-		param.setStatus(SCAN_STATE_SUCCESS);
-		param.setProduct(SCAN_PARAMS_IAC);
-		param.setFolderPath("a/b/c");
-		setupProductNodes(param);
-		var cache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
-		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
-		int issueCount = 3;
-		cache.addIacIssues(dummyFilePath, getIssues(issueCount, 2, 1));
-
-		cut = new SnykExtendedLanguageClient();
-		cut.setToolWindow(toolWindowMock);
-		cut.snykScan(param);
-
-		verify(toolWindowMock).addFileNode(any(), any());
-		verify(toolWindowMock, times(issueCount)).addIssueNode(any(), any());
+		throw new NotImplementedException();
 	}
 
 	@Test

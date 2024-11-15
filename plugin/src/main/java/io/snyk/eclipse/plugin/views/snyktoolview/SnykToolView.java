@@ -33,6 +33,7 @@ import org.osgi.framework.Bundle;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
+import io.snyk.languageserver.protocolextension.FileTreeNode;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
@@ -179,15 +180,21 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void addIssueNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
-		// TODO Auto-generated method stub
-		
+	public void addIssueNode(FileTreeNode parent, IssueTreeNode toBeAdded) {
+		toBeAdded.setParent(parent);
+		parent.addChild(toBeAdded);
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(parent, true);	
+		});
 	}
 
 	@Override
-	public void addFileNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
-		// TODO Auto-generated method stub
-		
+	public void addFileNode(ProductTreeNode parent, FileTreeNode toBeAdded) {
+		toBeAdded.setParent(parent);
+		parent.addChild(toBeAdded);
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(parent, true);	
+		});
 	}
 
 	@Override

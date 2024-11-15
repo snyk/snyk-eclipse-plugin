@@ -1,5 +1,7 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import io.snyk.languageserver.protocolextension.FileTreeNode;
+
 /**
  * This interface captures the externally used methods with the tool window.
  * Having it, should allow for easier testing of the business logic apart from
@@ -10,7 +12,7 @@ public interface ISnykToolView {
 	String NO_FIXABLE_ISSUES = "There are no issues automatically fixable.";
 	String IGNORED_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to see ignored issues.";
 	String OPEN_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to open issues.";
-	
+
 	String NODE_TEXT_SCANNING = "Scanning...";
 	String NODE_TEXT_NO_ISSUES_FOUND = "No issues found";
 	String NODE_TEXT_ERROR = "An error occurred";
@@ -29,7 +31,7 @@ public interface ISnykToolView {
 	 * @param parent
 	 * @param toBeAdded
 	 */
-	abstract void addIssueNode(BaseTreeNode parent, BaseTreeNode toBeAdded);
+	abstract void addIssueNode(FileTreeNode parent, IssueTreeNode toBeAdded);
 
 	/**
 	 * Adds a file node (usually below the product node)
@@ -37,7 +39,7 @@ public interface ISnykToolView {
 	 * @param parent
 	 * @param toBeAdded
 	 */
-	abstract void addFileNode(BaseTreeNode parent, BaseTreeNode toBeAdded);
+	abstract void addFileNode(ProductTreeNode parent, FileTreeNode toBeAdded);
 
 	/**
 	 * Adds an info node (usually below the product node)
@@ -50,12 +52,12 @@ public interface ISnykToolView {
 	/**
 	 * Returns the product node
 	 * 
-	 * @param product the product. ProductConstants#DISPLAY_
+	 * @param product    the product. ProductConstants#DISPLAY_
 	 * @param folderPath TODO*
 	 * @return
 	 */
 	abstract ProductTreeNode getProductNode(String product, String folderPath);
-	
+
 	/**
 	 * Resets a product node
 	 */
@@ -63,6 +65,7 @@ public interface ISnykToolView {
 
 	/**
 	 * Remove all info nodes from the product tree node
+	 * 
 	 * @param node
 	 */
 	abstract void removeInfoNodes(ProductTreeNode node);
@@ -71,7 +74,7 @@ public interface ISnykToolView {
 	 * Refreshes the tree display
 	 */
 	abstract void refreshTree();
-	
+
 	/**
 	 * Returns the tree root
 	 * 
@@ -82,5 +85,5 @@ public interface ISnykToolView {
 	static String getPlural(long count) {
 		return count > 1 ? "s" : "";
 	}
-	
+
 }
