@@ -1,7 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-
 /**
  * This interface captures the externally used methods with the tool window.
  * Having it, should allow for easier testing of the business logic apart from
@@ -15,7 +13,7 @@ public interface ISnykToolView {
 	
 	String NODE_TEXT_SCANNING = "Scanning...";
 	String NODE_TEXT_NO_ISSUES_FOUND = "No issues found";
-	String NODE_TEXT_EROR = "An error occurred";
+	String NODE_TEXT_ERROR = "An error occurred";
 
 	/**
 	 * Updates the text of the given node
@@ -24,13 +22,6 @@ public interface ISnykToolView {
 	 * @param text
 	 */
 	abstract void setNodeText(BaseTreeNode node, String text);
-
-	/**
-	 * Sets the icon of the given node
-	 * 
-	 * @param icon
-	 */
-	abstract void setNodeIcon(ImageDescriptor icon);
 
 	/**
 	 * Adds an issue node to the parent (usually a file node)
@@ -54,21 +45,27 @@ public interface ISnykToolView {
 	 * @param parent
 	 * @param toBeAdded
 	 */
-	abstract void addInfoNode(BaseTreeNode parent, BaseTreeNode toBeAdded);
+	abstract void addInfoNode(ProductTreeNode parent, InfoTreeNode toBeAdded);
 
 	/**
 	 * Returns the product node
 	 * 
-	 * @param product the product. ProductConstants#DISPLAY_*
+	 * @param product the product. ProductConstants#DISPLAY_
+	 * @param folderPath TODO*
 	 * @return
 	 */
-	abstract BaseTreeNode getProductNode(String product);
+	abstract ProductTreeNode getProductNode(String product, String folderPath);
 	
 	/**
 	 * Resets a product node
 	 */
 	abstract void resetNode(BaseTreeNode node);
 
+	/**
+	 * Remove all info nodes from the product tree node
+	 * @param node
+	 */
+	abstract void removeInfoNodes(ProductTreeNode node);
 
 	/**
 	 * Refreshes the tree display

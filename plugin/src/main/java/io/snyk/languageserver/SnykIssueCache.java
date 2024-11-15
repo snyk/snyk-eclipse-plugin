@@ -11,8 +11,6 @@ import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 public class SnykIssueCache {
-	private static SnykIssueCache instance = new SnykIssueCache();
-
 	private final Map<String, Collection<Issue>> codeSecurityIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> codeQualityIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> ossIssues = new ConcurrentHashMap<>();
@@ -36,17 +34,6 @@ public class SnykIssueCache {
 	 * This is public for testing purposes
 	 */
 	public SnykIssueCache() {
-	}
-
-	public static SnykIssueCache getInstance() {
-		if (instance == null) {
-			synchronized (SnykIssueCache.class) {
-				if (instance == null) {
-					instance = new SnykIssueCache();
-				}
-			}
-		}
-		return instance;
 	}
 
 	/** Clears all issue caches */

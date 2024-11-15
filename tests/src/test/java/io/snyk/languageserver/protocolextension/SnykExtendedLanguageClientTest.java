@@ -230,15 +230,14 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
 		ProductTreeNode productNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
-		when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY)).thenReturn(productNode);
+		when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath())).thenReturn(productNode);
 
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 		cut.snykScan(param);
 
 		// expect "scanning..."
-		verify(toolWindowMock).getProductNode(DISPLAYED_CODE_SECURITY);
-		verify(toolWindowMock).resetNode(productNode);
+		verify(toolWindowMock).getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath());
 		verify(toolWindowMock).setNodeText(productNode, "Scanning...");
 	}
 
@@ -362,42 +361,14 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			int expectedInfoNodeUpdateCount, String expectedFirstInfoNode, String expectedSecondInfoNode,
 			String expectedThirdInfoNode) {
 
-		String displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
-		var productNodes = new HashSet<ProductTreeNode>();
-		boolean notSnykCode = displayProduct != null;
-		if (notSnykCode) {
-			ProductTreeNode node = new ProductTreeNode(displayProduct);
-			productNodes.add(node);
-			when(toolWindowMock.getProductNode(displayProduct)).thenReturn(node);
-		} else {
-			ProductTreeNode codeSecurityProductNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
-			ProductTreeNode codeQualityProductNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
-			productNodes.add(codeSecurityProductNode);
-			productNodes.add(codeQualityProductNode);
-			when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY)).thenReturn(codeSecurityProductNode);
-			when(toolWindowMock.getProductNode(DISPLAYED_CODE_QUALITY)).thenReturn(codeQualityProductNode);
-		}
+		var productNodes = setupProductNodes(param);
 
 		var infoNodeCaptor = ArgumentCaptor.forClass(BaseTreeNode.class);
 		var parentCaptor = ArgumentCaptor.forClass(BaseTreeNode.class);
 
 		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
 
-		Set<Issue> issues = new HashSet<Issue>(issueCount);
-		int setAsFixable = 0;
-		int setAsIgnored = 0;
-		for (int i = 0; i < issueCount; i++) {
-			boolean fixable = fixableCount > setAsFixable++;
-			boolean ignored = ignoredCount > setAsIgnored++;
-			var additionalData = Instancio.of(AdditionalData.class)
-					.set(Select.field(AdditionalData::isSecurityType), true)
-					.set(Select.field(AdditionalData::isUpgradable), fixable)
-					.set(Select.field(AdditionalData::hasAIFix), fixable).create();
-
-			Issue issue = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), additionalData)
-					.set(Select.field(Issue::isIgnored), ignored).create();
-			issues.add(issue);
-		}
+		Set<Issue> issues = getIssues(issueCount, fixableCount, ignoredCount);
 
 		var cache = new SnykIssueCache();
 		cache.addCodeIssues(dummyFilePath, issues);
@@ -407,8 +378,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykScan(param);
 
 		for (ProductTreeNode node : productNodes) {
-			verify(toolWindowMock).getProductNode(node.getProduct());
-			verify(toolWindowMock).resetNode(node);
+			verify(toolWindowMock, times(2)).getProductNode(node.getProduct(), param.getFolderPath());
 		}
 
 		verify(toolWindowMock, times(expectedInfoNodeUpdateCount)).addInfoNode(any(), any());
@@ -425,6 +395,66 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 				assertEquals(expectedThirdInfoNode, infoNodeCaptor.getAllValues().get(2).getValue());
 			}
 		}
+	}
+
+	private Set<Issue> getIssues(int issueCount, int fixableCount, int ignoredCount) {
+		Set<Issue> issues = new HashSet<Issue>(issueCount);
+		int setAsFixable = 0;
+		int setAsIgnored = 0;
+		for (int i = 0; i < issueCount; i++) {
+			boolean fixable = fixableCount > setAsFixable++;
+			boolean ignored = ignoredCount > setAsIgnored++;
+			var additionalData = Instancio.of(AdditionalData.class)
+					.set(Select.field(AdditionalData::isSecurityType), true)
+					.set(Select.field(AdditionalData::isUpgradable), fixable)
+					.set(Select.field(AdditionalData::hasAIFix), fixable).create();
+
+			Issue issue = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), additionalData)
+					.set(Select.field(Issue::isIgnored), ignored).create();
+			issues.add(issue);
+		}
+		return issues;
+	}
+
+	private HashSet<ProductTreeNode> setupProductNodes(SnykScanParam param) {
+		String displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+		var productNodes = new HashSet<ProductTreeNode>();
+		boolean notSnykCode = displayProduct != null;
+		if (notSnykCode) {
+			ProductTreeNode node = new ProductTreeNode(displayProduct);
+			productNodes.add(node);
+			when(toolWindowMock.getProductNode(displayProduct, param.getFolderPath())).thenReturn(node);
+		} else {
+			ProductTreeNode codeSecurityProductNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
+			ProductTreeNode codeQualityProductNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
+			productNodes.add(codeSecurityProductNode);
+			productNodes.add(codeQualityProductNode);
+			when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath())).thenReturn(codeSecurityProductNode);
+			when(toolWindowMock.getProductNode(DISPLAYED_CODE_QUALITY, param.getFolderPath())).thenReturn(codeQualityProductNode);
+		}
+		return productNodes;
+	}
+
+	@Test
+	void testFileNodesAndIssueNodesAreAdded() {
+		var param = new SnykScanParam();
+		param.setStatus(SCAN_STATE_SUCCESS);
+		param.setProduct(SCAN_PARAMS_IAC);
+		param.setFolderPath("a/b/c");
+		setupProductNodes(param);
+		var cache = new SnykIssueCache();
+		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
+		int issueCount = 3;
+		cache.addIacIssues(dummyFilePath, getIssues(issueCount, 2, 1));
+
+		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
+		cut.setIssueCache(cache);
+
+		cut.snykScan(param);
+
+		verify(toolWindowMock).addFileNode(any(), any());
+		verify(toolWindowMock, times(issueCount)).addIssueNode(any(), any());
 	}
 
 	@Test

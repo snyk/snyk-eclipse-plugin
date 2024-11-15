@@ -20,10 +20,13 @@ import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +37,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
@@ -65,10 +69,12 @@ import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
-import io.snyk.eclipse.plugin.views.snyktoolview.BaseTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
+import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
+import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
+import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsCommandID;
 import io.snyk.languageserver.LsNotificationID;
 import io.snyk.languageserver.ScanInProgressKey;
@@ -87,7 +93,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
 	private ISnykToolView toolView;
-	private SnykIssueCache issueCache = SnykIssueCache.getInstance();
 
 	private static SnykExtendedLanguageClient instance = null;
 
@@ -96,6 +101,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		instance = this;
 		sendPluginInstalledEvent();
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		createIssueCaches();
+	}
+
+	private void createIssueCaches() {
+		var workspace = ResourcesPlugin.getWorkspace();
+		IProject[] allProjects = workspace.getRoot().getProjects();
+		List<IProject> openProjects = Arrays.stream(allProjects).filter(IProject::isOpen).collect(Collectors.toList());
+		for (IProject iProject : openProjects) {
+			IssueCacheHolder.getInstance().getCacheInstance(iProject);
+		}
 	}
 
 	private void sendPluginInstalledEvent() {
@@ -126,6 +141,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (Preferences.getInstance().getAuthToken().isBlank()) {
 				runSnykWizard();
 			} else {
+				this.toolView.resetNode(this.toolView.getRoot());
 				try {
 					if (window == null) {
 						executeCommand(LsCommandID.SNYK_WORKSPACE_SCAN, new ArrayList<>());
@@ -270,6 +286,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void snykScan(SnykScanParam param) {
 		var inProgressKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
 		var scanState = ScanState.getInstance();
+		SnykIssueCache issueCache = null;
+		if (!param.getFolderPath().isBlank()) {
+			issueCache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
+		}
 
 		Display.getDefault().syncExec(() -> {
 			if (toolView == null && !Preferences.getInstance().isTest()) {
@@ -285,19 +305,25 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		switch (param.getStatus()) {
 		case SCAN_STATE_IN_PROGRESS:
 			scanState.setScanInProgress(inProgressKey, true);
-			setScanningState(param);
+			var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+			if (displayProduct != null) {
+				toolView.resetNode(toolView.getProductNode(displayProduct, param.getFolderPath()));
+			} else {
+				toolView.resetNode(toolView.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath()));
+				toolView.resetNode(toolView.getProductNode(DISPLAYED_CODE_QUALITY, param.getFolderPath()));
+			}
 			break;
 		case SCAN_STATE_SUCCESS:
 			scanState.setScanInProgress(inProgressKey, false);
-			var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+			displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
 			if (displayProduct != null) {
-				addInfoNodes(displayProduct);
+				addInfoNodes(displayProduct, param.getFolderPath(), issueCache);
 			} else {
 				// if we don't have a direct mapping, it can only be code, as the code scan
 				// bundles
 				// quality issues and security issues. We then have to update both root nodes.
-				addInfoNodes(DISPLAYED_CODE_SECURITY);
-				addInfoNodes(DISPLAYED_CODE_QUALITY);
+				addInfoNodes(DISPLAYED_CODE_SECURITY, param.getFolderPath(), issueCache);
+				addInfoNodes(DISPLAYED_CODE_QUALITY, param.getFolderPath(), issueCache);
 			}
 			// Show scanning finished state
 			break;
@@ -306,60 +332,95 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			// Show error state
 			break;
 		}
+		setNodeState(param, issueCache);
 	}
 
-	private void setScanningState(SnykScanParam param) {
+	private void setNodeState(SnykScanParam param, SnykIssueCache cache) {
+		var nodeText = "";
 		String displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
-		var productNode = toolView.getProductNode(displayProduct);
-		if (displayProduct != null) {
-			toolView.resetNode(productNode);
-			toolView.setNodeText(productNode, NODE_TEXT_SCANNING);
-		} else {
-			toolView.resetNode(productNode);
-			var secNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY);
-			var qualNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY);
-			
-			toolView.resetNode(secNode);
-			toolView.resetNode(qualNode);
-			toolView.setNodeText(secNode, NODE_TEXT_SCANNING);
-			toolView.setNodeText(qualNode, NODE_TEXT_SCANNING);
+		String folderPath = param.getFolderPath();
+
+		if (param.getStatus().equals(SCAN_STATE_IN_PROGRESS)) {
+			nodeText = NODE_TEXT_SCANNING;
+			setProductNodeText(displayProduct, folderPath, nodeText);
+		} else if (param.getStatus().equals(SCAN_STATE_ERROR)) {
+			nodeText = ISnykToolView.NODE_TEXT_ERROR;
+			setProductNodeText(displayProduct, folderPath, nodeText);
+		} else if (param.getStatus().equals(SCAN_STATE_SUCCESS)) {
+			Map<String, String> displayCounts = getCountsSuffix(param, cache);
+			for (String product : displayCounts.keySet()) {
+				setProductNodeText(product, folderPath, nodeText);
+			}
 		}
 	}
 
-	private void addInfoNodes(String displayProduct) {
-		BaseTreeNode productNode = toolView.getProductNode(displayProduct);
-		toolView.resetNode(productNode);
+	private void setProductNodeText(String displayProduct, String folderPath, String nodeText) {
+		if (displayProduct != null) {
+			toolView.setNodeText(toolView.getProductNode(displayProduct, folderPath), nodeText);
+		} else {
+			var secNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY, folderPath);
+			var qualNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY, folderPath);
+
+			toolView.setNodeText(secNode, nodeText);
+			toolView.setNodeText(qualNode, nodeText);
+		}
+	}
+
+	public Map<String, String> getCountsSuffix(SnykScanParam param, SnykIssueCache issueCache) {
+		var productMap = new HashMap<String, String>();
+		String displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
+		if (displayProduct != null) {
+			productMap.put(displayProduct, String.valueOf(issueCache.getTotalCount(displayProduct)));
+		} else {
+			productMap.put(DISPLAYED_CODE_QUALITY, String.valueOf(issueCache.getTotalCount(DISPLAYED_CODE_QUALITY)));
+			productMap.put(DISPLAYED_CODE_SECURITY, String.valueOf(issueCache.getTotalCount(DISPLAYED_CODE_SECURITY)));
+		}
+		return productMap;
+	}
+
+	private SnykIssueCache getIssueCache(String filePath) {
+		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(Paths.get(filePath));
+		if (issueCache == null) {
+			throw new IllegalArgumentException("No issue cache for param possible");
+		}
+		return issueCache;
+	}
+
+	private void addInfoNodes(String displayProduct, String folderPath, SnykIssueCache issueCache) {
+		ProductTreeNode productNode = toolView.getProductNode(displayProduct, folderPath);
+		toolView.removeInfoNodes(productNode);
 
 		long totalCount = issueCache.getTotalCount(displayProduct);
 		long fixableCount = issueCache.getFixableCount(displayProduct);
 		long ignoredCount = issueCache.getIgnoredCount(displayProduct);
+
 		if (totalCount == 0) {
-			toolView.addInfoNode(productNode, new BaseTreeNode(CONGRATS_NO_ISSUES_FOUND));
+			toolView.addInfoNode(productNode, new InfoTreeNode(CONGRATS_NO_ISSUES_FOUND));
 		} else {
 			String text = "✋ " + totalCount + " issue" + getPlural(totalCount) + " found by Snyk";
 			if (ignoredCount > 0) {
 				text += ", " + ignoredCount + " ignored";
 			}
-			toolView.addInfoNode(productNode, new BaseTreeNode(text));
+			toolView.addInfoNode(productNode, new InfoTreeNode(text));
 		}
 		if (totalCount > 0 && fixableCount == 0) {
-			toolView.addInfoNode(productNode, new BaseTreeNode(NO_FIXABLE_ISSUES));
+			toolView.addInfoNode(productNode, new InfoTreeNode(NO_FIXABLE_ISSUES));
 		}
 
 		if (totalCount > 0 && fixableCount > 0) {
-			toolView.addInfoNode(productNode, new BaseTreeNode(
+			toolView.addInfoNode(productNode, new InfoTreeNode(
 					"⚡️ " + fixableCount + " issue" + getPlural(fixableCount) + " can be fixed automatically"));
 		}
 
 		if (totalCount > 0 && ignoredCount == totalCount
 				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_OPEN_ISSUES)) {
 			toolView.addInfoNode(productNode,
-					new BaseTreeNode("Adjust your Issue View Options to see ignored issues."));
+					new InfoTreeNode("Adjust your Issue View Options to see ignored issues."));
 		}
 
 		if (totalCount > 0 && ignoredCount == 0
 				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_IGNORED_ISSUES)) {
-			toolView.addInfoNode(productNode, new BaseTreeNode("Adjust your Issue View Options to see open issues."));
+			toolView.addInfoNode(productNode, new InfoTreeNode("Adjust your Issue View Options to see open issues."));
 		}
 	}
 
@@ -372,6 +433,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				return;
 			}
 			var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
+			var issueCache = getIssueCache(filePath);
 			if (filePath == null) {
 				SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
 				return;
@@ -538,9 +600,5 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public void setToolWindow(ISnykToolView toolView) {
 		this.toolView = toolView;
-	}
-
-	public void setIssueCache(SnykIssueCache cache) {
-		this.issueCache = cache;
 	}
 }

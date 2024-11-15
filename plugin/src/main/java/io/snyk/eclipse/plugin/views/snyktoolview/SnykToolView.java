@@ -3,11 +3,12 @@
  */
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.nio.file.Paths;
+
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceDialog;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -29,7 +30,6 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.ViewPart;
 import org.osgi.framework.Bundle;
 
-import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
@@ -119,8 +119,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	private String generateHtmlContent(TreeNode node) {
-		// return "<html><body><h1>" + "</h1><p>Content for " + "</p></body></html>";
-		return "<html><body><h1>" + node.getValue() + "</h1><p>Content for " + node.getValue() + "</p></body></html>";
+		if (node instanceof BaseTreeNode) {
+			return ((BaseTreeNode) node).getDetails();
+		}
+		return "";
 	}
 
 	private String generateHtmlContent(String text) {
@@ -177,12 +179,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void setNodeIcon(ImageDescriptor icon) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void addIssueNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
 		// TODO Auto-generated method stub
 		
@@ -195,7 +191,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void addInfoNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
+	public void addInfoNode(ProductTreeNode parent, InfoTreeNode toBeAdded) {
 		toBeAdded.setParent(parent);
 		parent.addChild(toBeAdded);
 		Display.getDefault().asyncExec(() -> {
@@ -204,16 +200,19 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public BaseTreeNode getProductNode(String product) {
-		switch (product) {
-		case ProductConstants.DISPLAYED_OSS:
-			return (ProductTreeNode) this.rootObject.getChildren()[0];
-		case ProductConstants.DISPLAYED_CODE_SECURITY:
-			return (ProductTreeNode) this.rootObject.getChildren()[1];
-		case ProductConstants.DISPLAYED_CODE_QUALITY:
-			return (ProductTreeNode) this.rootObject.getChildren()[2];
-		case ProductConstants.DISPLAYED_IAC:
-			return (ProductTreeNode) this.rootObject.getChildren()[3];
+	public ProductTreeNode getProductNode(String product, String folderPath) {
+		if (product == null || folderPath == null) {
+			return null;
+		}
+		
+		for (TreeNode child : rootObject.getChildren()) {
+			if (child instanceof ContentRootNode) {
+				ContentRootNode contentRoot = (ContentRootNode) child;
+				var givenPath = Paths.get(folderPath);
+				if (givenPath.startsWith(contentRoot.getPath())) {
+					return contentRoot.getProductNode(product);
+				}
+			}
 		}
 		return null;
 	}
@@ -233,6 +232,14 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void resetNode(BaseTreeNode node) {
 		node.reset();
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(node, true);	
+		});
+	}
+
+	@Override
+	public void removeInfoNodes(ProductTreeNode node) {
+		node.removeInfoNodes();
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(node, true);	
 		});

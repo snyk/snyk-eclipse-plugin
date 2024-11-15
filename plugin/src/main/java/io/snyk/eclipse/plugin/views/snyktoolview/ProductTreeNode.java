@@ -1,6 +1,10 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.TreeNode;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
@@ -32,14 +36,27 @@ public class ProductTreeNode extends BaseTreeNode {
 		}
 	}
 	
-	
-
 	@Override
 	public void setText(String text) {
 		this.setValue(text);
 	}
 
-
+	public void removeInfoNodes() {
+		var childs = getChildren();
+		if (childs == null || childs.length == 0) {
+			return;
+		}
+		
+		var list = new ArrayList<TreeNode>(Arrays.asList(getChildren()));
+		
+		for (TreeNode node : list) {
+			if (node instanceof InfoTreeNode) {
+				list.remove(node);
+			}
+		}
+		
+		setChildren(list.toArray(new BaseTreeNode[0]));
+	}
 
 	@Override
 	public void setValue(Object value) {
@@ -68,13 +85,9 @@ public class ProductTreeNode extends BaseTreeNode {
 		this.setValue(product);
 	}
 
-
-
 	public String getProduct() {
 		return product;
 	}
-
-
 
 	public void setProduct(String product) {
 		this.product = product;
