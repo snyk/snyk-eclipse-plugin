@@ -71,7 +71,7 @@
 		</command>
 		<command
 		    defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.ClearCacheHandler"
-		    id="io.snyk.eclipse.plugin.commands.snykEmptyScanResults"
+		    id="io.snyk.eclipse.plugin.commands.clearCacheHandler"
 		    name="%command.clearCache">
 		</command>
 		<command
@@ -228,7 +228,7 @@
 		        tooltip="%tooltip.expandAll">
 		    </command>
 		    <command
-		        commandId="io.snyk.eclipse.plugin.commands.snykEmptyScanResults"
+		        commandId="io.snyk.eclipse.plugin.commands.clearCacheHandler"
 		        icon="platform:/plugin/org.eclipse.ui.console/icons/full/clcl16/clear_co.png"
 		        style="push"
 		        tooltip="%tooltip.emptyScanResults">

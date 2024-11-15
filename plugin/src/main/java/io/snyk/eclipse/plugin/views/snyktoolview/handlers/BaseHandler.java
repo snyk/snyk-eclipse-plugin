@@ -15,7 +15,6 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 public class BaseHandler extends AbstractHandler implements IElementUpdater {
 
-	// TODO should we replace the filter button with a filter applied button icon?
 	protected ImageDescriptor iconEnabled = null;
 	protected ImageDescriptor iconDisabled = null;
 	protected String preferenceKey = null;
@@ -29,25 +28,16 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater {
 			commandService.refreshElements(commandId, null);
 		}
 
+		Preferences.getInstance().store(preferenceKey,
+				Boolean.valueOf(!Preferences.getInstance().getBooleanPref(preferenceKey)).toString());
 		return null;
 	}
 
 	@Override
 	public void updateElement(UIElement element, @SuppressWarnings("rawtypes") Map map) {
-
-		String preference = Preferences.getInstance().getPref(preferenceKey);
-		boolean bool = Boolean.parseBoolean(preference);
-
-		// Toggle the value, if it was true, it should be set to false
-		if (bool) {
-			element.setIcon(iconDisabled);
-			Preferences.getInstance().store(preferenceKey, "false");
-
-		} else {
-			element.setIcon(iconEnabled);
-			Preferences.getInstance().store(preferenceKey, "true");
-
-		}
-
+		boolean enabled = Preferences.getInstance().getBooleanPref(preferenceKey);
+		ImageDescriptor icon = enabled ? iconEnabled : iconDisabled;
+		element.setIcon(icon);
 	}
+
 }

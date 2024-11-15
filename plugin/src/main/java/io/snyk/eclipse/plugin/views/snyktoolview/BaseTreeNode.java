@@ -50,11 +50,11 @@ public class BaseTreeNode extends TreeNode {
 	public String getText() {
 		return this.text;
 	}
-	
+
 	public void setText(String text) {
 		this.text = text;
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.value.toString();
