@@ -1,7 +1,8 @@
-package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
+package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;

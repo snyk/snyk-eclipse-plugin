@@ -148,7 +148,7 @@
         <command
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.snykFilterFixableIssuesHandler"
             id="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
-            name="Show Fixable Issues">
+            name="AI Fixable">
         </command>
     </extension>
     <extension point="org.eclipse.ui.menus">
@@ -248,16 +248,6 @@
             allPopups="false"
             locationURI="menu:io.snyk.eclipse.plugin.views.snyktoolview">
             <menu
-                id="io.snyk.eclipse.plugin.views.snyktoolview.filtersMenu"
-                label="Fixablility">
-                <command
-                    commandId="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
-                    icon="icons/enabled.png"
-                    style="push"
-                    tooltip="Show only issues with AIFix or Fix suggestions">
-                </command>
-            </menu>
-            <menu
                 id="io.snyk.eclipse.plugin.views.snyktoolview.filterSeverityMenu"
                 label="Severity">
                 <command
@@ -350,6 +340,16 @@
                 <separator
                       name="io.snyk.eclipse.plugin.separator.allIssues">
                 </separator>
+            </menu>
+            <menu
+                  id="io.snyk.eclipse.plugin.views.snyktoolview.filtersMenu"
+                  label="Code AI Fixability">
+               <command
+                     commandId="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
+                     icon="icons/enabled.png"
+                     style="push"
+                     tooltip="Show only issues with AIFix or Fix suggestions">
+               </command>
             </menu>
         </menuContribution>
         <menuContribution
