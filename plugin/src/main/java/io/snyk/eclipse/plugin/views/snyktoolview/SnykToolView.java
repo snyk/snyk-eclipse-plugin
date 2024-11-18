@@ -6,7 +6,6 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -25,7 +24,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.ViewPart;
 import org.osgi.framework.Bundle;
 
@@ -96,8 +94,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				}
 			}
 		});
-
-		makeActions();
 	}
 
 	private void registerTreeContextMeny(Composite parent) {
@@ -142,27 +138,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				+ "    <p>\n" + snykWarningText + "</body>\n" + "</html>");
 	}
 
-	private void makeActions() {
-		openPrefPage = new Action() {
-
-			@Override
-			public void run() {
-				PreferenceDialog pref = PreferencesUtil.createPreferenceDialogOn(getShell(),
-						"io.snyk.eclipse.plugin.properties.preferencespage", null, null);
-				if (pref != null)
-					pref.open();
-			}
-		};
-		openPrefPage.setText("Preferences");
-	}
-
-	private static Shell getShell() {
-		var activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-		if (activeWorkbenchWindow == null)
-			return SHELL;
-		return activeWorkbenchWindow.getShell();
-	}
-
 	@Override
 	public void setFocus() {
 		treeViewer.getControl().setFocus();
@@ -172,26 +147,26 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void setNodeText(BaseTreeNode node, String text) {
 		node.setText(text);
 		Display.getDefault().asyncExec(() -> {
-			this.treeViewer.refresh(node, true);	
+			this.treeViewer.refresh(node, true);
 		});
 	}
 
 	@Override
 	public void setNodeIcon(ImageDescriptor icon) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void addIssueNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void addFileNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -199,7 +174,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		toBeAdded.setParent(parent);
 		parent.addChild(toBeAdded);
 		Display.getDefault().asyncExec(() -> {
-			this.treeViewer.refresh(parent, true);	
+			this.treeViewer.refresh(parent, true);
 		});
 	}
 
@@ -226,7 +201,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void refreshTree() {
 		Display.getDefault().asyncExec(() -> {
-			this.treeViewer.refresh(true);	
+			this.treeViewer.refresh(true);
 		});
 	}
 
@@ -234,7 +209,30 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void resetNode(BaseTreeNode node) {
 		node.reset();
 		Display.getDefault().asyncExec(() -> {
-			this.treeViewer.refresh(node, true);	
+			this.treeViewer.refresh(node, true);
 		});
 	}
+
+	public void clearTree() {
+		clearRoot();
+		Display.getDefault().asyncExec(() -> {
+			if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
+				this.treeViewer.refresh();
+				this.treeViewer.expandAll(); // Optional: if you want to expand all nodes after clearing
+			}
+		});
+	}
+
+	private void clearRoot() {
+		if (this.rootObject != null) {
+			this.rootObject.removeChildren();
+			this.rootObject.reset();
+		}
+	}
+
+	@Override
+	public TreeViewer getTreeViewer() {
+		return this.treeViewer;
+	}
+
 }
