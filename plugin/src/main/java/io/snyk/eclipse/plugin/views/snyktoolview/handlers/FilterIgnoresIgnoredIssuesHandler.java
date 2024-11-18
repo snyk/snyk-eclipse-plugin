@@ -12,6 +12,6 @@ public class FilterIgnoresIgnoredIssuesHandler extends BaseHandler implements IE
 
 		iconEnabled = SnykIcons.ENABLED;
 		iconDisabled = SnykIcons.DISABLED;
-		preferenceKey = Preferences.FILTER_IGNORES_IGNORED_ISSUES;
+		preferenceKey = Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
 	}
 }

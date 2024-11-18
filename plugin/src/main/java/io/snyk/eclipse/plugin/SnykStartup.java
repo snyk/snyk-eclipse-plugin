@@ -39,6 +39,7 @@ import io.snyk.languageserver.download.LsDownloader;
 public class SnykStartup implements IStartup {
 	private static LsRuntimeEnvironment runtimeEnvironment;
 	private SnykView snykView = null;
+	private static SnykToolView snykToolView = null;
 	private static boolean downloading = true;
 	private static ILog logger;
 
@@ -118,17 +119,18 @@ public class SnykStartup implements IStartup {
 	}
 
 	public static ISnykToolView getView() {
+		IWorkbench workbench = PlatformUI.getWorkbench();
 
-		IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-		ISnykToolView toolView;
-		try {
-			toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
-		} catch (PartInitException e) {
-			SnykLogger.logError(e);
-			return null;
-		}
-		return toolView;
+		workbench.getDisplay().syncExec(() -> {
+			IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 
+			try {
+				snykToolView = (SnykToolView) activePage.showView(SnykToolView.ID);
+			} catch (PartInitException e) {
+				SnykLogger.logError(e);
+			}
+		});
+		return snykToolView;
 	}
 
 	private boolean downloadLS() {

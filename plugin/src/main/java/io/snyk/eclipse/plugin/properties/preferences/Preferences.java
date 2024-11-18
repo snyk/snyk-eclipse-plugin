@@ -51,9 +51,8 @@ public class Preferences {
 	public static final String FILTER_MEDIUM = "FILTER_SNYK_MEDIUM";
 	public static final String FILTER_LOW = "FILTER_SNYK_LOW";
 	public static final String FILTER_DELTA_NEW_ISSUES = "FILTER_SNYK_NEW_ISSUES";
-	public static final String FILTER_DELTA_ALL_ISSUES = "FILTER_SNYK_ALL_ISSUES";
-	public static final String FILTER_IGNORES_OPEN_ISSUES = "FILTER_IGNORES_OPEN_ISSUES";
-	public static final String FILTER_IGNORES_IGNORED_ISSUES = "FILTER_IGNORES_IGNORED_ISSUES";
+	public static final String FILTER_IGNORES_SHOW_OPEN_ISSUES = "FILTER_IGNORES_OPEN_ISSUES";
+	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_IGNORED_ISSUES";
 	public static final String FILTER_FIXABLE_ISSUES = "FILTER_FIXABLE_ISSUES";
 
 	// This is a bit confusing - CLI takes DISABLE as env variable, but we ask for
@@ -101,14 +100,11 @@ public class Preferences {
 		if (getPref(FILTER_DELTA_NEW_ISSUES) == null) {
 		    store(FILTER_DELTA_NEW_ISSUES, "false");
 		}
-		if (getPref(FILTER_DELTA_ALL_ISSUES) == null) {
-		    store(FILTER_DELTA_ALL_ISSUES, "true");
+		if (getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES) == null) {
+		    store(FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		}
-		if (getPref(FILTER_IGNORES_OPEN_ISSUES) == null) {
-		    store(FILTER_IGNORES_OPEN_ISSUES, "true");
-		}
-		if (getPref(FILTER_IGNORES_IGNORED_ISSUES) == null) {
-		    store(FILTER_IGNORES_IGNORED_ISSUES, "false");
+		if (getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES) == null) {
+		    store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		}
 		if (getPref(FILTER_FIXABLE_ISSUES) == null) {
 		    store(FILTER_FIXABLE_ISSUES, "false");

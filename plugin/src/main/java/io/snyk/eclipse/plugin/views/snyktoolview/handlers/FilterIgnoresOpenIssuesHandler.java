@@ -12,7 +12,7 @@ public class FilterIgnoresOpenIssuesHandler extends BaseHandler implements IElem
 
 		iconEnabled = SnykIcons.ENABLED;
 		iconDisabled = SnykIcons.DISABLED;
-		preferenceKey = Preferences.FILTER_IGNORES_OPEN_ISSUES;
+		preferenceKey = Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
 	}
 
 }

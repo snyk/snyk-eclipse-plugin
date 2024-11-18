@@ -331,8 +331,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
 
-		pref.store(Preferences.FILTER_IGNORES_OPEN_ISSUES, "true");
-		pref.store(Preferences.FILTER_IGNORES_IGNORED_ISSUES, "false");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 
 		String expectedFirstInfoNode = "✋ 4 issues found by Snyk, 4 ignored";
 		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
@@ -348,8 +348,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
 
-		pref.store(Preferences.FILTER_IGNORES_OPEN_ISSUES, "false");
-		pref.store(Preferences.FILTER_IGNORES_IGNORED_ISSUES, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 
 		String expectedFirstInfoNode = "✋ 4 issues found by Snyk";
 		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";

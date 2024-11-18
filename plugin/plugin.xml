@@ -126,18 +126,13 @@
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.CollapseTreeHandler">
         </command>
         <command
-            id="io.snyk.eclipse.plugin.commands.snykFilterAllIssues"
-            name="All Issues"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaAllIssuesHandler">
-        </command>
-        <command
             id="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
             name="Net New Issues"
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaNewIssuesHandler">
         </command>
         <command
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresOpenIssuesHandler"
-            id="io.snyk.eclipse.plugin.commands.snykHideIgnored"
+            id="io.snyk.eclipse.plugin.commands.snykShowOpenIgnored"
             name="Open Issues">
         </command>
         <command
@@ -315,7 +310,7 @@
                 id="io.snyk.eclipse.plugin.views.snyktoolview.filterIgnoreMenu"
                 label="Issues Status">
                 <command
-                    commandId="io.snyk.eclipse.plugin.commands.snykHideIgnored"
+                    commandId="io.snyk.eclipse.plugin.commands.snykShowOpenIgnored"
                     icon="icons/enabled.png"
                     style="push"
                     tooltip="Hide Ignored">
@@ -325,11 +320,6 @@
                     icon="icons/enabled.png"
                     style="push"
                     tooltip="Show Ignored">
-                </command>
-                <command
-                      commandId="io.snyk.eclipse.plugin.commands.snykFilterAllIssues"
-                      style="push"
-                      tooltip="Show All Issues">
                 </command>
                 <command
                       commandId="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"

@@ -10,8 +10,8 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_TO_DISP
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_ERROR;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
-import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_IGNORED_ISSUES;
-import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_OPEN_ISSUES;
+import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
+import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NODE_TEXT_SCANNING;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_FIXABLE_ISSUES;
@@ -352,13 +352,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		if (totalCount > 0 && ignoredCount == totalCount
-				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_OPEN_ISSUES)) {
+				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
 			toolView.addInfoNode(productNode,
 					new BaseTreeNode("Adjust your Issue View Options to see ignored issues."));
 		}
 
 		if (totalCount > 0 && ignoredCount == 0
-				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_IGNORED_ISSUES)) {
+				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES)) {
 			toolView.addInfoNode(productNode, new BaseTreeNode("Adjust your Issue View Options to see open issues."));
 		}
 	}
