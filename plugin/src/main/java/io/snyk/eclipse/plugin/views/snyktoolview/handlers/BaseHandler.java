@@ -12,6 +12,7 @@ import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.languageserver.LsConfigurationUpdater;
 
 public class BaseHandler extends AbstractHandler implements IElementUpdater {
 
@@ -23,13 +24,19 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		String commandId = event.getCommand().getId();
 
+		// Update the application state for the preference.
+		Preferences.getInstance().store(preferenceKey,
+				Boolean.valueOf(!Preferences.getInstance().getBooleanPref(preferenceKey)).toString());
+
+		// Update the Snyk Language Server configuration.
+		new LsConfigurationUpdater().configurationChanged();
+
+		// Lastly update the UI.
 		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
 		if (commandService != null) {
 			commandService.refreshElements(commandId, null);
 		}
 
-		Preferences.getInstance().store(preferenceKey,
-				Boolean.valueOf(!Preferences.getInstance().getBooleanPref(preferenceKey)).toString());
 		return null;
 	}
 
