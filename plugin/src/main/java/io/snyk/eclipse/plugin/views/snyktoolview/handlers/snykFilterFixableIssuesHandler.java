@@ -23,7 +23,12 @@ public class snykFilterFixableIssuesHandler extends BaseHandler implements IElem
 		TreeViewerFilter filter = new TreeViewerFilter();
 
 		// TODO Add the correct filter strings here when we have items in the treeview.
+		// The fixable states a Ai Fix issues can have are one of: AI Fixable, Not AI
+		// Fixable or Any AI Fix Status
 		filter.addSearchText(""); // Ai Fix filter flash string
+
+		// The fixable states open source issues can have are one of: Fixable,
+		// Partially Fixable, No Supported Fix, Any Fixability Level
 		filter.addSearchText(""); // OSS Upgradable filter string
 		filter.setMatchAll(true);
 
