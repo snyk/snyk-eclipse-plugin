@@ -249,7 +249,7 @@
             locationURI="menu:io.snyk.eclipse.plugin.views.snyktoolview">
             <menu
                 id="io.snyk.eclipse.plugin.views.snyktoolview.filtersMenu"
-                label="Filter Issues">
+                label="Fixablility">
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
                     icon="icons/enabled.png"
@@ -259,89 +259,97 @@
             </menu>
             <menu
                 id="io.snyk.eclipse.plugin.views.snyktoolview.filterSeverityMenu"
-                label="Filter Severity">
+                label="Severity">
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykFilterCritical"
-                    icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-critical.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="Critical Severity">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykFilterHigh"
-                    icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-high.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="High Severity">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykFilterMedium"
-                    icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-medium.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="Medium Severity">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykFilterLow"
-                    icon="platform:/plugin/io.snyk.eclipse.plugin/icons/severity-low.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="Low Severity">
                 </command>
+                <separator
+                      name="io.snyk.eclipse.plugin.separator.allSeverities"
+                      visible="true">
+                </separator>
             </menu>
             <menu
                 id="io.snyk.eclipse.plugin.views.snyktoolview.filterProductTypeMenu"
-                label="Filter Product Type">
+                label="Snyk Product">
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.enableOSS"
-                    icon="platform:/plugin/io.snyk.eclipse.plugin/icons/oss.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="Enable/disable OSS scans">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.enableCodeSecurity"
-                    icon="icons/code.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="Enable/disable Code scans">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.enableCodeQuality"
-                    icon="icons/code.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="Enable/disable Code scans">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.enableIAC"
-                    icon="platform:/plugin/io.snyk.eclipse.plugin/icons/iac.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="Enable/disable IAC scans">
                 </command>
+                <separator
+                      name="io.snyk.eclipse.plugin.separator.allProducts"
+                      visible="true">
+                </separator>
             </menu>
             <menu
                 id="io.snyk.eclipse.plugin.views.snyktoolview.filterIgnoreMenu"
-                label="Filter Ignores">
+                label="Issues Status">
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykHideIgnored"
-                    icon="platform:/plugin/org.eclipse.jdt.ui/icons/full/elcl16/hide_ignored.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="Hide Ignored">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykShowIgnored"
-                    icon="platform:/plugin/org.eclipse.jdt.ui/icons/full/obj16/ignore.png"
+                    icon="icons/enabled.png"
                     style="push"
                     tooltip="Show Ignored">
                 </command>
-            </menu>
-            <menu
-                id="io.snyk.eclipse.plugin.views.snyktoolview.filterDeltaMenu"
-                label="Filter Net New Issues">
                 <command
-                    commandId="io.snyk.eclipse.plugin.commands.snykFilterAllIssues"
-                    style="push"
-                    tooltip="Show All Issues">
+                      commandId="io.snyk.eclipse.plugin.commands.snykFilterAllIssues"
+                      style="push"
+                      tooltip="Show All Issues">
                 </command>
                 <command
-                    commandId="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
-                    style="push"
-                    tooltip="Show Only Net New Issues">
+                      commandId="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
+                      icon="icons/enabled.png"
+                      style="push"
+                      tooltip="Show Only Net New Issues">
                 </command>
+                <separator
+                      name="io.snyk.eclipse.plugin.separator.allIssues">
+                </separator>
             </menu>
         </menuContribution>
         <menuContribution

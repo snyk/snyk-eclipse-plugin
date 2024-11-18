@@ -10,8 +10,8 @@ public class FilterMediumHandler extends BaseHandler implements IElementUpdater 
 	public FilterMediumHandler() {
 		super();
 
-		iconEnabled = SnykIcons.SEVERITY_MEDIUM;
-		iconDisabled = SnykIcons.SEVERITY_MEDIUM;
+		iconEnabled = SnykIcons.ENABLED;
+		iconDisabled = SnykIcons.DISABLED;
 		preferenceKey = Preferences.FILTER_MEDIUM;
 	}
 

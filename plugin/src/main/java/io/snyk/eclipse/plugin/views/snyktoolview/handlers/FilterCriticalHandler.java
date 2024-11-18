@@ -10,8 +10,8 @@ public class FilterCriticalHandler extends BaseHandler implements IElementUpdate
 	public FilterCriticalHandler() {
 		super();
 
-		iconEnabled = SnykIcons.SEVERITY_CRITICAL;
-		iconDisabled = SnykIcons.SEVERITY_CRITICAL;
+		iconEnabled = SnykIcons.ENABLED;
+		iconDisabled = SnykIcons.DISABLED;
 		preferenceKey = Preferences.FILTER_CRITICAL;
 	}
 

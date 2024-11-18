@@ -10,8 +10,8 @@ public class FilterLowHandler extends BaseHandler implements IElementUpdater {
 	public FilterLowHandler() {
 		super();
 
-		iconEnabled = SnykIcons.SEVERITY_LOW;
-		iconDisabled = SnykIcons.SEVERITY_LOW;
+		iconEnabled = SnykIcons.ENABLED;
+		iconDisabled = SnykIcons.DISABLED;
 		preferenceKey = Preferences.FILTER_LOW;
 	}
 

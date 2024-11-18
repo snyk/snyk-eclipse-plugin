@@ -11,6 +11,7 @@ public class FilterDeltaNewIssuesHandler extends BaseHandler implements IElement
 		super();
 
 		iconEnabled = SnykIcons.ENABLED;
+		iconDisabled = SnykIcons.DISABLED;
 		preferenceKey = Preferences.FILTER_DELTA_NEW_ISSUES;
 
 		// TODO filter to only show the issues on local branch

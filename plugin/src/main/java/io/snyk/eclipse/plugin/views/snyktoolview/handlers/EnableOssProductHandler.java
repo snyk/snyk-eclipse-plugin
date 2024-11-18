@@ -10,8 +10,8 @@ public class EnableOssProductHandler extends BaseHandler implements IElementUpda
 	public EnableOssProductHandler() {
 		super();
 
-		iconEnabled = SnykIcons.OSS;
-		iconDisabled = SnykIcons.OSS_DISABLED;
+		iconEnabled = SnykIcons.ENABLED;
+		iconDisabled = SnykIcons.DISABLED;
 		preferenceKey = Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
 	}
 

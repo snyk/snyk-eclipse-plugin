@@ -24,6 +24,7 @@ public class SnykIcons {
     public static final ImageDescriptor SEVERITY_LOW = imageProvider.getImageDescriptor("/icons/severity-low.png");
 
     public static final ImageDescriptor ENABLED = imageProvider.getImageDescriptor("/icons/enabled.png");
+    public static final ImageDescriptor DISABLED = imageProvider.getImageDescriptor("/icons/transparent.png");
 
     // You can add a method to set a custom ImageDescriptorProvider if needed
     public static void setImageDescriptorProvider(ImageDescriptorProvider provider) {

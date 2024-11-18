@@ -10,8 +10,8 @@ public class EnableCodeQualityProductHandler extends BaseHandler implements IEle
 	public EnableCodeQualityProductHandler() {
 		super();
 
-		iconEnabled = SnykIcons.CODE;
-		iconDisabled = SnykIcons.CODE_DISABLED;
+		iconEnabled = SnykIcons.ENABLED;
+		iconDisabled = SnykIcons.DISABLED;
 		preferenceKey = Preferences.ACTIVATE_SNYK_CODE_QUALITY;
 	}
 

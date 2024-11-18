@@ -10,8 +10,8 @@ public class EnableIacProductHandler extends BaseHandler implements IElementUpda
 	public EnableIacProductHandler() {
 		super();
 
-		iconEnabled = SnykIcons.IAC;
-		iconDisabled = SnykIcons.IAC_DISABLED;
+		iconEnabled = SnykIcons.ENABLED;
+		iconDisabled = SnykIcons.DISABLED;
 		preferenceKey = Preferences.ACTIVATE_SNYK_IAC;
 	}
 
