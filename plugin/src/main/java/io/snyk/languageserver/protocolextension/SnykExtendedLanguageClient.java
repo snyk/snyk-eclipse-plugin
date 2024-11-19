@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -60,6 +61,7 @@ import org.eclipse.ui.PlatformUI;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractAnalyticsEvent;
@@ -86,6 +88,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCl
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.IssueSorter;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -101,6 +104,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		instance = this;
 		sendPluginInstalledEvent();
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
 		createIssueCaches();
 	}
 
@@ -450,6 +454,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (ProductTreeNode productTreeNode : nodes) {
 			var issueCache = IssueCacheHolder.getInstance().getCacheInstance(filePath);
 			var issues = issueCache.getIssues(filePath, productTreeNode.getProduct());
+			if (issues.isEmpty())
+				continue;
+			issues = IssueSorter.sortIssuesBySeverity(issues);
 			FileTreeNode fileNode = new FileTreeNode(filePath);
 			toolView.addFileNode(productTreeNode, fileNode);
 			for (Issue issue : issues) {
@@ -631,6 +638,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (IProject iProject : openProjects) {
 			IssueCacheHolder.getInstance().getCacheInstance(iProject).clearAll();
 		}
-		
+
 	}
 }

@@ -172,7 +172,7 @@ public class SnykIssueCache {
 	 * @param issues The collection of issues to add
 	 */
 	public void addIacIssues(String path, Collection<Issue> issues) {
-		if (iacIssues.size() > 0) {
+		if (issues.size() > 0) {
 			iacIssues.put(path, issues);
 		} else {
 			iacIssues.remove(path);

@@ -1,7 +1,12 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 
+import io.snyk.eclipse.plugin.domain.ProductConstants;
+import io.snyk.eclipse.plugin.utils.SnykIcons;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 public class IssueTreeNode extends BaseTreeNode {
@@ -24,8 +29,18 @@ public class IssueTreeNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		// TODO Implement me to show fancy severity icons here
-		return super.getImageDescriptor();
+		switch(getIssue().severity()) {
+		case ProductConstants.SEVERITY_CRITICAL:
+			return SnykIcons.SEVERITY_CRITICAL;
+		case ProductConstants.SEVERITY_HIGH:
+			return SnykIcons.SEVERITY_HIGH;
+		case ProductConstants.SEVERITY_MEDIUM:
+			return SnykIcons.SEVERITY_MEDIUM;
+		case ProductConstants.SEVERITY_LOW:
+			return SnykIcons.SEVERITY_LOW;
+		default:
+			return super.getImageDescriptor();
+		}
 	}
 
 	public Issue getIssue() {

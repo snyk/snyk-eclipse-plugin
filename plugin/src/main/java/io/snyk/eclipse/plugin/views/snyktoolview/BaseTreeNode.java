@@ -72,6 +72,6 @@ public class BaseTreeNode extends TreeNode {
 	 * @return html details
 	 */
 	public String getDetails() {
-		return "<html><body><h1>" + getText() + "</h1><p>Content for " + getValue() + "</p></body></html>";
+		return "";
 	}
 }
