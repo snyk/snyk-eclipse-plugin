@@ -23,10 +23,8 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -624,5 +622,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public void setToolWindow(ISnykToolView toolView) {
 		this.toolView = toolView;
+	}
+
+	public void clearCache() {
+		var workspace = ResourcesPlugin.getWorkspace();
+		IProject[] allProjects = workspace.getRoot().getProjects();
+		List<IProject> openProjects = Arrays.stream(allProjects).filter(IProject::isOpen).collect(Collectors.toList());
+		for (IProject iProject : openProjects) {
+			IssueCacheHolder.getInstance().getCacheInstance(iProject).clearAll();
+		}
+		
 	}
 }

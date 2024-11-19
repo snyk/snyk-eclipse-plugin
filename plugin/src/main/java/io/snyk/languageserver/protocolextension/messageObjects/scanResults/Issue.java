@@ -1,6 +1,5 @@
 package io.snyk.languageserver.protocolextension.messageObjects.scanResults;
 
-import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.lsp4j.Position;
 
 public record Issue(

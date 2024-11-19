@@ -21,4 +21,5 @@ public class SnykIcons {
 	public static final ImageDescriptor SEVERITY_LOW = Activator.getImageDescriptor("/icons/severity-low.png");
 
 	public static final ImageDescriptor ENABLED = Activator.getImageDescriptor("/icons/enabled.png");
+	public static final ImageDescriptor DISABLED = Activator.getImageDescriptor("/icons/transparent.png");
 }
