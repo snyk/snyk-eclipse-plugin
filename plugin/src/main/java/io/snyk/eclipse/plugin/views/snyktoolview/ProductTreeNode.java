@@ -9,11 +9,9 @@ import org.eclipse.jface.viewers.TreeNode;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
+import io.snyk.eclipse.plugin.utils.SnykIcons;
 
 public class ProductTreeNode extends BaseTreeNode {
-	public static final ImageDescriptor OSS = Activator.getImageDescriptor("/icons/oss.png");
-	public static final ImageDescriptor CODE = Activator.getImageDescriptor("/icons/code.png");
-	public static final ImageDescriptor IAC = Activator.getImageDescriptor("/icons/iac.png");
 
 	private String product;
 
@@ -23,16 +21,16 @@ public class ProductTreeNode extends BaseTreeNode {
 
 		switch (value) {
 		case ProductConstants.DISPLAYED_OSS:
-			setImageDescriptor(OSS);
+			setImageDescriptor(SnykIcons.OSS);
 			break;
 		case ProductConstants.DISPLAYED_IAC:
-			setImageDescriptor(IAC);
+			setImageDescriptor(SnykIcons.IAC);
 			break;
 		case ProductConstants.DISPLAYED_CODE_QUALITY:
-			setImageDescriptor(CODE);
+			setImageDescriptor(SnykIcons.CODE);
 			break;
 		case ProductConstants.DISPLAYED_CODE_SECURITY:
-			setImageDescriptor(CODE);
+			setImageDescriptor(SnykIcons.CODE);
 			break;
 		}
 	}

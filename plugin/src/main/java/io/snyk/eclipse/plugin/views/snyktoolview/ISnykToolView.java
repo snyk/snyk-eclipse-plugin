@@ -2,6 +2,10 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import io.snyk.languageserver.protocolextension.FileTreeNode;
 
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.TreeViewer;
+
+
 /**
  * This interface captures the externally used methods with the tool window.
  * Having it, should allow for easier testing of the business logic apart from
@@ -82,8 +86,16 @@ public interface ISnykToolView {
 	 */
 	abstract BaseTreeNode getRoot();
 
+	/**
+	 * Clears all nodes in the tree
+	 * 
+	 * @return
+	 */
+	abstract void clearTree();
+
 	static String getPlural(long count) {
 		return count > 1 ? "s" : "";
 	}
 
+	abstract TreeViewer getTreeViewer();
 }

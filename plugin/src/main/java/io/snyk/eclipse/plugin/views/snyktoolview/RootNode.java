@@ -26,6 +26,5 @@ public class RootNode extends BaseTreeNode {
 			var contentRoot = new ContentRootNode(project.getName(), path);
 			this.addChild(contentRoot);
 		}
-
 	}
 }

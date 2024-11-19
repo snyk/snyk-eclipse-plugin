@@ -12,10 +12,10 @@ import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.languageserver.LsConfigurationUpdater;
 
 public class BaseHandler extends AbstractHandler implements IElementUpdater {
 
-	// TODO should we replace the filter button with a filter applied button icon?
 	protected ImageDescriptor iconEnabled = null;
 	protected ImageDescriptor iconDisabled = null;
 	protected String preferenceKey = null;
@@ -24,6 +24,14 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		String commandId = event.getCommand().getId();
 
+		// Update the application state for the preference.
+		Preferences.getInstance().store(preferenceKey,
+				Boolean.valueOf(!Preferences.getInstance().getBooleanPref(preferenceKey)).toString());
+
+		// Update the Snyk Language Server configuration.
+		new LsConfigurationUpdater().configurationChanged();
+
+		// Lastly update the UI.
 		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
 		if (commandService != null) {
 			commandService.refreshElements(commandId, null);
@@ -34,20 +42,9 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater {
 
 	@Override
 	public void updateElement(UIElement element, @SuppressWarnings("rawtypes") Map map) {
-
-		String preference = Preferences.getInstance().getPref(preferenceKey);
-		boolean bool = Boolean.parseBoolean(preference);
-
-		// Toggle the value, if it was true, it should be set to false
-		if (bool) {
-			element.setIcon(iconDisabled);
-			Preferences.getInstance().store(preferenceKey, "false");
-
-		} else {
-			element.setIcon(iconEnabled);
-			Preferences.getInstance().store(preferenceKey, "true");
-
-		}
-
+		boolean enabled = Preferences.getInstance().getBooleanPref(preferenceKey);
+		ImageDescriptor icon = enabled ? iconEnabled : iconDisabled;
+		element.setIcon(icon);
 	}
+
 }
