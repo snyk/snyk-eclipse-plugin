@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -43,11 +42,12 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
-import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.ProgressParams;
-import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
+import org.eclipse.lsp4j.WorkDoneProgressEnd;
+import org.eclipse.lsp4j.WorkDoneProgressNotification;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -58,10 +58,8 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractAnalyticsEvent;
@@ -522,6 +520,23 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		progressMgr.updateProgress(params);
 	}
 
+	public void cancelAllProgresses() {
+		if(progressMgr == null) {
+			return;
+		}
+		for (var progressHashMap : progressMgr.progresses.entrySet()) {
+			var progressToken = progressHashMap.getKey();
+		    WorkDoneProgressEnd workDoneProgressEnd = new WorkDoneProgressEnd();
+		    workDoneProgressEnd.setMessage("Operation canceled.");
+		    Either<WorkDoneProgressNotification, Object> value = Either.forLeft(workDoneProgressEnd);
+		    Either<String, Integer> token = Either.forLeft(progressToken);
+
+			var progressParam = new ProgressParams(token, value);
+			notifyProgress(progressParam);
+		}
+		ScanState.getInstance().clearAllScanStates();
+	}
+	
 	private void runSnykWizard() {
 		SnykWizard wizard = new SnykWizard();
 

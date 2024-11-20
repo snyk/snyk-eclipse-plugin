@@ -7,6 +7,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.utils.SnykMessageDialog;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class StopScanHandler extends AbstractHandler {
 
@@ -17,12 +18,7 @@ public class StopScanHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		String commandId = event.getCommand().getId();
-
-		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-		SnykMessageDialog.showOkDialog(shell, commandId);
-
+		SnykExtendedLanguageClient.getInstance().cancelAllProgresses();
 		return null;
 	}
-
 }
