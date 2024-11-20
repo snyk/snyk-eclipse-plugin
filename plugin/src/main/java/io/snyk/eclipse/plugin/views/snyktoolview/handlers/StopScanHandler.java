@@ -26,16 +26,16 @@ public class StopScanHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		SnykExtendedLanguageClient.getInstance().cancelAllProgresses();
 		ScanState.getInstance().clearAllScanStates();
-
-		IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-		try {
-			toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
-			toolView.clearTree();
-			toolView.refreshTree();
-		} catch (PartInitException e) {
-			SnykLogger.logError(e);
-			return null;
-		}
+		PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
+			IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+			try {
+				toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
+				toolView.clearTree();
+				toolView.refreshTree();
+			} catch (PartInitException e) {
+				SnykLogger.logError(e);
+			}
+		});
 
 		return null;
 	}

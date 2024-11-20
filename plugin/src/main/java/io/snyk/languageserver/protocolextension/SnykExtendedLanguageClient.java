@@ -524,16 +524,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (getProgressMgr() == null) {
 			return;
 		}
-		for (var progressHashMap : getProgressMgr().progresses.entrySet()) {
-			var progressToken = progressHashMap.getKey();
-			WorkDoneProgressEnd workDoneProgressEnd = new WorkDoneProgressEnd();
-			workDoneProgressEnd.setMessage("Operation canceled.");
-			Either<WorkDoneProgressNotification, Object> value = Either.forLeft(workDoneProgressEnd);
-			Either<String, Integer> token = Either.forLeft(progressToken);
-
-			var progressParam = new ProgressParams(token, value);
-			notifyProgress(progressParam);
-		}
+		CompletableFuture.runAsync(() -> {
+			for (var progressHashMap : getProgressMgr().progresses.entrySet()) {
+				var progressToken = progressHashMap.getKey();
+				WorkDoneProgressEnd workDoneProgressEnd = new WorkDoneProgressEnd();
+				workDoneProgressEnd.setMessage("Operation canceled.");
+				Either<WorkDoneProgressNotification, Object> value = Either.forLeft(workDoneProgressEnd);
+				Either<String, Integer> token = Either.forLeft(progressToken);
+	
+				var progressParam = new ProgressParams(token, value);
+				notifyProgress(progressParam);
+			}
+		});
 	}
 
 	private void runSnykWizard() {
