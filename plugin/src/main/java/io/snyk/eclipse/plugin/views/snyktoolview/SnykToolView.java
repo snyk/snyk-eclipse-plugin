@@ -9,21 +9,31 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.lsp4e.LSPEclipseUtils;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.BrowserFunction;
+import org.eclipse.swt.browser.LocationEvent;
+import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
@@ -32,13 +42,27 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.texteditor.ITextEditor;
 import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
+import io.snyk.eclipse.plugin.html.CodeHtmlProvider;
+import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
+import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
+import io.snyk.languageserver.protocolextension.FileTreeNode;
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.LineRange;
+
+import java.io.File;
+import java.nio.file.Path;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
@@ -86,6 +110,53 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		// Create Browser
 		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
 		browser = new Browser(sashForm, SWT.EDGE);
+		// Register the Java function as an anonymous class
+
+		new BrowserFunction(browser, "openInEditor") {
+		    @SuppressWarnings("restriction")
+			@Override
+		    public Object function(Object[] arguments) {
+		        if (arguments.length != 5) {
+		        	return null;
+		        }
+	            String filePath = (String) arguments[0];
+	            var fileUri = Paths.get(filePath).toUri().toASCIIString();
+	            int startLine = Integer.parseInt(arguments[1].toString());
+	            int endLine = Integer.parseInt(arguments[2].toString());
+	            int startCharacter = Integer.parseInt(arguments[3].toString());
+	            int endCharacter = Integer.parseInt(arguments[4].toString());
+
+	            Display.getDefault().asyncExec(() -> {
+	                try {
+	                    Position startPosition = new Position(startLine, startCharacter);
+	                    Position endPosition = new Position(endLine, endCharacter);
+	                    Range range = new Range(startPosition, endPosition);
+
+	                    var location = new Location(fileUri, range);
+	                    LSPEclipseUtils.openInEditor(location);
+
+	                } catch (Exception e) {
+	                    e.printStackTrace();
+	                }
+	            });
+		        return null;
+		    }
+		};
+
+        browser.addLocationListener(new LocationListener() {
+            @Override
+            public void changing(LocationEvent event) {
+                String url = event.location;
+                if(url.startsWith("http")) {
+                	event.doit = false;
+                    Program.launch(url);
+                }
+            }
+
+            @Override
+            public void changed(LocationEvent event) {
+            }
+        });
 		initBrowserText();
 
 		// Set sash weights
@@ -121,7 +192,13 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private void updateBrowserContent(TreeNode node) {
 		// Generate HTML content based on the selected node
 		String htmlContent = generateHtmlContent(node);
-		browser.setText(htmlContent);
+		if (node instanceof IssueTreeNode) {
+			var product = ((ProductTreeNode) node.getParent().getParent()).getProduct();
+			var htmlProvider = HtmlProviderFactory.GetHtmlProvider(product);
+			htmlContent = htmlProvider.replaceCssVariables(htmlContent);
+			browser.setText(htmlContent);
+			browser.execute(htmlProvider.getInitScript());
+		}
 	}
 
 	private void updateBrowserContent(String text) {
