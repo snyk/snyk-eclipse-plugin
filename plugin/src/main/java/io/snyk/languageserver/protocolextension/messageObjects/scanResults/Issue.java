@@ -39,7 +39,7 @@ public record Issue(
 	        return title;
 	    }
 
-		public org.eclipse.lsp4j.Range getLSP4JRange() {
+        public org.eclipse.lsp4j.Range getLSP4JRange() {
 			LineRange localStart = range.start();
 			var start = new Position(localStart.line(), localStart.character());
 			LineRange localEnd = range.end();

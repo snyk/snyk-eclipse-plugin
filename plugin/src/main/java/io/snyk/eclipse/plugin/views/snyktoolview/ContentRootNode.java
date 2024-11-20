@@ -24,7 +24,7 @@ public class ContentRootNode extends BaseTreeNode {
 		this.name = name;
 		this.setPath(value);
 	}
-	
+
 	@Override
 	public ImageDescriptor getImageDescriptor() {
 		WorkbenchLabelProvider labelProvider = new WorkbenchLabelProvider();
@@ -33,13 +33,13 @@ public class ContentRootNode extends BaseTreeNode {
 			Image image = labelProvider.getImage(object);
 			if (image == null)
 				return null;
-			
+
 			return ImageDescriptor.createFromImage(image);
 		} finally {
 			labelProvider.dispose();
 		}
 	}
-	
+
 	public ProductTreeNode getProductNode(String product) {
 		if (product == null) {
 			return null;
@@ -56,20 +56,18 @@ public class ContentRootNode extends BaseTreeNode {
 		}
 		return null;
 	}
-	
-	
 
 	@Override
 	public void reset() {
 		var ossRootNode = new ProductTreeNode(DISPLAYED_OSS);
 		ossRootNode.setParent(this);
-		
+
 		var codeSecurityRootNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
 		codeSecurityRootNode.setParent(this);
-		
+
 		var codeQualityRootNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
 		codeQualityRootNode.setParent(this);
-		
+
 		var iacRootNode = new ProductTreeNode(DISPLAYED_IAC);
 		iacRootNode.setParent(this);
 
