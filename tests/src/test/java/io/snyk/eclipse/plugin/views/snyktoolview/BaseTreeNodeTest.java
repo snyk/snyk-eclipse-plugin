@@ -69,6 +69,7 @@ class BaseTreeNodeTest {
 		assertEquals(child2, children[1]);
 	}
 
+	//TODO update this when the treeviewer is implemented
 	@Test
 	void testRemoveChildren() {
 		BaseTreeNode child = new BaseTreeNode("child");
@@ -103,6 +104,7 @@ class BaseTreeNodeTest {
 		assertEquals("42", intNode.toString());
 	}
 
+	//TODO update this when the treeviewer is implemented
 	@Test
 	void testReset() {
 		// Setup initial state
