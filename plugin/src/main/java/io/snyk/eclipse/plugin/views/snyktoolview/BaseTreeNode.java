@@ -66,5 +66,12 @@ public class BaseTreeNode extends TreeNode {
 		this.value = null;
 		this.imageDescriptor = null;
 	}
-
+	
+	/**
+	 * Provides the details to be displayed in the details view
+	 * @return html details
+	 */
+	public String getDetails() {
+		return "";
+	}
 }

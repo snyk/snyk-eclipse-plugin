@@ -3,15 +3,20 @@
  */
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
@@ -21,16 +26,14 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.osgi.framework.Bundle;
 
-import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
+import io.snyk.languageserver.protocolextension.FileTreeNode;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
@@ -46,13 +49,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	ResourceUtils data = new ResourceUtils();
 
-	private Action openPrefPage;
-
 	private TreeViewer treeViewer;
 	private Browser browser;
 	private BaseTreeNode rootObject = new RootNode();
-
-	private final static Shell SHELL = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -73,11 +72,13 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		// Create and set the root object
 		treeViewer.setInput(rootObject);
+		treeViewer.expandAll();
 
 		registerTreeContextMeny(parent);
 
 		// Create Browser
-		browser = new Browser(sashForm, SWT.NONE);
+		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
+		browser = new Browser(sashForm, SWT.EDGE);
 		initBrowserText();
 
 		// Set sash weights
@@ -85,12 +86,19 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		// Add selection listener to the tree
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@SuppressWarnings("restriction")
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				IStructuredSelection selection = (IStructuredSelection) event.getSelection();
 				if (!selection.isEmpty()) {
 					TreeNode node = (TreeNode) selection.getFirstElement();
 					updateBrowserContent(node);
+					if (node instanceof IssueTreeNode) {
+						IssueTreeNode issueTreeNode = (IssueTreeNode) node;
+						FileTreeNode fileNode = (FileTreeNode) issueTreeNode.getParent();
+						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(),
+								issueTreeNode.getIssue().getLSP4JRange());
+					}
 				}
 			}
 		});
@@ -115,8 +123,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	private String generateHtmlContent(TreeNode node) {
-		// return "<html><body><h1>" + "</h1><p>Content for " + "</p></body></html>";
-		return "<html><body><h1>" + node.getValue() + "</h1><p>Content for " + node.getValue() + "</p></body></html>";
+		if (node instanceof BaseTreeNode) {
+			return ((BaseTreeNode) node).getDetails();
+		}
+		return "";
 	}
 
 	private String generateHtmlContent(String text) {
@@ -152,25 +162,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void setNodeIcon(ImageDescriptor icon) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void addIssueNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void addFileNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void addInfoNode(BaseTreeNode parent, BaseTreeNode toBeAdded) {
+	public void addIssueNode(FileTreeNode parent, IssueTreeNode toBeAdded) {
 		toBeAdded.setParent(parent);
 		parent.addChild(toBeAdded);
 		Display.getDefault().asyncExec(() -> {
@@ -179,16 +171,58 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public BaseTreeNode getProductNode(String product) {
-		switch (product) {
-		case ProductConstants.DISPLAYED_OSS:
-			return (ProductTreeNode) this.rootObject.getChildren()[0];
-		case ProductConstants.DISPLAYED_CODE_SECURITY:
-			return (ProductTreeNode) this.rootObject.getChildren()[1];
-		case ProductConstants.DISPLAYED_CODE_QUALITY:
-			return (ProductTreeNode) this.rootObject.getChildren()[2];
-		case ProductConstants.DISPLAYED_IAC:
-			return (ProductTreeNode) this.rootObject.getChildren()[3];
+	public void addFileNode(ProductTreeNode parent, FileTreeNode toBeAdded) {
+		toBeAdded.setParent(parent);
+		parent.addChild(toBeAdded);
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(parent, true);
+		});
+	}
+
+	@Override
+	public void addInfoNode(ProductTreeNode parent, InfoTreeNode toBeAdded) {
+		List<BaseTreeNode> list = new ArrayList<>();
+		var children = parent.getChildren();
+		if (children != null) {
+			list = Arrays.stream(children).map(it -> (BaseTreeNode) it).collect(Collectors.toList());
+		}
+
+		toBeAdded.setParent(parent);
+		int insertIndex = GetLastInfoNodeIndex(list);
+		list.add(insertIndex, toBeAdded);
+		parent.setChildren(list.toArray(new BaseTreeNode[0]));
+
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(parent, true);
+		});
+	}
+
+	private int GetLastInfoNodeIndex(List<BaseTreeNode> list) {
+		int insertIndex = 0;
+		for (int i = 0; i < list.size(); i++) {
+			if (list.get(i) instanceof InfoTreeNode) {
+				insertIndex += 1;
+			} else {
+				break;
+			}
+		}
+		return insertIndex;
+	}
+
+	@Override
+	public ProductTreeNode getProductNode(String product, String folderPath) {
+		if (product == null || folderPath == null) {
+			return null;
+		}
+
+		for (TreeNode child : rootObject.getChildren()) {
+			if (child instanceof ContentRootNode) {
+				ContentRootNode contentRoot = (ContentRootNode) child;
+				var givenPath = Paths.get(folderPath);
+				if (givenPath.startsWith(contentRoot.getPath())) {
+					return contentRoot.getProductNode(product);
+				}
+			}
 		}
 		return null;
 	}
@@ -208,6 +242,14 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void resetNode(BaseTreeNode node) {
 		node.reset();
+		Display.getDefault().asyncExec(() -> {
+			this.treeViewer.refresh(node, true);
+		});
+	}
+
+	@Override
+	public void removeInfoNodes(ProductTreeNode node) {
+		node.removeInfoNodes();
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(node, true);
 		});
@@ -234,5 +276,4 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public TreeViewer getTreeViewer() {
 		return this.treeViewer;
 	}
-
 }

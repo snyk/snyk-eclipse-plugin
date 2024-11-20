@@ -11,7 +11,7 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.languageserver.ScanState;
-import io.snyk.languageserver.SnykIssueCache;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class ClearCacheHandler extends AbstractHandler {
 
@@ -24,7 +24,7 @@ public class ClearCacheHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		SnykIssueCache.getInstance().clearAll();
+		SnykExtendedLanguageClient.getInstance().clearCache();
 		ScanState.getInstance().clearAllScanStates();
 
 		IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();

@@ -1,26 +1,32 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_QUALITY;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_IAC;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
 public class RootNode extends BaseTreeNode {
-	private BaseTreeNode ossRootNode;
-	private BaseTreeNode codeSecurityRootNode;
-	private BaseTreeNode codeQualityRootNode;
-	private BaseTreeNode iacRootNode;
-
 	public RootNode() {
 		super("");
+		reset();
+	}
 
-		ossRootNode = new ProductTreeNode(DISPLAYED_OSS);
-		codeSecurityRootNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
-		codeQualityRootNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
-		iacRootNode = new ProductTreeNode(DISPLAYED_IAC);
+	public void reset() {
+		super.reset();
 
-		BaseTreeNode[] children = new BaseTreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode,
-				iacRootNode, };
-		setChildren(children);
+		var workspace = ResourcesPlugin.getWorkspace();
+		IProject[] allProjects = workspace.getRoot().getProjects();
+		List<IProject> openProjects = Arrays.stream(allProjects).filter(IProject::isOpen).collect(Collectors.toList());
+
+		for (IProject project : openProjects) {
+			Path path = ResourceUtils.getFullPath(project);
+			var contentRoot = new ContentRootNode(project.getName(), path);
+			this.addChild(contentRoot);
+		}
 	}
 }

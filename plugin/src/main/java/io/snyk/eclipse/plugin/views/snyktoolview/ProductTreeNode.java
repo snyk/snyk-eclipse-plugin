@@ -1,5 +1,13 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.TreeNode;
+
+import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 
@@ -7,11 +15,11 @@ public class ProductTreeNode extends BaseTreeNode {
 
 	private String product;
 
-	public ProductTreeNode(Object value) {
+	public ProductTreeNode(String value) {
 		super(value);
-		this.setProduct(value.toString());
+		this.setProduct(value);
 
-		switch (value.toString()) {
+		switch (value) {
 		case ProductConstants.DISPLAYED_OSS:
 			setImageDescriptor(SnykIcons.OSS);
 			break;
@@ -30,6 +38,24 @@ public class ProductTreeNode extends BaseTreeNode {
 	@Override
 	public void setText(String text) {
 		this.setValue(text);
+	}
+
+	public void removeInfoNodes() {
+		var childs = getChildren();
+		if (childs == null || childs.length == 0) {
+			return;
+		}
+
+		var list = new ArrayList<TreeNode>(Arrays.asList(getChildren()));
+
+		var newList = new HashSet<BaseTreeNode>();
+		for (TreeNode node : list) {
+			if (!(node instanceof InfoTreeNode) && node instanceof BaseTreeNode) {
+				newList.add((BaseTreeNode) node);
+			}
+		}
+
+		setChildren(newList.toArray(new BaseTreeNode[0]));
 	}
 
 	@Override

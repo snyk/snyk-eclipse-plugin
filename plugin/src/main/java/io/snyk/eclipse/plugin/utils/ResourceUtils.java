@@ -3,10 +3,11 @@ package io.snyk.eclipse.plugin.utils;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Base64;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
 import org.osgi.framework.Bundle;
 
 public class ResourceUtils {
@@ -15,7 +16,7 @@ public class ResourceUtils {
 	}
 
 	public static String getBase64Image(Bundle bundle, String icon) {
-		URL imageUrl = FileLocator.find(bundle, new Path("icons/" + icon), null);
+		URL imageUrl = FileLocator.find(bundle, new org.eclipse.core.runtime.Path("icons/" + icon), null);
 
 		byte[] imageData = getImageDataFromUrl(imageUrl);
 
@@ -42,4 +43,7 @@ public class ResourceUtils {
 		}
 	}
 
+	public static Path getFullPath(IResource resource) {	
+		return resource.getLocation().toPath().toAbsolutePath();
+	}
 }

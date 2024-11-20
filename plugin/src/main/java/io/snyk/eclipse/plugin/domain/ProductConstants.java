@@ -13,13 +13,18 @@ public interface ProductConstants {
 
 	String DIAGNOSTIC_SOURCE_SNYK_OSS = "Snyk Open Source";
 	String DIAGNOSTIC_SOURCE_SNYK_CODE = "Snyk Code";
-	String DIAGNOSTIC_SOURCE_SNYK_IAC = "Snyk Infrastructure";
+	String DIAGNOSTIC_SOURCE_SNYK_IAC = "Snyk IaC";
 
 	String DISPLAYED_OSS = "Snyk Open Source";
 	String DISPLAYED_CODE_SECURITY = "Code Security";
 	String DISPLAYED_CODE_QUALITY = "Code Quality";
 	String DISPLAYED_IAC = "Configuration";
 
+	String SEVERITY_CRITICAL = "critical";
+	String SEVERITY_HIGH = "high";
+	String SEVERITY_MEDIUM = "medium";
+	String SEVERITY_LOW = "low";
+	
 	Map<String, String> LSP_SOURCE_TO_SCAN_PARAMS = Map.of(DIAGNOSTIC_SOURCE_SNYK_CODE, SCAN_PARAMS_CODE,
 			DIAGNOSTIC_SOURCE_SNYK_IAC, SCAN_PARAMS_IAC, DIAGNOSTIC_SOURCE_SNYK_OSS, SCAN_PARAMS_OSS);
 
