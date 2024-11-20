@@ -12,9 +12,9 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeViewerFilter;
 
-public class snykFilterFixableIssuesHandler extends BaseHandler implements IElementUpdater {
+public class SnykFilterFixableIssuesHandler extends BaseHandler implements IElementUpdater {
 
-	public snykFilterFixableIssuesHandler() {
+	public SnykFilterFixableIssuesHandler() {
 		super();
 
 		iconEnabled = SnykIcons.ENABLED;

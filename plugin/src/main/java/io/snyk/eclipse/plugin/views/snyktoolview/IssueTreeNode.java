@@ -1,9 +1,6 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
@@ -19,7 +16,17 @@ public class IssueTreeNode extends BaseTreeNode {
 
 	@Override
 	public String getText() {
-		return getIssue().getDisplayTitle();
+		String displayTitle = getIssue().getDisplayTitle();
+
+		if (getIssue().isIgnored()) {
+			displayTitle = " [ Ignored ]" + displayTitle;
+		}
+
+		if (issue.hasFix()) {
+			displayTitle = " ⚡" + displayTitle;
+		}
+
+		return displayTitle;
 	}
 
 	@Override
@@ -29,7 +36,7 @@ public class IssueTreeNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		switch(getIssue().severity()) {
+		switch (getIssue().severity()) {
 		case ProductConstants.SEVERITY_CRITICAL:
 			return SnykIcons.SEVERITY_CRITICAL;
 		case ProductConstants.SEVERITY_HIGH:
@@ -50,6 +57,5 @@ public class IssueTreeNode extends BaseTreeNode {
 	public void setIssue(Issue issue) {
 		this.issue = issue;
 	}
-	
-	
+
 }
