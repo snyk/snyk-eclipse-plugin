@@ -18,7 +18,7 @@ public class RootNode extends BaseTreeNode {
 
 	public void reset() {
 		super.reset();
-		
+
 		var workspace = ResourcesPlugin.getWorkspace();
 		IProject[] allProjects = workspace.getRoot().getProjects();
 		List<IProject> openProjects = Arrays.stream(allProjects).filter(IProject::isOpen).collect(Collectors.toList());
