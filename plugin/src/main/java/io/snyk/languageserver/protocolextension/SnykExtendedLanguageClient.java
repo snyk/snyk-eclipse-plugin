@@ -92,7 +92,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
-	private final ProgressManager progressMgr = new ProgressManager();
+	private ProgressManager progressMgr = new ProgressManager();
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
 	private ISnykToolView toolView;
@@ -512,19 +512,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@Override
 	public CompletableFuture<Void> createProgress(WorkDoneProgressCreateParams params) {
-		return progressMgr.createProgress(params);
+		return getProgressMgr().createProgress(params);
 	}
 
 	@Override
 	public void notifyProgress(ProgressParams params) {
-		progressMgr.updateProgress(params);
+		getProgressMgr().updateProgress(params);
 	}
 
 	public void cancelAllProgresses() {
-		if (progressMgr == null) {
+		if (getProgressMgr() == null) {
 			return;
 		}
-		for (var progressHashMap : progressMgr.progresses.entrySet()) {
+		for (var progressHashMap : getProgressMgr().progresses.entrySet()) {
 			var progressToken = progressHashMap.getKey();
 			WorkDoneProgressEnd workDoneProgressEnd = new WorkDoneProgressEnd();
 			workDoneProgressEnd.setMessage("Operation canceled.");
@@ -648,5 +648,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			IssueCacheHolder.getInstance().getCacheInstance(iProject).clearAll();
 		}
 
+	}
+
+	public ProgressManager getProgressMgr() {
+		return progressMgr;
+	}
+
+	public void setProgressMgr(ProgressManager progressMgr) {
+		this.progressMgr = progressMgr;
 	}
 }

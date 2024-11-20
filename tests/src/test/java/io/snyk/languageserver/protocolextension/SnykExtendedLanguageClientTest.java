@@ -12,6 +12,8 @@ import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_N
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.reset;
@@ -20,29 +22,33 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Array;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.lsp4e.LSPEclipseUtils;
-import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.ProgressParams;
+import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
+import org.eclipse.lsp4j.WorkDoneProgressEnd;
+import org.eclipse.lsp4j.WorkDoneProgressNotification;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.instancio.Instancio;
 import org.instancio.Select;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mockito.MockitoAnnotations;
 
 import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
 import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
@@ -54,6 +60,7 @@ import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsBaseTest;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
+import io.snyk.languageserver.protocolextension.ProgressManager.SnykBackgroundJob;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
@@ -66,6 +73,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private SnykExtendedLanguageClient cut;
 	private Preferences pref;
+
 	private ISnykToolView toolWindowMock;
 
 	@BeforeEach
@@ -75,6 +83,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		// we don't want the wizard to pop up, so we set a dummy token
 		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
 		pref.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "false");
+
 		toolWindowMock = mock(ISnykToolView.class);
 	}
 
@@ -188,7 +197,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		var issue = Instancio.of(Issue.class).create();
 		diagnostic.setData(issue);
-		param.setDiagnostics(new Diagnostic316[]{diagnostic});
+		param.setDiagnostics(new Diagnostic316[] { diagnostic });
 		cut = new SnykExtendedLanguageClient();
 		var future = cut.publishDiagnostics316(param);
 		try {
@@ -352,6 +361,37 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String expectedThirdInfoNode = "Adjust your Issue View Options to see open issues.";
 
 		runInfoNodeTest(param, 4, 2, 0, 4, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+	}
+
+	@Test
+	void cancelAllProgresses_WithNullProgressManager_ShouldDoNothing() {
+		MockitoAnnotations.openMocks(this);
+		cut = new SnykExtendedLanguageClient();
+
+		cut.setProgressMgr(null);
+		cut.cancelAllProgresses();
+		// No exceptions should be thrown
+	}
+
+	@Test
+	void cancelAllProgresses_WithMultipleProgresses_ShouldNotifyProgressForEach() {
+	    MockitoAnnotations.openMocks(this);
+	    cut = new SnykExtendedLanguageClient();
+	    
+	    ConcurrentHashMap<String, Pair<SnykBackgroundJob, IProgressMonitor>> progresses = new ConcurrentHashMap<>();
+	    progresses.put("token1", Pair.of(mock(SnykBackgroundJob.class), mock(IProgressMonitor.class)));
+	    progresses.put("token2", Pair.of(mock(SnykBackgroundJob.class), mock(IProgressMonitor.class)));
+	    WorkDoneProgressCreateParams workDoneProgressStart1 = new WorkDoneProgressCreateParams();
+	    workDoneProgressStart1.setToken("token1");
+	    cut.createProgress(workDoneProgressStart1);
+	    WorkDoneProgressCreateParams workDoneProgressStart2 = new WorkDoneProgressCreateParams();
+	    workDoneProgressStart2.setToken("token2");
+	    cut.createProgress(workDoneProgressStart2);
+	    assertEquals(cut.getProgressMgr().progresses.size(), 2);
+
+	    cut.cancelAllProgresses();
+
+	    assertEquals(cut.getProgressMgr().progresses.size(), 0);
 	}
 
 	private void runInfoNodeTest(SnykScanParam param, int issueCount, int fixableCount, int ignoredCount,
