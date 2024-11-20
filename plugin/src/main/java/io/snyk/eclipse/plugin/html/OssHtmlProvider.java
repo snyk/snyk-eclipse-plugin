@@ -18,5 +18,5 @@ public class OssHtmlProvider extends BaseHtmlProvider {
         html = html.replace("var(--container-background-color)", super.getColorAsHex("org.eclipse.ui.workbench.CODE_BACKGROUND_COLOR", "#F0F0F0"));
 
         return html;
-    }	
+    }
 }

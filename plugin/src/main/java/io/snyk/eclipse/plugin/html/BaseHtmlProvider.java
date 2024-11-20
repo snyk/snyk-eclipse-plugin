@@ -76,7 +76,7 @@ public class BaseHtmlProvider {
             return String.format("#%02x%02x%02x", rgb.red, rgb.green, rgb.blue);
         }
     }
-    
+
     private ColorRegistry getColorRegistry() {
         IThemeManager themeManager = PlatformUI.getWorkbench().getThemeManager();
         ITheme currentTheme = themeManager.getCurrentTheme();

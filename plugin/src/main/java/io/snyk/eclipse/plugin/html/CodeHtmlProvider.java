@@ -17,7 +17,7 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 		}
 		return instance;
 	}
-	
+
     @Override
     public String getInitScript() {
         String themeScript = getThemeScript();
@@ -42,7 +42,7 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
                 if(document.getElementById('position-line')) {
                     document.getElementById('position-line').onclick = function(e) {
                         var target = navigatableLines[0];
-                        if(target) { 
+                        if(target) {
                             navigateToIssue(e, target);
                         }
                     }
