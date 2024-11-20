@@ -86,7 +86,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		registerTreeContextMeny(parent);
 
 		// Create Browser
-		browser = new Browser(sashForm, SWT.NONE);
+		browser = new Browser(sashForm, SWT.EDGE);
 		initBrowserText();
 
 		// Set sash weights
