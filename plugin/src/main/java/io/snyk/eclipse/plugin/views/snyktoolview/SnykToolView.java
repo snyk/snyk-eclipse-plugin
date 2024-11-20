@@ -86,6 +86,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		registerTreeContextMeny(parent);
 
 		// Create Browser
+		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
 		browser = new Browser(sashForm, SWT.EDGE);
 		initBrowserText();
 
