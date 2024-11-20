@@ -72,6 +72,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		// Create and set the root object
 		treeViewer.setInput(rootObject);
+		treeViewer.expandAll();
 
 		registerTreeContextMeny(parent);
 
