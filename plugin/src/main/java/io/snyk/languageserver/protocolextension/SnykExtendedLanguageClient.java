@@ -83,7 +83,9 @@ import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
+import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
+import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
@@ -432,7 +434,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	@JsonNotification(value = LsNotificationID.SNYK_PUBLISH_DIAGNOSTICS_316)
-	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnosticsParams param) {
+	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnostics316Param param) {
 		return CompletableFuture.runAsync(() -> {
 			var uri = param.getUri();
 			if (StringUtils.isEmpty(uri)) {
@@ -465,14 +467,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private Set<ProductTreeNode> populateIssueCache(PublishDiagnosticsParams param, String filePath) {
+	private Set<ProductTreeNode> populateIssueCache(PublishDiagnostics316Param param, String filePath) {
 		var issueCache = getIssueCache(filePath);
-		List<Diagnostic> diagnostics = param.getDiagnostics();
-		if (diagnostics.isEmpty()) {
+		Diagnostic316[] diagnostics = param.getDiagnostics();
+		if (diagnostics.length == 0) {
 			issueCache.removeAllIssuesForPath(filePath);
 			return Set.of();
 		}
-		var source = diagnostics.get(0).getSource();
+		var source = diagnostics[0].getSource();
 		if (StringUtils.isEmpty(source)) {
 			return Set.of();
 		}
@@ -480,17 +482,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		List<Issue> issueList = new ArrayList<>();
 
 		for (var diagnostic : diagnostics) {
-			Issue issue;
 			if (diagnostic.getData() == null) {
 				continue;
 			}
-			try {
-				issue = om.readValue(diagnostic.getData().toString(), Issue.class);
-				issueList.add(issue);
-			} catch (JsonProcessingException e) {
-				SnykLogger.logError(e);
-				continue;
-			}
+			issueList.add(diagnostic.getData());
 		}
 
 		switch (snykProduct) {

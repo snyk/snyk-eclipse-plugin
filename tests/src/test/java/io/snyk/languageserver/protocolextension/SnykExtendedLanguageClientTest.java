@@ -20,6 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Array;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -53,7 +54,9 @@ import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsBaseTest;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
+import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
+import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.AdditionalData;
@@ -178,21 +181,14 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var uri = "file://" + folderPath + "/c/";
 		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
 
-		var param = new PublishDiagnosticsParams();
+		var param = new PublishDiagnostics316Param();
 		param.setUri(uri);
-		var diagnostic = new Diagnostic();
+		var diagnostic = new Diagnostic316();
 		diagnostic.setSource(DIAGNOSTIC_SOURCE_SNYK_CODE);
 
 		var issue = Instancio.of(Issue.class).create();
-		ObjectMapper objectMapper = new ObjectMapper();
-		String res;
-		try {
-			res = objectMapper.writeValueAsString(issue);
-		} catch (Exception e) {
-			res = "{}";
-		}
-		diagnostic.setData(res);
-		param.setDiagnostics(List.of(diagnostic));
+		diagnostic.setData(issue);
+		param.setDiagnostics(new Diagnostic316[]{diagnostic});
 		cut = new SnykExtendedLanguageClient();
 		var future = cut.publishDiagnostics316(param);
 		try {
@@ -211,7 +207,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		assertEquals(issue.id(), actualIssueList.stream().findFirst().get().id());
 
 		// Test remove from cache
-		param = new PublishDiagnosticsParams();
+		param = new PublishDiagnostics316Param();
 		param.setUri(uri);
 
 		cut = new SnykExtendedLanguageClient();
