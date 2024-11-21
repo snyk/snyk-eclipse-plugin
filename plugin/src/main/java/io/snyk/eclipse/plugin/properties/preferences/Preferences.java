@@ -55,9 +55,9 @@ public class Preferences {
 	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_IGNORED_ISSUES";
 	public static final String FILTER_FIXABLE_ISSUES = "FILTER_FIXABLE_ISSUES";
 
-	//Feature flags
+	// Feature flags
 	public static final String IS_GLOBAL_IGNORES_FEATURE_ENABLED = "IS_GLOBAL_IGNORES_FEATURE_ENABLED";
-	
+
 	// This is a bit confusing - CLI takes DISABLE as env variable, but we ask for
 	// ENABLE, so we need to revert it
 	// when populating the environment

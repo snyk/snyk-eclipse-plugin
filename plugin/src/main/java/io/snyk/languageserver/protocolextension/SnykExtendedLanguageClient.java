@@ -235,7 +235,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public boolean getFeatureFlagStatus(String featureFlag) {
 		try {
 			CompletableFuture<Object> lsGlobalIgnoresFeatureFlag = executeCommand(
-					LsCommandID.COMMAND_GET_FEATURE_FLAG_STATUS, new ArrayList<>());
+					LsCommandID.COMMAND_GET_FEATURE_FLAG_STATUS, List.of(featureFlag));
 			Object result;
 			try {
 				result = lsGlobalIgnoresFeatureFlag.get(5, TimeUnit.SECONDS);
@@ -248,15 +248,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				@SuppressWarnings("unchecked")
 				Map<String, Object> resultMap = (Map<String, Object>) result;
 				boolean ok = resultMap.get("ok") instanceof Boolean ? (Boolean) resultMap.get("ok") : false;
-				String userMessage = resultMap.get("userMessage") instanceof String
-						? (String) resultMap.get("userMessage")
-						: "No message provided";
+//				String userMessage = resultMap.get("userMessage") instanceof String
+//						? (String) resultMap.get("userMessage")
+//						: "No message provided";
 
 				if (ok) {
 					SnykLogger.logInfo("Feature flag " + featureFlag + " is enabled.");
 					return true;
 				} else {
-					SnykLogger.logInfo("Feature flag " + featureFlag + " is disabled. Message: " + userMessage);
+//					SnykLogger.logInfo("Feature flag " + featureFlag + " is disabled. Message: " + userMessage);
 					return false;
 				}
 			}

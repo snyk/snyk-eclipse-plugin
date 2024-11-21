@@ -313,7 +313,7 @@
                     commandId="io.snyk.eclipse.plugin.commands.snykShowOpenIgnored"
                     icon="icons/enabled.png"
                     style="push"
-                    tooltip="Hide Ignored">
+                    tooltip="Show Open Issues">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykShowIgnored"
