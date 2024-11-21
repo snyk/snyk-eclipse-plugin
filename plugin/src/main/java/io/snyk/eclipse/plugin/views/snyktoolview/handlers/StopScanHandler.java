@@ -24,7 +24,7 @@ public class StopScanHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		SnykExtendedLanguageClient.getInstance().cancelAllProgresses();
+		SnykExtendedLanguageClient.getInstance().getProgressManager().cancelAll();
 		ScanState.getInstance().clearAllScanStates();
 		PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
 			IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
