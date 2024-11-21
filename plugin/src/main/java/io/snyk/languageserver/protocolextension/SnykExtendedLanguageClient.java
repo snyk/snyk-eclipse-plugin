@@ -44,8 +44,10 @@ import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.ProgressParams;
+import org.eclipse.lsp4j.WorkDoneProgressCancelParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressEnd;
+import org.eclipse.lsp4j.WorkDoneProgressKind;
 import org.eclipse.lsp4j.WorkDoneProgressNotification;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
@@ -92,10 +94,12 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
-	private ProgressManager progressMgr = new ProgressManager();
+	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
 	private ISnykToolView toolView;
+	// this field is for testing only
+	private LanguageServer ls;
 
 	private static SnykExtendedLanguageClient instance = null;
 
@@ -137,6 +141,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public LanguageServer getConnectedLanguageServer() {
+		if (this.ls != null) {
+			return ls;
+		}
 		return super.getLanguageServer();
 	}
 
@@ -512,30 +519,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@Override
 	public CompletableFuture<Void> createProgress(WorkDoneProgressCreateParams params) {
-		return getProgressMgr().createProgress(params);
-	}
-
-	@Override
-	public void notifyProgress(ProgressParams params) {
-		getProgressMgr().updateProgress(params);
-	}
-
-	public void cancelAllProgresses() {
-		if (getProgressMgr() == null) {
-			return;
-		}
-		CompletableFuture.runAsync(() -> {
-			for (var progressHashMap : getProgressMgr().progresses.entrySet()) {
-				var progressToken = progressHashMap.getKey();
-				WorkDoneProgressEnd workDoneProgressEnd = new WorkDoneProgressEnd();
-				workDoneProgressEnd.setMessage("Operation canceled.");
-				Either<WorkDoneProgressNotification, Object> value = Either.forLeft(workDoneProgressEnd);
-				Either<String, Integer> token = Either.forLeft(progressToken);
-	
-				var progressParam = new ProgressParams(token, value);
-				notifyProgress(progressParam);
-			}
-		});
+		this.progressManager.addProgress(params.getToken().getLeft());
+		return super.createProgress(params);
 	}
 
 	private void runSnykWizard() {
@@ -652,11 +637,49 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	}
 
-	public ProgressManager getProgressMgr() {
-		return progressMgr;
+	public void setProgressMgr(ProgressManager progressMgr) {
+		this.progressManager = progressMgr;
 	}
 
-	public void setProgressMgr(ProgressManager progressMgr) {
-		this.progressMgr = progressMgr;
+	@Override
+	public void notifyProgress(final ProgressParams params) {
+		WorkDoneProgressNotification progressNotification = params.getValue().getLeft();
+		if (progressNotification != null && progressNotification.getKind() == WorkDoneProgressKind.end) {
+			this.progressManager.removeProgress(params.getToken().getLeft());
+		}
+		super.notifyProgress(params);
+	}
+
+	/**
+	 * This cancels a progress in language server.
+	 * @param token
+	 */
+	public void cancelProgress(String token) {
+		// call language server to cancel
+		var workDoneProgressCancelParams = new WorkDoneProgressCancelParams();
+		workDoneProgressCancelParams.setToken(token);
+		getConnectedLanguageServer().cancelProgress(workDoneProgressCancelParams);
+
+		// call notify progress with end message
+		var progressParam = getEndProgressParam(token);
+		super.notifyProgress(progressParam);
+	}
+
+	ProgressParams getEndProgressParam(String token) {
+		WorkDoneProgressEnd workDoneProgressEnd = new WorkDoneProgressEnd();
+		workDoneProgressEnd.setMessage("Operation canceled.");
+		Either<WorkDoneProgressNotification, Object> value = Either.forLeft(workDoneProgressEnd);
+		Either<String, Integer> tokenEither = Either.forLeft(token);
+
+		var progressParam = new ProgressParams(tokenEither, value);
+		return progressParam;
+	}
+
+	public ProgressManager getProgressManager() {
+		return this.progressManager;
+	}
+
+	public void setLs(LanguageServer ls) {
+		this.ls = ls;
 	}
 }
