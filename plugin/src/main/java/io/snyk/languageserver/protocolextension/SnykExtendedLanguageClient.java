@@ -697,6 +697,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@Override
 	public void notifyProgress(final ProgressParams params) {
+		if(params.getValue() == null) {
+			return;
+		}
 		WorkDoneProgressNotification progressNotification = params.getValue().getLeft();
 		if (progressNotification != null && progressNotification.getKind() == WorkDoneProgressKind.end) {
 			this.progressManager.removeProgress(params.getToken().getLeft());
