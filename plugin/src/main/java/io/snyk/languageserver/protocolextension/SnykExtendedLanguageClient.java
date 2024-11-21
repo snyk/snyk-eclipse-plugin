@@ -10,6 +10,10 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_TO_DISP
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_ERROR;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_CRITICAL;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_HIGH;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_LOW;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_MEDIUM;
 import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
 import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
@@ -45,8 +49,10 @@ import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.ProgressParams;
+import org.eclipse.lsp4j.WorkDoneProgressCancelParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressEnd;
+import org.eclipse.lsp4j.WorkDoneProgressKind;
 import org.eclipse.lsp4j.WorkDoneProgressNotification;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
@@ -77,6 +83,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsCommandID;
+import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.LsNotificationID;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
@@ -93,10 +100,13 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
-	private ProgressManager progressMgr = new ProgressManager();
+	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
 	private AnalyticsSender analyticsSender;
 	private ISnykToolView toolView;
+	// this field is for testing only
+	private LanguageServer ls;
+	private LsConfigurationUpdater configurationUpdater = new LsConfigurationUpdater();
 
 	private static SnykExtendedLanguageClient instance = null;
 
@@ -111,7 +121,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private void refreshFeatureFlags() {
 		boolean enableConsistentIgnores = getFeatureFlagStatus("snykCodeConsistentIgnores");
-		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, 
+		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
 				Boolean.valueOf(enableConsistentIgnores).toString());
 	}
 
@@ -144,6 +154,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public LanguageServer getConnectedLanguageServer() {
+		if (this.ls != null) {
+			return ls;
+		}
 		return super.getLanguageServer();
 	}
 
@@ -152,6 +165,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (Preferences.getInstance().getAuthToken().isBlank()) {
 				runSnykWizard();
 			} else {
+				openToolView();
 				this.toolView.resetNode(this.toolView.getRoot());
 				refreshFeatureFlags();
 				try {
@@ -305,6 +319,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
 		}
 
+		configurationUpdater.configurationChanged();
+
 		if (!newToken.isBlank() && PlatformUI.isWorkbenchRunning()) {
 			enableSnykViewRunActions();
 		}
@@ -340,17 +356,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			issueCache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
 		}
 
-		Display.getDefault().syncExec(() -> {
-			if (toolView == null && !Preferences.getInstance().isTest()) {
-				IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-				try {
-					toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
-				} catch (PartInitException e) {
-					SnykLogger.logError(e);
-					return;
-				}
-			}
-		});
+		openToolView();
 
 		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(),
 				param.getFolderPath());
@@ -374,6 +380,22 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			break;
 		}
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
+	}
+
+	private void openToolView() {
+		// we don't want to use the UI in tests usually
+		if (this.toolView != null || Preferences.getInstance().isTest()) {
+			return;
+		}
+		Display.getDefault().syncExec(() -> {
+			IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+			try {
+				toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
+			} catch (PartInitException e) {
+				SnykLogger.logError(e);
+				return;
+			}
+		});
 	}
 
 	private Set<ProductTreeNode> getAffectedProductNodes(String snykScanProduct, String folderPath) {
@@ -424,7 +446,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public String getCountsSuffix(ProductTreeNode productTreeNode, SnykIssueCache issueCache) {
-		return "Total: " + String.valueOf(issueCache.getTotalCount(productTreeNode.getProduct()));
+		String product = productTreeNode.getProduct();
+		var critical = issueCache.getIssueCountBySeverity(product, SEVERITY_CRITICAL);
+		var high = issueCache.getIssueCountBySeverity(product, SEVERITY_HIGH);
+		var medium = issueCache.getIssueCountBySeverity(product, SEVERITY_MEDIUM);
+		var low = issueCache.getIssueCountBySeverity(product, SEVERITY_LOW);
+		var total = issueCache.getTotalCount(product);
+		return String.format("%d unique vulnerabilities: %d critical, %d high, %d medium, %d low", total, critical,
+				high, medium, low);
 	}
 
 	private SnykIssueCache getIssueCache(String filePath) {
@@ -557,30 +586,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@Override
 	public CompletableFuture<Void> createProgress(WorkDoneProgressCreateParams params) {
-		return getProgressMgr().createProgress(params);
-	}
-
-	@Override
-	public void notifyProgress(ProgressParams params) {
-		getProgressMgr().updateProgress(params);
-	}
-
-	public void cancelAllProgresses() {
-		if (getProgressMgr() == null) {
-			return;
-		}
-		CompletableFuture.runAsync(() -> {
-			for (var progressHashMap : getProgressMgr().progresses.entrySet()) {
-				var progressToken = progressHashMap.getKey();
-				WorkDoneProgressEnd workDoneProgressEnd = new WorkDoneProgressEnd();
-				workDoneProgressEnd.setMessage("Operation canceled.");
-				Either<WorkDoneProgressNotification, Object> value = Either.forLeft(workDoneProgressEnd);
-				Either<String, Integer> token = Either.forLeft(progressToken);
-
-				var progressParam = new ProgressParams(token, value);
-				notifyProgress(progressParam);
-			}
-		});
+		this.progressManager.addProgress(params.getToken().getLeft());
+		return super.createProgress(params);
 	}
 
 	private void runSnykWizard() {
@@ -697,17 +704,50 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	}
 
-	/**
-	 * Added for test.
-	 */
-	public ProgressManager getProgressMgr() {
-		return progressMgr;
+	public void setProgressMgr(ProgressManager progressMgr) {
+		this.progressManager = progressMgr;
+	}
+
+	@Override
+	public void notifyProgress(final ProgressParams params) {
+		WorkDoneProgressNotification progressNotification = params.getValue().getLeft();
+		if (progressNotification != null && progressNotification.getKind() == WorkDoneProgressKind.end) {
+			this.progressManager.removeProgress(params.getToken().getLeft());
+		}
+		super.notifyProgress(params);
 	}
 
 	/**
-	 * Added for test.
+	 * This cancels a progress in language server.
+	 *
+	 * @param token
 	 */
-	public void setProgressMgr(ProgressManager progressMgr) {
-		this.progressMgr = progressMgr;
+	public void cancelProgress(String token) {
+		// call language server to cancel
+		var workDoneProgressCancelParams = new WorkDoneProgressCancelParams();
+		workDoneProgressCancelParams.setToken(token);
+		getConnectedLanguageServer().cancelProgress(workDoneProgressCancelParams);
+
+		// call notify progress with end message
+		var progressParam = getEndProgressParam(token);
+		super.notifyProgress(progressParam);
+	}
+
+	ProgressParams getEndProgressParam(String token) {
+		WorkDoneProgressEnd workDoneProgressEnd = new WorkDoneProgressEnd();
+		workDoneProgressEnd.setMessage("Operation canceled.");
+		Either<WorkDoneProgressNotification, Object> value = Either.forLeft(workDoneProgressEnd);
+		Either<String, Integer> tokenEither = Either.forLeft(token);
+
+		var progressParam = new ProgressParams(tokenEither, value);
+		return progressParam;
+	}
+
+	public ProgressManager getProgressManager() {
+		return this.progressManager;
+	}
+
+	public void setLs(LanguageServer ls) {
+		this.ls = ls;
 	}
 }

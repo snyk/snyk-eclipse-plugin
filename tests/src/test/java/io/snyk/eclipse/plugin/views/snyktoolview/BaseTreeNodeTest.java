@@ -78,8 +78,7 @@ class BaseTreeNodeTest {
 		node.removeChildren();
 
 		TreeNode[] children = node.getChildren();
-		assertNotNull(children);
-		assertEquals(0, children.length);
+		assertNull(children);
 	}
 
 	@Test
@@ -119,7 +118,7 @@ class BaseTreeNodeTest {
 		assertNull(node.getValue());
 		assertEquals("", node.getText());
 		assertNull(node.getImageDescriptor());
-		assertEquals(0, node.getChildren().length);
+		assertNull(node.getChildren());
 	}
 
 	@Test
