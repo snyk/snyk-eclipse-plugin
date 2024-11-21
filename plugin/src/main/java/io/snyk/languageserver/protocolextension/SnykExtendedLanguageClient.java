@@ -301,9 +301,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (!param.getFolderPath().isBlank()) {
 			issueCache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
 		}
-
-		Display.getDefault().syncExec(() -> {
-			if (toolView == null && !Preferences.getInstance().isTest()) {
+		if (toolView == null && !Preferences.getInstance().isTest()) {
+			Display.getDefault().syncExec(() -> {
 				IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				try {
 					toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
@@ -311,8 +310,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					SnykLogger.logError(e);
 					return;
 				}
-			}
-		});
+			});
+		}
 
 		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(),
 				param.getFolderPath());
@@ -652,6 +651,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	/**
 	 * This cancels a progress in language server.
+	 * 
 	 * @param token
 	 */
 	public void cancelProgress(String token) {
