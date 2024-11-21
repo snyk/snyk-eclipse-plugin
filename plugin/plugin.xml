@@ -141,7 +141,7 @@
             name="Ignored Issues">
         </command>
         <command
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.SnykFilterFixableIssuesHandler"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.snykFilterFixableIssuesHandler"
             id="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
             name="AI Fixable">
         </command>
