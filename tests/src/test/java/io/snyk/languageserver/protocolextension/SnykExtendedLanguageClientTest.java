@@ -56,6 +56,7 @@ import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsBaseTest;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
+import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
@@ -224,7 +225,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		} catch (Exception ex) {
 			fail(ex);
 		}
-		
+
 	}
 
 	@Test
@@ -319,7 +320,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
-		
+
 		runInfoNodeTest(param, 4, 2, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
 	}
 
@@ -366,7 +367,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String expectedFirstInfoNode = "✋ 4 issues found by Snyk";
 		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
 		String expectedThirdInfoNode = "Adjust your Issue View Options to see open issues.";
-		
+
 		runInfoNodeTest(param, 4, 2, 0, 4, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
 	}
 
@@ -448,7 +449,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		}
 		return productNodes;
 	}
-	
+
 	@Test
 	void testSnykScanAddsToScanStateHashMap() {
 		var scanState = ScanState.getInstance();
@@ -478,34 +479,34 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		actualState = scanState.isScanInProgress(expectedKey);
 		assertEquals(false, actualState);
 	}
-	
-	@Test 
+
+	@Test
 	void createProgressAddsTokenToProgressManager() {
 		ProgressManager pmMock = mock(ProgressManager.class);
 		cut = new SnykExtendedLanguageClient();
 		cut.setProgressMgr(pmMock);
 		var params = new WorkDoneProgressCreateParams();
 		params.setToken("a");
-		
+
 		cut.createProgress(params);
-		
+
 		verify(pmMock).addProgress("a");
 	}
-	
-	@Test 
+
+	@Test
 	void notifyProgress_EndProgressRemovesFromProgressManager() {
 		ProgressManager pmMock = mock(ProgressManager.class);
 		cut = new SnykExtendedLanguageClient();
 		cut.setProgressMgr(pmMock);
 		var params = cut.getEndProgressParam("a");
 		params.setToken("a");
-		
+
 		cut.notifyProgress(params);
-		
+
 		verify(pmMock).removeProgress("a");
 	}
-	
-	@Test 
+
+	@Test
 	void notifyProgress_BeginProgressDoesNotRemoveFromProgressManager() {
 		ProgressManager pmMock = mock(ProgressManager.class);
 		cut = new SnykExtendedLanguageClient();
@@ -516,13 +517,13 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		Either<String, Integer> tokenEither = Either.forLeft("a");
 		var progressParam = new ProgressParams(tokenEither, value);
 		progressParam.setToken("a");
-		
+
 		cut.notifyProgress(progressParam);
-		
+
 		verifyNoInteractions(pmMock);
 	}
-	
-	@Test 
+
+	@Test
 	void notifyProgress_ReportProgressDoesNotRemoveFromProgressManager() {
 		ProgressManager pmMock = mock(ProgressManager.class);
 		cut = new SnykExtendedLanguageClient();
@@ -533,25 +534,50 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		Either<String, Integer> tokenEither = Either.forLeft("a");
 		var progressParam = new ProgressParams(tokenEither, value);
 		progressParam.setToken("a");
-		
+
 		cut.notifyProgress(progressParam);
-		
+
 		verifyNoInteractions(pmMock);
 	}
-	
-	@Test 
+
+	@Test
 	void cancelProgress_callsLSToCancel() {
 		ProgressManager pmMock = mock(ProgressManager.class);
 		LanguageServer lsMock = mock(LanguageServer.class);
 		cut = new SnykExtendedLanguageClient();
 		cut.setLs(lsMock);
 		cut.setProgressMgr(pmMock);
-		
+
 		cut.cancelProgress("a");
-		
+
 		// progressManager should call language client, but not the other way round
 		// else we'd have an endless loop
 		verifyNoInteractions(pmMock);
 		verify(lsMock).cancelProgress(Mockito.any());
+	}
+
+	@Test
+	void testGetTotal() {
+		cut = new SnykExtendedLanguageClient();
+		ProductTreeNode productTreeNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
+		SnykIssueCache issueCache = new SnykIssueCache();
+		var issues = new HashSet<Issue>();
+		var highIssue = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), getSecurityIssue())
+				.set(Select.field(Issue::severity), "high").create();
+		var mediumIssue = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), getSecurityIssue())
+				.set(Select.field(Issue::severity), "medium").create();
+		var lowIssue = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), getSecurityIssue())
+				.set(Select.field(Issue::severity), "low").create();
+		issues.addAll(Set.of(highIssue, mediumIssue, lowIssue));
+
+		issueCache.addCodeIssues("a/b/c", issues);
+
+		var actual = cut.getCountsSuffix(productTreeNode, issueCache);
+
+		assertEquals("3 unique vulnerabilities: 0 critical, 1 high, 1 medium, 1 low", actual);
+	}
+
+	private AdditionalData getSecurityIssue() {
+		return Instancio.of(AdditionalData.class).set(Select.field(AdditionalData::isSecurityType), true).create();
 	}
 }

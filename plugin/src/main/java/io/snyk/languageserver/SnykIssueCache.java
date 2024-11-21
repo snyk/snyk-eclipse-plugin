@@ -60,7 +60,7 @@ public class SnykIssueCache {
 		Collection<Issue> issues = cache.get(path);
 		return issues != null ? Collections.unmodifiableCollection(issues) : Collections.emptyList();
 	}
-	
+
 	public Collection<Issue> getIssues(String path, String displayProduct) {
 		var cache = getCacheByDisplayProduct(displayProduct);
 		return getIssuesForPath(path, cache);
@@ -235,6 +235,16 @@ public class SnykIssueCache {
 
 	public long getIgnoredCount(String displayProduct) {
 		var issues = getFilteredIssue(displayProduct, ignoredPredicate);
+		return issues.size();
+	}
+
+	public long getIssueCountBySeverity(String displayProduct, String severity) {
+		var issues = getFilteredIssue(displayProduct, new Predicate<Issue>() {
+			@Override
+			public boolean test(Issue issue) {
+				return issue != null && issue.severity().equals(severity);
+			}
+		});
 		return issues.size();
 	}
 }

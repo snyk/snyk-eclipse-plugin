@@ -10,6 +10,10 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_TO_DISP
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_ERROR;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_CRITICAL;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_HIGH;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_LOW;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_MEDIUM;
 import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
 import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
@@ -78,6 +82,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsCommandID;
+import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.LsNotificationID;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
@@ -100,6 +105,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private ISnykToolView toolView;
 	// this field is for testing only
 	private LanguageServer ls;
+	private LsConfigurationUpdater configurationUpdater = new LsConfigurationUpdater();
 
 	private static SnykExtendedLanguageClient instance = null;
 
@@ -152,6 +158,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (Preferences.getInstance().getAuthToken().isBlank()) {
 				runSnykWizard();
 			} else {
+				openToolView();
 				this.toolView.resetNode(this.toolView.getRoot());
 				try {
 					if (window == null) {
@@ -267,6 +274,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
 		}
 
+		configurationUpdater.configurationChanged();
+
 		if (!newToken.isBlank() && PlatformUI.isWorkbenchRunning()) {
 			enableSnykViewRunActions();
 		}
@@ -301,17 +310,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (!param.getFolderPath().isBlank()) {
 			issueCache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
 		}
-		if (toolView == null && !Preferences.getInstance().isTest()) {
-			Display.getDefault().syncExec(() -> {
-				IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-				try {
-					toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
-				} catch (PartInitException e) {
-					SnykLogger.logError(e);
-					return;
-				}
-			});
-		}
+
+		openToolView();
 
 		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(),
 				param.getFolderPath());
@@ -335,6 +335,22 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			break;
 		}
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
+	}
+
+	private void openToolView() {
+		// we don't want to use the UI in tests usually
+		if (this.toolView != null || Preferences.getInstance().isTest()) {
+			return;
+		}
+		Display.getDefault().syncExec(() -> {
+			IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+			try {
+				toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
+			} catch (PartInitException e) {
+				SnykLogger.logError(e);
+				return;
+			}
+		});
 	}
 
 	private Set<ProductTreeNode> getAffectedProductNodes(String snykScanProduct, String folderPath) {
@@ -385,7 +401,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public String getCountsSuffix(ProductTreeNode productTreeNode, SnykIssueCache issueCache) {
-		return "Total: " + String.valueOf(issueCache.getTotalCount(productTreeNode.getProduct()));
+		String product = productTreeNode.getProduct();
+		var critical = issueCache.getIssueCountBySeverity(product, SEVERITY_CRITICAL);
+		var high = issueCache.getIssueCountBySeverity(product, SEVERITY_HIGH);
+		var medium = issueCache.getIssueCountBySeverity(product, SEVERITY_MEDIUM);
+		var low = issueCache.getIssueCountBySeverity(product, SEVERITY_LOW);
+		var total = issueCache.getTotalCount(product);
+		return String.format("%d unique vulnerabilities: %d critical, %d high, %d medium, %d low", total, critical,
+				high, medium, low);
 	}
 
 	private SnykIssueCache getIssueCache(String filePath) {
