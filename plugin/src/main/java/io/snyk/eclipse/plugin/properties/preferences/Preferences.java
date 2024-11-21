@@ -55,6 +55,9 @@ public class Preferences {
 	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_IGNORED_ISSUES";
 	public static final String FILTER_FIXABLE_ISSUES = "FILTER_FIXABLE_ISSUES";
 
+	//Feature flags
+	public static final String IS_GLOBAL_IGNORES_FEATURE_ENABLED = "IS_GLOBAL_IGNORES_FEATURE_ENABLED";
+	
 	// This is a bit confusing - CLI takes DISABLE as env variable, but we ask for
 	// ENABLE, so we need to revert it
 	// when populating the environment
@@ -98,16 +101,16 @@ public class Preferences {
 			store(FILTER_CRITICAL, "false");
 		}
 		if (getPref(FILTER_DELTA_NEW_ISSUES) == null) {
-		    store(FILTER_DELTA_NEW_ISSUES, "false");
+			store(FILTER_DELTA_NEW_ISSUES, "false");
 		}
 		if (getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES) == null) {
-		    store(FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+			store(FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		}
 		if (getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES) == null) {
-		    store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+			store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		}
 		if (getPref(FILTER_FIXABLE_ISSUES) == null) {
-		    store(FILTER_FIXABLE_ISSUES, "false");
+			store(FILTER_FIXABLE_ISSUES, "false");
 		}
 
 		if (getPref(SEND_ERROR_REPORTS) == null) {
@@ -124,6 +127,9 @@ public class Preferences {
 		}
 		if (getPref(LSP_VERSION) == null) {
 			store(LSP_VERSION, "1");
+		}
+		if (getPref(IS_GLOBAL_IGNORES_FEATURE_ENABLED) == null) {
+			store(IS_GLOBAL_IGNORES_FEATURE_ENABLED, "false");
 		}
 
 		String token = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");

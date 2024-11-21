@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -108,6 +109,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		createIssueCaches();
 	}
 
+	private void refreshFeatureFlags() {
+		boolean enableConsistentIgnores = getFeatureFlagStatus("snykCodeConsistentIgnores");
+		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, 
+				Boolean.valueOf(enableConsistentIgnores).toString());
+	}
+
 	private void createIssueCaches() {
 		var workspace = ResourcesPlugin.getWorkspace();
 		IProject[] allProjects = workspace.getRoot().getProjects();
@@ -146,9 +153,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				runSnykWizard();
 			} else {
 				this.toolView.resetNode(this.toolView.getRoot());
+				refreshFeatureFlags();
 				try {
 					if (window == null) {
-						executeCommand(LsCommandID.SNYK_WORKSPACE_SCAN, new ArrayList<>());
+						executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 						return;
 					}
 
@@ -167,7 +175,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 					if (project != null) {
 						runForProject(project.getName());
-						executeCommand(LsCommandID.SNYK_WORKSPACE_FOLDER_SCAN,
+						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN,
 								List.of(project.getLocation().toOSString()));
 					}
 				} catch (Exception e) {
@@ -178,7 +186,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void triggerAuthentication() {
-		executeCommand(LsCommandID.SNYK_LOGIN, new ArrayList<>());
+		executeCommand(LsCommandID.COMMAND_LOGIN, new ArrayList<>());
 	}
 
 	public void ensureLanguageServerRunning() {
@@ -201,12 +209,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void trustWorkspaceFolders() {
-		executeCommand(LsCommandID.SNYK_TRUST_WORKSPACE_FOLDERS, new ArrayList<>());
+		executeCommand(LsCommandID.COMMAND_TRUST_WORKSPACE_FOLDERS, new ArrayList<>());
 	}
 
 	public boolean getSastEnabled() {
 		try {
-			CompletableFuture<Object> lsSastSettings = executeCommand(LsCommandID.SNYK_SAST_ENABLED, new ArrayList<>());
+			CompletableFuture<Object> lsSastSettings = executeCommand(LsCommandID.COMMAND_GET_SETTINGS_SAST_ENABLED,
+					new ArrayList<>());
 			Object result;
 			try {
 				result = lsSastSettings.get(5, TimeUnit.SECONDS);
@@ -223,12 +232,48 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return false;
 	}
 
+	public boolean getFeatureFlagStatus(String featureFlag) {
+		try {
+			CompletableFuture<Object> lsGlobalIgnoresFeatureFlag = executeCommand(
+					LsCommandID.COMMAND_GET_FEATURE_FLAG_STATUS, new ArrayList<>());
+			Object result;
+			try {
+				result = lsGlobalIgnoresFeatureFlag.get(5, TimeUnit.SECONDS);
+			} catch (TimeoutException e) {
+				SnykLogger.logInfo("did not get a response for Ignores settings, disabling Global Ignores");
+				return false;
+			}
+
+			if (result instanceof Map) {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> resultMap = (Map<String, Object>) result;
+				boolean ok = resultMap.get("ok") instanceof Boolean ? (Boolean) resultMap.get("ok") : false;
+				String userMessage = resultMap.get("userMessage") instanceof String
+						? (String) resultMap.get("userMessage")
+						: "No message provided";
+
+				if (ok) {
+					SnykLogger.logInfo("Feature flag " + featureFlag + " is enabled.");
+					return true;
+				} else {
+					SnykLogger.logInfo("Feature flag " + featureFlag + " is disabled. Message: " + userMessage);
+					return false;
+				}
+			}
+		} catch (Exception e) {
+			SnykLogger.logError(e);
+			return false;
+		}
+
+		return false;
+	}
+
 	public String getIssueDescription(String issueId) {
 		if (StringUtils.isEmpty(issueId)) {
 			SnykLogger.logInfo("issueId is empty");
 			return "";
 		}
-		CompletableFuture<Object> issueDescription = executeCommand(LsCommandID.SNYK_GENERATE_ISSUE_DESCRIPTION,
+		CompletableFuture<Object> issueDescription = executeCommand(LsCommandID.COMMAND_GENERATE_ISSUE_DESCRIPTION,
 				List.of(issueId));
 		Object result;
 		try {
@@ -503,7 +548,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void reportAnalytics(AbstractAnalyticsEvent event) {
 		try {
 			var eventString = om.writeValueAsString(event);
-			executeCommand(LsCommandID.SNYK_REPORT_ANALYTICS, List.of(eventString));
+			executeCommand(LsCommandID.COMMAND_REPORT_ANALYTICS, List.of(eventString));
 		} catch (Exception e) {
 			SnykLogger.logError(e);
 		}
@@ -531,7 +576,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				workDoneProgressEnd.setMessage("Operation canceled.");
 				Either<WorkDoneProgressNotification, Object> value = Either.forLeft(workDoneProgressEnd);
 				Either<String, Integer> token = Either.forLeft(progressToken);
-	
+
 				var progressParam = new ProgressParams(token, value);
 				notifyProgress(progressParam);
 			}
@@ -586,7 +631,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var token = p.getAuthToken();
 		final int timeout = 5;
 		CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-			var result = executeCommand(LsCommandID.SNYK_GET_ACTIVE_USER, new ArrayList<>());
+			var result = executeCommand(LsCommandID.COMMAND_GET_ACTIVE_USER, new ArrayList<>());
 			// we don't wait forever, and if we can't get a user name (refresh token), we're
 			// done.
 			try {
@@ -652,10 +697,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	}
 
+	/**
+	 * Added for test.
+	 */
 	public ProgressManager getProgressMgr() {
 		return progressMgr;
 	}
 
+	/**
+	 * Added for test.
+	 */
 	public void setProgressMgr(ProgressManager progressMgr) {
 		this.progressMgr = progressMgr;
 	}
