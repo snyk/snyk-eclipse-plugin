@@ -28,7 +28,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -323,12 +325,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (differentToken) {
 			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
 		}
-		
+
 		if (!Preferences.getInstance().isTest()) {
 			configurationUpdater.configurationChanged();
 			refreshFeatureFlags();
 		}
-		
+
 		if (!newToken.isBlank() && PlatformUI.isWorkbenchRunning()) {
 			enableSnykViewRunActions();
 		}
@@ -379,7 +381,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		case SCAN_STATE_SUCCESS:
 			scanState.setScanInProgress(inProgressKey, false);
 			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+				productTreeNode.reset();
 				addInfoNodes(productTreeNode, param.getFolderPath(), issueCache);
+				populateFileAndIssueNodes(productTreeNode, param.getFolderPath(), issueCache);
 			}
 			break;
 		case SCAN_STATE_ERROR:
@@ -502,7 +506,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		if (totalCount > 0 && ignoredCount == totalCount
-				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED) 
+				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
 				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
 			toolView.addInfoNode(productNode,
 					new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE));
@@ -529,20 +533,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				return;
 			}
 
-			var productTreeNodes = populateIssueCache(param, filePath);
-			populateFileAndIssueNodes(filePath, productTreeNodes);
+			populateIssueCache(param, filePath);
 		});
 	}
 
-	private void populateFileAndIssueNodes(String filePath, Set<ProductTreeNode> nodes) {
-		for (ProductTreeNode productTreeNode : nodes) {
-			var issueCache = IssueCacheHolder.getInstance().getCacheInstance(filePath);
-			var issues = issueCache.getIssues(filePath, productTreeNode.getProduct());
-			issues = IssueSorter.sortIssuesBySeverity(issues);
-   			issues = filterIgnoredIssues(issues);
-			if (issues.isEmpty())
+	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, String folderPath, SnykIssueCache issueCache) {
+		var cacheHashMap = Collections.unmodifiableMap(issueCache.getCacheByDisplayProduct(productTreeNode.getProduct()));
+		for (var kv : cacheHashMap.entrySet()) {
+			var fileName = kv.getKey();
+			var issues = kv.getValue();
+			if(issues.isEmpty())
 				continue;
-			FileTreeNode fileNode = new FileTreeNode(filePath);
+			issues = IssueSorter.sortIssuesBySeverity(issues);
+			FileTreeNode fileNode = new FileTreeNode(fileName);
 			toolView.addFileNode(productTreeNode, fileNode);
 			for (Issue issue : issues) {
 				toolView.addIssueNode(fileNode, new IssueTreeNode(issue));
@@ -568,17 +571,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     	    .toList();
 
     }
-	
-	private Set<ProductTreeNode> populateIssueCache(PublishDiagnostics316Param param, String filePath) {
+
+	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
 		var issueCache = getIssueCache(filePath);
 		Diagnostic316[] diagnostics = param.getDiagnostics();
 		if (diagnostics.length == 0) {
 			issueCache.removeAllIssuesForPath(filePath);
-			return Set.of();
+			return;
 		}
 		var source = diagnostics[0].getSource();
 		if (StringUtils.isEmpty(source)) {
-			return Set.of();
+			return;
 		}
 		var snykProduct = LSP_SOURCE_TO_SCAN_PARAMS.get(source);
 		List<Issue> issueList = new ArrayList<>();
@@ -601,7 +604,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			issueCache.addIacIssues(filePath, issueList);
 			break;
 		}
-		return getAffectedProductNodes(snykProduct, filePath);
 	}
 
 	public void reportAnalytics(AbstractTask event) {

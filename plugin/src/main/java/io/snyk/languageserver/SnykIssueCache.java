@@ -208,7 +208,7 @@ public class SnykIssueCache {
 		return getCacheByDisplayProduct(product).values().stream().flatMap(Collection::stream).count();
 	}
 
-	private Map<String, Collection<Issue>> getCacheByDisplayProduct(String displayProduct) {
+	public Map<String, Collection<Issue>> getCacheByDisplayProduct(String displayProduct) {
 		switch (displayProduct) {
 		case ProductConstants.DISPLAYED_OSS:
 			return ossIssues;

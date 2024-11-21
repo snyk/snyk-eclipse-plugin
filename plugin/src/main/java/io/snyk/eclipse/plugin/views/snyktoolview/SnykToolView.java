@@ -267,32 +267,12 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public void addInfoNode(ProductTreeNode parent, InfoTreeNode toBeAdded) {
-		List<BaseTreeNode> list = new ArrayList<>();
-		var children = parent.getChildren();
-		if (children != null) {
-			list = Arrays.stream(children).map(it -> (BaseTreeNode) it).collect(Collectors.toList());
-		}
-
 		toBeAdded.setParent(parent);
-		int insertIndex = GetLastInfoNodeIndex(list);
-		list.add(insertIndex, toBeAdded);
-		parent.setChildren(list.toArray(new BaseTreeNode[0]));
-
+		parent.addChild(toBeAdded);
+		
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(parent, true);
 		});
-	}
-
-	private int GetLastInfoNodeIndex(List<BaseTreeNode> list) {
-		int insertIndex = 0;
-		for (int i = 0; i < list.size(); i++) {
-			if (list.get(i) instanceof InfoTreeNode) {
-				insertIndex += 1;
-			} else {
-				break;
-			}
-		}
-		return insertIndex;
 	}
 
 	@Override
