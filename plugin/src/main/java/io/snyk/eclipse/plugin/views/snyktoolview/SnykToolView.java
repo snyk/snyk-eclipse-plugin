@@ -167,6 +167,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		parent.addChild(toBeAdded);
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(parent, true);
+			this.treeViewer.expandToLevel(4); //Expand to level 4 to show ProjectNode, ProductNodes, FileNode, and IssueNodes.
 		});
 	}
 
