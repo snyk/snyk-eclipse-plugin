@@ -19,7 +19,7 @@ public class IssueTreeNode extends BaseTreeNode {
 		String displayTitle = getIssue().getDisplayTitle();
 
 		if (getIssue().isIgnored()) {
-			displayTitle = " [ Ignored ]" + displayTitle;
+			displayTitle = " [ Ignored ] " + displayTitle;
 		}
 
 		if (issue.hasFix()) {
