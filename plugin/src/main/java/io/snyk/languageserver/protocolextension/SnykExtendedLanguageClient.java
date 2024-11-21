@@ -75,12 +75,14 @@ import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
+import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.IssueTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
+import io.snyk.languageserver.FeatureFlagConstants;
 import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsCommandID;
 import io.snyk.languageserver.LsConfigurationUpdater;
@@ -90,6 +92,7 @@ import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
+import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
@@ -119,8 +122,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		createIssueCaches();
 	}
 
-	private void refreshFeatureFlags() {
-		boolean enableConsistentIgnores = getFeatureFlagStatus("snykCodeConsistentIgnores");
+	public void refreshFeatureFlags() {
+		boolean enableConsistentIgnores = getFeatureFlagStatus(FeatureFlagConstants.SNYK_CODE_CONSISTENT_IGNORES);
 		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
 				Boolean.valueOf(enableConsistentIgnores).toString());
 	}
@@ -167,7 +170,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			} else {
 				openToolView();
 				this.toolView.resetNode(this.toolView.getRoot());
-				refreshFeatureFlags();
 				try {
 					if (window == null) {
 						executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
@@ -254,29 +256,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			try {
 				result = lsGlobalIgnoresFeatureFlag.get(5, TimeUnit.SECONDS);
 			} catch (TimeoutException e) {
-				SnykLogger.logInfo("did not get a response for Ignores settings, disabling Global Ignores");
+				SnykLogger.logInfo("did not get a response for feature flag status");
 				return false;
 			}
-
-			if (result instanceof Map) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> resultMap = (Map<String, Object>) result;
-				boolean ok = resultMap.get("ok") instanceof Boolean ? (Boolean) resultMap.get("ok") : false;
-//				String userMessage = resultMap.get("userMessage") instanceof String
-//						? (String) resultMap.get("userMessage")
-//						: "No message provided";
-
-				if (ok) {
-					SnykLogger.logInfo("Feature flag " + featureFlag + " is enabled.");
-					return true;
-				} else {
-//					SnykLogger.logInfo("Feature flag " + featureFlag + " is disabled. Message: " + userMessage);
-					return false;
-				}
-			}
+			FeatureFlagStatus featureFlagStatus = om.convertValue(result, FeatureFlagStatus.class);
+			return featureFlagStatus != null ? featureFlagStatus.getOk() : false;
 		} catch (Exception e) {
 			SnykLogger.logError(e);
-			return false;
 		}
 
 		return false;
@@ -320,6 +306,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		configurationUpdater.configurationChanged();
+		refreshFeatureFlags();
 
 		if (!newToken.isBlank() && PlatformUI.isWorkbenchRunning()) {
 			enableSnykViewRunActions();

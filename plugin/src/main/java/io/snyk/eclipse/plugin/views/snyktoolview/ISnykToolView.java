@@ -1,7 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import io.snyk.languageserver.protocolextension.FileTreeNode;
-
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.TreeViewer;
 

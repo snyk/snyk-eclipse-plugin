@@ -43,7 +43,6 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
-import io.snyk.languageserver.protocolextension.FileTreeNode;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
