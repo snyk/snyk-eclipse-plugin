@@ -30,7 +30,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -105,7 +104,6 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
-	private static final String SNYK_CODE_CONSISTENT_IGNORES = "snykCodeConsistentIgnores";
 	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
 	private TaskProcessor taskProcessor;
@@ -542,9 +540,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (var kv : cacheHashMap.entrySet()) {
 			var fileName = kv.getKey();
 			var issues = kv.getValue();
+			issues = IssueSorter.sortIssuesBySeverity(issues);
+			issues = filterIgnoredIssues(issues);
 			if(issues.isEmpty())
 				continue;
-			issues = IssueSorter.sortIssuesBySeverity(issues);
 			FileTreeNode fileNode = new FileTreeNode(fileName);
 			toolView.addFileNode(productTreeNode, fileNode);
 			for (Issue issue : issues) {

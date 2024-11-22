@@ -4,17 +4,10 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -42,27 +35,14 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.texteditor.ITextEditor;
 import org.osgi.framework.Bundle;
 
+import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
-import io.snyk.eclipse.plugin.html.CodeHtmlProvider;
-import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
-import io.snyk.eclipse.plugin.utils.ResourceUtils;
-import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
-import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
-import io.snyk.languageserver.protocolextension.FileTreeNode;
-import io.snyk.languageserver.protocolextension.messageObjects.scanResults.LineRange;
-
-import java.io.File;
-import java.nio.file.Path;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
