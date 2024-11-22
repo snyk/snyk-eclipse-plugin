@@ -83,12 +83,10 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@BeforeEach
 	protected void setUp() {
 		super.setUp();
-	    //Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
-		//PreferencesUtils.setPreferences(prefs);
+		pref = Preferences.getInstance();
 		// we don't want the wizard to pop up, so we set a dummy token
 		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
 		pref.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "false");
-		pref.setTest(true);
 		toolWindowMock = mock(ISnykToolView.class);
 	}
 
