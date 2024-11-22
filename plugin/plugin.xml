@@ -145,6 +145,21 @@
             id="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
             name="AI Fixable">
         </command>
+        <command
+              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllAiFixHandler"
+              id="io.snyk.eclipse.plugin.snykShowAllSeverities"
+              name="Show All Severities">
+        </command>
+        <command
+              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllProductHandler"
+              id="io.snyk.eclipse.plugin.command.snykShowAllProducts"
+              name="Show All Products">
+        </command>
+        <command
+              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllIssuesHandler"
+              id="io.snyk.eclipse.plugin.command.snykShowAllIssuesStatus"
+              name="Show All Issues">
+        </command>
     </extension>
     <extension point="org.eclipse.ui.menus">
         <menuContribution
@@ -273,6 +288,12 @@
                       name="io.snyk.eclipse.plugin.separator.allSeverities"
                       visible="true">
                 </separator>
+                <command
+                      commandId="io.snyk.eclipse.plugin.snykShowAllSeverities"
+                      icon="icons/enabled.png"
+                      style="push"
+                      tooltip="Show Issues of all Severities">
+                </command>
             </menu>
             <menu
                 id="io.snyk.eclipse.plugin.views.snyktoolview.filterProductTypeMenu"
@@ -305,6 +326,12 @@
                       name="io.snyk.eclipse.plugin.separator.allProducts"
                       visible="true">
                 </separator>
+                <command
+                      commandId="io.snyk.eclipse.plugin.command.snykShowAllProducts"
+                      icon="icons/enabled.png"
+                      style="push"
+                      tooltip="Scan All Products">
+                </command>
             </menu>
             <menu
                 id="io.snyk.eclipse.plugin.views.snyktoolview.filterIgnoreMenu"
@@ -328,8 +355,15 @@
                       tooltip="Show Only Net New Issues">
                 </command>
                 <separator
-                      name="io.snyk.eclipse.plugin.separator.allIssues">
+                      name="io.snyk.eclipse.plugin.separator.allIssues"
+                      visible="true">
                 </separator>
+                <command
+                      commandId="io.snyk.eclipse.plugin.command.snykShowAllIssuesStatus"
+                      icon="icons/enabled.png"
+                      style="push"
+                      tooltip="Show all issues">
+                </command>
             </menu>
             <menu
                   id="io.snyk.eclipse.plugin.views.snyktoolview.filtersMenu"
