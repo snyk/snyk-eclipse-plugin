@@ -30,7 +30,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -104,6 +103,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
+	private static final String SNYK_CODE_CONSISTENT_IGNORES = "snykCodeConsistentIgnores";
 	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
 	private TaskProcessor taskProcessor;
@@ -135,6 +135,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		boolean enableConsistentIgnores = getFeatureFlagStatus(FeatureFlagConstants.SNYK_CODE_CONSISTENT_IGNORES);
 		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
 				Boolean.valueOf(enableConsistentIgnores).toString());
+
+		updateIgnoresButtons();
+	}
+
+	private void updateIgnoresButtons() {
+		PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
+			var snykToolView = SnykStartup.getView();
+			if (snykToolView != null)
+				snykToolView.toggleIgnoresButtons();
+		});
+
 	}
 
 	private void createIssueCaches() {
@@ -729,7 +740,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@Override
 	public void notifyProgress(final ProgressParams params) {
-		if(params.getValue() == null) {
+		if (params.getValue() == null) {
 			return;
 		}
 		WorkDoneProgressNotification progressNotification = params.getValue().getLeft();

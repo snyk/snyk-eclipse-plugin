@@ -95,4 +95,6 @@ public interface ISnykToolView {
 	}
 
 	abstract TreeViewer getTreeViewer();
+
+	abstract void toggleIgnoresButtons();
 }
