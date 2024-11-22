@@ -552,8 +552,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-    private Collection<Issue> filterIgnoredIssues(Collection<Issue> issueList)
-    {
+    private Collection<Issue> filterIgnoredIssues(Collection<Issue> issueList) {
     	final boolean includeIgnoredIssues;
     	final boolean includeOpenedIssues;
 
@@ -568,7 +567,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
     	return issueList.stream()
     	    .filter(it -> it.isVisible(includeIgnoredIssues, includeOpenedIssues))
     	    .toList();
-
     }
 
 	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {

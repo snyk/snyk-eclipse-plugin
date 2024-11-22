@@ -48,17 +48,8 @@ public class BaseHtmlProvider {
         html = html.replace("var(--link-color)", getColorAsHex("org.eclipse.ui.workbench.HYPERLINK_COLOR", "#0000FF"));
         html = html.replace("var(--horizontal-border-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_HIGHLIGHT_BORDER_COLOR", "#CCCCCC"));
         html = html.replace("var(--code-background-color)", getColorAsHex("org.eclipse.ui.workbench.CODE_BACKGROUND_COLOR", "#F0F0F0"));
-
-        // Update the HTML head
-        String ideHeaders = """
-                            <head>
-                            <meta http-equiv='Content-Type' content='text/html; charset=unicode' />
-                            <meta http-equiv='X-UA-Compatible' content='IE=edge' />
-                            """;
-        html = html.replace("<head>", ideHeaders);
+        
         html = html.replace("${headerEnd}", "");
-
-        // Replace nonce placeholders
         html = html.replace("${nonce}", nonce);
         html = html.replace("ideNonce", nonce);
         html = html.replace("${ideScript}", "");
@@ -76,10 +67,15 @@ public class BaseHtmlProvider {
             return String.format("#%02x%02x%02x", rgb.red, rgb.green, rgb.blue);
         }
     }
-
+    
+    private ColorRegistry colorRegistry;
     private ColorRegistry getColorRegistry() {
+    	if(colorRegistry != null) {
+    		return colorRegistry;
+    	}
         IThemeManager themeManager = PlatformUI.getWorkbench().getThemeManager();
         ITheme currentTheme = themeManager.getCurrentTheme();
-        return currentTheme.getColorRegistry();
+        colorRegistry = currentTheme.getColorRegistry();
+        return colorRegistry;
     }
 }

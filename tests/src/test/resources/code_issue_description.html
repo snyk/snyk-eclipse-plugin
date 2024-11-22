@@ -1,0 +1,1411 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="style-src 'self' 'nonce-${nonce}' 'nonce-ideNonce' https://fonts.googleapis.com;
+             script-src 'nonce-${nonce}' https://fonts.googleapis.com;
+             font-src 'self' https://fonts.gstatic.com;" />
+
+  <style nonce="${nonce}">
+    @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+    :root {
+      --default-font: "SF Pro Text", "Segoe UI", "Ubuntu", Geneva, Verdana, Tahoma, sans-serif;
+      --background-color: var();
+      --text-color: var();
+      --link-color: var();
+      --scroll-bar-hover-background-color: #595a5c;
+      --horizontal-border-color: var();
+      --code-background-color: var(--vscode-editor-background);
+      --tab-active-background-color: var(--vscode-tab-activeBackground);
+       
+      --border-color: var(--vscode-border-color);
+      --example-line-removed-color: var(--vscode-line-removed-color);
+      --example-line-added-color: var(--vscode-line-added-color);
+    }
+
+    section {
+      padding: 20px;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--scroll-bar-hover-background-color);
+    }
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: border-box;
+    }
+
+    a, .link {
+      color: var(--link-color);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    body {
+      background-color: var(--background-color);
+      font-family: var(--default-font);
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-color);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      margin: initial;
+    }
+
+    h2, h3 {
+      font-size: 1rem;
+      margin-block-start: 0;
+      margin-block-end: 0.4rem;
+      font-weight: 700;
+    }
+
+    main {
+      flex: 1 0 auto;
+      overflow-y: auto;
+    }
+
+    .arrow {
+      margin: 3px;
+      cursor: pointer;
+    }
+
+    .ignore-warning-wrapper,
+    header,
+    article,
+    footer {
+      padding: 0px 20px 5px 20px;
+    }
+
+    .panel-header {
+      display: flex;
+      flex-direction: column;
+      background-image: linear-gradient(0, transparent, var(--vscode-tab-activeBackground));
+      margin: inherit;
+    }
+
+    .code-issue-panel {
+      margin-bottom: 30px;
+    }
+
+    .example-fixes-header,
+    .issue-overview-header,
+    .ignore-details-header,
+    .data-flow-header,
+    .ai-fix-header,
+    .overview-text>h2 {
+      line-height: 1.25rem;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    .severity-title {
+      padding-left: 8px;
+      font-size: 1.4rem;
+    }
+
+    .severity-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding-bottom: 20px;
+      padding-top: 20px;
+    }
+
+    .severity-type-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: 1rem;
+      line-height: 1rem;
+      font-size: 1rem;
+    }
+
+    .lesson-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
+
+    .lesson-icon {
+      display: flex;
+      align-items: center;
+    }
+
+    .lesson-link {
+      display: flex;
+      align-items: center;
+    }
+
+    .is-external {
+      padding-right: 12px;
+    }
+
+    .is-external-icon {
+      margin-bottom: 8px;
+      margin-left: 4px;
+    }
+
+    .styled-link {
+      text-decoration: none;
+    }
+
+    .styled-link:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .delimiter {
+      margin: 0 8px;
+    }
+
+    .ignore-warning-icon {
+      margin-right: 0.5em;
+    }
+
+    .ignore-warning-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    .ignore-warning {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      line-height: 1.125rem;
+      padding: 0.5em;
+      font-size: 0.85rem;
+      border-radius: 0.25em;
+      width: 100%;
+      box-sizing: border-box;
+      background: #FFF4ED;
+      color: #B6540B;
+      border: 1px solid #E27122;
+    }
+
+    .ignore-badge {
+      padding: 0.35em 0.35em;
+      border-radius: 0.25em;
+      margin-left: 1em;
+      background: #FFF4ED;
+      color: #B6540B;
+      font-size: 0.75rem;
+      border: 1px solid #E27122;
+    }
+
+    .example {
+      background-color: var(--code-background-color);
+    }
+
+    .data-flow-file {
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      margin-top: 5px;
+    }
+
+    .data-flow-file-icon {
+      margin-left: 4px;
+      margin-right: 4px;
+    }
+
+    .data-flow-body {
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+
+    .data-flow-table {
+      background-color: var(--code-background-color);
+      margin-top: 5px;
+      margin-left: 15px;
+    }
+
+    .data-flow-row {
+      border-collapse: collapse;
+      vertical-align: baseline;
+    }
+
+    .data-flow-number {
+      padding-left: 14px;
+      padding-right: 14px;
+      width: 0.9375rem;
+      text-align: right;
+    }
+
+    .data-flow-clickable-row {
+      color: var(--link-color);
+      font-weight: 400;
+      width: 3.9375rem;
+      text-align: right;
+    }
+
+    .data-flow-clickable-row:hover {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .data-flow-text {
+      margin-right: 8px;
+      font-weight: 400;
+      word-break: break-all;
+    }
+
+    code {
+      background-color: var(--code-background-color);
+    }
+
+    .data-flow-text code {
+      background: transparent none;
+    }
+
+    .data-flow-delimiter {
+      opacity: 0.5;
+    }
+
+    .main-tabs-nav {
+      display: flex;
+      list-style-type: none;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .tab-content {
+      display: none;
+      border-top-style: hidden;
+    }
+
+    .tab-content.is-selected {
+      display: block;
+    }
+
+
+    .tab-item {
+      font-weight: 500;
+      float: left;
+      display: block;
+      text-align: center;
+      padding: 10px 16px 8px 16px;
+      text-decoration: none;
+      margin-right: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+
+
+    .example-fixes h2 {
+      margin-bottom: 0.5em;
+    }
+
+    .example-fixes-info-top {
+      margin-bottom: 0.5em;
+    }
+
+    .example {
+      margin-top: 0.75rem;
+    }
+
+    .example-repo-link {
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .example-repo-link:hover {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .example-repo-link a {
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .example-repo-link a:hover {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .example-line {
+      display: block;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .example-line>code {
+      padding-left: 0.75rem;
+      display: inline-block;
+      white-space: pre-wrap;
+      font-weight: 400;
+      background-color: transparent;
+    }
+
+    .example-line.added>code::before,
+    .example-line.removed>code::before {
+      position: absolute;
+      left: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .example-line.added>code::before {
+      content: "+";
+    }
+
+    .example-line.removed>code::before {
+      content: "-";
+    }
+
+     
+    .ignore-action-container {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      margin-block-end: 0;
+    }
+
+    #ignore-actions {
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+
+    .actions {
+      justify-content: space-between;
+      display: flex;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+    }
+
+    .ignore-button.secondary {
+      cursor: pointer;
+      width: auto;
+      padding: 6px 16px;
+      border-radius: 3px;
+      background: none;
+      line-height: 1;
+    }
+
+    .ignore-details {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 20px 0;
+      gap: 12px;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .ignore-details-row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      align-items: flex-start;
+    }
+
+    .ignore-details-row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      align-items: flex-start;
+    }
+
+    .ignore-details-label {
+      width: 30%;
+      text-align: left;
+      font-weight: bold;
+      padding-right: 10px;
+    }
+
+    .ignore-details-value {
+      flex-grow: 1;
+      text-align: left;
+      align-self: stretch;
+    }
+
+    button.generate-ai-fix,
+    button.sn-apply-fix {
+      border-radius: 3px;
+      background-color: var(--generated-ai-fix-button-background-color);
+      color: white;
+      cursor: pointer;
+    }
+    button.sn-apply-fix{
+      padding: 4px 12px;
+      background: var(--dark-button-default);
+
+    }
+
+    .delimiter-top {
+      border-top: 1px solid var(--border-color);
+    }
+    .dark .light-only,
+    .high-contrast:not(.high-contrast-light) .light-only {
+      display: none;
+    }
+    .light .dark-only,
+    .high-contrast.high-contrast-light .dark-only {
+      display: none;
+    }
+
+    .sn-ai-fixes {
+      padding-top: 20px;
+    }
+
+    .sn-ai-fix-error {
+      padding-top: 20px;
+    }
+
+    .tab-item:hover {
+      background-color: var(--tab-item-hover-color);
+    }
+    .tab-item.is-selected {
+      border-bottom: 3px solid #3474f0;
+    }
+
+    .example-line.added {
+      background-color: var(--example-line-added-color);
+    }
+    .example-line.removed {
+      background-color: var(--example-line-removed-color);
+    }
+    .tab-item.is-selected {
+      border-bottom: 3px solid #3474f0;
+    }
+
+
+
+
+    button.generate-ai-fix:hover,
+    button.sn-apply-fix:hover {
+      opacity: 0.9;
+    }
+
+     
+    .row.between {
+      justify-content: space-between;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+    }
+
+    .suggestion-text {
+      padding: 0.4rem 0;
+      line-height: 1.6;
+    }
+
+    .suggestion-links {
+      display: flex;
+      width: 100%;
+      line-height: 1;
+    }
+
+    .ai-fix {
+      padding-bottom: 0;
+    }
+
+    .ai-fix p {
+      margin-bottom: 0;
+    }
+
+    .sn-fix-wrapper {
+      padding: 2rem;
+      margin-top: 1rem;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .generate-ai-fix {
+      width: auto;
+      padding: 8px 16px;
+    }
+
+    .sn-apply-fix {
+      margin-top: 1rem;
+    }
+    .sn-loading {
+      display: flex;
+    }
+    .sn-loading svg {
+      inline-size: 6rem;
+      block-size: auto;
+    }
+
+    .sn-loading-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .sn-loading-message {
+      opacity: 0;
+      position: absolute;
+      width: 100%;
+      padding-left: 16px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .sn-loading-title {
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .sn-loading-description {
+      margin-bottom: 0;
+      opacity: 0.75;
+    }
+
+    .sn-msg-1 {
+      animation: reduce 4s ease-in;
+    }
+
+    .sn-msg-2 {
+      animation: reduce 4s ease-in;
+      animation-delay: 4s;
+    }
+
+    .sn-msg-3 {
+      animation: reduce 4s ease-in;
+      animation-delay: 8s;
+    }
+
+    .sn-msg-4 {
+      animation: inference 4s ease-in infinite;
+      animation-delay: 12s;
+    }
+
+    #s0 {
+      animation: s0ani 3000ms linear infinite;
+    }
+
+    #l1 {
+      animation: l1ani 3000ms linear infinite;
+    }
+
+    #l2 {
+      animation: l2ani 3000ms linear infinite;
+    }
+
+    #l3 {
+      animation: l3ani 3000ms linear infinite;
+    }
+
+    #b1 {
+      animation: b1ani 3000ms linear infinite;
+    }
+
+    #b2 {
+      animation: b2ani 3000ms linear infinite;
+    }
+
+    #b3 {
+      animation: b3ani 3000ms linear infinite;
+    }
+
+    @keyframes s0ani {
+      0% {
+        transform: translate(50%, -15%);
+      }
+
+      100% {
+        transform: translate(50%, 115%);
+      }
+    }
+
+    @keyframes l1ani {
+
+      0%,
+      23% {
+        fill: rgba(255, 255, 255, 0.2);
+      }
+
+      40%,
+      100% {
+        fill: rgba(249, 122, 153, 0.6);
+      }
+    }
+
+    @keyframes l2ani {
+
+      0%,
+      40% {
+        fill: rgba(255, 255, 255, 0.2);
+      }
+
+      56%,
+      100% {
+        fill: rgba(249, 122, 153, 0.6);
+      }
+    }
+
+    @keyframes l3ani {
+
+      0%,
+      56% {
+        fill: rgba(255, 255, 255, 0.2);
+      }
+
+      72%,
+      100% {
+        fill: rgba(67, 181, 154, 0.6);
+      }
+    }
+
+    @keyframes b1ani {
+
+      0%,
+      8% {
+        opacity: 0;
+        transform: scale(1, 1);
+      }
+
+      33% {
+        transform: translate(-10%, -18%) scale(1.6, 1.6);
+      }
+
+      53%,
+      100% {
+        opacity: 1;
+        transform: scale(1, 1);
+      }
+    }
+
+    @keyframes b2ani {
+
+      0%,
+      36% {
+        opacity: 0;
+        transform: scale(1, 1);
+      }
+
+      50% {
+        transform: translate(-20%, -18%) scale(1.4, 1.4);
+      }
+
+      60%,
+      100% {
+        opacity: 1;
+        transform: scale(1, 1);
+      }
+    }
+
+    @keyframes b3ani {
+
+      0%,
+      54% {
+        opacity: 0;
+        transform: scale(1, 1);
+      }
+
+      66% {
+        transform: translate(-10%, -27%) scale(1.4, 1.4);
+      }
+
+      76%,
+      100% {
+        opacity: 1;
+        transform: scale(1, 1);
+      }
+    }
+
+    @keyframes reduce {
+
+      15%,
+      85% {
+        opacity: 1;
+      }
+
+      86%,
+      100%,
+      0% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes inference {
+
+      0%,
+      25%,
+      100% {
+        opacity: 1;
+      }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+
+  ${ideStyle}
+</head>
+
+<body>
+  
+  <header class="panel-header">
+    
+    
+    <div class="ignore-warning-wrapper">
+      <div class="ignore-warning ">
+        <svg class="ignore-warning-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+          <path d="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16" fill="#D68000" />
+        </svg>
+        <span><strong>Ignored.</strong> This issue is currently ignored.</span>
+      </div>
+    </div>
+    
+    <div class="severity-container">
+      <svg id="severity-icon" class="icon high" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16">
+			 <rect width="16" height="16" rx="2" fill="#CE5019"/>
+			 <path d="M10.5 7v2h-5V7h5ZM6 3v10H4V3h2Zm6 0v10h-2V3h2Z" fill="#fff"/>
+		 </svg>
+      <h2 class="severity-title">NoSQL Injection</h2>
+    </div>
+    <div class="severity-type-container">
+      <div class="severity-type">Issue</div>
+      
+      <span class="delimiter">|</span>
+      
+      <a class="cwe styled-link"  rel="noopener noreferrer"
+        href="https://cwe.mitre.org/data/definitions/943.html">CWE-943</a>
+      
+      
+      
+      
+      <span class="delimiter">|</span>
+      <div>Position line: <a class="styled-link" id="position-line">39</a></div>
+      
+      
+      <span class="delimiter">|</span>
+      <div>Priority score: 818</div>
+      
+      <div class="ignore-badge">IGNORED</div>
+    </div>
+    
+    <div class="lesson-container">
+      <div class="lesson-icon">
+        <svg class="icon" width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+	<path d="M8.25 0L0 4.5L3 6.135V10.635L8.25 13.5L13.5 10.635V6.135L15 5.3175V10.5H16.5V4.5L8.25 0ZM13.365 4.5L8.25 7.29L3.135 4.5L8.25 1.71L13.365 4.5ZM12 9.75L8.25 11.79L4.5 9.75V6.9525L8.25 9L12 6.9525V9.75Z" fill="#888"/>
+	</svg>
+	
+      </div>
+      <a class="lesson-link styled-link is-external"  rel="noopener noreferrer" href="https://learn.snyk.io/lesson/nosql-injection-attack/?loc=ide">
+        Learn about this vulnerability
+        <svg class="is-external-icon" width="9" height="9" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg" fill="none">
+		<path d="M4.99998 0L6.64648 1.6465L3.14648 5.1465L3.85348 5.8535L7.35348 2.3535L8.99998 4V0H4.99998Z" fill="#888"/>
+		<path d="M8 8H1V1H4.5L3.5 0H1C0.4485 0 0 0.4485 0 1V8C0 8.5515 0.4485 9 1 9H8C8.5515 9 9 8.5515 9 8V5.5L8 4.5V8Z" fill="#888"/>
+	</svg>
+      </a>
+    </div>
+    
+  </header>
+
+  <main class="code-issue-container">
+    
+    <article class="code-issue-panel">
+      <div class="main-tabs-nav">
+        
+        <span data-tab="ignore-details" id="ignore-details-tab" class="tab-item is-selected ignore-details-tab">
+          Ignore Details
+        </span>
+        
+        <span data-tab="fix-analysis" id="fix-analysis-tab"
+          class="tab-item  sn-fix-analysis fix-analysis-tab">
+          Fix Analysis
+        </span>
+        
+        <span data-tab="vuln-overview" id="vuln-overview-tab" class="tab-item sn-vuln-overview vuln-overview-tab">
+          Issue Overview
+        </span>
+        
+      </div>
+
+      
+      <div class="tab-container">
+        
+        
+        <div data-content="ignore-details" id="ignore-details-content" class="tab-content main-tab-content is-selected">
+          <div class="ignore-details delimiter-top">
+            
+            <div class="ignore-details-row">
+              <div class="ignore-details-label">Category</div>
+              <div class="ignore-details-value">Ignored temporarily</div>
+            </div>
+            
+            <div class="ignore-details-row">
+              <div class="ignore-details-label">Expiration</div>
+              <div class="ignore-details-value">27 days</div>
+            </div>
+            
+            <div class="ignore-details-row">
+              <div class="ignore-details-label">Ignored On</div>
+              <div class="ignore-details-value">November 14, 2024</div>
+            </div>
+            
+            <div class="ignore-details-row">
+              <div class="ignore-details-label">Ignored By</div>
+              <div class="ignore-details-value">Abdelrahman Shawki</div>
+            </div>
+            
+            <div class="ignore-details-row">
+              <div class="ignore-details-label">Reason</div>
+              <div class="ignore-details-value">test test test</div>
+            </div>
+            
+            <div class="ignore-next-step-text">
+              Ignores are currently managed in the Snyk web app.
+              To edit or remove the ignore please go to:
+              <a class="styled-link" href="https://app.snyk.io"
+                rel="noopener noreferrer">https://app.snyk.io</a>.
+            </div>
+          </div>
+        </div>
+        
+        
+
+        
+        <div data-content="fix-analysis" id="fix-analysis-content"
+          class="tab-content main-tab-content ">
+          <section id="suggestion-info" class="delimiter-top">
+            <div id="description" class="suggestion-text">Unsanitized input from the HTTP request body flows into find, where it is used in an NoSQL query. This may result in an NoSQL Injection vulnerability.</div>
+            <div class="suggestion-links">
+              <div id="lead-url" class="clickable hidden">
+                <svg width="9" height="9" viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg" fill="none">
+                  <path d="M4.99998 0L6.64648 1.6465L3.14648 5.1465L3.85348 5.8535L7.35348 2.3535L8.99998 4V0H4.99998Z"
+                    fill="#888" />
+                  <path
+                    d="M8 8H1V1H4.5L3.5 0H1C0.4485 0 0 0.4485 0 1V8C0 8.5515 0.4485 9 1 9H8C8.5515 9 9 8.5515 9 8V5.5L8 4.5V8Z"
+                    fill="#888" />
+                </svg> More info
+              </div>
+            </div>
+          </section>
+
+          
+          <div id="ai-fix-wrapper" class="hidden">
+            
+            <section id="fix-wrapper" class="ai-fix delimiter-top">
+              <h2 class="ai-fix-header">
+                DeepCode AI Fixes
+              </h2>
+
+              <p>⚡ Fix this issue by generating a solution using Snyk DeepCode AI</p>
+
+              <div class="sn-fix-wrapper">
+                <button id="generate-ai-fix" folder-path="C:\Users\shawky\work\snyk-goof\" file-path="C:\Users\shawky\work\snyk-goof\routes\index.js"
+                  issue-id="28595acd671df2ee80fa0f25c21cb6a8" class="generate-ai-fix">✨ Generate AI fix</button>
+
+                <div id="fix-loading-indicator" class="sn-loading hidden">
+                  <div class="sn-loading-icon">
+                    <svg id="scan-animation" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 248 204" shape-rendering="geometricPrecision">
+	<defs>
+		<linearGradient id="mg" x1="16.0903" y1="180" x2="92.743" y2="107.462" spreadMethod="pad"
+			gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0)">
+			<stop id="eQeHIUZsTfX2-fill-0" offset="0%" stop-color="#145deb" />
+			<stop id="eQeHIUZsTfX2-fill-1" offset="100%" stop-color="#441c99" />
+		</linearGradient>
+		<linearGradient id="sg" x1="116" y1="0" x2="116" y2="64" spreadMethod="pad" gradientUnits="userSpaceOnUse"
+			gradientTransform="translate(0 0)">
+			<stop id="eQeHIUZsTfX26-fill-0" offset="0%" stop-color="#ff78e1" />
+			<stop id="eQeHIUZsTfX26-fill-1" offset="100%" stop-color="rgba(255,120,225,0)" />
+		</linearGradient>
+	</defs>
+	<rect width="224" height="180" rx="16" ry="16" transform="translate(12 12)" fill="url(#mg)" />
+	<circle r="4" transform="translate(28 28)" opacity="0.3" fill="#fff" />
+	<circle r="4" transform="translate(40 28)" opacity="0.25" fill="#fff" />
+	<circle r="4" transform="translate(52 28)" opacity="0.2" fill="#fff" />
+	<rect width="48" height="12" rx="6" ry="6" transform="translate(162 56)" opacity="0.2" fill="#fff" />
+	<rect width="80" height="12" rx="6" ry="6" transform="translate(32 92)" opacity="0.2" fill="#fff" />
+	<rect width="72" height="12" rx="6" ry="6" transform="translate(96 164)" opacity="0.2" fill="#fff" />
+	<rect width="56" height="12" rx="6" ry="6" transform="translate(156 128)" opacity="0.2" fill="#fff" />
+	<rect id="l3" width="80" height="12" rx="6" ry="6" transform="translate(64 128)" />
+	<rect id="l2" width="64" height="12" rx="6" ry="6" transform="translate(150 92)" />
+	<rect id="l1" width="117" height="12" rx="6" ry="6" transform="translate(32 56)" />
+	<g id="b3">
+		<rect width="32" height="32" rx="6" ry="6" transform="translate(48 118)" fill="#43b59a" />
+		<path
+			d="M54.5991,134c.7987-.816,2.0938-.816,2.8926,0l2.8926,2.955l10.124-10.343c.7988-.816,2.0939-.816,2.8926,0c.7988.816.7988,2.139,0,2.955L61.8306,141.388c-.7988.816-2.0939.816-2.8926,0l-4.3389-4.433c-.7988-.816-.7988-2.139,0-2.955Z"
+			fill="#fff" />
+	</g>
+	<g id="b2">
+		<rect width="32" height="32" rx="6" ry="6" transform="translate(124 81)" fill="#f97a99" />
+		<path
+			d="M142,91c0,.7685-.433,5.3087-1.069,8h-1.862c-.636-2.6913-1.069-7.2315-1.069-8c0-1.1046.895-2,2-2s2,.8954,2,2Z"
+			fill="#fff" />
+		<path d="M140,104c1.105,0,2-.895,2-2s-.895-2-2-2-2,.895-2,2s.895,2,2,2Z" fill="#fff" />
+	</g>
+	<g id="b1">
+		<rect width="24" height="24" rx="6" ry="6" transform="translate(28 50)" fill="#f97a99" />
+		<path
+			d="M42,56c0,.7685-.4335,5.3087-1.0693,8h-1.8614C38.4335,61.3087,38,56.7685,38,56c0-1.1046.8954-2,2-2s2,.8954,2,2Z"
+			fill="#fff" />
+		<path d="M40,69c1.1046,0,2-.8954,2-2s-.8954-2-2-2-2,.8954-2,2s.8954,2,2,2Z" fill="#fff" />
+	</g>
+	<g id="s0" transform="translate(124,-40)">
+		<g transform="translate(-124,-40)">
+			<rect width="232" height="64" rx="0" ry="0" transform="matrix(1 0 0-1 8 64)" opacity="0.5" fill="url(#sg)" />
+			<rect width="248" height="16" rx="8" ry="8" transform="translate(0 64)" fill="#e555ac" />
+		</g>
+	</g>
+	</svg>
+                  </div>
+                  <div class="sn-loading-wrapper">
+                    <div class="sn-loading-message sn-msg-1">
+                      <span class="sn-loading-title">1<span class="font-light">/4</span> Code Reduction...</span>
+                      <p class="sn-loading-description">Reduces the given files to a smaller and relevant code snippet.
+                      </p>
+                    </div>
+                    <div class="sn-loading-message sn-msg-2">
+                      <span class="sn-loading-title">2<span class="font-light">/4</span> Parsing...</span>
+                      <p class="sn-loading-description">Analyzing symbols and generating the graph representation.</p>
+                    </div>
+                    <div class="sn-loading-message sn-msg-3">
+                      <span class="sn-loading-title">3<span class="font-light">/4</span> Static Analysis...</span>
+                      <p class="sn-loading-description">Examining the vulnerability code without having to execute the
+                        program.</p>
+                    </div>
+                    <div class="sn-loading-message sn-msg-4">
+                      <span class="sn-loading-title">4<span class="font-light">/4</span> Inferencing...</span>
+                      <p class="sn-loading-description">Feeding the reduced code to our neural network to obtain the
+                        prediction.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            
+            <section id="fixes-section" class="sn-ai-fixes delimiter-top hidden">
+              <div id="info-no-diffs" class="font-light">
+                There are no fix diffs for this issue.
+              </div>
+              <div id="diff-top" class="row between">
+                <div id="info-top" class="font-light">⚡️ Here are <span id="diff-number"></span> AI-generated solutions
+                </div>
+                <div class="diffs-nav">
+                  <span id="previous-diff" class="arrow" title="Previous diff">
+                    <svg class="arrow-icon dark-only" width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M8.86723 11.4303L8.86721 11.4302L0.641823 6.22447L0.387031 6.62706L0.641821 6.22447C0.532336 6.15518 0.5 6.06763 0.5 6.00001C0.5 5.93239 0.532336 5.84484 0.641821 5.77555L0.641824 5.77555L8.86721 0.569741L8.86723 0.569731C9.00417 0.483055 9.17298 0.480315 9.31053 0.543871C9.44734 0.607082 9.5 0.705333 9.5 0.79421V11.2058C9.5 11.2947 9.44734 11.3929 9.31054 11.4561C9.173 11.5197 9.00418 11.5169 8.86723 11.4303Z"
+    stroke="#CCCCCC" />
+	</svg>
+                    <svg class="arrow-icon light-only" width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M8.86723 11.4303L8.86721 11.4302L0.641823 6.22447L0.387031 6.62706L0.641821 6.22447C0.532336 6.15518 0.5 6.06763 0.5 6.00001C0.5 5.93239 0.532336 5.84484 0.641821 5.77555L0.641824 5.77555L8.86721 0.569741L8.86723 0.569731C9.00417 0.483055 9.17298 0.480315 9.31053 0.543871C9.44734 0.607082 9.5 0.705333 9.5 0.79421V11.2058C9.5 11.2947 9.44734 11.3929 9.31054 11.4561C9.173 11.5197 9.00418 11.5169 8.86723 11.4303Z"
+    stroke="#3B3B3B" />
+	</svg>
+                  </span>
+                  <span id="diff-text">
+                    AI solution <strong id="diff-counter">1</strong>/<span id="diff-number2"></span>
+                  </span>
+                  <span id="next-diff" class="arrow" title="Next diff">
+                    
+	<svg class="arrow-icon dark-only" width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M1.13277 11.4303L1.13279 11.4302L9.35818 6.22447L9.61297 6.62706L9.35818 6.22447C9.46766 6.15518 9.5 6.06763 9.5 6.00001C9.5 5.93239 9.46766 5.84484 9.35818 5.77555L9.35818 5.77555L1.13279 0.569741L1.13277 0.569731C0.995832 0.483055 0.827023 0.480315 0.689467 0.543871C0.55266 0.607082 0.5 0.705333 0.5 0.79421V11.2058C0.5 11.2947 0.552661 11.3929 0.689456 11.4561C0.827003 11.5197 0.99582 11.5169 1.13277 11.4303Z"
+    stroke="#CCCCCC" />
+	</svg>
+                    <svg class="arrow-icon light-only" width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M1.13277 11.4303L1.13279 11.4302L9.35818 6.22447L9.61297 6.62706L9.35818 6.22447C9.46766 6.15518 9.5 6.06763 9.5 6.00001C9.5 5.93239 9.46766 5.84484 9.35818 5.77555L9.35818 5.77555L1.13279 0.569741L1.13277 0.569731C0.995832 0.483055 0.827023 0.480315 0.689467 0.543871C0.55266 0.607082 0.5 0.705333 0.5 0.79421V11.2058C0.5 11.2947 0.552661 11.3929 0.689456 11.4561C0.827003 11.5197 0.99582 11.5169 1.13277 11.4303Z"
+    stroke="#3B3B3B" />
+	</svg>
+                  </span>
+                </div>
+              </div>
+              <div id="diff"></div>
+              <button id="apply-fix" class="button sn-apply-fix">Apply fix</button>
+            </section>
+
+            
+            <section id="fixes-error-section" class="sn-ai-fix-error delimiter-top hidden">
+              <div id="info-no-diffs" class="font-light">
+                ⚠️ Failed to generate the fix. Please try again.
+              </div>
+              <div class="sn-fix-wrapper">
+                <button id="retry-generate-fix" folder-path="C:\Users\shawky\work\snyk-goof\" file-path="C:\Users\shawky\work\snyk-goof\routes\index.js"
+                        issue-id="28595acd671df2ee80fa0f25c21cb6a8" class="button generate-ai-fix">✨ Retry AI fix</button>
+              </div>
+            </section>
+          </div>
+
+          
+          <div id="no-ai-fix-wrapper" class="">
+            
+            <section class="data-flow-section delimiter-top">
+              <h2 class="data-flow-header">
+                Data Flow - 1 step
+              </h2>
+              <div class="data-flow-body">
+                
+                <div class="data-flow-file">
+                  <svg class="data-flow-file-icon" width="16" height="16" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none""><path d="M20.414,2H5V30H27V8.586ZM7,28V4H19v6h6V28Z" fill="#888"/></svg>
+                  <span class="data-flow-file-name">index.js</span>
+                </div>
+                <table class="data-flow-table">
+                  <tbody>
+                    
+                    <tr class="data-flow-row">
+                      <td class="data-flow-number">1</td>
+                      <td class="data-flow-clickable-row" file-path="C:\Users\shawky\work\snyk-goof\routes\index.js" start-line="38"
+                        end-line="38" start-character="28" end-character="33">
+                        line:39
+                      </td>
+                      <td class="delimiter data-flow-delimiter">|</td>
+                      <td class="data-flow-text">
+                        <code>  User.find({ username: req.body.username, password: req.body.password }, function (err, users) {</code>
+                      </td>
+                    </tr>
+                    
+                  </tbody>
+                </table>
+                
+              </div>
+            </section>
+
+            
+            <section class="example-fixes delimiter-top">
+              <h2 class="example-fixes-header">Fixed Code Examples</h2>
+              
+              <p id="example-fixes-info-top" class="example-fixes-info-top font-light">
+                This type of vulnerability was fixed in 30 open source projects.
+              </p>
+              <div id="example-top" class="row between">
+                <div id="current-example" class="repo clickable">
+                  <svg class="tab-item-icon" width="18" height="16" viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg">
+		<path
+			fill-rule="evenodd"
+			clip-rule="evenodd"
+			d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"
+		/>
+	</svg>
+                  <span id="example-link" class="example-repo-link">
+                    <a id="example-repo-anchor" href="https://github.com/afuh/pinstagram/commit/776a6b63f84b3bc9d38963933ff511b319b73ac5?diff=split#diff-fb901db253d2190ed5dec3508eb32e99524e0b4dcacdaea322a50f2619ae2d99L-1"
+                      rel="noopener noreferrer">
+                      afuh/pinstagram
+                    </a>
+                  </span>
+                </div>
+                <div class="examples-nav">
+                  <span id="previous-example" class="arrow" title="Previous example">
+                    <svg class="arrow-icon dark-only" width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M8.86723 11.4303L8.86721 11.4302L0.641823 6.22447L0.387031 6.62706L0.641821 6.22447C0.532336 6.15518 0.5 6.06763 0.5 6.00001C0.5 5.93239 0.532336 5.84484 0.641821 5.77555L0.641824 5.77555L8.86721 0.569741L8.86723 0.569731C9.00417 0.483055 9.17298 0.480315 9.31053 0.543871C9.44734 0.607082 9.5 0.705333 9.5 0.79421V11.2058C9.5 11.2947 9.44734 11.3929 9.31054 11.4561C9.173 11.5197 9.00418 11.5169 8.86723 11.4303Z"
+    stroke="#CCCCCC" />
+	</svg>
+                    <svg class="arrow-icon light-only" width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M8.86723 11.4303L8.86721 11.4302L0.641823 6.22447L0.387031 6.62706L0.641821 6.22447C0.532336 6.15518 0.5 6.06763 0.5 6.00001C0.5 5.93239 0.532336 5.84484 0.641821 5.77555L0.641824 5.77555L8.86721 0.569741L8.86723 0.569731C9.00417 0.483055 9.17298 0.480315 9.31053 0.543871C9.44734 0.607082 9.5 0.705333 9.5 0.79421V11.2058C9.5 11.2947 9.44734 11.3929 9.31054 11.4561C9.173 11.5197 9.00418 11.5169 8.86723 11.4303Z"
+    stroke="#3B3B3B" />
+	</svg>
+                  </span>
+                  <span id="example-text">
+                    Example <strong id="example-counter">1</strong>/<span id="example-number2">3</span>
+                  </span>
+                  <span id="next-example" class="arrow" title="Next example">
+                    
+	<svg class="arrow-icon dark-only" width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M1.13277 11.4303L1.13279 11.4302L9.35818 6.22447L9.61297 6.62706L9.35818 6.22447C9.46766 6.15518 9.5 6.06763 9.5 6.00001C9.5 5.93239 9.46766 5.84484 9.35818 5.77555L9.35818 5.77555L1.13279 0.569741L1.13277 0.569731C0.995832 0.483055 0.827023 0.480315 0.689467 0.543871C0.55266 0.607082 0.5 0.705333 0.5 0.79421V11.2058C0.5 11.2947 0.552661 11.3929 0.689456 11.4561C0.827003 11.5197 0.99582 11.5169 1.13277 11.4303Z"
+    stroke="#CCCCCC" />
+	</svg>
+                    <svg class="arrow-icon light-only" width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M1.13277 11.4303L1.13279 11.4302L9.35818 6.22447L9.61297 6.62706L9.35818 6.22447C9.46766 6.15518 9.5 6.06763 9.5 6.00001C9.5 5.93239 9.46766 5.84484 9.35818 5.77555L9.35818 5.77555L1.13279 0.569741L1.13277 0.569731C0.995832 0.483055 0.827023 0.480315 0.689467 0.543871C0.55266 0.607082 0.5 0.705333 0.5 0.79421V11.2058C0.5 11.2947 0.552661 11.3929 0.689456 11.4561C0.827003 11.5197 0.99582 11.5169 1.13277 11.4303Z"
+    stroke="#3B3B3B" />
+	</svg>
+                  </span>
+                </div>
+              </div>
+
+              <div id="example" class="example">
+                
+                <div class="example-detail " data-index=" 0">
+                  <div>
+                    
+                    <div class="example-line removed">
+                      <code>const user = await User.findOne({ slug: req.params.user }).populate(&#39;likes&#39;)
+</code>
+                    </div>
+                    
+                    <div class="example-line added">
+                      <code>const user = await User.findOne({ _id: req.user._id }).populate(&#39;likes&#39;)
+</code>
+                    </div>
+                    
+                  </div>
+                </div>
+                
+                <div class="example-detail hidden" data-index=" 1">
+                  <div>
+                    
+                    <div class="example-line removed">
+                      <code>  Workspace.findOne({ _id: req.params.workspaceId }, function( err, doc ){
+</code>
+                    </div>
+                    
+                    <div class="example-line added">
+                      <code>  workspaces.findOne({ _id: ObjectId(req.params.workspaceId) }, function( err, doc ){
+</code>
+                    </div>
+                    
+                    <div class="example-line none">
+                      <code>    resUtils.checkFindOneResponse( err, doc, next, function(){
+</code>
+                    </div>
+                    
+                    <div class="example-line none">
+                      <code>
+</code>
+                    </div>
+                    
+                    <div class="example-line none">
+                      <code>      perms.checkPermissions( req, next, &#39;workspaceConfig/get&#39;, req.body, doc, function(){
+</code>
+                    </div>
+                    
+                    <div class="example-line none">
+                      <code>      sendResponse( res, doc.settings );
+</code>
+                    </div>
+                    
+                    <div class="example-line none">
+                      <code>    });
+</code>
+                    </div>
+                    
+                    <div class="example-line none">
+                      <code>  });
+</code>
+                    </div>
+                    
+                    <div class="example-line none">
+                      <code>});
+</code>
+                    </div>
+                    
+                  </div>
+                </div>
+                
+                <div class="example-detail hidden" data-index=" 2">
+                  <div>
+                    
+                    <div class="example-line removed">
+                      <code>const token = req.query.t
+</code>
+                    </div>
+                    
+                    <div class="example-line added">
+                      <code>const token = req.query.t.toString()
+</code>
+                    </div>
+                    
+                    <div class="example-line none">
+                      <code>const user = await User.findOne({ token })
+</code>
+                    </div>
+                    
+                  </div>
+                </div>
+                
+              </div>
+              
+            </section>
+          </div>
+        </div>
+        
+
+        
+        <div id="vuln-overview-content" class="tab-content main-tab-content" data-content="vuln-overview">
+          
+          <section class="issue-overview delimiter-top">
+            <div class="overview-text">
+              <h2>Details</h2>
+
+<p>In an NoSQL injection attack, the user can submit an NoSQL query directly to the database, gaining access without providing appropriate credentials. Attackers can then view, export, modify, and delete confidential information; change passwords and other authentication information; and possibly gain access to other systems within the network. This is one of the most commonly exploited categories of vulnerability, but can largely be avoided through good coding practices.</p>
+
+            </div>
+          </section>
+        </div>
+        
+      </div>
+    </article>
+  </main>
+
+  
+  
+
+  
+  <script nonce="${nonce}">
+    
+
+
+    
+
+
+    
+    var MAIN_TAB_NAV_SELECTOR = '.main-tabs-nav';
+    var MAIN_TAB_ITEM_SELECTOR = '.main-tabs-nav .tab-item';
+    var MAIN_TAB_CONTENT_SELECTOR = '.tab-container > .main-tab-content';
+
+    var EXAMPLE_COUNTER = 'example-counter';
+    var EXAMPLE_PREVIOUS = 'previous-example';
+    var EXAMPLE_NEXT = 'next-example';
+    var EXAMPLE_REPO_ANCHOR = 'example-repo-anchor';
+    var ALL_EXAMPLES_DETAIL = '.example-detail';
+
+    
+    function toggleIsSelectedClass(elements, shouldToggle) {
+      if(!elements){
+        return;
+      }
+      for (var i = 0; i < elements.length; i++) {
+        var el = elements[i];
+        if (shouldToggle(el)) {
+          if (el.className.indexOf('is-selected') === -1) {
+            el.className += ' is-selected';
+          }
+        } else {
+          el.className = el.className.replace(/(?:^|\s)is-selected(?!\S)/g, '');
+        }
+      }
+    }
+
+    function toggleElement(element, toggle) {
+      if (!element) {
+        return;
+      }
+
+      if (toggle === 'show') {
+        element.className = element.className.replace(/(?:^|\s)hidden(?!\S)/g, '');
+      } else if (toggle === 'hide') {
+        if (element.className.indexOf('hidden') === -1) {
+          element.className += ' hidden';
+        }
+      } else {
+        console.error('Unexpected toggle value', toggle);
+      }
+    }
+
+    function polyfillClosest() {
+      if (!Element.prototype.closest) {
+        Element.prototype.closest = function (s) {
+          var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+            i, el = this;
+          do {
+            i = matches.length;
+            while (--i >= 0 && matches.item(i) !== el) {};
+          } while ((i < 0) && (el = el.parentElement));
+          return el;
+        };
+      }
+    }
+
+    polyfillClosest();
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var exampleCounter = document.getElementById(EXAMPLE_COUNTER);
+      var examplePrevious = document.getElementById(EXAMPLE_PREVIOUS);
+      var exampleNext = document.getElementById(EXAMPLE_NEXT);
+      var exampleRepoAnchor = document.getElementById(EXAMPLE_REPO_ANCHOR);
+      var allExamplesDetail = document.querySelectorAll(ALL_EXAMPLES_DETAIL);
+      var mainTabLinks = document.querySelectorAll(MAIN_TAB_ITEM_SELECTOR);
+      var mainTabContents = document.querySelectorAll(MAIN_TAB_CONTENT_SELECTOR);
+      var mainTabNav = document.querySelector(MAIN_TAB_NAV_SELECTOR);
+
+      var exampleCount = 0;
+
+       
+      var exampleCommitFixes = JSON.parse("[{\u0022CommitURL\u0022:\u0022https:\/\/github.com\/afuh\/pinstagram\/commit\/776a6b63f84b3bc9d38963933ff511b319b73ac5?diff=split#diff-fb901db253d2190ed5dec3508eb32e99524e0b4dcacdaea322a50f2619ae2d99L-1\u0022,\u0022RepoName\u0022:\u0022afuh\/pinstagram\u0022,\u0022RepoLink\u0022:\u0022https:\/\/github.com\/afuh\/pinstagram\/commit\/776a6b63f84b3bc9d38963933ff511b319b73ac5?diff=split#diff-fb901db253d2190ed5dec3508eb32e99524e0b4dcacdaea322a50f2619ae2d99L-1\u0022,\u0022ExampleLines\u0022:[{\u0022LineNumber\u0022:47,\u0022Line\u0022:\u0022const user = await User.findOne({ slug: req.params.user }).populate(\u0027likes\u0027)\\n\u0022,\u0022LineChange\u0022:\u0022removed\u0022},{\u0022LineNumber\u0022:47,\u0022Line\u0022:\u0022const user = await User.findOne({ _id: req.user._id }).populate(\u0027likes\u0027)\\n\u0022,\u0022LineChange\u0022:\u0022added\u0022}]},{\u0022CommitURL\u0022:\u0022https:\/\/github.com\/mercmobily\/hotplate\/commit\/c9dfbe8bf6bfd03838946d0898978543589a5ea2?diff=split#diff-bdb0afd700d4dfe1801bcfe39008d413182be643063835d326641fcce15b969aL-1\u0022,\u0022RepoName\u0022:\u0022mercmobily\/hotplate\u0022,\u0022RepoLink\u0022:\u0022https:\/\/github.com\/mercmobily\/hotplate\/commit\/c9dfbe8bf6bfd03838946d0898978543589a5ea2?diff=split#diff-bdb0afd700d4dfe1801bcfe39008d413182be643063835d326641fcce15b969aL-1\u0022,\u0022ExampleLines\u0022:[{\u0022LineNumber\u0022:270,\u0022Line\u0022:\u0022  Workspace.findOne({ _id: req.params.workspaceId }, function( err, doc ){\\n\u0022,\u0022LineChange\u0022:\u0022removed\u0022},{\u0022LineNumber\u0022:264,\u0022Line\u0022:\u0022  workspaces.findOne({ _id: ObjectId(req.params.workspaceId) }, function( err, doc ){\\n\u0022,\u0022LineChange\u0022:\u0022added\u0022},{\u0022LineNumber\u0022:271,\u0022Line\u0022:\u0022    resUtils.checkFindOneResponse( err, doc, next, function(){\\n\u0022,\u0022LineChange\u0022:\u0022none\u0022},{\u0022LineNumber\u0022:272,\u0022Line\u0022:\u0022\\n\u0022,\u0022LineChange\u0022:\u0022none\u0022},{\u0022LineNumber\u0022:273,\u0022Line\u0022:\u0022      perms.checkPermissions( req, next, \u0027workspaceConfig\/get\u0027, req.body, doc, function(){\\n\u0022,\u0022LineChange\u0022:\u0022none\u0022},{\u0022LineNumber\u0022:274,\u0022Line\u0022:\u0022      sendResponse( res, doc.settings );\\n\u0022,\u0022LineChange\u0022:\u0022none\u0022},{\u0022LineNumber\u0022:275,\u0022Line\u0022:\u0022    });\\n\u0022,\u0022LineChange\u0022:\u0022none\u0022},{\u0022LineNumber\u0022:276,\u0022Line\u0022:\u0022  });\\n\u0022,\u0022LineChange\u0022:\u0022none\u0022},{\u0022LineNumber\u0022:277,\u0022Line\u0022:\u0022});\\n\u0022,\u0022LineChange\u0022:\u0022none\u0022}]},{\u0022CommitURL\u0022:\u0022https:\/\/github.com\/JasonEtco\/flintcms\/commit\/4ae34238ce39fde00dfa15082397541758c07af1?diff=split#diff-9abe922e7535c6f75fba7150a7a803a93be7ae235564b86f799db9f37e4c1674L-1\u0022,\u0022RepoName\u0022:\u0022JasonEtco\/flintcms\u0022,\u0022RepoLink\u0022:\u0022https:\/\/github.com\/JasonEtco\/flintcms\/commit\/4ae34238ce39fde00dfa15082397541758c07af1?diff=split#diff-9abe922e7535c6f75fba7150a7a803a93be7ae235564b86f799db9f37e4c1674L-1\u0022,\u0022ExampleLines\u0022:[{\u0022LineNumber\u0022:103,\u0022Line\u0022:\u0022const token = req.query.t\\n\u0022,\u0022LineChange\u0022:\u0022removed\u0022},{\u0022LineNumber\u0022:103,\u0022Line\u0022:\u0022const token = req.query.t.toString()\\n\u0022,\u0022LineChange\u0022:\u0022added\u0022},{\u0022LineNumber\u0022:104,\u0022Line\u0022:\u0022const user = await User.findOne({ token })\\n\u0022,\u0022LineChange\u0022:\u0022none\u0022}]}]" || '[]');
+
+      function showCurrentExample() {
+        if(!allExamplesDetail){
+          return;
+        }
+        for (var i = 0; i < allExamplesDetail.length; i++) {
+          var example = allExamplesDetail[i];
+          if (i === exampleCount) {
+            example.className = example.className.replace(/(?:^|\s)hidden(?!\S)/g, '');
+          } else {
+            if (example.className.indexOf('hidden') === -1) {
+              example.className += ' hidden';
+            }
+          }
+        }
+        if(exampleCounter){
+          exampleCounter.textContent = exampleCount + 1;
+        }
+
+        if(exampleRepoAnchor && exampleCommitFixes){
+          exampleRepoAnchor.textContent = exampleCommitFixes[exampleCount].RepoName;
+          exampleRepoAnchor.href = exampleCommitFixes[exampleCount].RepoLink;
+        }
+      }
+
+      function previousExample() {
+        if (exampleCount > 0) {
+          exampleCount--;
+          showCurrentExample();
+        }
+      }
+
+      function nextExample() {
+        if (exampleCount < exampleCommitFixes.length - 1) {
+          exampleCount++;
+          showCurrentExample();
+        }
+      }
+      if(mainTabNav) {
+        mainTabNav.onclick = function (event) {
+          var clickedTab = event.target.closest('.tab-item');
+          if (!clickedTab) return;
+
+          var selectedTab = clickedTab.getAttribute('data-tab');
+
+          
+          toggleIsSelectedClass(mainTabLinks, function (tab) {
+            return tab === clickedTab;
+          });
+          toggleIsSelectedClass(mainTabContents, function (content) {
+            return content.getAttribute('data-content') === selectedTab;
+          });
+        };
+      }
+      if (examplePrevious){
+        examplePrevious.onclick = previousExample;
+      }
+      if (exampleNext) {
+        exampleNext.onclick = nextExample;
+      }
+
+      showCurrentExample();
+    });
+  </script>
+  ${ideScript}
+</body>
+
+</html>

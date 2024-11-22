@@ -47,13 +47,10 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
                         }
                     }
                 }
-                // Disable Autofix and ignores
+                // Disable AIfix
                 if(document.getElementById('ai-fix-wrapper') && document.getElementById('no-ai-fix-wrapper')){
                     document.getElementById('ai-fix-wrapper').className = 'hidden';
                     document.getElementById('no-ai-fix-wrapper').className = '';
-                }
-                if(document.getElementsByClassName('ignore-action-container') && document.getElementsByClassName('ignore-action-container')[0]){
-                    document.getElementsByClassName('ignore-action-container')[0].className = 'hidden';
                 }
             """ + themeScript;
     }
