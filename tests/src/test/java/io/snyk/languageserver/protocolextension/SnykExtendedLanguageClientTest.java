@@ -155,11 +155,11 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 			cut = new SnykExtendedLanguageClient();
 
-			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor = 
+			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor =
 					ArgumentCaptor.forClass((Class<Consumer<SnykExtendedLanguageClient>>) (Class<?>) Consumer.class);
 			verify(asMock, times(2)).registerTask(captor.capture(), any());
 			verifyNoMoreInteractions(asMock);
-	    }		
+	    }
 	}
 
 
@@ -172,7 +172,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 			cut = new SnykExtendedLanguageClient();
 
-			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor = 
+			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor =
 					ArgumentCaptor.forClass((Class<Consumer<SnykExtendedLanguageClient>>) (Class<?>) Consumer.class);
 			verify(asMock, times(1)).registerTask(captor.capture(), any());
 			verifyNoMoreInteractions(asMock);
@@ -183,10 +183,10 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	void testPublishDiagnosticsShouldChangeCache() {
 		// Test Add to cache
 		String folderPath = "/a/b";
-		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(folderPath);
 
 		var uri = "file://" + folderPath + "/c/";
 		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
+		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(filePath);
 
 		var param = new PublishDiagnostics316Param();
 		param.setUri(uri);
@@ -221,7 +221,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		future = cut.publishDiagnostics316(param);
 		try {
 			future.thenRun(() -> {
-				// FIXME This appears to be flaky at times
 				assertEquals(true, issueCache.getCodeSecurityIssuesForPath(filePath).isEmpty());
 			});
 		} catch (Exception ex) {
@@ -345,7 +344,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus(SCAN_STATE_SUCCESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-		
+
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
@@ -363,7 +362,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus(SCAN_STATE_SUCCESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-		
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
