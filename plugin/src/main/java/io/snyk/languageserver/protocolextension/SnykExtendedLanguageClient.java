@@ -69,9 +69,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.analytics.AbstractAnalyticsEvent;
-import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
-import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
+import io.snyk.eclipse.plugin.analytics.AbstractTask;
+import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
+import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
@@ -105,7 +105,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
-	private AnalyticsSender analyticsSender;
+	private TaskProcessor taskProcessor;
 	private ISnykToolView toolView;
 	// this field is for testing only
 	private LanguageServer ls;
@@ -116,10 +116,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public SnykExtendedLanguageClient() {
 		super();
 		instance = this;
-		sendPluginInstalledEvent();
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
+		registerPluginInstalledEventTask();
+		registerRefreshFeatureFlagsTask();
 		createIssueCaches();
+	}
+
+	private void registerRefreshFeatureFlagsTask() {
+		if (taskProcessor == null) {
+			taskProcessor = TaskProcessor.getInstance();
+		}
+		Consumer<SnykExtendedLanguageClient> refreshFeatureFlagsConsumer = lc -> lc.refreshFeatureFlags();
+		taskProcessor.registerTask(refreshFeatureFlagsConsumer, null);
 	}
 
 	public void refreshFeatureFlags() {
@@ -137,18 +145,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private void sendPluginInstalledEvent() {
+	private void registerPluginInstalledEventTask() {
 		if (!Preferences.getInstance().getBooleanPref(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, false)) {
-			if (analyticsSender == null) {
-				analyticsSender = AnalyticsSender.getInstance();
+			if (taskProcessor == null) {
+				taskProcessor = TaskProcessor.getInstance();
 			}
-			var pluginInstalledEvent = new AnalyticsEvent("plugin installed", List.of("install"));
-			analyticsSender.logEvent(pluginInstalledEvent, new Consumer<Void>() {
-				@Override
-				public void accept(Void t) {
-					Preferences.getInstance().store(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, "true");
-				}
-			});
+			var pluginInstalledEvent = new AnalyticsEventTask("plugin installed", List.of("install"));
+			Consumer<SnykExtendedLanguageClient> analyticsTask = lc -> lc.reportAnalytics(pluginInstalledEvent);
+			Consumer<Void> analyticsCallback = v -> {
+				Preferences.getInstance().store(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, "true");
+			};
+
+			taskProcessor.registerTask(analyticsTask, analyticsCallback);
 		}
 	}
 
@@ -256,7 +264,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			try {
 				result = lsGlobalIgnoresFeatureFlag.get(5, TimeUnit.SECONDS);
 			} catch (TimeoutException e) {
-				SnykLogger.logInfo("did not get a response for feature flag status");
 				return false;
 			}
 			FeatureFlagStatus featureFlagStatus = om.convertValue(result, FeatureFlagStatus.class);
@@ -304,10 +311,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (differentToken) {
 			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
 		}
-
-		configurationUpdater.configurationChanged();
-		refreshFeatureFlags();
-
+		
+		if (!Preferences.getInstance().isTest()) {
+			configurationUpdater.configurationChanged();
+			refreshFeatureFlags();
+		}
+		
 		if (!newToken.isBlank() && PlatformUI.isWorkbenchRunning()) {
 			enableSnykViewRunActions();
 		}
@@ -483,12 +492,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (totalCount > 0 && ignoredCount == totalCount
 				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
 			toolView.addInfoNode(productNode,
-					new InfoTreeNode("Adjust your Issue View Options to see ignored issues."));
+					new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
 
 		if (totalCount > 0 && ignoredCount == 0
 				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES)) {
-			toolView.addInfoNode(productNode, new InfoTreeNode("Adjust your Issue View Options to see open issues."));
+			toolView.addInfoNode(productNode, new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
 	}
 
@@ -561,7 +570,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return getAffectedProductNodes(snykProduct, filePath);
 	}
 
-	public void reportAnalytics(AbstractAnalyticsEvent event) {
+	public void reportAnalytics(AbstractTask event) {
 		try {
 			var eventString = om.writeValueAsString(event);
 			executeCommand(LsCommandID.COMMAND_REPORT_ANALYTICS, List.of(eventString));

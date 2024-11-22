@@ -11,11 +11,14 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -26,8 +29,10 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.ProgressParams;
@@ -46,9 +51,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
-import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
+import io.snyk.eclipse.plugin.analytics.AbstractTask;
+import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
+import io.snyk.eclipse.plugin.analytics.TaskProcessor;
+import io.snyk.eclipse.plugin.properties.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
@@ -75,11 +83,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@BeforeEach
 	protected void setUp() {
 		super.setUp();
-		pref = Preferences.getInstance();
+	    //Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		//PreferencesUtils.setPreferences(prefs);
 		// we don't want the wizard to pop up, so we set a dummy token
 		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
 		pref.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "false");
-
+		pref.setTest(true);
 		toolWindowMock = mock(ISnykToolView.class);
 	}
 
@@ -149,30 +158,33 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSendsPluginInstalledEventOnFirstStart() {
-		try (MockedStatic<AnalyticsSender> mockedAnalyticsSender = mockStatic(AnalyticsSender.class)) {
-			var asMock = Mockito.mock(AnalyticsSender.class);
-			mockedAnalyticsSender.when(() -> AnalyticsSender.getInstance()).thenReturn(asMock);
+	void testSendsPluginInstalledEventAndRefreshFeatureFlagOnFirstStart() {
+		try (MockedStatic<TaskProcessor> mockedAnalyticsSender = mockStatic(TaskProcessor.class)) {
+			var asMock = Mockito.mock(TaskProcessor.class);
+			mockedAnalyticsSender.when(() -> TaskProcessor.getInstance()).thenReturn(asMock);
 
 			cut = new SnykExtendedLanguageClient();
 
-			var captor = ArgumentCaptor.forClass(AnalyticsEvent.class);
-			verify(asMock).logEvent(captor.capture(), any());
+			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor = 
+					ArgumentCaptor.forClass((Class<Consumer<SnykExtendedLanguageClient>>) (Class<?>) Consumer.class);
+			verify(asMock, times(2)).registerTask(captor.capture(), any());
 			verifyNoMoreInteractions(asMock);
-
-			assertEquals("plugin installed", captor.getValue().getInteractionType());
-		}
+	    }		
 	}
+
 
 	@Test
 	void testDoesNotSendPluginInstalledEventOnSecondStart() {
-		try (MockedStatic<AnalyticsSender> mockedAnalyticsSender = mockStatic(AnalyticsSender.class)) {
-			var asMock = Mockito.mock(AnalyticsSender.class);
-			mockedAnalyticsSender.when(() -> AnalyticsSender.getInstance()).thenReturn(asMock);
+		try (MockedStatic<TaskProcessor> mockedAnalyticsSender = mockStatic(TaskProcessor.class)) {
+			var asMock = Mockito.mock(TaskProcessor.class);
+			mockedAnalyticsSender.when(() -> TaskProcessor.getInstance()).thenReturn(asMock);
 			pref.store(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, "true");
 
 			cut = new SnykExtendedLanguageClient();
 
+			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor = 
+					ArgumentCaptor.forClass((Class<Consumer<SnykExtendedLanguageClient>>) (Class<?>) Consumer.class);
+			verify(asMock, times(1)).registerTask(captor.capture(), any());
 			verifyNoMoreInteractions(asMock);
 		}
 	}

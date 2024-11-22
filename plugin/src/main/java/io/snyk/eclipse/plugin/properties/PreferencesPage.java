@@ -128,7 +128,10 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		snykView.toggleRunActionEnablement();
 		disableSnykCodeIfOrgDisabled();
 		new LsConfigurationUpdater().configurationChanged();
-		SnykExtendedLanguageClient.getInstance().refreshFeatureFlags();
+
+		if(Preferences.getInstance().getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, false)) {
+			SnykExtendedLanguageClient.getInstance().refreshFeatureFlags();	
+		}
 		
 		return superOK;
 	}
