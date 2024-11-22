@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.languageserver.LsBaseTest;
 
-public class HtmlProviderFactoryTest  extends LsBaseTest {
+public class HtmlProviderFactoryTest {
   @Test
   void htmlProviderFactoryReturnsCorrectType() throws Exception {
 	var cut = HtmlProviderFactory.GetHtmlProvider(ProductConstants.DISPLAYED_CODE_SECURITY);
