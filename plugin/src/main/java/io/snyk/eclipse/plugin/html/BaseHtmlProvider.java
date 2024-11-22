@@ -1,5 +1,7 @@
 package io.snyk.eclipse.plugin.html;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import org.eclipse.jface.resource.ColorRegistry;
@@ -10,6 +12,10 @@ import org.eclipse.ui.themes.ITheme;
 import org.eclipse.ui.themes.IThemeManager;
 
 public class BaseHtmlProvider {
+	private final Random random = new Random();
+	private final Map<String, String> colorCache = new HashMap<>();
+	private String nonce = "";
+	
     public String getCss() {
         return "";
     }
@@ -23,13 +29,16 @@ public class BaseHtmlProvider {
     }
 
     public String getNonce() {
+    	if(!nonce.isEmpty()) {
+    		return nonce;
+    	}
         String allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
         StringBuilder nonceBuilder = new StringBuilder(32);
         for (int i = 0; i < 32; i++) {
             nonceBuilder.append(allowedChars.charAt(random.nextInt(allowedChars.length())));
         }
-        return nonceBuilder.toString();
+        nonce =  nonceBuilder.toString();
+        return nonce;
     }
 
     public String replaceCssVariables(String html) {
@@ -58,14 +67,16 @@ public class BaseHtmlProvider {
     }
 
     public String getColorAsHex(String colorKey, String defaultColor) {
-    	ColorRegistry colorRegistry = getColorRegistry();
-        Color color = colorRegistry.get(colorKey);
-        if (color == null) {
-            return defaultColor;
-        } else {
-            RGB rgb = color.getRGB();
-            return String.format("#%02x%02x%02x", rgb.red, rgb.green, rgb.blue);
-        }
+    	  return colorCache.computeIfAbsent(colorKey, key -> {
+    	        ColorRegistry colorRegistry = getColorRegistry();
+    	        Color color = colorRegistry.get(colorKey);
+    	        if (color == null) {
+    	            return defaultColor;
+    	        } else {
+    	            RGB rgb = color.getRGB();
+    	            return String.format("#%02x%02x%02x", rgb.red, rgb.green, rgb.blue);
+    	        }
+    	  });
     }
     
     private ColorRegistry colorRegistry;

@@ -1,6 +1,3 @@
-/**
- *
- */
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
@@ -61,7 +58,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private TreeViewer treeViewer;
 	private Browser browser;
 	private BaseTreeNode rootObject = new RootNode();
-
+	private BrowserHandler browserHandler;
 	private final static Shell SHELL = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
 	@Override
@@ -90,55 +87,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		// Create Browser
 		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
 		browser = new Browser(sashForm, SWT.EDGE);
-		// Register the Java function as an anonymous class
-
-		new BrowserFunction(browser, "openInEditor") {
-		    @SuppressWarnings("restriction")
-			@Override
-		    public Object function(Object[] arguments) {
-		        if (arguments.length != 5) {
-		        	return null;
-		        }
-	            String filePath = (String) arguments[0];
-	            var fileUri = Paths.get(filePath).toUri().toASCIIString();
-	            int startLine = Integer.parseInt(arguments[1].toString());
-	            int endLine = Integer.parseInt(arguments[2].toString());
-	            int startCharacter = Integer.parseInt(arguments[3].toString());
-	            int endCharacter = Integer.parseInt(arguments[4].toString());
-
-	            Display.getDefault().asyncExec(() -> {
-	                try {
-	                    Position startPosition = new Position(startLine, startCharacter);
-	                    Position endPosition = new Position(endLine, endCharacter);
-	                    Range range = new Range(startPosition, endPosition);
-
-	                    var location = new Location(fileUri, range);
-	                    LSPEclipseUtils.openInEditor(location);
-
-	                } catch (Exception e) {
-	                    e.printStackTrace();
-	                }
-	            });
-		        return null;
-		    }
-		};
-
-        browser.addLocationListener(new LocationListener() {
-            @Override
-            public void changing(LocationEvent event) {
-                String url = event.location;
-                if(url.startsWith("http")) {
-                	event.doit = false;
-                    Program.launch(url);
-                }
-            }
-
-            @Override
-            public void changed(LocationEvent event) {
-            }
-        });
-		initBrowserText();
-
+		browserHandler = new BrowserHandler(browser);
+		browserHandler.initialize();
 		// Set sash weights
 		sashForm.setWeights(new int[] { 1, 2 });
 
@@ -147,19 +97,19 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			@SuppressWarnings("restriction")
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
-				IStructuredSelection selection = (IStructuredSelection) event.getSelection();
-				if (!selection.isEmpty()) {
+				Display.getDefault().asyncExec(() -> {
+					IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+					if (selection.isEmpty()) return;
 					TreeNode node = (TreeNode) selection.getFirstElement();
-					updateBrowserContent(node);
+					browserHandler.updateBrowserContent(node);
 					if (node instanceof IssueTreeNode) {
 						IssueTreeNode issueTreeNode = (IssueTreeNode) node;
 						FileTreeNode fileNode = (FileTreeNode) issueTreeNode.getParent();
 						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(),
 								issueTreeNode.getIssue().getLSP4JRange());
-					}
-				}
-			}
-		});
+						}
+					});
+		}});
 	}
 
 	private void registerTreeContextMeny(Composite parent) {
@@ -167,49 +117,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		Menu menu = menuMgr.createContextMenu(parent);
 		getSite().registerContextMenu(menuMgr, null);
 		parent.setMenu(menu);
-	}
-
-	private void updateBrowserContent(TreeNode node) {
-		// Generate HTML content based on the selected node
-		String htmlContent = generateHtmlContent(node);
-		if (node instanceof IssueTreeNode) {
-			var product = ((ProductTreeNode) node.getParent().getParent()).getProduct();
-			var htmlProvider = HtmlProviderFactory.GetHtmlProvider(product);
-			htmlContent = htmlProvider.replaceCssVariables(htmlContent);
-			browser.setText(htmlContent);
-			browser.execute(htmlProvider.getInitScript());
-		}
-	}
-
-	private void updateBrowserContent(String text) {
-		String htmlContent = generateHtmlContent(text);
-		browser.setText(htmlContent);
-	}
-
-	private String generateHtmlContent(TreeNode node) {
-		if (node instanceof BaseTreeNode) {
-			return ((BaseTreeNode) node).getDetails();
-		}
-		return "";
-	}
-
-	private String generateHtmlContent(String text) {
-		return "<html><body<p>" + text + "</p></body></html>";
-	}
-
-	private void initBrowserText() {
-		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
-				"%snyk.trust.dialog.warning.text");
-
-		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
-		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
-
-		browser.setText("<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\"> "
-				+ "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> "
-				+ "<title>Snyk for Eclipse</title> <style> .container { display: flex; align-items: center; } .logo { margin-right: 20px; } "
-				+ "</style> </head> <body> <div class=\"container\"> " + "<img src='data:image/png;base64,"
-				+ base64Image + "' alt='Snyk Logo'>" + "<div> <p><strong>Welcome to Snyk for Eclipse</strong></p>"
-				+ "    <p>\n" + snykWarningText + "</body>\n" + "</html>");
 	}
 
 	@Override
@@ -249,7 +156,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void addInfoNode(ProductTreeNode parent, InfoTreeNode toBeAdded) {
 		toBeAdded.setParent(parent);
 		parent.addChild(toBeAdded);
-		
+
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(parent, true);
 		});
