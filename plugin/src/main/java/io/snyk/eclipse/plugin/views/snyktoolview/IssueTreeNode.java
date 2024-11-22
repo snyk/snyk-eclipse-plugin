@@ -16,17 +16,7 @@ public class IssueTreeNode extends BaseTreeNode {
 
 	@Override
 	public String getText() {
-		String displayTitle = getIssue().getDisplayTitle();
-
-		if (getIssue().isIgnored()) {
-			displayTitle = " [ Ignored ] " + displayTitle;
-		}
-
-		if (issue.hasFix()) {
-			displayTitle = " ⚡" + displayTitle;
-		}
-
-		return displayTitle;
+		return getIssue().getDisplayTitle();
 	}
 
 	@Override

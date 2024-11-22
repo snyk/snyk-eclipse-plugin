@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.TreeViewer;
 
 
@@ -13,7 +12,7 @@ public interface ISnykToolView {
 	String CONGRATS_NO_ISSUES_FOUND = "✅ Congrats! No issues found!";
 	String NO_FIXABLE_ISSUES = "There are no issues automatically fixable.";
 	String IGNORED_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to see ignored issues.";
-	String OPEN_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to open issues.";
+	String OPEN_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to see open issues.";
 
 	String NODE_TEXT_SCANNING = "Scanning...";
 	String NODE_TEXT_NO_ISSUES_FOUND = "No issues found";

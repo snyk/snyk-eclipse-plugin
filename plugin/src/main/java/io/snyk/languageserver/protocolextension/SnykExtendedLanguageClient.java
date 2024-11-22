@@ -27,6 +27,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -470,7 +471,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		long totalCount = issueCache.getTotalCount(productNode.getProduct());
 		long fixableCount = issueCache.getFixableCount(productNode.getProduct());
 		long ignoredCount = issueCache.getIgnoredCount(productNode.getProduct());
-
+		var pref = Preferences.getInstance();
 		if (totalCount == 0) {
 			toolView.addInfoNode(productNode, new InfoTreeNode(CONGRATS_NO_ISSUES_FOUND));
 		} else {
@@ -490,13 +491,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		if (totalCount > 0 && ignoredCount == totalCount
-				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
+				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED) 
+				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
 			toolView.addInfoNode(productNode,
 					new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
 
 		if (totalCount > 0 && ignoredCount == 0
-				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES)) {
+				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
+				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES)) {
 			toolView.addInfoNode(productNode, new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
 	}
@@ -524,9 +527,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (ProductTreeNode productTreeNode : nodes) {
 			var issueCache = IssueCacheHolder.getInstance().getCacheInstance(filePath);
 			var issues = issueCache.getIssues(filePath, productTreeNode.getProduct());
+			issues = IssueSorter.sortIssuesBySeverity(issues);
+   			issues = filterIgnoredIssues(issues);
 			if (issues.isEmpty())
 				continue;
-			issues = IssueSorter.sortIssuesBySeverity(issues);
 			FileTreeNode fileNode = new FileTreeNode(filePath);
 			toolView.addFileNode(productTreeNode, fileNode);
 			for (Issue issue : issues) {
@@ -535,6 +539,25 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
+    private Collection<Issue> filterIgnoredIssues(Collection<Issue> issueList)
+    {
+    	final boolean includeIgnoredIssues;
+    	final boolean includeOpenedIssues;
+
+    	if (Preferences.getInstance().getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)) {
+    	    includeOpenedIssues = Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
+    	    includeIgnoredIssues = Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES);
+    	} else {
+    	    includeOpenedIssues = true;
+    	    includeIgnoredIssues = true;
+    	}
+
+    	return issueList.stream()
+    	    .filter(it -> it.isVisible(includeIgnoredIssues, includeOpenedIssues))
+    	    .toList();
+
+    }
+	
 	private Set<ProductTreeNode> populateIssueCache(PublishDiagnostics316Param param, String filePath) {
 		var issueCache = getIssueCache(filePath);
 		Diagnostic316[] diagnostics = param.getDiagnostics();

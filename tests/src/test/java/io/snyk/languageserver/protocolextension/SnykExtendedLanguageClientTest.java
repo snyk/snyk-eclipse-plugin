@@ -353,7 +353,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus(SCAN_STATE_SUCCESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-
+		
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 
@@ -370,7 +371,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus(SCAN_STATE_SUCCESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-
+		
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 

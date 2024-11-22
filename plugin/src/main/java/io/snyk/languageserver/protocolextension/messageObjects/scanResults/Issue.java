@@ -8,7 +8,16 @@ public record Issue(String id, String title, String severity, String filePath, R
 		if (title == null || title.isEmpty()) {
 			return additionalData != null ? additionalData.message() : null;
 		}
-		return title;
+		String displayTitle = title;
+		if (isIgnored()) {
+			displayTitle = " [ Ignored ] " + displayTitle;
+		}
+
+		if (hasFix()) {
+			displayTitle = " ⚡" + displayTitle;
+		}
+		
+		return displayTitle;
 	}
 
 	public String getDisplayTitleWithLineNumber() {
@@ -41,4 +50,20 @@ public record Issue(String id, String title, String severity, String filePath, R
 		}
 		return additionalData.hasAIFix() || additionalData.isUpgradable();
 	}
+	
+	public Boolean isVisible(Boolean includeIgnoredIssues, Boolean includeOpenedIssues) {
+        if (includeIgnoredIssues && includeOpenedIssues)
+        {
+            return true;
+        }
+        if (includeIgnoredIssues)
+        {
+            return this.isIgnored();
+        }
+        if (includeOpenedIssues)
+        {
+            return !this.isIgnored();
+        }
+        return false;
+	}	
 }
