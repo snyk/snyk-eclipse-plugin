@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -26,14 +27,18 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.menus.CommandContributionItem;
+import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 import org.osgi.framework.Bundle;
 
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
-import io.snyk.languageserver.protocolextension.FileTreeNode;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
@@ -52,6 +57,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private TreeViewer treeViewer;
 	private Browser browser;
 	private BaseTreeNode rootObject = new RootNode();
+
+	private final static Shell SHELL = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -167,6 +174,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		parent.addChild(toBeAdded);
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(parent, true);
+			this.treeViewer.expandToLevel(4); // Expand to level 4 to show ProjectNode, ProductNodes, FileNode, and
+												// IssueNodes.
 		});
 	}
 
@@ -276,4 +285,46 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public TreeViewer getTreeViewer() {
 		return this.treeViewer;
 	}
+
+	@Override
+	public void toggleIgnoresButtons() {
+
+		Display.getDefault().asyncExec(() -> {
+			IMenuManager menuManager = this.getViewSite().getActionBars().getMenuManager();
+			IMenuManager submenu = menuManager
+					.findMenuUsingPath("io.snyk.eclipse.plugin.views.snyktoolview.filterIgnoreMenu");
+
+			if (submenu == null) {
+				return;
+			}
+
+			boolean enableConsistentIgnores = Preferences.getInstance()
+					.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, false);
+
+			if (enableConsistentIgnores) {
+				// Show the commands
+				addCommandIfNotPresent(submenu, "io.snyk.eclipse.plugin.commands.snykShowOpenIgnored");
+				addCommandIfNotPresent(submenu, "io.snyk.eclipse.plugin.commands.snykShowIgnored");
+			} else {
+				// Hide the commands
+				submenu.remove("io.snyk.eclipse.plugin.commands.snykShowOpenIgnored");
+				submenu.remove("io.snyk.eclipse.plugin.commands.snykShowIgnored");
+			}
+
+			menuManager.update(true);
+
+		});
+
+	}
+
+	// Helper method to add a command if it's not already present
+	private void addCommandIfNotPresent(IMenuManager menu, String commandId) {
+		if (menu.find(commandId) == null) {
+			CommandContributionItemParameter param = new CommandContributionItemParameter(PlatformUI.getWorkbench(),
+					null, commandId, CommandContributionItem.STYLE_PUSH);
+			CommandContributionItem item = new CommandContributionItem(param);
+			menu.add(item);
+		}
+	}
+
 }

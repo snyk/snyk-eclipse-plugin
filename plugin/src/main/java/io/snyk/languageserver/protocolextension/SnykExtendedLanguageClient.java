@@ -27,6 +27,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,18 +69,20 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.analytics.AbstractAnalyticsEvent;
-import io.snyk.eclipse.plugin.analytics.AnalyticsEvent;
-import io.snyk.eclipse.plugin.analytics.AnalyticsSender;
+import io.snyk.eclipse.plugin.analytics.AbstractTask;
+import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
+import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
+import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.IssueTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
+import io.snyk.languageserver.FeatureFlagConstants;
 import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsCommandID;
 import io.snyk.languageserver.LsConfigurationUpdater;
@@ -89,6 +92,7 @@ import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
+import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
@@ -99,9 +103,10 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
+	private static final String SNYK_CODE_CONSISTENT_IGNORES = "snykCodeConsistentIgnores";
 	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
-	private AnalyticsSender analyticsSender;
+	private TaskProcessor taskProcessor;
 	private ISnykToolView toolView;
 	// this field is for testing only
 	private LanguageServer ls;
@@ -112,10 +117,35 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public SnykExtendedLanguageClient() {
 		super();
 		instance = this;
-		sendPluginInstalledEvent();
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
+		registerPluginInstalledEventTask();
+		registerRefreshFeatureFlagsTask();
 		createIssueCaches();
+	}
+
+	private void registerRefreshFeatureFlagsTask() {
+		if (taskProcessor == null) {
+			taskProcessor = TaskProcessor.getInstance();
+		}
+		Consumer<SnykExtendedLanguageClient> refreshFeatureFlagsConsumer = lc -> lc.refreshFeatureFlags();
+		taskProcessor.registerTask(refreshFeatureFlagsConsumer, null);
+	}
+
+	public void refreshFeatureFlags() {
+		boolean enableConsistentIgnores = getFeatureFlagStatus(FeatureFlagConstants.SNYK_CODE_CONSISTENT_IGNORES);
+		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
+				Boolean.valueOf(enableConsistentIgnores).toString());
+
+		updateIgnoresButtons();
+	}
+
+	private void updateIgnoresButtons() {
+		PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
+			var snykToolView = SnykStartup.getView();
+			if (snykToolView != null)
+				snykToolView.toggleIgnoresButtons();
+		});
+
 	}
 
 	private void createIssueCaches() {
@@ -127,18 +157,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private void sendPluginInstalledEvent() {
+	private void registerPluginInstalledEventTask() {
 		if (!Preferences.getInstance().getBooleanPref(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, false)) {
-			if (analyticsSender == null) {
-				analyticsSender = AnalyticsSender.getInstance();
+			if (taskProcessor == null) {
+				taskProcessor = TaskProcessor.getInstance();
 			}
-			var pluginInstalledEvent = new AnalyticsEvent("plugin installed", List.of("install"));
-			analyticsSender.logEvent(pluginInstalledEvent, new Consumer<Void>() {
-				@Override
-				public void accept(Void t) {
-					Preferences.getInstance().store(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, "true");
-				}
-			});
+			var pluginInstalledEvent = new AnalyticsEventTask("plugin installed", List.of("install"));
+			Consumer<SnykExtendedLanguageClient> analyticsTask = lc -> lc.reportAnalytics(pluginInstalledEvent);
+			Consumer<Void> analyticsCallback = v -> {
+				Preferences.getInstance().store(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, "true");
+			};
+
+			taskProcessor.registerTask(analyticsTask, analyticsCallback);
 		}
 	}
 
@@ -162,7 +192,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				this.toolView.resetNode(this.toolView.getRoot());
 				try {
 					if (window == null) {
-						executeCommand(LsCommandID.SNYK_WORKSPACE_SCAN, new ArrayList<>());
+						executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 						return;
 					}
 
@@ -181,7 +211,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 					if (project != null) {
 						runForProject(project.getName());
-						executeCommand(LsCommandID.SNYK_WORKSPACE_FOLDER_SCAN,
+						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN,
 								List.of(project.getLocation().toOSString()));
 					}
 				} catch (Exception e) {
@@ -192,7 +222,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void triggerAuthentication() {
-		executeCommand(LsCommandID.SNYK_LOGIN, new ArrayList<>());
+		executeCommand(LsCommandID.COMMAND_LOGIN, new ArrayList<>());
 	}
 
 	public void ensureLanguageServerRunning() {
@@ -215,12 +245,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void trustWorkspaceFolders() {
-		executeCommand(LsCommandID.SNYK_TRUST_WORKSPACE_FOLDERS, new ArrayList<>());
+		executeCommand(LsCommandID.COMMAND_TRUST_WORKSPACE_FOLDERS, new ArrayList<>());
 	}
 
 	public boolean getSastEnabled() {
 		try {
-			CompletableFuture<Object> lsSastSettings = executeCommand(LsCommandID.SNYK_SAST_ENABLED, new ArrayList<>());
+			CompletableFuture<Object> lsSastSettings = executeCommand(LsCommandID.COMMAND_GET_SETTINGS_SAST_ENABLED,
+					new ArrayList<>());
 			Object result;
 			try {
 				result = lsSastSettings.get(5, TimeUnit.SECONDS);
@@ -237,12 +268,31 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return false;
 	}
 
+	public boolean getFeatureFlagStatus(String featureFlag) {
+		try {
+			CompletableFuture<Object> lsGlobalIgnoresFeatureFlag = executeCommand(
+					LsCommandID.COMMAND_GET_FEATURE_FLAG_STATUS, List.of(featureFlag));
+			Object result;
+			try {
+				result = lsGlobalIgnoresFeatureFlag.get(5, TimeUnit.SECONDS);
+			} catch (TimeoutException e) {
+				return false;
+			}
+			FeatureFlagStatus featureFlagStatus = om.convertValue(result, FeatureFlagStatus.class);
+			return featureFlagStatus != null ? featureFlagStatus.getOk() : false;
+		} catch (Exception e) {
+			SnykLogger.logError(e);
+		}
+
+		return false;
+	}
+
 	public String getIssueDescription(String issueId) {
 		if (StringUtils.isEmpty(issueId)) {
 			SnykLogger.logInfo("issueId is empty");
 			return "";
 		}
-		CompletableFuture<Object> issueDescription = executeCommand(LsCommandID.SNYK_GENERATE_ISSUE_DESCRIPTION,
+		CompletableFuture<Object> issueDescription = executeCommand(LsCommandID.COMMAND_GENERATE_ISSUE_DESCRIPTION,
 				List.of(issueId));
 		Object result;
 		try {
@@ -273,9 +323,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (differentToken) {
 			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
 		}
-
-		configurationUpdater.configurationChanged();
-
+		
+		if (!Preferences.getInstance().isTest()) {
+			configurationUpdater.configurationChanged();
+			refreshFeatureFlags();
+		}
+		
 		if (!newToken.isBlank() && PlatformUI.isWorkbenchRunning()) {
 			enableSnykViewRunActions();
 		}
@@ -429,7 +482,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		long totalCount = issueCache.getTotalCount(productNode.getProduct());
 		long fixableCount = issueCache.getFixableCount(productNode.getProduct());
 		long ignoredCount = issueCache.getIgnoredCount(productNode.getProduct());
-
+		var pref = Preferences.getInstance();
 		if (totalCount == 0) {
 			toolView.addInfoNode(productNode, new InfoTreeNode(CONGRATS_NO_ISSUES_FOUND));
 		} else {
@@ -449,14 +502,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		if (totalCount > 0 && ignoredCount == totalCount
-				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
+				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED) 
+				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
 			toolView.addInfoNode(productNode,
-					new InfoTreeNode("Adjust your Issue View Options to see ignored issues."));
+					new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
 
 		if (totalCount > 0 && ignoredCount == 0
-				&& Preferences.getInstance().getBooleanPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES)) {
-			toolView.addInfoNode(productNode, new InfoTreeNode("Adjust your Issue View Options to see open issues."));
+				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
+				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES)) {
+			toolView.addInfoNode(productNode, new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
 	}
 
@@ -483,9 +538,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (ProductTreeNode productTreeNode : nodes) {
 			var issueCache = IssueCacheHolder.getInstance().getCacheInstance(filePath);
 			var issues = issueCache.getIssues(filePath, productTreeNode.getProduct());
+			issues = IssueSorter.sortIssuesBySeverity(issues);
+   			issues = filterIgnoredIssues(issues);
 			if (issues.isEmpty())
 				continue;
-			issues = IssueSorter.sortIssuesBySeverity(issues);
 			FileTreeNode fileNode = new FileTreeNode(filePath);
 			toolView.addFileNode(productTreeNode, fileNode);
 			for (Issue issue : issues) {
@@ -494,6 +550,25 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
+    private Collection<Issue> filterIgnoredIssues(Collection<Issue> issueList)
+    {
+    	final boolean includeIgnoredIssues;
+    	final boolean includeOpenedIssues;
+
+    	if (Preferences.getInstance().getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)) {
+    	    includeOpenedIssues = Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
+    	    includeIgnoredIssues = Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES);
+    	} else {
+    	    includeOpenedIssues = true;
+    	    includeIgnoredIssues = true;
+    	}
+
+    	return issueList.stream()
+    	    .filter(it -> it.isVisible(includeIgnoredIssues, includeOpenedIssues))
+    	    .toList();
+
+    }
+	
 	private Set<ProductTreeNode> populateIssueCache(PublishDiagnostics316Param param, String filePath) {
 		var issueCache = getIssueCache(filePath);
 		Diagnostic316[] diagnostics = param.getDiagnostics();
@@ -529,10 +604,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return getAffectedProductNodes(snykProduct, filePath);
 	}
 
-	public void reportAnalytics(AbstractAnalyticsEvent event) {
+	public void reportAnalytics(AbstractTask event) {
 		try {
 			var eventString = om.writeValueAsString(event);
-			executeCommand(LsCommandID.SNYK_REPORT_ANALYTICS, List.of(eventString));
+			executeCommand(LsCommandID.COMMAND_REPORT_ANALYTICS, List.of(eventString));
 		} catch (Exception e) {
 			SnykLogger.logError(e);
 		}
@@ -593,7 +668,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var token = p.getAuthToken();
 		final int timeout = 5;
 		CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-			var result = executeCommand(LsCommandID.SNYK_GET_ACTIVE_USER, new ArrayList<>());
+			var result = executeCommand(LsCommandID.COMMAND_GET_ACTIVE_USER, new ArrayList<>());
 			// we don't wait forever, and if we can't get a user name (refresh token), we're
 			// done.
 			try {
@@ -665,6 +740,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@Override
 	public void notifyProgress(final ProgressParams params) {
+		if (params.getValue() == null) {
+			return;
+		}
 		WorkDoneProgressNotification progressNotification = params.getValue().getLeft();
 		if (progressNotification != null && progressNotification.getKind() == WorkDoneProgressKind.end) {
 			this.progressManager.removeProgress(params.getToken().getLeft());
@@ -674,7 +752,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	/**
 	 * This cancels a progress in language server.
-	 * 
+	 *
 	 * @param token
 	 */
 	public void cancelProgress(String token) {
