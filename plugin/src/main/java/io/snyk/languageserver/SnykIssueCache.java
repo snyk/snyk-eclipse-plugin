@@ -4,11 +4,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.IssueComparator;
 
 public class SnykIssueCache {
 	private final Map<String, Collection<Issue>> codeSecurityIssues = new ConcurrentHashMap<>();
@@ -75,8 +77,8 @@ public class SnykIssueCache {
 	 * @param issues The collection of issues to add
 	 */
 	public void addCodeIssues(String path, Collection<Issue> issues) {
-		var qualityIssues = new HashSet<Issue>(issues.size());
-		var securityIssues = new HashSet<Issue>(issues.size());
+		var qualityIssues = new TreeSet<Issue>(new IssueComparator(issues));
+		var securityIssues = new TreeSet<Issue>(new IssueComparator(issues));
 		for (Issue issue : issues) {
 			if (issue.additionalData().isSecurityType()) {
 				securityIssues.add(issue);
@@ -138,7 +140,7 @@ public class SnykIssueCache {
 	 */
 	public void addOssIssues(String path, Collection<Issue> issues) {
 		if (issues.size() > 0) {
-			ossIssues.put(path, issues);
+			ossIssues.put(path, new TreeSet<Issue>(new IssueComparator(issues)));
 		} else {
 			ossIssues.remove(path);
 		}
@@ -173,7 +175,7 @@ public class SnykIssueCache {
 	 */
 	public void addIacIssues(String path, Collection<Issue> issues) {
 		if (issues.size() > 0) {
-			iacIssues.put(path, issues);
+			iacIssues.put(path, new TreeSet<Issue>(new IssueComparator(issues)));
 		} else {
 			iacIssues.remove(path);
 		}

@@ -27,7 +27,6 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -100,7 +99,6 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCl
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
-import io.snyk.languageserver.protocolextension.messageObjects.scanResults.IssueSorter;
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
@@ -133,19 +131,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public void refreshFeatureFlags() {
 		boolean enableConsistentIgnores = getFeatureFlagStatus(FeatureFlagConstants.SNYK_CODE_CONSISTENT_IGNORES);
-		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
-				Boolean.valueOf(enableConsistentIgnores).toString());
-
-		updateIgnoresButtons();
+		toggleIgnores(enableConsistentIgnores);
 	}
 
-	private void updateIgnoresButtons() {
+	private void toggleIgnores(Boolean enableConsistentIgnores) {
+		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
+				Boolean.valueOf(enableConsistentIgnores).toString());
 		PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
 			var snykToolView = SnykStartup.getView();
 			if (snykToolView != null)
 				snykToolView.toggleIgnoresButtons();
 		});
-
 	}
 
 	private void createIssueCaches() {
@@ -539,8 +535,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var cacheHashMap = Collections.unmodifiableMap(issueCache.getCacheByDisplayProduct(productTreeNode.getProduct()));
 		for (var kv : cacheHashMap.entrySet()) {
 			var fileName = kv.getKey();
-			var issues = kv.getValue();
-			issues = IssueSorter.sortIssuesBySeverity(issues);
+			var issues = new ArrayList<>(kv.getValue());
 			issues = filterIgnoredIssues(issues);
 			if(issues.isEmpty())
 				continue;
@@ -552,7 +547,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-    private Collection<Issue> filterIgnoredIssues(Collection<Issue> issueList) {
+    private ArrayList<Issue> filterIgnoredIssues(ArrayList<Issue> issueList) {
     	final boolean includeIgnoredIssues;
     	final boolean includeOpenedIssues;
 
@@ -566,7 +561,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
     	return issueList.stream()
     	    .filter(it -> it.isVisible(includeIgnoredIssues, includeOpenedIssues))
-    	    .toList();
+    	    .collect(Collectors.toCollection(ArrayList::new));
     }
 
 	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
@@ -582,10 +577,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		var snykProduct = LSP_SOURCE_TO_SCAN_PARAMS.get(source);
 		List<Issue> issueList = new ArrayList<>();
-
+		var isIgnoresEnabled = Preferences.getInstance().getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
 		for (var diagnostic : diagnostics) {
 			if (diagnostic.getData() == null) {
 				continue;
+			}
+			if(!isIgnoresEnabled && diagnostic.getData().isIgnored()) {
+				toggleIgnores(true);
+				isIgnoresEnabled = true;
 			}
 			issueList.add(diagnostic.getData());
 		}
