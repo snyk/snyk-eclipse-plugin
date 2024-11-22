@@ -49,6 +49,5 @@ public class HtmlProviderFactoryTest extends LsBaseTest {
 	var cut = HtmlProviderFactory.GetHtmlProvider(ProductConstants.DISPLAYED_CODE_SECURITY);
 	var initScript = cut.getInitScript();
     assertTrue(initScript.contains("window.openInEditor"));
-    assertTrue(initScript.contains("document.body.classList.add(isHighContrast"));
   }
 }

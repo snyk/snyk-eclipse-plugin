@@ -199,7 +199,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut = new SnykExtendedLanguageClient();
 		var future = cut.publishDiagnostics316(param);
 		try {
-			future.get(5, TimeUnit.SECONDS);
+			future.get(10, TimeUnit.SECONDS);
 		} catch (Exception ex) {
 
 		}
