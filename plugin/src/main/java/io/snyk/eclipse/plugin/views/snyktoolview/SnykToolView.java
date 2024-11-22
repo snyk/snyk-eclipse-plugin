@@ -289,11 +289,14 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void toggleIgnoresButtons() {
 
-		IMenuManager menuManager = this.getViewSite().getActionBars().getMenuManager();
-		IMenuManager submenu = menuManager
-				.findMenuUsingPath("io.snyk.eclipse.plugin.views.snyktoolview.filterIgnoreMenu");
+		Display.getDefault().asyncExec(() -> {
+			IMenuManager menuManager = this.getViewSite().getActionBars().getMenuManager();
+			IMenuManager submenu = menuManager
+					.findMenuUsingPath("io.snyk.eclipse.plugin.views.snyktoolview.filterIgnoreMenu");
 
-		if (submenu != null) {
+			if (submenu == null) {
+				return;
+			}
 
 			boolean enableConsistentIgnores = Preferences.getInstance()
 					.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, false);
@@ -309,7 +312,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			}
 
 			menuManager.update(true);
-		}
+
+		});
 
 	}
 
