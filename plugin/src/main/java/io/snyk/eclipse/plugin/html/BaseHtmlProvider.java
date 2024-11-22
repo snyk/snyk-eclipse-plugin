@@ -11,6 +11,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.themes.ITheme;
 import org.eclipse.ui.themes.IThemeManager;
 
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+
 public class BaseHtmlProvider {
 	private final Random random = new Random();
 	private final Map<String, String> colorCache = new HashMap<>();
@@ -67,16 +69,19 @@ public class BaseHtmlProvider {
     }
 
     public String getColorAsHex(String colorKey, String defaultColor) {
-    	  return colorCache.computeIfAbsent(colorKey, key -> {
-    	        ColorRegistry colorRegistry = getColorRegistry();
-    	        Color color = colorRegistry.get(colorKey);
-    	        if (color == null) {
-    	            return defaultColor;
-    	        } else {
-    	            RGB rgb = color.getRGB();
-    	            return String.format("#%02x%02x%02x", rgb.red, rgb.green, rgb.blue);
-    	        }
-    	  });
+		if(Preferences.getInstance().isTest()) {
+			return "";
+		}
+	    return colorCache.computeIfAbsent(colorKey, key -> {
+	        ColorRegistry colorRegistry = getColorRegistry();
+	        Color color = colorRegistry.get(colorKey);
+	        if (color == null) {
+	            return defaultColor;
+	        } else {
+	            RGB rgb = color.getRGB();
+	            return String.format("#%02x%02x%02x", rgb.red, rgb.green, rgb.blue);
+	        }
+	  });
     }
     
     private ColorRegistry colorRegistry;

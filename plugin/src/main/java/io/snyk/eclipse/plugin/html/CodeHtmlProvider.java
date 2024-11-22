@@ -4,6 +4,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.themes.ITheme;
 import org.eclipse.ui.themes.IThemeManager;
 
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+
 public class CodeHtmlProvider extends BaseHtmlProvider {
     private static CodeHtmlProvider instance = new CodeHtmlProvider();
 
@@ -64,7 +66,11 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
         currentTheme = themeManager.getCurrentTheme();
         return currentTheme;
     }
+    
     private String getThemeScript() {
+    	if(Preferences.getInstance().isTest()) {
+    		return "";
+    	}
         ITheme currentTheme = getCurrentTheme();
         String themeId = currentTheme.getId().toLowerCase();
 
