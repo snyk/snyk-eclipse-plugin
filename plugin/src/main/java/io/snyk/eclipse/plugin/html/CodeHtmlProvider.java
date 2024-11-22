@@ -54,10 +54,18 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
                 }
             """ + themeScript;
     }
-
+    
+    private ITheme currentTheme;
+    private ITheme getCurrentTheme() {
+    	if(currentTheme != null) {
+    		return currentTheme;
+    	}
+    	IThemeManager themeManager = PlatformUI.getWorkbench().getThemeManager();
+        currentTheme = themeManager.getCurrentTheme();
+        return currentTheme;
+    }
     private String getThemeScript() {
-        IThemeManager themeManager = PlatformUI.getWorkbench().getThemeManager();
-        ITheme currentTheme = themeManager.getCurrentTheme();
+        ITheme currentTheme = getCurrentTheme();
         String themeId = currentTheme.getId().toLowerCase();
 
         boolean isDarkTheme = themeId.contains("dark");

@@ -87,11 +87,13 @@ public class BrowserHandler {
 
 	public CompletableFuture<Void> updateBrowserContent(TreeNode node) {
 		// Generate HTML content based on the selected node
+		if (!(node instanceof IssueTreeNode)) return CompletableFuture.completedFuture(null);
+		browser.setText("Loading...");
+
 		return CompletableFuture.supplyAsync(() -> {
 			return generateHtmlContent(node);
 			})
 			.thenAccept(htmlContent -> {
-				if (!(node instanceof IssueTreeNode)) return;
 				Display.getDefault().asyncExec(() -> {
 					var product = ((ProductTreeNode) node.getParent().getParent()).getProduct();
 					var htmlProvider = HtmlProviderFactory.GetHtmlProvider(product);
