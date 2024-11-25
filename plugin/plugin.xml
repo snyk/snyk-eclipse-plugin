@@ -1,271 +1,541 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-
-  <extension
-    name="%extension.name"
-    point="org.eclipse.ui.views">
-    <category
-      name="%category.name"
-      id="io.snyk.eclipse.plugin">
-    </category>
-    <view
-      id="io.snyk.eclipse.plugin.views.SnykView"
-      name="%view.name"
-      icon="icons/patch.png"
-      class="io.snyk.eclipse.plugin.views.SnykView"
-      category="io.snyk.eclipse.plugin"
-      inject="true">
-    </view>
-  </extension>
-  <extension
-    point="org.eclipse.ui.perspectiveExtensions">
-    <perspectiveExtension
-      targetID="org.eclipse.jdt.ui.JavaPerspective">
-      <view
-        id="io.snyk.eclipse.plugin.views.SnykView"
-        relative="org.eclipse.ui.views.ProblemView"
-        relationship="right"
-        ratio="0.5">
-      </view>
-    </perspectiveExtension>
-  </extension>
-  <extension
-    point="org.eclipse.help.contexts">
-    <contexts
-      file="contexts.xml">
-    </contexts>
-  </extension>
-  <extension
-    point="org.eclipse.ui.preferencePages">
-    <page
-      class="io.snyk.eclipse.plugin.properties.PreferencesPage"
-      id="io.snyk.eclipse.plugin.properties.preferencespage"
-      name="%page.name">
-    </page>
-  </extension>
-  <extension
-    point="org.eclipse.ui.commands">
-    <command
-      defaultHandler="io.snyk.eclipse.plugin.views.MenuHandler"
-      id="io.snyk.eclipse.plugin.commands.execute"
-      name="%command.name">
-    </command>
-    <command
-      defaultHandler="io.snyk.eclipse.plugin.views.ScanWorkspaceMenuHandler"
-      id="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
-      name="%scanWorkspace.name">
-    </command>
-  </extension>
-  <extension
-    point="org.eclipse.ui.menus">
-    <menuContribution
-      locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
-
-      <command
-        commandId="io.snyk.eclipse.plugin.commands.execute"
-        icon="icons/patch.png"
-        label="%command.label"
-        style="push">
-        <visibleWhen>
-          <with variable="activeMenuSelection">
-            <iterate
-              ifEmpty="false">
-              <adapt type="org.eclipse.core.resources.IProject">
-
-              </adapt>
-            </iterate>
-          </with>
-        </visibleWhen>
-      </command>
-      <command
-        commandId="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
-        icon="icons/patch.png"
-        label="%scanWorkspace.label"
-        style="push">
-      </command>
-    </menuContribution>
-  </extension>
-  <extension point="org.eclipse.ui.menus">
-    <menuContribution locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu">
-      <command
-        commandId="io.snyk.eclipse.plugin.commands.execute"
-        icon="icons/patch.png"
-        label="%command.label.0"
-        style="push">
-        <visibleWhen>
-          <with variable="activeMenuSelection">
-            <iterate
-              ifEmpty="false">
-              <adapt type="org.eclipse.core.resources.IProject">
-
-              </adapt>
-            </iterate>
-          </with>
-        </visibleWhen>
-      </command>
-      <command
-        commandId="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
-        icon="icons/patch.png"
-        label="%scanWorkspace.label"
-        style="push">
-      </command>
-    </menuContribution>
-  </extension>
-  <extension point="org.eclipse.ui.startup">
-    <startup class="io.snyk.eclipse.plugin.SnykStartup"/>
-  </extension>
-  <extension
-    point="org.eclipse.core.contenttype.contentTypes">
-    <content-type
-      base-type="org.eclipse.core.runtime.text"
-      file-extensions="*"
-      id="io.snyk.languageserver.parent"
-      name="Snyk"
-      priority="normal">
-    </content-type>
-    <!-- snyk code -->
-    <content-type
-      base-type="io.snyk.languageserver.parent"
-      file-extensions="java,aspx,cs,cls,ejs,es,es6,htm,html,js,jsx,kt,kts,ts,tsx,vue,py,erb,haml,rb,rhtml,slim,go,c,cc,cpp,cxx,h,hpp,hxx,php,phtml"
-      id="io.snyk.languageserver.snykCode"
-      name="Snyk Code"
-      priority="normal">
-    </content-type>
-    <!-- snyk oss -->
-    <content-type
-      base-type="io.snyk.languageserver.parent"
-      file-names="yarn.lock,package-lock.json,package.json,Gemfile,Gemfile.lock,pom.xml,build.gradle,build.gradle.kts,build.sbt,Pipfile,requirements.txt,Gopkg.lock,go.mod,vendor/vendor.json,obj/project.assets.json,project.assets.json,packages.config,paket.dependencies,composer.lock,Podfile,Podfile.lock,poetry.lock,mix.exs,mix.lock"
-      id="io.snyk.languageserver.snykOss"
-      name="Snyk Open Source"
-      priority="normal">
-    </content-type>
-    <!-- snyk Iac -->
-    <content-type
-      base-type="io.snyk.languageserver.parent"
-      file-extensions="yaml,yml,json,tf"
-      id="io.snyk.languageserver.snykIac"
-      name="Snyk Infrastructure-as-Code"
-      priority="normal">
-    </content-type>
-  </extension>
-
-  <extension
-    point="org.eclipse.ui.editors">
-    <editorContentTypeBinding
-      contentTypeId="io.snyk.languageserver.parent"
-      editorId="org.eclipse.ui.genericeditor.GenericEditor">
-    </editorContentTypeBinding>
-  </extension>
-
-  <extension
-    point="org.eclipse.lsp4e.languageServer">
-    <server
-      class="io.snyk.languageserver.SnykLanguageServer"
-      id="io.snyk.languageserver"
-      label="Snyk Language Server"
-      clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
-      lastDocumentDisconnectedTimeout="3000000"
-      singleton="true"
-      markerType="io.snyk.languageserver.marker">
-    </server>
-
-    <!-- snyk code -->
-    <contentTypeMapping
-      contentType="io.snyk.languageserver.snykCode"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-
-    <!-- snyk oss  -->
-    <contentTypeMapping
-      contentType="io.snyk.languageserver.snykOss"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-
-    <!-- iac -->
-    <contentTypeMapping
-      contentType="io.snyk.languageserver.snykIac"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-
-    <!-- third party editors & extensions -->
-    <contentTypeMapping
-      contentType="org.eclipse.core.runtime.text"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.core.runtime.xml"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.jdt.core.javaSource"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.buildship.core.files.gradlebuildscript"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.wildwebdeveloper.json"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.wildwebdeveloper.yaml"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.wildwebdeveloper.ts"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.wildwebdeveloper.tsx"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.wildwebdeveloper.js"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.wst.dtd.core.dtdsource"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.wst.xml.core.xmisource"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.eclipse.wst.xml.core.xmlsource"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-    <contentTypeMapping
-      contentType="org.python.pydev.pythonfile"
-      id="io.snyk.languageserver">
-    </contentTypeMapping>
-  </extension>
-  <extension
+    <extension
+        name="%extension.name"
+        point="org.eclipse.ui.views">
+        <category
+            name="%category.name"
+            id="io.snyk.eclipse.plugin">
+        </category>
+        <view
+            id="io.snyk.eclipse.plugin.views.SnykView"
+            name="%view.name"
+            icon="icons/patch.png"
+            class="io.snyk.eclipse.plugin.views.SnykView"
+            category="io.snyk.eclipse.plugin"
+            inject="true">
+        </view>
+        <view
+            id="io.snyk.eclipse.plugin.views.snyktoolview"
+            name="%toolView.name"
+            icon="icons/patch.png"
+            class="io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView"
+            category="io.snyk.eclipse.plugin"
+            inject="true">
+        </view>
+    </extension>
+    <extension point="org.eclipse.ui.perspectiveExtensions">
+        <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaPerspective">
+            <view
+                id="io.snyk.eclipse.plugin.views.SnykView"
+                relative="org.eclipse.ui.views.ProblemView"
+                relationship="right"
+                ratio="0.5">
+            </view>
+            <!-- <view id="io.snyk.eclipse.plugin.views.snyktoolview" ratio="0.5"> 
+                </view> -->
+        </perspectiveExtension>
+    </extension>
+    <extension point="org.eclipse.help.contexts">
+        <contexts file="contexts.xml">
+        </contexts>
+    </extension>
+    <extension point="org.eclipse.ui.preferencePages">
+        <page
+            class="io.snyk.eclipse.plugin.properties.PreferencesPage"
+            id="io.snyk.eclipse.plugin.properties.preferencespage"
+            name="%page.name">
+        </page>
+    </extension>
+    <extension point="org.eclipse.ui.commands">
+        <command
+            defaultHandler="io.snyk.eclipse.plugin.views.MenuHandler"
+            id="io.snyk.eclipse.plugin.commands.execute"
+            name="%command.name">
+        </command>
+        <command
+            defaultHandler="io.snyk.eclipse.plugin.views.ScanWorkspaceMenuHandler"
+            id="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
+            name="%scanWorkspace.name">
+        </command>
+        <command
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.StopScanHandler"
+            id="io.snyk.eclipse.plugin.commands.snykStopScan"
+            name="Stop Scan">
+        </command>
+        <command
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.ClearCacheHandler"
+            id="io.snyk.eclipse.plugin.commands.snykEmptyScanResults"
+            name="Clear Cache">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.properties.preferencespage"
+            name="Open Snyk Preferences"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.OpenSnykPreferencesHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.snykFilterCritical"
+            name="Critical Severity"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterCriticalHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.snykFilterHigh"
+            name="High Severity"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHighHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.snykFilterMedium"
+            name="Medium Severity"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterMediumHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.snykFilterLow"
+            name="Low Severity"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterLowHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.enableOSS"
+            name="Open Source"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableOssProductHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.enableCodeSecurity"
+            name="Code Security"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableCodeSecurityProductHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.enableCodeQuality"
+            name="Code Quality"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableCodeQualityProductHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.enableIAC"
+            name="Infrastructure as Code"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableIacProductHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.TreeCollapse"
+            name="Collapse Tree"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.CollapseTreeHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.TreeExpand"
+            name="Collapse Tree"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.CollapseTreeHandler">
+        </command>
+        <command
+            id="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
+            name="Net New Issues"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaNewIssuesHandler">
+        </command>
+        <command
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresOpenIssuesHandler"
+            id="io.snyk.eclipse.plugin.commands.snykShowOpenIgnored"
+            name="Open Issues">
+        </command>
+        <command
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresIgnoredIssuesHandler"
+            id="io.snyk.eclipse.plugin.commands.snykShowIgnored"
+            name="Ignored Issues">
+        </command>
+        <command
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.snykFilterFixableIssuesHandler"
+            id="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
+            name="AI Fixable">
+        </command>
+        <command
+              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllAiFixHandler"
+              id="io.snyk.eclipse.plugin.snykShowAllSeverities"
+              name="Show All Severities">
+        </command>
+        <command
+              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllProductHandler"
+              id="io.snyk.eclipse.plugin.command.snykShowAllProducts"
+              name="Show All Products">
+        </command>
+        <command
+              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllIssuesHandler"
+              id="io.snyk.eclipse.plugin.command.snykShowAllIssuesStatus"
+              name="Show All Issues">
+        </command>
+    </extension>
+    <extension point="org.eclipse.ui.menus">
+        <menuContribution
+            locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu">
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.execute"
+                icon="icons/patch.png"
+                label="%command.label.0"
+                style="push">
+                <visibleWhen>
+                    <with variable="activeMenuSelection">
+                        <iterate ifEmpty="false">
+                            <adapt
+                                type="org.eclipse.core.resources.IProject">
+                            </adapt>
+                        </iterate>
+                    </with>
+                </visibleWhen>
+            </command>
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
+                icon="icons/patch.png"
+                label="%scanWorkspace.label"
+                style="push">
+            </command>
+        </menuContribution>
+        <menuContribution
+            locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.execute"
+                icon="icons/patch.png"
+                label="%command.label"
+                style="push">
+                <visibleWhen>
+                    <with variable="activeMenuSelection">
+                        <iterate ifEmpty="false">
+                            <adapt
+                                type="org.eclipse.core.resources.IProject">
+                            </adapt>
+                        </iterate>
+                    </with>
+                </visibleWhen>
+            </command>
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
+                icon="icons/patch.png"
+                label="%scanWorkspace.label"
+                style="push">
+            </command>
+        </menuContribution>
+        <menuContribution
+            locationURI="toolbar:io.snyk.eclipse.plugin.views.snyktoolview">
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.snykWorkspaceScan"
+                icon="platform:/plugin/org.eclipse.ui.browser/icons/clcl16/nav_go.png"
+                style="push"
+                tooltip="Scan">
+            </command>
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.snykStopScan"
+                icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/progress_stop.png"
+                style="push"
+                tooltip="Stop Scan">
+            </command>
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.TreeCollapse"
+                icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/collapseall.png"
+                style="push"
+                tooltip="Collapse all tree nodes">
+            </command>
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.TreeExpand"
+                icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/expandall.png"
+                style="push"
+                tooltip="Expand all tree nodes">
+            </command>
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.snykEmptyScanResults"
+                icon="platform:/plugin/org.eclipse.ui.console/icons/full/clcl16/clear_co.png"
+                style="push"
+                tooltip="Empty Scan Results Cache">
+            </command>
+            <!-- Add a separator -->
+            <separator
+                name="RunScanSeparator"
+                visible="true">
+            </separator>
+            <command
+                commandId="io.snyk.eclipse.plugin.properties.preferencespage"
+                icon="platform:/plugin/org.eclipse.jdt.debug.ui/icons/full/elcl16/thread_view.gif"
+                style="push"
+                tooltip="Open Snyk Preferences">
+            </command>
+        </menuContribution>
+        <menuContribution
+            allPopups="false"
+            locationURI="menu:io.snyk.eclipse.plugin.views.snyktoolview">
+            <menu
+                id="io.snyk.eclipse.plugin.views.snyktoolview.filterSeverityMenu"
+                label="Severity">
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.snykFilterCritical"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="Critical Severity">
+                </command>
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.snykFilterHigh"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="High Severity">
+                </command>
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.snykFilterMedium"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="Medium Severity">
+                </command>
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.snykFilterLow"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="Low Severity">
+                </command>
+                <separator
+                      name="io.snyk.eclipse.plugin.separator.allSeverities"
+                      visible="true">
+                </separator>
+                <command
+                      commandId="io.snyk.eclipse.plugin.snykShowAllSeverities"
+                      icon="icons/enabled.png"
+                      style="push"
+                      tooltip="Show Issues of all Severities">
+                </command>
+            </menu>
+            <menu
+                id="io.snyk.eclipse.plugin.views.snyktoolview.filterProductTypeMenu"
+                label="Snyk Product">
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.enableOSS"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="Enable/disable OSS scans">
+                </command>
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.enableCodeSecurity"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="Enable/disable Code scans">
+                </command>
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.enableCodeQuality"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="Enable/disable Code scans">
+                </command>
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.enableIAC"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="Enable/disable IAC scans">
+                </command>
+                <separator
+                      name="io.snyk.eclipse.plugin.separator.allProducts"
+                      visible="true">
+                </separator>
+                <command
+                      commandId="io.snyk.eclipse.plugin.command.snykShowAllProducts"
+                      icon="icons/enabled.png"
+                      style="push"
+                      tooltip="Scan All Products">
+                </command>
+            </menu>
+            <menu
+                id="io.snyk.eclipse.plugin.views.snyktoolview.filterIgnoreMenu"
+                label="Issues Status">
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.snykShowOpenIgnored"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="Show Open Issues">
+                </command>
+                <command
+                    commandId="io.snyk.eclipse.plugin.commands.snykShowIgnored"
+                    icon="icons/enabled.png"
+                    style="push"
+                    tooltip="Show Ignored">
+                </command>
+                <command
+                      commandId="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
+                      icon="icons/enabled.png"
+                      style="push"
+                      tooltip="Show Only Net New Issues">
+                </command>
+                <separator
+                      name="io.snyk.eclipse.plugin.separator.allIssues"
+                      visible="true">
+                </separator>
+                <command
+                      commandId="io.snyk.eclipse.plugin.command.snykShowAllIssuesStatus"
+                      icon="icons/enabled.png"
+                      style="push"
+                      tooltip="Show all issues">
+                </command>
+            </menu>
+            <menu
+                  id="io.snyk.eclipse.plugin.views.snyktoolview.filtersMenu"
+                  label="Code AI Fixability">
+               <command
+                     commandId="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
+                     icon="icons/enabled.png"
+                     style="push"
+                     tooltip="Show only issues with AIFix or Fix suggestions">
+               </command>
+            </menu>
+        </menuContribution>
+        <menuContribution
+            locationURI="popup:io.snyk.eclipse.plugin.views.snyktoolview#PopupTreeMenu">
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.TreeExpand"
+                icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/expandall.png"
+                style="push"
+                tooltip="Expand Issue Tree">
+            </command>
+            <command
+                commandId="io.snyk.eclipse.plugin.commands.TreeCollapse"
+                icon="platform:/plugin/org.eclipse.ui/icons/full/elcl16/collapseall.png"
+                style="push"
+                tooltip="Collapse Issue Tree">
+            </command>
+        </menuContribution>
+    </extension>
+    <extension point="org.eclipse.ui.startup">
+        <startup class="io.snyk.eclipse.plugin.SnykStartup" />
+    </extension>
+    <extension
+        point="org.eclipse.core.contenttype.contentTypes">
+        <content-type
+            base-type="org.eclipse.core.runtime.text"
+            file-extensions="*"
+            id="io.snyk.languageserver.parent"
+            name="Snyk"
+            priority="normal">
+        </content-type>
+        <!-- snyk code -->
+        <content-type
+            base-type="io.snyk.languageserver.parent"
+            file-extensions="java,aspx,cs,cls,ejs,es,es6,htm,html,js,jsx,kt,kts,ts,tsx,vue,py,erb,haml,rb,rhtml,slim,go,c,cc,cpp,cxx,h,hpp,hxx,php,phtml"
+            id="io.snyk.languageserver.snykCode"
+            name="Snyk Code"
+            priority="normal">
+        </content-type>
+        <!-- snyk oss -->
+        <content-type
+            base-type="io.snyk.languageserver.parent"
+            file-names="yarn.lock,package-lock.json,package.json,Gemfile,Gemfile.lock,pom.xml,build.gradle,build.gradle.kts,build.sbt,Pipfile,requirements.txt,Gopkg.lock,go.mod,vendor/vendor.json,obj/project.assets.json,project.assets.json,packages.config,paket.dependencies,composer.lock,Podfile,Podfile.lock,poetry.lock,mix.exs,mix.lock"
+            id="io.snyk.languageserver.snykOss"
+            name="Snyk Open Source"
+            priority="normal">
+        </content-type>
+        <!-- snyk Iac -->
+        <content-type
+            base-type="io.snyk.languageserver.parent"
+            file-extensions="yaml,yml,json,tf"
+            id="io.snyk.languageserver.snykIac"
+            name="Snyk Infrastructure-as-Code"
+            priority="normal">
+        </content-type>
+    </extension>
+    <extension point="org.eclipse.ui.editors">
+        <editorContentTypeBinding
+            contentTypeId="io.snyk.languageserver.parent"
+            editorId="org.eclipse.ui.genericeditor.GenericEditor">
+        </editorContentTypeBinding>
+    </extension>
+    <extension point="org.eclipse.lsp4e.languageServer">
+        <server
+            class="io.snyk.languageserver.SnykLanguageServer"
+            id="io.snyk.languageserver"
+            label="Snyk Language Server"
+            clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
+            lastDocumentDisconnectedTimeout="3000000"
+            singleton="true"
+            markerType="io.snyk.languageserver.marker">
+        </server>
+        <!-- snyk code -->
+        <contentTypeMapping
+            contentType="io.snyk.languageserver.snykCode"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <!-- snyk oss -->
+        <contentTypeMapping
+            contentType="io.snyk.languageserver.snykOss"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <!-- iac -->
+        <contentTypeMapping
+            contentType="io.snyk.languageserver.snykIac"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <!-- third party editors & extensions -->
+        <contentTypeMapping
+            contentType="org.eclipse.core.runtime.text"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.core.runtime.xml"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.jdt.core.javaSource"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.buildship.core.files.gradlebuildscript"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.wildwebdeveloper.json"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.wildwebdeveloper.yaml"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.wildwebdeveloper.ts"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.wildwebdeveloper.tsx"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.wildwebdeveloper.js"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.wst.dtd.core.dtdsource"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.wst.xml.core.xmisource"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.eclipse.wst.xml.core.xmlsource"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+        <contentTypeMapping
+            contentType="org.python.pydev.pythonfile"
+            id="io.snyk.languageserver">
+        </contentTypeMapping>
+    </extension>
+    <extension
         id="io.snyk.languageserver.marker"
         name="Snyk"
         point="org.eclipse.core.resources.markers">
-    <super
-          type="org.eclipse.lsp4e.diagnostic">
-    </super>
-    <persistent value="false"/>
-  </extension>
-
+        <super type="org.eclipse.lsp4e.diagnostic">
+        </super>
+        <persistent value="false" />
+    </extension>
     <extension
-  		id="wizard"
-  		name="Snyk"
+        id="wizard"
+        name="Snyk"
         point="org.eclipse.ui.newWizards">
-     <category
-           id="io.snyk.eclipse.plugin.wizards.category.snyk"
-           name="Snyk">
-     </category>
-     <wizard
-           category="io.snyk.eclipse.plugin.wizards.category.snyk"
-           class="io.snyk.eclipse.plugin.wizards.SnykWizard"
-           icon="icons/patch.png"
-           id="io.snyk.eclipse.plugin.wizards.snykwizard"
-           name="SnykWizard">
-     </wizard>
-  </extension>
+        <category
+            id="io.snyk.eclipse.plugin.wizards.category.snyk"
+            name="Snyk">
+        </category>
+        <wizard
+            category="io.snyk.eclipse.plugin.wizards.category.snyk"
+            class="io.snyk.eclipse.plugin.wizards.SnykWizard"
+            icon="icons/patch.png"
+            id="io.snyk.eclipse.plugin.wizards.snykwizard"
+            name="SnykWizard">
+        </wizard>
+    </extension>
 </plugin>

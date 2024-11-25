@@ -8,7 +8,7 @@ import java.util.Map;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
-public class AnalyticsEvent implements AbstractAnalyticsEvent {
+public class AnalyticsEventTask implements AbstractTask {
     private final String interactionType;
     private final List<String> category;
     private final String status;
@@ -19,7 +19,7 @@ public class AnalyticsEvent implements AbstractAnalyticsEvent {
     private final List<Object> errors;
     private final Map<String, Object> extension;
 
-    public AnalyticsEvent(String interactionType, List<String> category, String status, String targetId, long timestampMs, long durationMs, Map<String, Object> results, List<Object> errors, Map<String, Object> extension) {
+    public AnalyticsEventTask(String interactionType, List<String> category, String status, String targetId, long timestampMs, long durationMs, Map<String, Object> results, List<Object> errors, Map<String, Object> extension) {
         this.interactionType = interactionType;
         this.category = category;
         this.status = status != null ? status : "success";
@@ -32,7 +32,7 @@ public class AnalyticsEvent implements AbstractAnalyticsEvent {
         this.extension.put("device_id", Preferences.getInstance().getPref(Preferences.DEVICE_ID));
     }
 
-    public AnalyticsEvent(String interactionType, List<String> category) {
+    public AnalyticsEventTask(String interactionType, List<String> category) {
     	this(interactionType, category, null, null, 0, 0, null, null, null);
 	}
 

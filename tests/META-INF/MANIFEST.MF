@@ -17,4 +17,6 @@ Require-Bundle: wrapped.org.mockito.mockito-inline;bundle-version="4.5.1",
  org.mockito.mockito-core;bundle-version="4.5.1",
  net.bytebuddy.byte-buddy;bundle-version="1.12.7",
  net.bytebuddy.byte-buddy-agent;bundle-version="1.12.7",
- org.objenesis;bundle-version="3.1.0"
+ org.objenesis;bundle-version="3.1.0",
+ com.google.gson;bundle-version="2.11.0",
+ org.instancio.core;bundle-version="5.0.2"

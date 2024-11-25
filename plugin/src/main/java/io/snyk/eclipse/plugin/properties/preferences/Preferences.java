@@ -1,16 +1,16 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
-import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.jface.preference.IPreferenceStore;
-
-import io.snyk.eclipse.plugin.EnvironmentConstants;
-import io.snyk.languageserver.LsRuntimeEnvironment;
+import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getBinaryDirectory;
 
 import java.io.File;
 import java.util.Optional;
 import java.util.UUID;
 
-import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getBinaryDirectory;
+import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.jface.preference.IPreferenceStore;
+
+import io.snyk.eclipse.plugin.EnvironmentConstants;
+import io.snyk.languageserver.LsRuntimeEnvironment;
 
 public class Preferences {
 	static Preferences CURRENT_PREFERENCES;
@@ -46,6 +46,17 @@ public class Preferences {
 	public static final String LSP_VERSION = "LSP_VERSION";
 	public static final String USE_TOKEN_AUTH = "useTokenAuth";
 	public static final String ANALYTICS_PLUGIN_INSTALLED_SENT = "analyticsPluginInstalledSent";
+	public static final String FILTER_CRITICAL = "FILTER_SNYK_CRITICAL";
+	public static final String FILTER_HIGH = "FILTER_SNYK_HIGH";
+	public static final String FILTER_MEDIUM = "FILTER_SNYK_MEDIUM";
+	public static final String FILTER_LOW = "FILTER_SNYK_LOW";
+	public static final String FILTER_DELTA_NEW_ISSUES = "FILTER_SNYK_NEW_ISSUES";
+	public static final String FILTER_IGNORES_SHOW_OPEN_ISSUES = "FILTER_IGNORES_OPEN_ISSUES";
+	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_IGNORED_ISSUES";
+	public static final String FILTER_FIXABLE_ISSUES = "FILTER_FIXABLE_ISSUES";
+
+	// Feature flags
+	public static final String IS_GLOBAL_IGNORES_FEATURE_ENABLED = "IS_GLOBAL_IGNORES_FEATURE_ENABLED";
 
 	// This is a bit confusing - CLI takes DISABLE as env variable, but we ask for
 	// ENABLE, so we need to revert it
@@ -74,6 +85,34 @@ public class Preferences {
 		if (getPref(ACTIVATE_SNYK_IAC) == null) {
 			store(ACTIVATE_SNYK_IAC, "true");
 		}
+		if (getPref(FILTER_CRITICAL) == null) {
+			store(FILTER_CRITICAL, "false");
+		}
+		if (getPref(FILTER_HIGH) == null) {
+			store(FILTER_HIGH, "false");
+		}
+		if (getPref(FILTER_MEDIUM) == null) {
+			store(FILTER_MEDIUM, "false");
+		}
+		if (getPref(FILTER_LOW) == null) {
+			store(FILTER_LOW, "false");
+		}
+		if (getPref(FILTER_CRITICAL) == null) {
+			store(FILTER_CRITICAL, "false");
+		}
+		if (getPref(FILTER_DELTA_NEW_ISSUES) == null) {
+			store(FILTER_DELTA_NEW_ISSUES, "false");
+		}
+		if (getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES) == null) {
+			store(FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		}
+		if (getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES) == null) {
+			store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+		}
+		if (getPref(FILTER_FIXABLE_ISSUES) == null) {
+			store(FILTER_FIXABLE_ISSUES, "false");
+		}
+
 		if (getPref(SEND_ERROR_REPORTS) == null) {
 			store(SEND_ERROR_REPORTS, "true");
 		}
@@ -88,6 +127,9 @@ public class Preferences {
 		}
 		if (getPref(LSP_VERSION) == null) {
 			store(LSP_VERSION, "1");
+		}
+		if (getPref(IS_GLOBAL_IGNORES_FEATURE_ENABLED) == null) {
+			store(IS_GLOBAL_IGNORES_FEATURE_ENABLED, "false");
 		}
 
 		String token = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
@@ -133,7 +175,7 @@ public class Preferences {
 		if (deviceId == null || deviceId.isBlank()) {
 			store.put(DEVICE_ID, UUID.randomUUID().toString());
 		}
-		
+
 		String releaseChannel = getPref(RELEASE_CHANNEL);
 		if (releaseChannel == null || releaseChannel.isBlank()) {
 			store.put(RELEASE_CHANNEL, "stable");
@@ -212,7 +254,7 @@ public class Preferences {
 	public void setTest(boolean b) {
 		store.put("isTesting", Boolean.toString(b));
 	}
-	
+
 	public boolean isTest() {
 		return getBooleanPref("isTesting");
 	}

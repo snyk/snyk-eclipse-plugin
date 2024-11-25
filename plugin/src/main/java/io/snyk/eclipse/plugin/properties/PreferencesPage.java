@@ -1,21 +1,15 @@
 package io.snyk.eclipse.plugin.properties;
 
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
-import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -24,8 +18,6 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsConfigurationUpdater;
-import io.snyk.languageserver.SnykLanguageServer;
-import io.snyk.languageserver.download.LsDownloader;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
@@ -135,8 +127,9 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		snykView.disableRunAbortActions();
 		snykView.toggleRunActionEnablement();
 		disableSnykCodeIfOrgDisabled();
-
 		new LsConfigurationUpdater().configurationChanged();
+		SnykExtendedLanguageClient.getInstance().refreshFeatureFlags();	
+		
 		return superOK;
 	}
 
