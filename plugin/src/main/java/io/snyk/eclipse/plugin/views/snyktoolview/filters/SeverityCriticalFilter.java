@@ -17,7 +17,7 @@ public class SeverityCriticalFilter implements BaseFilter {
 
 	@Override
 	public void applyFilter() {
-		boolean booleanPref = this.preferences.getBooleanPref(preferenceKey);
+		boolean booleanPref = this.preferences.getBooleanPref(this.preferenceKey);
 
 		if (booleanPref) {
 			this.filterManager.removeTreeFilter(this.preferenceKey);

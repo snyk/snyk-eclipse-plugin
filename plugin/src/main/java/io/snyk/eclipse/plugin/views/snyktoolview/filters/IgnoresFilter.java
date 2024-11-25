@@ -16,12 +16,12 @@ public class IgnoresFilter implements BaseFilter {
 
 	@Override
 	public void applyFilter() {
-		boolean booleanPref = this.preferences.getBooleanPref(Preferences.FILTER_FIXABLE_ISSUES);
+		boolean booleanPref = this.preferences.getBooleanPref(this.preferenceKey);
 
 		if (booleanPref) {
 			filterManager.removeTreeFilter(preferenceKey);
 		} else {
-			filterManager.addTreeFilter(preferenceKey, issue -> issue.isIgnored());
+			filterManager.addTreeFilter(preferenceKey, issue -> !issue.isIgnored());
 		}
 
 	}

@@ -19,19 +19,7 @@ public class TreeFilterManager {
 			return filterManager;
 		}
 		filterManager = new TreeFilterManager();
-		setupFilters();
 		return filterManager;
-	}
-
-	private static void setupFilters() {
-		String filterFixableIssues = Preferences.FILTER_FIXABLE_ISSUES;
-		boolean booleanPref = Preferences.getInstance().getBooleanPref(Preferences.FILTER_FIXABLE_ISSUES);
-
-		TreeFilterManager filterManager = TreeFilterManager.getInstance();
-
-		if (booleanPref) {
-			filterManager.addTreeFilter(filterFixableIssues, issue -> issue.hasFix());
-		}
 	}
 
 	private TreeFilterManager() {
