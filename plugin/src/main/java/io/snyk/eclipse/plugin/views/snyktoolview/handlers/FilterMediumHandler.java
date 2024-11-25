@@ -28,4 +28,5 @@ public class FilterMediumHandler extends BaseHandler implements IElementUpdater 
 
 		return null;
 	}
+}
 

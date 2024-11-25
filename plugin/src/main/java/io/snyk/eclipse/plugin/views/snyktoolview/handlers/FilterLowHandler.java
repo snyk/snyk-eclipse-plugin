@@ -27,4 +27,5 @@ public class FilterLowHandler extends BaseHandler implements IElementUpdater {
 
 		return null;
 	}
+}
 

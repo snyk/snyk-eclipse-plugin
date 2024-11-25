@@ -135,6 +135,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private void toggleIgnores(Boolean enableConsistentIgnores) {
+		if(Preferences.getInstance().isTest()) {
+			return;
+		}
 		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
 				Boolean.valueOf(enableConsistentIgnores).toString());
 		PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
@@ -514,21 +517,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	@JsonNotification(value = LsNotificationID.SNYK_PUBLISH_DIAGNOSTICS_316)
-	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnostics316Param param) {
-		return CompletableFuture.runAsync(() -> {
-			var uri = param.getUri();
-			if (StringUtils.isEmpty(uri)) {
-				SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
-				return;
-			}
-			var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
-			if (filePath == null) {
-				SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
-				return;
-			}
-
-			populateIssueCache(param, filePath);
-		});
+	public void publishDiagnostics316(PublishDiagnostics316Param param) {
+		var uri = param.getUri();
+		if (StringUtils.isEmpty(uri)) {
+			SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
+			return;
+		}
+		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
+		if (filePath == null) {
+			SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
+			return;
+		}
+		
+		populateIssueCache(param, filePath);
 	}
 
 	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, String folderPath, SnykIssueCache issueCache) {
@@ -566,7 +567,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
 		var issueCache = getIssueCache(filePath);
 		Diagnostic316[] diagnostics = param.getDiagnostics();
-		if (diagnostics.length == 0) {
+		if (diagnostics == null || diagnostics.length == 0) {
 			issueCache.removeAllIssuesForPath(filePath);
 			return;
 		}
