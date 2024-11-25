@@ -197,12 +197,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		diagnostic.setData(issue);
 		param.setDiagnostics(new Diagnostic316[] { diagnostic });
 		cut = new SnykExtendedLanguageClient();
-		var future = cut.publishDiagnostics316(param);
-		try {
-			future.get(10, TimeUnit.SECONDS);
-		} catch (Exception ex) {
-
-		}
+		cut.publishDiagnostics316(param);
 
 		Collection<Issue> actualIssueList = null;
 		if (issue.additionalData().isSecurityType()) {
@@ -218,14 +213,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setUri(uri);
 
 		cut = new SnykExtendedLanguageClient();
-		future = cut.publishDiagnostics316(param);
-		try {
-			future.thenRun(() -> {
-				assertEquals(true, issueCache.getCodeSecurityIssuesForPath(filePath).isEmpty());
-			});
-		} catch (Exception ex) {
-			fail(ex);
-		}
+		cut.publishDiagnostics316(param);
+
+		assertEquals(true, issueCache.getCodeSecurityIssuesForPath(filePath).isEmpty());
 
 	}
 

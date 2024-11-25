@@ -514,21 +514,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	@JsonNotification(value = LsNotificationID.SNYK_PUBLISH_DIAGNOSTICS_316)
-	public CompletableFuture<Void> publishDiagnostics316(PublishDiagnostics316Param param) {
-		return CompletableFuture.runAsync(() -> {
-			var uri = param.getUri();
-			if (StringUtils.isEmpty(uri)) {
-				SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
-				return;
-			}
-			var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
-			if (filePath == null) {
-				SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
-				return;
-			}
+	public void publishDiagnostics316(PublishDiagnostics316Param param) {
+		var uri = param.getUri();
+		if (StringUtils.isEmpty(uri)) {
+			SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
+			return;
+		}
+		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
+		if (filePath == null) {
+			SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
+			return;
+		}
 
-			populateIssueCache(param, filePath);
-		});
+		populateIssueCache(param, filePath);
 	}
 
 	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, String folderPath, SnykIssueCache issueCache) {
