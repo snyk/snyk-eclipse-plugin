@@ -6,6 +6,14 @@ import org.eclipse.jface.viewers.TreeViewer;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.FixableFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresOpenIssuesFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.OssFixableFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.SeverityCriticalFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.SeverityHighFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.SeverityLowFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.SeverityMediumFilter;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 public class TreeFilterManager {
@@ -19,7 +27,34 @@ public class TreeFilterManager {
 			return filterManager;
 		}
 		filterManager = new TreeFilterManager();
+
+		setupFilters();
 		return filterManager;
+	}
+
+	private static void setupFilters() {
+		// Severity filters
+		new SeverityCriticalFilter(TreeFilterManager.getInstance(), Preferences.getInstance(),
+				Preferences.FILTER_CRITICAL).applyFilter();
+		new SeverityHighFilter(TreeFilterManager.getInstance(), Preferences.getInstance(), Preferences.FILTER_HIGH)
+				.applyFilter();
+		new SeverityMediumFilter(TreeFilterManager.getInstance(), Preferences.getInstance(), Preferences.FILTER_MEDIUM)
+				.applyFilter();
+		new SeverityLowFilter(TreeFilterManager.getInstance(), Preferences.getInstance(), Preferences.FILTER_LOW)
+				.applyFilter();
+
+		// Ignores filters
+		new IgnoresFilter(TreeFilterManager.getInstance(), Preferences.getInstance(),
+				Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES).applyFilter();
+		new IgnoresOpenIssuesFilter(TreeFilterManager.getInstance(), Preferences.getInstance(),
+				Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES).applyFilter();
+
+		// Fix
+		new FixableFilter(TreeFilterManager.getInstance(), Preferences.getInstance(), Preferences.FILTER_FIXABLE_ISSUES)
+				.applyFilter();
+		new OssFixableFilter(TreeFilterManager.getInstance(), Preferences.getInstance(),
+				Preferences.FILTER_OSS_FIXABLE_ISSUES).applyFilter();
+
 	}
 
 	private TreeFilterManager() {
