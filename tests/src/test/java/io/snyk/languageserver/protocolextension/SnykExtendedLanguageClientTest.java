@@ -202,6 +202,11 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			future.get(10, TimeUnit.SECONDS);
 		} catch (Exception ex) {
 
+		Collection<Issue> actualIssueList = null;
+		if (issue.additionalData().isSecurityType()) {
+			actualIssueList = issueCache.getCodeSecurityIssuesForPath(filePath);
+		} else {
+			actualIssueList = issueCache.getCodeQualityIssuesForPath(filePath);
 		}
 
 		Collection<Issue> actualIssueList = null;

@@ -27,4 +27,3 @@ public class FilterIgnoresIgnoredIssuesHandler extends BaseHandler implements IE
 
 		return null;
 	}
-}

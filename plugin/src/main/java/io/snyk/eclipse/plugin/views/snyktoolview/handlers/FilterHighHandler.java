@@ -28,4 +28,3 @@ public class FilterHighHandler extends BaseHandler implements IElementUpdater {
 		return null;
 	}
 
-}

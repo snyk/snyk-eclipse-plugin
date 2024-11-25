@@ -29,4 +29,3 @@ public class FilterCriticalHandler extends BaseHandler implements IElementUpdate
 		return null;
 	}
 
-}

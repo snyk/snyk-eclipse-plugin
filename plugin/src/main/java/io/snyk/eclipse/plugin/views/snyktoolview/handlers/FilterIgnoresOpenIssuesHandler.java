@@ -29,4 +29,3 @@ public class FilterIgnoresOpenIssuesHandler extends BaseHandler implements IElem
 
 		return null;
 	}
-}
