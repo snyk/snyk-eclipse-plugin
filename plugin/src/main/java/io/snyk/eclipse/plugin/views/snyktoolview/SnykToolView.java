@@ -1,7 +1,13 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -13,22 +19,33 @@ import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 
+import com.google.gson.Gson;
+
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
+import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
@@ -47,6 +64,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private TreeViewer treeViewer;
 	private Browser browser;
 	private BrowserHandler browserHandler;
+	private Map<TreeItem, Listener> itemListeners = new HashMap<>();
+	private final Gson gson = new Gson();
+
+	private final static Shell SHELL = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -253,6 +274,123 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		});
 
+	}
+
+	public void enableDelta() {
+		TreeItem[] rootItems = getTreeViewer().getTree().getItems();
+		for (TreeItem item : rootItems) {
+			ContentRootNode node = (ContentRootNode) item.getData();
+			String project = node.getText().toString();
+			String projectPath = node.getPath().toString();
+			String baseBranch = getBaseBranch(projectPath.toString());
+
+			item.setText(String.format("Click to choose base branch for: %s [ current: %s ]", project, baseBranch));
+
+			Listener selectionListener = new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					if (event.item == item) {
+						showPopup(event.display, item);
+					}
+				}
+			};
+
+			// Store the listener in the map
+			itemListeners.put(item, selectionListener);
+
+			// Add the listener to the item's parent
+			item.getParent().addListener(SWT.Selection, selectionListener);
+		}
+	}
+
+	private void showPopup(Display display, TreeItem item) {
+		Shell shell = new Shell(display, SWT.APPLICATION_MODAL | SWT.DIALOG_TRIM);
+		shell.setText("Choose base branch for net-new issues scanning");
+		shell.setLayout(new GridLayout(1, false));
+
+		if (!(item.getData() instanceof ContentRootNode))
+			return;
+
+		ContentRootNode node = (ContentRootNode) item.getData();
+		Path project = node.getPath();
+
+		Label label = new Label(shell, SWT.NONE);
+		label.setText("Base Branch for: " + project);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+		List<String> dropdownItems = getLocalBranches(project.toString());
+
+		Combo dropdown = new Combo(shell, SWT.DROP_DOWN);
+		dropdown.setItems(dropdownItems.toArray(new String[0]));
+		dropdown.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+		Button okButton = new Button(shell, SWT.PUSH);
+		okButton.setText("OK");
+		okButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
+		okButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				// Handle OK button press
+				shell.close();
+			}
+		});
+
+		shell.pack();
+		shell.open();
+
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch()) {
+				display.sleep();
+			}
+		}
+	}
+
+	public List<String> getLocalBranches(String folderPath) {
+
+		IEclipsePreferences state = InstanceScope.INSTANCE.getNode("io.snyk.eclipse.plugin");
+		// Retrieve the JSON string from the preferences state
+		String json = state.get(folderPath, null);
+
+		if (json != null) {
+			// Deserialize the JSON string back to a FolderConfig object
+			FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
+			// Return the list of local branches
+			return folderConfig.getLocalBranches();
+		}
+
+		return List.of(); // Return an empty list if no data is found
+	}
+
+	public String getBaseBranch(String folderPath) {
+
+		IEclipsePreferences state = InstanceScope.INSTANCE.getNode("io.snyk.eclipse.plugin");
+		// Retrieve the JSON string from the preferences state
+		String json = state.get(folderPath, null);
+
+		if (json == null)
+			return null;
+
+		// Deserialize the JSON string back to a FolderConfig object
+		FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
+		// Return the list of local branches
+		return folderConfig.getBaseBranch();
+
+	}
+
+	public void disableDelta() {
+		for (Map.Entry<TreeItem, Listener> entry : itemListeners.entrySet()) {
+			TreeItem item = entry.getKey();
+			Listener listener = entry.getValue();
+
+			// Revert text to original
+			item.setText("Project name");
+
+			// Remove listener from the item's parent
+			item.getParent().removeListener(SWT.Selection, listener);
+		}
+
+		// Clear the map after removing all listeners
+		itemListeners.clear();
 	}
 
 	// Helper method to add a command if it's not already present

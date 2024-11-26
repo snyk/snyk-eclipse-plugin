@@ -66,6 +66,7 @@ import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractTask;
@@ -92,6 +93,8 @@ import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
+import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
+import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.LsSdk;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
@@ -109,6 +112,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	// this field is for testing only
 	private LanguageServer ls;
 	private LsConfigurationUpdater configurationUpdater = new LsConfigurationUpdater();
+	private final Gson gson = new Gson();
+
+	private final IEclipsePreferences state = InstanceScope.INSTANCE.getNode("io.snyk.eclipse.plugin");
 	private static SnykExtendedLanguageClient instance = null;
 
 	public SnykExtendedLanguageClient() {
@@ -376,6 +382,30 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			break;
 		}
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
+	}
+
+	@JsonNotification(value = LsNotificationID.SNYK_FOLDER_CONFIG)
+	public void folderConfig(FolderConfigsParam folderConfigParam) {
+
+		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
+
+		CompletableFuture.runAsync(() -> addAll(folderConfigs));
+
+	}
+
+	public void addAll(List<FolderConfig> folderConfigs) {
+		for (FolderConfig folderConfig : folderConfigs) {
+			addFolderConfig(folderConfig);
+		}
+	}
+
+	public void addFolderConfig(FolderConfig folderConfig) {
+		state.put(folderConfig.getFolderPath(), gson.toJson(folderConfig));
+		try {
+			state.flush();
+		} catch (Exception e) {
+			SnykLogger.logError(e);
+		}
 	}
 
 	private void openToolView() {
