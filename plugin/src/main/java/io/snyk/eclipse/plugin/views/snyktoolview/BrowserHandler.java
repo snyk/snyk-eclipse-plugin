@@ -17,6 +17,8 @@ import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
+import org.eclipse.swt.browser.ProgressAdapter;
+import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
 import org.osgi.framework.Bundle;
@@ -99,7 +101,13 @@ public class BrowserHandler {
 					var htmlProvider = HtmlProviderFactory.GetHtmlProvider(product);
 					var content = htmlProvider.replaceCssVariables(htmlContent);
 					browser.setText(content);
-					browser.execute(htmlProvider.getInitScript());
+					browser.addProgressListener(new ProgressAdapter() {
+					    @Override
+					    public void completed(ProgressEvent event) {
+					        // Evaluate your script here
+					        browser.evaluate(htmlProvider.getInitScript());
+					    }
+					});
 				});
 			});
 		
