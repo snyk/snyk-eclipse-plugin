@@ -24,6 +24,5 @@ public class FixableFilter implements BaseFilter {
 		} else {
 			this.filterManager.removeTreeFilter(this.preferenceKey);
 		}
-
 	}
 }

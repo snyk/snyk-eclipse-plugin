@@ -83,6 +83,7 @@ public class TreeFilterManager {
 		treeView.getControl().setRedraw(false);
 		treeView.refresh();
 		treeView.getControl().setRedraw(true);
+		treeView.expandAll();
 	}
 
 }
