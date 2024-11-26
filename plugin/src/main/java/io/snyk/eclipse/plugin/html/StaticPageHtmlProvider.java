@@ -1,0 +1,88 @@
+package io.snyk.eclipse.plugin.html;
+
+import org.eclipse.core.runtime.Platform;
+import org.osgi.framework.Bundle;
+
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
+
+public class StaticPageHtmlProvider extends BaseHtmlProvider {
+    private static StaticPageHtmlProvider instance = new StaticPageHtmlProvider();
+
+	public static StaticPageHtmlProvider getInstance() {
+		if (instance == null) {
+			synchronized (StaticPageHtmlProvider.class) {
+				if (instance == null) {
+					instance = new StaticPageHtmlProvider();
+				}
+			}
+		}
+		return instance;
+	}
+	
+	public String getInitHtml() {
+		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
+				"%snyk.trust.dialog.warning.text");
+
+		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
+		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
+
+		var html = """
+			    <!DOCTYPE html>
+			    <html lang="en">
+			    <head>
+			        <meta charset="UTF-8">
+			        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+			        <title>Snyk for Eclipse</title>
+			        <style>
+			            body {
+			            	font-family: var(--default-font);
+			                background-color: var(--background-color);
+			                color: var(--text-color);
+			            }			        
+			            .container {
+			                display: flex;
+			                align-items: center;
+			            }
+			            .logo {
+			                margin-right: 20px;
+			            }
+			        </style>
+			    </head>
+			    <body>
+			        <div class="container">
+			            <img src='data:image/png;base64,%s' alt='Snyk Logo'>
+			            <div>
+			                <p><strong>Welcome to Snyk for Eclipse</strong></p>
+			                <p>%s</p>
+			            </div>
+			        </div>
+			    </body>
+			    </html>
+			    """.formatted(base64Image, snykWarningText);
+		return replaceCssVariables(html);
+	}
+	
+	public String getLoadingHtml() {
+		var html = """
+			    <!DOCTYPE html>
+			    <html lang="en">
+			    <head>
+			        <meta charset="UTF-8">
+			        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+			        <title>Snyk for Eclipse</title>
+			        <style>
+			            body {
+			            	font-family: var(--default-font);
+			                background-color: var(--background-color);
+			                color: var(--text-color);
+			            }
+			        </style>
+			    </head>
+			    <body>
+			        Loading...
+			    </body>
+			    </html>
+			    """;
+		return replaceCssVariables(html);
+	}
+}
