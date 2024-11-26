@@ -86,7 +86,7 @@ public class BaseHtmlProvider {
     }
     
     public Boolean isDarkTheme() {
-    	var darkColor = getColorAsHex("org.eclipse.ui.workbench.DARK_BACKGROUND", "")
+    	var darkColor = getColorAsHex("org.eclipse.ui.workbench.DARK_BACKGROUND", "");
         return darkColor != "";
     }
     
