@@ -104,7 +104,6 @@ public class BrowserHandler {
 					browser.addProgressListener(new ProgressAdapter() {
 					    @Override
 					    public void completed(ProgressEvent event) {
-					        // Evaluate your script here
 					        browser.evaluate(htmlProvider.getInitScript());
 					    }
 					});
