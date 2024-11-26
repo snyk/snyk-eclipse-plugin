@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.html;
 
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.themes.ITheme;
 import org.eclipse.ui.themes.IThemeManager;
@@ -56,40 +57,24 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
                 }
             """ + themeScript;
     }
-    
-    private ITheme currentTheme;
-    private ITheme getCurrentTheme() {
-    	if(currentTheme != null) {
-    		return currentTheme;
-    	}
-    	IThemeManager themeManager = PlatformUI.getWorkbench().getThemeManager();
-        currentTheme = themeManager.getCurrentTheme();
-        return currentTheme;
-    }
-    
+
     private String getThemeScript() {
     	if(Preferences.getInstance().isTest()) {
     		return "";
     	}
-        ITheme currentTheme = getCurrentTheme();
-        String themeId = currentTheme.getId().toLowerCase();
 
-        boolean isDarkTheme = themeId.contains("dark");
-        boolean isHighContrast = themeId.contains("highcontrast") || themeId.contains("high-contrast");
-
-        String themeScript = "var isDarkTheme = " + isDarkTheme + ";\n" +
-                             "var isHighContrast = " + isHighContrast + ";\n" +
-                             "document.body.classList.add(isHighContrast ? 'high-contrast' : (isDarkTheme ? 'dark' : 'light'));";
+        String themeScript = "var isDarkTheme = " + isDarkTheme() + ";\n" +
+                             "document.body.classList.add(isDarkTheme ? 'dark' : 'light');";
         return themeScript;
     }
 
     @Override
     public String replaceCssVariables(String html) {
         html = super.replaceCssVariables(html);
-
+        
         // Replace CSS variables with actual color values
-        html = html.replace("var(--example-line-removed-color)", super.getColorAsHex("org.eclipse.ui.workbench.lineRemovedColor", "#ff0000"));
-        html = html.replace("var(--example-line-added-color)", super.getColorAsHex("org.eclipse.ui.workbench.lineAddedColor", "#00ff00"));
+        html = html.replace("var(--example-line-removed-color)", super.getColorAsHex("DELETION_COLOR", "#ff0000"));
+        html = html.replace("var(--example-line-added-color)", super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
 
         return html;
     }

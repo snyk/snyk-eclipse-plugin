@@ -3,6 +3,7 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -17,15 +18,19 @@ import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
+import org.eclipse.swt.browser.ProgressAdapter;
+import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
 import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
+import io.snyk.eclipse.plugin.html.StaticPageHtmlProvider;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
 public class BrowserHandler {
 	private Browser browser;
+	private String initScript = "";
 	public BrowserHandler(Browser browser) {
 		this.browser = browser;
 	}
@@ -77,6 +82,14 @@ public class BrowserHandler {
 	        }
 	    });
 	    
+		browser.addProgressListener(new ProgressAdapter() {
+		    @Override
+		    public void completed(ProgressEvent event) {
+		    	if(!StringUtils.isEmpty(initScript)) {
+		    		browser.execute(initScript);	
+		    	}
+		    }
+		});	    
 	    initBrowserText();
 	}
 
@@ -88,7 +101,7 @@ public class BrowserHandler {
 	public CompletableFuture<Void> updateBrowserContent(TreeNode node) {
 		// Generate HTML content based on the selected node
 		if (!(node instanceof IssueTreeNode)) return CompletableFuture.completedFuture(null);
-		browser.setText("Loading...");
+		browser.setText(StaticPageHtmlProvider.getInstance().getLoadingHtml());
 
 		return CompletableFuture.supplyAsync(() -> {
 			return generateHtmlContent(node);
@@ -98,8 +111,8 @@ public class BrowserHandler {
 					var product = ((ProductTreeNode) node.getParent().getParent()).getProduct();
 					var htmlProvider = HtmlProviderFactory.GetHtmlProvider(product);
 					var content = htmlProvider.replaceCssVariables(htmlContent);
+					initScript = htmlProvider.getInitScript();
 					browser.setText(content);
-					browser.execute(htmlProvider.getInitScript());
 				});
 			});
 		
@@ -117,17 +130,6 @@ public class BrowserHandler {
 	}
 
 	public void initBrowserText() {
-		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
-				"%snyk.trust.dialog.warning.text");
-
-		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
-		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
-
-		browser.setText("<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\"> "
-				+ "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> "
-				+ "<title>Snyk for Eclipse</title> <style> .container { display: flex; align-items: center; } .logo { margin-right: 20px; } "
-				+ "</style> </head> <body> <div class=\"container\"> " + "<img src='data:image/png;base64,"
-				+ base64Image + "' alt='Snyk Logo'>" + "<div> <p><strong>Welcome to Snyk for Eclipse</strong></p>"
-				+ "    <p>\n" + snykWarningText + "</body>\n" + "</html>");
+		browser.setText(StaticPageHtmlProvider.getInstance().getInitHtml());
 	}	
 }
