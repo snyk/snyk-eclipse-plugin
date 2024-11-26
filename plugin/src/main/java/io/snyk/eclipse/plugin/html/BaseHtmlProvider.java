@@ -55,10 +55,11 @@ public class BaseHtmlProvider {
         // Replace CSS variables with actual color values
         html = html.replace("var(--text-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR", "#000000"));
         html = html.replace("var(--background-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_START", "#FFFFFF"));
-        html = html.replace("var(--border-color)", getColorAsHex( "org.eclipse.ui.workbench.ACTIVE_TAB_BORDER_COLOR", "#CCCCCC"));
-        html = html.replace("var(--link-color)", getColorAsHex("org.eclipse.ui.workbench.HYPERLINK_COLOR", "#0000FF"));
-        html = html.replace("var(--horizontal-border-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_HIGHLIGHT_BORDER_COLOR", "#CCCCCC"));
-        html = html.replace("var(--code-background-color)", getColorAsHex("org.eclipse.ui.workbench.CODE_BACKGROUND_COLOR", "#F0F0F0"));
+    	html = html.replace("var(--code-background-color)", getColorAsHex("org.eclipse.ui.workbench.DARK_BACKGROUND", "#F0F0F0"));
+
+        html = html.replace("var(--border-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
+        html = html.replace("var(--link-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
+        html = html.replace("var(--horizontal-border-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
         
         html = html.replace("${headerEnd}", "");
         html = html.replace("${nonce}", nonce);
@@ -84,14 +85,29 @@ public class BaseHtmlProvider {
 	  });
     }
     
+    public Boolean isDarkTheme() {
+    	var darkColor = getColorAsHex("org.eclipse.ui.workbench.DARK_BACKGROUND", "");
+        return darkColor != "";
+    }
+    
     private ColorRegistry colorRegistry;
     private ColorRegistry getColorRegistry() {
     	if(colorRegistry != null) {
     		return colorRegistry;
     	}
-        IThemeManager themeManager = PlatformUI.getWorkbench().getThemeManager();
-        ITheme currentTheme = themeManager.getCurrentTheme();
+        ITheme currentTheme = getCurrentTheme();
         colorRegistry = currentTheme.getColorRegistry();
         return colorRegistry;
     }
+    
+    
+    private ITheme currentTheme;
+    public ITheme getCurrentTheme() {
+    	if(currentTheme != null) {
+    		return currentTheme;
+    	}
+    	IThemeManager themeManager = PlatformUI.getWorkbench().getThemeManager();
+        currentTheme = themeManager.getCurrentTheme();
+        return currentTheme;
+    }    
 }
