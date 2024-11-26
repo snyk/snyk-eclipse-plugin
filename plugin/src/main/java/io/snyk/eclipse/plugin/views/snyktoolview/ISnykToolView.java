@@ -108,4 +108,11 @@ public interface ISnykToolView {
 	 * @return
 	 */
 	abstract void enableDelta();
+
+	/**
+	 * Disable the net new issues scans.
+	 * 
+	 * @return
+	 */
+	abstract void disableDelta();
 }

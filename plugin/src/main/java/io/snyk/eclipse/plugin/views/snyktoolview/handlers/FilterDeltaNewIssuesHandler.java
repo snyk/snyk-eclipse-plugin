@@ -23,7 +23,15 @@ public class FilterDeltaNewIssuesHandler extends BaseHandler implements IElement
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		super.execute(event);
 
-		SnykStartup.getView().enableDelta();
+//		new DeltaFilter(TreeFilterManager.getInstance(), Preferences.getInstance(), preferenceKey).applyFilter();
+
+		boolean booleanPref = Preferences.getInstance().getBooleanPref(this.preferenceKey);
+
+		if (booleanPref) {
+			SnykStartup.getView().enableDelta();
+		} else {
+			SnykStartup.getView().disableDelta();
+		}
 
 		return null;
 	}

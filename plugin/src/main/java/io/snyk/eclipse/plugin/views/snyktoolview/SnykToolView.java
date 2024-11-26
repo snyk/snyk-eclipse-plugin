@@ -283,6 +283,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			String project = node.getText().toString();
 			String projectPath = node.getPath().toString();
 			String baseBranch = getBaseBranch(projectPath.toString());
+			String[] localBranches = getLocalBranches(projectPath).toArray(String[]::new);
 
 			item.setText(String.format("Click to choose base branch for: %s [ current: %s ]", project, baseBranch));
 
@@ -290,7 +291,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				@Override
 				public void handleEvent(Event event) {
 					if (event.item == item) {
-						showPopup(event.display, item);
+						baseBranchDialog(event.display, projectPath, localBranches);
 					}
 				}
 			};
@@ -303,25 +304,16 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		}
 	}
 
-	private void showPopup(Display display, TreeItem item) {
+	private void baseBranchDialog(Display display, String projectPath, String[] localBranches) {
 		Shell shell = new Shell(display, SWT.APPLICATION_MODAL | SWT.DIALOG_TRIM);
 		shell.setText("Choose base branch for net-new issues scanning");
 		shell.setLayout(new GridLayout(1, false));
-
-		if (!(item.getData() instanceof ContentRootNode))
-			return;
-
-		ContentRootNode node = (ContentRootNode) item.getData();
-		Path project = node.getPath();
-
 		Label label = new Label(shell, SWT.NONE);
-		label.setText("Base Branch for: " + project);
+		label.setText("Base Branch for: " + projectPath);
 		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-		List<String> dropdownItems = getLocalBranches(project.toString());
-
 		Combo dropdown = new Combo(shell, SWT.DROP_DOWN);
-		dropdown.setItems(dropdownItems.toArray(new String[0]));
+		dropdown.setItems(localBranches);
 		dropdown.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		Button okButton = new Button(shell, SWT.PUSH);
@@ -382,8 +374,11 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			TreeItem item = entry.getKey();
 			Listener listener = entry.getValue();
 
+			ContentRootNode node = (ContentRootNode) item.getData();
+			String project = node.getText().toString();
+
 			// Revert text to original
-			item.setText("Project name");
+			item.setText(project);
 
 			// Remove listener from the item's parent
 			item.getParent().removeListener(SWT.Selection, listener);
