@@ -21,7 +21,7 @@ public class FilterDeltaNewIssuesHandler extends BaseHandler implements IElement
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		super.execute(event); 
+		super.execute(event);
 
 		boolean booleanPref = Preferences.getInstance().getBooleanPref(this.preferenceKey);
 

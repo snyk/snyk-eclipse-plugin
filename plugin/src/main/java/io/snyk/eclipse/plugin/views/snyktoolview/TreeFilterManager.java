@@ -54,7 +54,6 @@ public class TreeFilterManager {
 				.applyFilter();
 		new OssFixableFilter(TreeFilterManager.getInstance(), Preferences.getInstance(),
 				Preferences.FILTER_OSS_FIXABLE_ISSUES).applyFilter();
-
 	}
 
 	private TreeFilterManager() {

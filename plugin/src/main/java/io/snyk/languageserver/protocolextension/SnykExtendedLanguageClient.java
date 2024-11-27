@@ -66,12 +66,12 @@ import org.eclipse.ui.PlatformUI;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
+import io.snyk.eclipse.plugin.properties.preferences.EclipsePreferenceState;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
@@ -112,9 +112,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	// this field is for testing only
 	private LanguageServer ls;
 	private LsConfigurationUpdater configurationUpdater = new LsConfigurationUpdater();
-	private final Gson gson = new Gson();
+	private EclipsePreferenceState preferenceState = EclipsePreferenceState.getInstance();
 
-	private final IEclipsePreferences state = InstanceScope.INSTANCE.getNode("io.snyk.eclipse.plugin");
 	private static SnykExtendedLanguageClient instance = null;
 
 	public SnykExtendedLanguageClient() {
@@ -183,6 +182,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				runSnykWizard();
 			} else {
 				openToolView();
+				this.toolView.resetNode(this.toolView.getRoot());
+
+				if (Preferences.getInstance().getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES))
+					this.toolView.enableDelta();
+
 				try {
 					this.toolView.resetNode(this.toolView.getRoot());
 					if (window == null) {
@@ -395,16 +399,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public void addAll(List<FolderConfig> folderConfigs) {
 		for (FolderConfig folderConfig : folderConfigs) {
-			addFolderConfig(folderConfig);
-		}
-	}
-
-	public void addFolderConfig(FolderConfig folderConfig) {
-		state.put(folderConfig.getFolderPath(), gson.toJson(folderConfig));
-		try {
-			state.flush();
-		} catch (Exception e) {
-			SnykLogger.logError(e);
+			preferenceState.addFolderConfig(folderConfig);
 		}
 	}
 
