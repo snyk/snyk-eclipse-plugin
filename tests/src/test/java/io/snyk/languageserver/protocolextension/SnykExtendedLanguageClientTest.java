@@ -11,7 +11,6 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -27,7 +26,6 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.eclipse.lsp4e.LSPEclipseUtils;
@@ -155,13 +153,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 			cut = new SnykExtendedLanguageClient();
 
-			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor =
-					ArgumentCaptor.forClass((Class<Consumer<SnykExtendedLanguageClient>>) (Class<?>) Consumer.class);
+			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor = ArgumentCaptor
+					.forClass((Class<Consumer<SnykExtendedLanguageClient>>) (Class<?>) Consumer.class);
 			verify(asMock, times(2)).registerTask(captor.capture(), any());
 			verifyNoMoreInteractions(asMock);
-	    }
+		}
 	}
-
 
 	@Test
 	void testDoesNotSendPluginInstalledEventOnSecondStart() {
@@ -172,8 +169,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 			cut = new SnykExtendedLanguageClient();
 
-			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor =
-					ArgumentCaptor.forClass((Class<Consumer<SnykExtendedLanguageClient>>) (Class<?>) Consumer.class);
+			ArgumentCaptor<Consumer<SnykExtendedLanguageClient>> captor = ArgumentCaptor
+					.forClass((Class<Consumer<SnykExtendedLanguageClient>>) (Class<?>) Consumer.class);
 			verify(asMock, times(1)).registerTask(captor.capture(), any());
 			verifyNoMoreInteractions(asMock);
 		}

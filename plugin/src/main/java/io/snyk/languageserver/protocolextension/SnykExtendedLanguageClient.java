@@ -528,7 +528,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
 			return;
 		}
-
+		
 		populateIssueCache(param, filePath);
 	}
 
@@ -537,7 +537,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (var kv : cacheHashMap.entrySet()) {
 			var fileName = kv.getKey();
 			var issues = new ArrayList<>(kv.getValue());
-			issues = filterIgnoredIssues(issues);
 			if(issues.isEmpty())
 				continue;
 			FileTreeNode fileNode = new FileTreeNode(fileName);

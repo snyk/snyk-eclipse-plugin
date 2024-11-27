@@ -141,9 +141,14 @@
             name="Ignored Issues">
         </command>
         <command
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.snykFilterFixableIssuesHandler"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterFixableIssuesHandler"
             id="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
             name="AI Fixable">
+        </command>
+        <command
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterOssFixableIssuesHandler"
+            id="io.snyk.eclipse.plugin.commands.snykFilterOssFixableIssues"
+            name="Fixable">
         </command>
         <command
               defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllAiFixHandler"
@@ -354,19 +359,19 @@
                       style="push"
                       tooltip="Show Only Net New Issues">
                 </command>
-                <separator
-                      name="io.snyk.eclipse.plugin.separator.allIssues"
-                      visible="true">
-                </separator>
-                <command
-                      commandId="io.snyk.eclipse.plugin.command.snykShowAllIssuesStatus"
-                      icon="icons/enabled.png"
-                      style="push"
-                      tooltip="Show all issues">
-                </command>
             </menu>
             <menu
-                  id="io.snyk.eclipse.plugin.views.snyktoolview.filtersMenu"
+                  id="io.snyk.eclipse.plugin.views.snyktoolview.filtersAiFixMenu"
+                  label="Open Source Fixability">
+               <command
+                     commandId="io.snyk.eclipse.plugin.commands.snykFilterOssFixableIssues"
+                     icon="icons/enabled.png"
+                     style="push"
+                     tooltip="Show only issues with Open Source Upgrade suggestions">
+               </command>
+            </menu>
+            <menu
+                  id="io.snyk.eclipse.plugin.views.snyktoolview.filtersOssMenu"
                   label="Code AI Fixability">
                <command
                      commandId="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"

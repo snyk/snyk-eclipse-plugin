@@ -54,6 +54,7 @@ public class Preferences {
 	public static final String FILTER_IGNORES_SHOW_OPEN_ISSUES = "FILTER_IGNORES_OPEN_ISSUES";
 	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_IGNORED_ISSUES";
 	public static final String FILTER_FIXABLE_ISSUES = "FILTER_FIXABLE_ISSUES";
+	public static final String FILTER_OSS_FIXABLE_ISSUES = "FILTER_OSS_FIXABLE_ISSUES";
 
 	// Feature flags
 	public static final String IS_GLOBAL_IGNORES_FEATURE_ENABLED = "IS_GLOBAL_IGNORES_FEATURE_ENABLED";
@@ -68,6 +69,7 @@ public class Preferences {
 	public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
+	
 
 	private final PreferenceStore store;
 
@@ -97,9 +99,6 @@ public class Preferences {
 		if (getPref(FILTER_LOW) == null) {
 			store(FILTER_LOW, "false");
 		}
-		if (getPref(FILTER_CRITICAL) == null) {
-			store(FILTER_CRITICAL, "false");
-		}
 		if (getPref(FILTER_DELTA_NEW_ISSUES) == null) {
 			store(FILTER_DELTA_NEW_ISSUES, "false");
 		}
@@ -112,7 +111,10 @@ public class Preferences {
 		if (getPref(FILTER_FIXABLE_ISSUES) == null) {
 			store(FILTER_FIXABLE_ISSUES, "false");
 		}
-
+		if (getPref(FILTER_OSS_FIXABLE_ISSUES) == null) {
+			store(FILTER_OSS_FIXABLE_ISSUES, "false");
+		}
+		
 		if (getPref(SEND_ERROR_REPORTS) == null) {
 			store(SEND_ERROR_REPORTS, "true");
 		}

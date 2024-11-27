@@ -1,55 +1,66 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
-import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
+
 public class TreeViewerFilter extends ViewerFilter {
-	private List<String> searchStrings;
-	private boolean matchAll; // If true, all filters must match; if false, any filter can match
+	private Map<String, Predicate<? super Issue>> filters;
 
 	public TreeViewerFilter() {
-		this.searchStrings = new ArrayList<>();
-		this.matchAll = true; // Default to matching all filters
-	}
-
-	public void addSearchText(String s) {
-		if (s != null && !s.isEmpty()) {
-			this.searchStrings.add(".*" + s.toLowerCase() + ".*");
-		}
-	}
-
-	public void clearSearchText() {
-		this.searchStrings.clear();
-	}
-
-	public void setMatchAll(boolean matchAll) {
-		this.matchAll = matchAll;
+		filters = new ConcurrentHashMap<>();
 	}
 
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element) {
-		if (searchStrings.isEmpty()) {
-			return true;
-		}
+	    if (element instanceof FileTreeNode) {
+	        return hasVisibleChildren((FileTreeNode) element, viewer);
+	    }
+	    
+	    if (!(element instanceof IssueTreeNode) || !(viewer instanceof TreeViewer)) {
+	        return true;
+	    }
 
-		TreeViewer treeViewer = (TreeViewer) viewer;
-		String label = ((ILabelProvider) treeViewer.getLabelProvider()).getText(element);
-
-		if (label == null) {
-			return false;
-		}
-
-		String labelLower = label.toLowerCase();
-
-		if (matchAll) {
-			return searchStrings.stream().allMatch(s -> labelLower.matches(s));
-		} else {
-			return searchStrings.stream().anyMatch(s -> labelLower.matches(s));
-		}
+	    return isIssueVisible((IssueTreeNode) element);
 	}
+
+	private boolean hasVisibleChildren(FileTreeNode fileNode, Viewer viewer) {
+	    Object[] children = ((ITreeContentProvider) ((TreeViewer) viewer).getContentProvider()).getChildren(fileNode);
+	    for (Object child : children) {
+	        if (child instanceof IssueTreeNode && isIssueVisible((IssueTreeNode) child)) {
+	            return true;
+	        }
+	    }
+	    return false;
+	}
+
+	private boolean isIssueVisible(IssueTreeNode issueNode) {
+	    Issue issue = issueNode.getIssue();
+	    if (issue == null) {
+	        return true;
+	    }
+
+	    for (var filter : this.filters.values()) {
+	        if (!filter.test(issue)) {
+	            return false;
+	        }
+	    }
+	    return true;
+	}
+
+	public void setFilterPredicate(String filterName, Predicate<? super Issue> predicate) {
+		this.filters.put(filterName, predicate);
+	}
+
+	public void removeFilterPredicate(String filterName) {
+		this.filters.remove(filterName);
+	}
+
 }
