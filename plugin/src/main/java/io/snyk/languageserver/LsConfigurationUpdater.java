@@ -50,16 +50,18 @@ public class LsConfigurationUpdater {
             trustedFolders = trustedFoldersString.split(File.pathSeparator);
         }
         String enableTrustedFolderFeature = Boolean.TRUE.toString();
+        //TODO does this work? getBooleanPref returns a boolean, but we are assigning the return value to a string?
         String scanningMode = preferences.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC) ? "automatic" : "manual";
         boolean useTokenAuth = preferences.getBooleanPref(Preferences.USE_TOKEN_AUTH, false);
         var authMethod = "oauth";
         if (useTokenAuth) {
         	authMethod = "token";
         }
-        return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac, insecure, endpoint, additionalParams,
+		String enableDeltaFindings = preferences.getPref(Preferences.FILTER_DELTA_NEW_ISSUES, "");
+		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac, insecure, endpoint, additionalParams,
             additionalEnv, path, sendErrorReports, enableTelemetry, organization, manageBinariesAutomatically, cliPath,
             token, integrationName, integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature,
-            scanningMode, authMethod);
+            scanningMode, enableDeltaFindings , authMethod);
     }
 
     static class Settings {
@@ -89,6 +91,7 @@ public class LsConfigurationUpdater {
         private final String osArch = SystemUtils.OS_ARCH;
         private final String osPlatform = SystemUtils.OS_NAME;
         private final String scanningMode;
+        private final String enableDeltaFindings;
         private final String requiredProtocolVersion = LsBinaries.REQUIRED_LS_PROTOCOL_VERSION;
         private final String authenticationMethod;
 
@@ -96,7 +99,7 @@ public class LsConfigurationUpdater {
                         String endpoint, String additionalParams, String additionalEnv, String path, String sendErrorReports,
                         String enableTelemetry, String organization, String manageBinariesAutomatically, String cliPath, String token,
                         String integrationName, String integrationVersion, String automaticAuthentication, String[] trustedFolders,
-                        String enableTrustedFoldersFeature, String scanningMode, String authMethod) {
+                        String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings, String authMethod) {
             this.activateSnykOpenSource = activateSnykOpenSource;
             this.activateSnykCodeSecurity = activateSnykCodeSecurity;
             this.activateSnykCodeQuality = activateSnykCodeQuality;
@@ -118,6 +121,7 @@ public class LsConfigurationUpdater {
             this.trustedFolders = trustedFolders;
             this.enableTrustedFoldersFeature = enableTrustedFoldersFeature;
             this.scanningMode = scanningMode;
+            this.enableDeltaFindings = enableDeltaFindings;
             this.authenticationMethod = authMethod;
         }
 
