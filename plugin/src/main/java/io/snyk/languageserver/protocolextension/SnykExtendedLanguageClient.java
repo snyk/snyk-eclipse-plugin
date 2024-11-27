@@ -176,7 +176,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return super.getLanguageServer();
 	}
 
-	public void triggerScan(IWorkbenchWindow window) {
+	public void triggerScan(IProject project) {
 		CompletableFuture.runAsync(() -> {
 			if (Preferences.getInstance().getAuthToken().isBlank()) {
 				runSnykWizard();
@@ -188,14 +188,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					this.toolView.enableDelta();
 
 				try {
-					this.toolView.resetNode(this.toolView.getRoot());
-					if (window == null) {
+					if (project == null) {
 						executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 						return;
 					}
 
-					ISelectionService service = window.getSelectionService();
-					IStructuredSelection structured = (IStructuredSelection) service.getSelection();
+					executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN,
+							List.of(project.getLocation().toOSString()));
 
 					Object firstElement = structured.getFirstElement();
 					IProject project = null;
@@ -629,13 +628,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (snykView != null)
 				snykView.toggleRunActionEnablement();
 		});
-	}
-
-	private void runForProject(String projectName) {
-		SnykView snykView = SnykStartup.getSnykView();
-		if (snykView != null) {
-			snykView.testProject(projectName);
-		}
 	}
 
 	private CompletableFuture<Object> executeCommand(@NonNull String command, List<Object> arguments) {

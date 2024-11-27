@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -286,19 +288,20 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				TreeItem[] rootItems = getTreeViewer().getTree().getItems();
 				for (TreeItem item : rootItems) {
 					ContentRootNode node = (ContentRootNode) item.getData();
-					String project = node.getText().toString();
+					String projectName = node.getText().toString();
 					String projectPath = node.getPath().toString();
 					String baseBranch = preferenceState.getBaseBranch(projectPath);
+					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 					String[] localBranches = preferenceState.getLocalBranches(projectPath).toArray(String[]::new);
 
 					item.setText(
-							String.format("Click to choose base branch for: %s [ current: %s ]", project, baseBranch));
+							String.format("%s - Click here choose base branch [ current: %s ]", projectName, baseBranch));
 
 					Listener selectionListener = new Listener() {
 						@Override
 						public void handleEvent(Event event) {
 							if (event.item == item) {
-								baseBranchDialog(event.display, projectPath, localBranches);
+								baseBranchDialog(event.display, projectPath, project, localBranches);
 							}
 						}
 					};
@@ -313,7 +316,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		});
 	}
 
-	private void baseBranchDialog(Display display, String projectPath, String[] localBranches) {
+	private void baseBranchDialog(Display display, String projectPath, IProject project, String[] localBranches) {
 		Shell shell = new Shell(display, SWT.APPLICATION_MODAL | SWT.DIALOG_TRIM);
 		shell.setText("Choose base branch for net-new issues scanning");
 		shell.setLayout(new GridLayout(1, false));
@@ -337,7 +340,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				if (Arrays.asList(localBranches).contains(selectedBranch)) {
 					preferenceState.setBaseBranch(projectPath, selectedBranch);
 					shell.close();
-					SnykExtendedLanguageClient.getInstance().triggerScan(null);
+					SnykExtendedLanguageClient.getInstance().triggerScan(project);
 				} else {
 					SnykLogger.logInfo("Branch is not a valid local branch for repository: " + projectPath);
 				}
