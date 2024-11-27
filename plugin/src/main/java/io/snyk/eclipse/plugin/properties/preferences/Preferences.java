@@ -99,9 +99,6 @@ public class Preferences {
 		if (getPref(FILTER_LOW) == null) {
 			store(FILTER_LOW, "false");
 		}
-		if (getPref(FILTER_CRITICAL) == null) {
-			store(FILTER_CRITICAL, "false");
-		}
 		if (getPref(FILTER_DELTA_NEW_ISSUES) == null) {
 			store(FILTER_DELTA_NEW_ISSUES, "false");
 		}
