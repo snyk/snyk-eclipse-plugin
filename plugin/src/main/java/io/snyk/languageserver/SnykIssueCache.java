@@ -77,8 +77,8 @@ public class SnykIssueCache {
 	 * @param issues The collection of issues to add
 	 */
 	public void addCodeIssues(String path, Collection<Issue> issues) {
-		var qualityIssues = new TreeSet<Issue>(new IssueComparator(issues));
-		var securityIssues = new TreeSet<Issue>(new IssueComparator(issues));
+		var qualityIssues = new TreeSet<Issue>(new IssueComparator());
+		var securityIssues = new TreeSet<Issue>(new IssueComparator());
 		for (Issue issue : issues) {
 			if (issue.additionalData().isSecurityType()) {
 				securityIssues.add(issue);
@@ -140,7 +140,9 @@ public class SnykIssueCache {
 	 */
 	public void addOssIssues(String path, Collection<Issue> issues) {
 		if (issues.size() > 0) {
-			ossIssues.put(path, new TreeSet<Issue>(new IssueComparator(issues)));
+			var treeSet = new TreeSet<Issue>(new IssueComparator());
+			treeSet.addAll(issues);
+			ossIssues.put(path, treeSet);
 		} else {
 			ossIssues.remove(path);
 		}
@@ -175,7 +177,9 @@ public class SnykIssueCache {
 	 */
 	public void addIacIssues(String path, Collection<Issue> issues) {
 		if (issues.size() > 0) {
-			iacIssues.put(path, new TreeSet<Issue>(new IssueComparator(issues)));
+			var treeSet = new TreeSet<Issue>(new IssueComparator());
+			treeSet.addAll(issues);
+			iacIssues.put(path, treeSet);
 		} else {
 			iacIssues.remove(path);
 		}
