@@ -1,7 +1,6 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,17 +17,12 @@ import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Tree;
@@ -41,7 +35,6 @@ import org.eclipse.ui.part.ViewPart;
 import io.snyk.eclipse.plugin.properties.preferences.EclipsePreferenceState;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
@@ -290,18 +283,19 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					ContentRootNode node = (ContentRootNode) item.getData();
 					String projectName = node.getText().toString();
 					String projectPath = node.getPath().toString();
-					String baseBranch = preferenceState.getBaseBranch(projectPath);
 					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+					String baseBranch = preferenceState.getBaseBranch(projectPath);
 					String[] localBranches = preferenceState.getLocalBranches(projectPath).toArray(String[]::new);
 
-					item.setText(
-							String.format("%s - Click here choose base branch [ current: %s ]", projectName, baseBranch));
+					item.setText(String.format("%s - Click here choose base branch [ current: %s ]", projectName,
+							baseBranch));
 
 					Listener selectionListener = new Listener() {
 						@Override
 						public void handleEvent(Event event) {
 							if (event.item == item) {
-								baseBranchDialog(event.display, projectPath, project, localBranches);
+								new BaseBranchDialog().baseBranchDialog(event.display, projectPath, project,
+										localBranches);
 							}
 						}
 					};
@@ -314,48 +308,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				}
 			}
 		});
-	}
-
-	private void baseBranchDialog(Display display, String projectPath, IProject project, String[] localBranches) {
-		Shell shell = new Shell(display, SWT.APPLICATION_MODAL | SWT.DIALOG_TRIM);
-		shell.setText("Choose base branch for net-new issues scanning");
-		shell.setLayout(new GridLayout(1, false));
-		Label label = new Label(shell, SWT.NONE);
-		label.setText("Base Branch for: " + projectPath);
-		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-		Combo dropdown = new Combo(shell, SWT.DROP_DOWN);
-		dropdown.setItems(localBranches);
-		dropdown.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		dropdown.setText(preferenceState.getBaseBranch(projectPath));
-
-		Button okButton = new Button(shell, SWT.PUSH);
-		okButton.setText("OK");
-		okButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
-		okButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				// Handle OK button press
-				String selectedBranch = dropdown.getText();
-				if (Arrays.asList(localBranches).contains(selectedBranch)) {
-					preferenceState.setBaseBranch(projectPath, selectedBranch);
-					shell.close();
-					SnykExtendedLanguageClient.getInstance().triggerScan(project);
-				} else {
-					SnykLogger.logInfo("Branch is not a valid local branch for repository: " + projectPath);
-				}
-
-			}
-		});
-
-		shell.pack();
-		shell.open();
-
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
 	}
 
 	/*
