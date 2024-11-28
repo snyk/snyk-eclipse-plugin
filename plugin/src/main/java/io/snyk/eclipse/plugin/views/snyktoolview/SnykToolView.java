@@ -187,6 +187,22 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
+	public void resetContentRootNode(String project) {
+		if (project == null ) {
+			return;
+		}
+
+		for (TreeNode child : rootObject.getChildren()) {
+			if (child instanceof ContentRootNode) {
+				ContentRootNode contentRoot = (ContentRootNode) child;
+				if (project.startsWith(contentRoot.getName())) {
+					resetNode(contentRoot);
+				}
+			}
+		}
+	}
+
+	@Override
 	public BaseTreeNode getRoot() {
 		return ((RootNode) treeViewer.getInput());
 	}
@@ -281,7 +297,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				TreeItem[] rootItems = getTreeViewer().getTree().getItems();
 				for (TreeItem item : rootItems) {
 					ContentRootNode node = (ContentRootNode) item.getData();
-					String projectName = node.getText().toString();
+					String projectName = node.getName();
 					String projectPath = node.getPath().toString();
 					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 					String baseBranch = preferenceState.getBaseBranch(projectPath);
@@ -327,7 +343,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					Listener listener = entry.getValue();
 
 					ContentRootNode node = (ContentRootNode) item.getData();
-					String project = node.getText().toString();
+					String project = node.getName();
 
 					// Revert text to original
 					item.setText(project);

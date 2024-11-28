@@ -58,9 +58,7 @@ import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
@@ -74,7 +72,6 @@ import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.properties.preferences.EclipsePreferenceState;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
@@ -182,19 +179,20 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				runSnykWizard();
 			} else {
 				openToolView();
-				this.toolView.resetNode(this.toolView.getRoot());
 
 				if (Preferences.getInstance().getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES))
 					this.toolView.enableDelta();
 
 				try {
-					if (project == null) {
-						executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
+					if (project != null) {
+						this.toolView.resetContentRootNode(project.getName());
+						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN,
+								List.of(project.getLocation().toOSString()));
 						return;
 					}
 
-					executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN,
-							List.of(project.getLocation().toOSString()));
+					this.toolView.resetNode(this.toolView.getRoot());
+					executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 
 					Object firstElement = structured.getFirstElement();
 					IProject project = null;
