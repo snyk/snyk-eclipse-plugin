@@ -10,14 +10,13 @@ import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.SeverityCriticalFilter;
 
 public class EnableAllSeveritiesHandler extends BaseHandler implements IElementUpdater {
-	
+
 	public EnableAllSeveritiesHandler() {
 		super();
 
 		iconEnabled = SnykIcons.ENABLED;
 		iconDisabled = SnykIcons.DISABLED;
 		preferenceKey = Preferences.ACTIVATE_SNYK_CODE_QUALITY;
-
 	}
 
 	@Override

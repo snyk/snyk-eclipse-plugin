@@ -316,10 +316,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						}
 					};
 
-					// Store the listener in the map
 					itemListeners.put(item, selectionListener);
 
-					// Add the listener to the item's parent
 					item.getParent().addListener(SWT.Selection, selectionListener);
 				}
 			}
@@ -348,11 +346,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					// Revert text to original
 					item.setText(project);
 
-					// Remove listener from the item's parent
 					item.getParent().removeListener(SWT.Selection, listener);
 				}
 
-				// Clear the map after removing all listeners
 				itemListeners.clear();
 			}
 		});

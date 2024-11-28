@@ -387,11 +387,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@JsonNotification(value = LsNotificationID.SNYK_FOLDER_CONFIG)
 	public void folderConfig(FolderConfigsParam folderConfigParam) {
-
 		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
-
 		CompletableFuture.runAsync(() -> addAll(folderConfigs));
-
 	}
 
 	public void addAll(List<FolderConfig> folderConfigs) {

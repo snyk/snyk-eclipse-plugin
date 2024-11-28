@@ -52,7 +52,6 @@ public class BaseBranchDialog {
 				} else {
 					SnykLogger.logInfo("Branch is not a valid local branch for repository: " + projectPath);
 				}
-
 			}
 		});
 

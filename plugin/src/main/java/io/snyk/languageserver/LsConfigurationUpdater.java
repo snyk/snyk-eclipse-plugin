@@ -50,7 +50,6 @@ public class LsConfigurationUpdater {
             trustedFolders = trustedFoldersString.split(File.pathSeparator);
         }
         String enableTrustedFolderFeature = Boolean.TRUE.toString();
-        //TODO does this work? getBooleanPref returns a boolean, but we are assigning the return value to a string?
         String scanningMode = preferences.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC) ? "automatic" : "manual";
         boolean useTokenAuth = preferences.getBooleanPref(Preferences.USE_TOKEN_AUTH, false);
         var authMethod = "oauth";
