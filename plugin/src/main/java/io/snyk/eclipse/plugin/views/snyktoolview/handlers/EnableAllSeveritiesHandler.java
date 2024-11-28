@@ -24,8 +24,6 @@ public class EnableAllSeveritiesHandler extends BaseHandler implements IElementU
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		super.execute(event);
 
-		TreeFilterManager.getInstance().removeTreeFilter(this.preferenceKey);
-
 		return null;
 	}
 

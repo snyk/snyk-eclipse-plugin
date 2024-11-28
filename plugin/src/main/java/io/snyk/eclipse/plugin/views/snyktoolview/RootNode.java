@@ -17,6 +17,12 @@ public class RootNode extends BaseTreeNode {
 		super.reset();
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
 
+		if (openProjects.isEmpty()) {
+			var contentRoot = new ContentRootNode("No projects in workspace to scan", null);
+			this.addChild(contentRoot);
+
+		}
+
 		for (IProject project : openProjects) {
 			Path path = ResourceUtils.getFullPath(project);
 			var contentRoot = new ContentRootNode(project.getName(), path);
