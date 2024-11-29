@@ -21,7 +21,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
@@ -546,10 +549,10 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testGetTotal() {
+	void testGetTotal() throws IOException {
 		cut = new SnykExtendedLanguageClient();
 		ProductTreeNode productTreeNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
-		SnykIssueCache issueCache = new SnykIssueCache();
+		SnykIssueCache issueCache = new SnykIssueCache(Path.of("a/b"));
 		var issues = new HashSet<Issue>();
 		var highIssue = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), getSecurityIssue())
 				.set(Select.field(Issue::severity), "high").create();
