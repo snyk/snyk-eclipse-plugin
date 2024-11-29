@@ -118,7 +118,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		registerPluginInstalledEventTask();
 		registerRefreshFeatureFlagsTask();
-		createIssueCaches();
 	}
 
 	private void registerRefreshFeatureFlagsTask() {
@@ -145,15 +144,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (snykToolView != null)
 				snykToolView.toggleIgnoresButtons();
 		});
-	}
-
-	private void createIssueCaches() {
-		var workspace = ResourcesPlugin.getWorkspace();
-		IProject[] allProjects = workspace.getRoot().getProjects();
-		List<IProject> openProjects = Arrays.stream(allProjects).filter(IProject::isOpen).collect(Collectors.toList());
-		for (IProject iProject : openProjects) {
-			IssueCacheHolder.getInstance().getCacheInstance(iProject);
-		}
 	}
 
 	private void registerPluginInstalledEventTask() {

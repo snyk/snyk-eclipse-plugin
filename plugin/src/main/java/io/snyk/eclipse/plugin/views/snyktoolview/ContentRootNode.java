@@ -13,6 +13,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
 public class ContentRootNode extends BaseTreeNode {
 	private Path path;
@@ -29,9 +30,9 @@ public class ContentRootNode extends BaseTreeNode {
 	public ImageDescriptor getImageDescriptor() {
 		WorkbenchLabelProvider labelProvider = new WorkbenchLabelProvider();
 		try {
-			var object = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
+			var object = ResourceUtils.getProjectByPath(path);
 			Image image = labelProvider.getImage(object);
-			if (image == null)
+			if (image == null || image.isDisposed())
 				return null;
 
 			return ImageDescriptor.createFromImage(image);

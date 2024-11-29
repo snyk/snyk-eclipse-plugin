@@ -1,15 +1,14 @@
 package io.snyk.languageserver;
 
+import static io.snyk.eclipse.plugin.utils.ResourceUtils.getFullPath;
+import static io.snyk.eclipse.plugin.utils.ResourceUtils.getProjectByPath;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
-
-import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
 public class IssueCacheHolder {
 	private Map<Path, SnykIssueCache> caches = new ConcurrentHashMap<>();
@@ -33,20 +32,14 @@ public class IssueCacheHolder {
 			}
 		}
 		
-		var projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-		for (IProject iProject : projects) {
-			Path projectPath = ResourceUtils.getFullPath(iProject);
-			if (iProject.isAccessible() && path.startsWith(projectPath)) {
-				caches.put(projectPath, new SnykIssueCache());
-				break;
-			}
-		}
+		var project = getProjectByPath(path);
+		caches.put(getFullPath(project), new SnykIssueCache());
 		
 		return caches.get(path);
 	}
 
 	public SnykIssueCache getCacheInstance(IProject project) {
-		return getCacheInstance(ResourceUtils.getFullPath(project));
+		return getCacheInstance(getFullPath(project));
 	}
 
 	public SnykIssueCache getCacheInstance(String folderPath) {
