@@ -7,7 +7,6 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
 
 import java.nio.file.Path;
 
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
@@ -86,6 +85,6 @@ public class ContentRootNode extends BaseTreeNode {
 	}
 
 	public void setPath(Path path) {
-		this.path = path;
+		this.path = path.normalize();
 	}
 }

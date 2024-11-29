@@ -27,7 +27,6 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -523,7 +522,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, String folderPath, SnykIssueCache issueCache) {
-		var cacheHashMap = Collections.unmodifiableMap(issueCache.getCacheByDisplayProduct(productTreeNode.getProduct()));
+		var cacheHashMap = issueCache.getCacheByDisplayProduct(productTreeNode.getProduct());
 		for (var kv : cacheHashMap.entrySet()) {
 			var fileName = kv.getKey();
 			var issues = new ArrayList<>(kv.getValue());
@@ -536,23 +535,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 		}
 	}
-
-    private ArrayList<Issue> filterIgnoredIssues(ArrayList<Issue> issueList) {
-    	final boolean includeIgnoredIssues;
-    	final boolean includeOpenedIssues;
-
-    	if (Preferences.getInstance().getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)) {
-    	    includeOpenedIssues = Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
-    	    includeIgnoredIssues = Preferences.getInstance().getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES);
-    	} else {
-    	    includeOpenedIssues = true;
-    	    includeIgnoredIssues = true;
-    	}
-
-    	return issueList.stream()
-    	    .filter(it -> it.isVisible(includeIgnoredIssues, includeOpenedIssues))
-    	    .collect(Collectors.toCollection(ArrayList::new));
-    }
 
 	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
 		var issueCache = getIssueCache(filePath);

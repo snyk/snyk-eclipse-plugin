@@ -33,9 +33,10 @@ public class IssueCacheHolder {
 		}
 		
 		var project = getProjectByPath(path);
-		caches.put(getFullPath(project), new SnykIssueCache());
+		Path projectPath = getFullPath(project);
+		caches.put(projectPath, new SnykIssueCache(projectPath));
 		
-		return caches.get(path);
+		return caches.get(projectPath);
 	}
 
 	public SnykIssueCache getCacheInstance(IProject project) {

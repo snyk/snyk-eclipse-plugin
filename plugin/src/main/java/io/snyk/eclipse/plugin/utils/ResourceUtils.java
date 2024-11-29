@@ -53,7 +53,7 @@ public class ResourceUtils {
 		var projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		for (IProject iProject : projects) {
 			Path projectPath = ResourceUtils.getFullPath(iProject);
-			if (iProject.isAccessible() && path.startsWith(projectPath)) {
+			if (iProject.isAccessible() && path.normalize().startsWith(projectPath)) {
 				return iProject;
 			}
 		}
