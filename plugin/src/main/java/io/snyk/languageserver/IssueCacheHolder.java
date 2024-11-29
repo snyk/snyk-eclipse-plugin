@@ -2,10 +2,12 @@ package io.snyk.languageserver;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
@@ -30,7 +32,16 @@ public class IssueCacheHolder {
 				return caches.get(p);
 			}
 		}
-		caches.put(path, new SnykIssueCache());
+		
+		var projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		for (IProject iProject : projects) {
+			Path projectPath = ResourceUtils.getFullPath(iProject);
+			if (iProject.isAccessible() && path.startsWith(projectPath)) {
+				caches.put(projectPath, new SnykIssueCache());
+				break;
+			}
+		}
+		
 		return caches.get(path);
 	}
 

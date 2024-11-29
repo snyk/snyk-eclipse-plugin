@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -47,7 +48,10 @@ public class LsDownloader {
     File destinationFile = new File(Preferences.getInstance().getCliPath());
     File tempFile = null;
     try {
-      Files.createDirectories(destinationFile.toPath().getParent());
+	  Path parent = destinationFile.toPath().getParent();
+	  if (!parent.toFile().exists()) {		  
+		  Files.createDirectories(parent);
+	  }
       tempFile = File.createTempFile(destinationFile.getName(), ".tmp", destinationFile.getParentFile());
       logger.info("LS: Starting download to " + tempFile.getAbsolutePath());
 
