@@ -46,4 +46,8 @@ public class IssueCacheHolder {
 	public SnykIssueCache getCacheInstance(String folderPath) {
 		return getCacheInstance(Paths.get(folderPath));
 	}
+
+	public void addCacheForTest(SnykIssueCache cache) {
+		caches.put(cache.basePath, cache);
+	}
 }

@@ -14,7 +14,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.IssueComparator;
 
 public class SnykIssueCache {
-	private final Path basePath;
+	final Path basePath;
 	private final Map<String, Collection<Issue>> codeSecurityIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> codeQualityIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> ossIssues = new ConcurrentHashMap<>();

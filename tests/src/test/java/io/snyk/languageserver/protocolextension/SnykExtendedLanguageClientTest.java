@@ -12,6 +12,7 @@ import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_N
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.reset;
@@ -21,6 +22,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -185,8 +187,10 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String folderPath = "/a/b";
 
 		var uri = "file://" + folderPath + "/c/";
-		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
-		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(filePath);
+		File pathFromUri = LSPEclipseUtils.fromUri(URI.create(uri));
+		var filePath = pathFromUri.getAbsolutePath();
+		var issueCache = new SnykIssueCache(Paths.get(folderPath));
+		IssueCacheHolder.getInstance().addCacheForTest(issueCache);
 
 		var param = new PublishDiagnostics316Param();
 		param.setUri(uri);
@@ -366,17 +370,19 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private void runInfoNodeTest(SnykScanParam param, int issueCount, int fixableCount, int ignoredCount,
 			int expectedInfoNodeUpdateCount, String expectedFirstInfoNode, String expectedSecondInfoNode,
 			String expectedThirdInfoNode) {
-
+		
 		var productNodes = setupProductNodes(param);
 
 		var infoNodeCaptor = ArgumentCaptor.forClass(InfoTreeNode.class);
 		var parentCaptor = ArgumentCaptor.forClass(ProductTreeNode.class);
 
+		Path folderPath = Paths.get(param.getFolderPath());
 		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
 
 		Set<Issue> issues = getIssues(issueCount, fixableCount, ignoredCount);
 
-		var cache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
+		var cache = new SnykIssueCache(folderPath);
+		IssueCacheHolder.getInstance().addCacheForTest(cache);
 		cache.addCodeIssues(dummyFilePath, issues);
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
