@@ -10,6 +10,8 @@ import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
+import io.snyk.eclipse.plugin.utils.SnykIcons;
+
 public class FileTreeNode extends BaseTreeNode {
 	private Path path;
 
@@ -21,21 +23,7 @@ public class FileTreeNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
-		try {
-			var files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(getPath().toUri());
-			var object = files[0];
-			if (object == null) {
-				return null;
-			}
-			Image image = labelProvider.getImage(object);
-			if (image == null)
-				return null;
-
-			return ImageDescriptor.createFromImage(image);
-		} finally {
-			labelProvider.dispose();
-		}
+		return SnykIcons.FILE;
 	}
 
 	@Override

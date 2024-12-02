@@ -8,12 +8,9 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
 import java.nio.file.Path;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.ILabelProvider;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
-import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.eclipse.plugin.utils.SnykIcons;
 
 public class ContentRootNode extends BaseTreeNode {
 	private Path path;
@@ -28,17 +25,7 @@ public class ContentRootNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
-		try {
-			var object = ResourceUtils.getProjectByPath(path);
-			Image image = labelProvider.getImage(object);
-			if (image == null || image.isDisposed())
-				return null;
-
-			return ImageDescriptor.createFromImage(image);
-		} finally {
-			labelProvider.dispose();
-		}
+		return SnykIcons.PROJECT;
 	}
 
 	public ProductTreeNode getProductNode(String product) {

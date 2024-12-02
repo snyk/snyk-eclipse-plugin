@@ -22,4 +22,10 @@ public class SnykIcons {
 
 	public static final ImageDescriptor ENABLED = Activator.getImageDescriptor("/icons/enabled.png");
 	public static final ImageDescriptor DISABLED = Activator.getImageDescriptor("/icons/transparent.png");
+
+	public static final ImageDescriptor PROJECT = Activator
+			.getImageDescriptor("platform:/plugin/org.eclipse.ui.ide/icons/full/obj16/prj_obj.png");
+	public static final ImageDescriptor FILE = Activator
+			.getImageDescriptor("platform:/plugin/org.eclipse.ui.genericeditor/icons/full/obj16/generic_editor.png");
+
 }
