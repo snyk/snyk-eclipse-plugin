@@ -1,14 +1,12 @@
 package io.snyk.eclipse.plugin.views;
 
-import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.domain.MonitorResult;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
-import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;
-import io.snyk.eclipse.plugin.views.provider.LinkLabelProvider;
-import io.snyk.eclipse.plugin.views.provider.TreeContentProvider;
-import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliFile;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import javax.inject.Inject;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.action.Action;
@@ -37,12 +35,15 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.ViewPart;
 
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
-import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getCliFile;
+import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.domain.MonitorResult;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.eclipse.plugin.views.provider.ColumnProvider;
+import io.snyk.eclipse.plugin.views.provider.ColumnTextProvider;
+import io.snyk.eclipse.plugin.views.provider.LinkLabelProvider;
+import io.snyk.eclipse.plugin.views.provider.TreeContentProvider;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class SnykView extends ViewPart {
 

@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.eclipse.jface.action.IMenuManager;
@@ -28,7 +27,6 @@ import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
 

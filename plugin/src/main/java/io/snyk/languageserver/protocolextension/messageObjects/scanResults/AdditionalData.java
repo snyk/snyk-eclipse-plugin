@@ -1,8 +1,5 @@
 package io.snyk.languageserver.protocolextension.messageObjects.scanResults;
 
-import java.time.Instant;
-
-import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public record AdditionalData(

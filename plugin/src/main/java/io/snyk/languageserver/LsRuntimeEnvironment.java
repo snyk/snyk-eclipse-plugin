@@ -1,13 +1,7 @@
 package io.snyk.languageserver;
 
-import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.core.net.proxy.IProxyData;
-import org.eclipse.core.net.proxy.IProxyService;
-import org.eclipse.core.runtime.Platform;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import static org.eclipse.core.net.proxy.IProxyData.HTTPS_PROXY_TYPE;
+import static org.eclipse.core.net.proxy.IProxyData.HTTP_PROXY_TYPE;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,8 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static org.eclipse.core.net.proxy.IProxyData.HTTPS_PROXY_TYPE;
-import static org.eclipse.core.net.proxy.IProxyData.HTTP_PROXY_TYPE;
+import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.core.net.proxy.IProxyData;
+import org.eclipse.core.net.proxy.IProxyService;
+import org.eclipse.core.runtime.Platform;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+
+import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 public class LsRuntimeEnvironment {
   public static final Map<String, String> map = new HashMap<>();

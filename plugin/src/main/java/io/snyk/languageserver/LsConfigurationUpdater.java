@@ -2,12 +2,12 @@ package io.snyk.languageserver;
 
 import java.io.File;
 
-import io.snyk.languageserver.download.LsBinaries;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 @SuppressWarnings("restriction")

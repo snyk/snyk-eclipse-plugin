@@ -1,10 +1,11 @@
 package io.snyk.eclipse.plugin.views.provider;
 
-import io.snyk.eclipse.plugin.views.DisplayModel;
+import java.util.function.Function;
+
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.swt.graphics.Image;
 
-import java.util.function.Function;
+import io.snyk.eclipse.plugin.views.DisplayModel;
 
 public class ColumnProvider extends ColumnLabelProvider {
   Function<DisplayModel, Image> vulnFuncImg;
