@@ -136,12 +136,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public void addFileNode(ProductTreeNode parent, FileTreeNode toBeAdded) {
-		ContentRootNode contentRootNode = (ContentRootNode) parent.getParent();
-		Path fileNodePath = toBeAdded.getPath();
-		Path rootPath = contentRootNode.getPath();
-		if (!fileNodePath.startsWith(rootPath)) {
-			throw new IllegalArgumentException(fileNodePath + " is not in the same file hierarchy as " + rootPath);
-		}
 		toBeAdded.setParent(parent);
 		parent.addChild(toBeAdded);
 		Display.getDefault().asyncExec(() -> {
