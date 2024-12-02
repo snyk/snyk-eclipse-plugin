@@ -78,7 +78,6 @@ public class ProductTreeNode extends BaseTreeNode {
 		if (child instanceof FileTreeNode) {
 			var ftNode = (FileTreeNode) child;
 			var crNode = (ContentRootNode) this.getParent();
-			SnykLogger.logInfo("addChild: adding " + child.getText() + " to " + this.getText());
 			if (!ftNode.getPath().startsWith(crNode.getPath())) {
 				throw new IllegalArgumentException(
 						ftNode.getPath().toString() + " is not a sub path of " + crNode.getPath().toString());

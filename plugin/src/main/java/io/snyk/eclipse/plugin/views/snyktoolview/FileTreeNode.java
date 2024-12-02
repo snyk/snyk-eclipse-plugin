@@ -61,7 +61,6 @@ public class FileTreeNode extends BaseTreeNode {
 		var crNode = (ContentRootNode) parent.getParent();
 		if (!this.getPath().startsWith(crNode.getPath()))
 			throw new IllegalArgumentException(crNode.getPath() + " is not a sub path of " + this.getPath());
-		SnykLogger.logInfo("adding "+this.getText()+" to "+ crNode.getText());
 		super.setParent(parent);
 	}
 
