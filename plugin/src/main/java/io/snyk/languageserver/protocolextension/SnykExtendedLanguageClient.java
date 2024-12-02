@@ -395,8 +395,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private Set<ProductTreeNode> getAffectedProductNodes(String snykScanProduct, String folderPath) {
-		SnykLogger.logInfo(
-				"getting affected product tree nodes for path: " + folderPath + ", product: " + snykScanProduct);
 		Set<ProductTreeNode> affectedProductTreeNodes = new HashSet<>();
 		var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(snykScanProduct);
 		if (displayProduct != null) {
