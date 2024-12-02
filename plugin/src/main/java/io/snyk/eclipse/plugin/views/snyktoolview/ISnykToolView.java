@@ -115,11 +115,4 @@ public interface ISnykToolView {
 	 * @return
 	 */
 	abstract void disableDelta();
-
-	/**
-	 * Remove the scan results for the Project from the TreeViewer.
-	 *
-	 * @param project
-	 */
-	abstract void resetContentRootNode(String project);
 }

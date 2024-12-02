@@ -185,7 +185,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 				try {
 					if (project != null) {
-						this.toolView.resetContentRootNode(project.getName());
 						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN,
 								List.of(project.getLocation().toOSString()));
 						return;

@@ -187,22 +187,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void resetContentRootNode(String project) {
-		if (project == null ) {
-			return;
-		}
-
-		for (TreeNode child : rootObject.getChildren()) {
-			if (child instanceof ContentRootNode) {
-				ContentRootNode contentRoot = (ContentRootNode) child;
-				if (project.startsWith(contentRoot.getName())) {
-					resetNode(contentRoot);
-				}
-			}
-		}
-	}
-
-	@Override
 	public BaseTreeNode getRoot() {
 		return ((RootNode) treeViewer.getInput());
 	}
