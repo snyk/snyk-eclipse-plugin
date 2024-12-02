@@ -31,11 +31,21 @@ public class BaseTreeNode extends TreeNode {
 
 			list = new ArrayList<BaseTreeNode>(previousList);
 		}
+		child.setParent(this);
 		list.add(child);
 		this.setChildren(list.toArray(new BaseTreeNode[list.size()]));
 	}
 
 	public void removeChildren() {
+		TreeNode[] children = this.getChildren();
+		if (children == null) {
+			return;
+		}
+
+		for (TreeNode child : children) {
+			child.setParent(null);
+		}
+
 		setChildren(new BaseTreeNode[0]);
 	}
 
@@ -66,9 +76,10 @@ public class BaseTreeNode extends TreeNode {
 		this.value = null;
 		this.imageDescriptor = null;
 	}
-	
+
 	/**
 	 * Provides the details to be displayed in the details view
+	 * 
 	 * @return html details
 	 */
 	public String getDetails() {

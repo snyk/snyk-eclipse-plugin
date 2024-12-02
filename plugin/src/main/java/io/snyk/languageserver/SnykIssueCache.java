@@ -1,8 +1,9 @@
 package io.snyk.languageserver;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,6 +14,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.IssueComparator;
 
 public class SnykIssueCache {
+	final Path basePath;
 	private final Map<String, Collection<Issue>> codeSecurityIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> codeQualityIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> ossIssues = new ConcurrentHashMap<>();
@@ -35,7 +37,8 @@ public class SnykIssueCache {
 	/**
 	 * This is public for testing purposes
 	 */
-	public SnykIssueCache() {
+	public SnykIssueCache(Path basePath) {
+		this.basePath = basePath;
 	}
 
 	/** Clears all issue caches */
@@ -64,7 +67,7 @@ public class SnykIssueCache {
 	}
 
 	public Collection<Issue> getIssues(String path, String displayProduct) {
-		var cache = getCacheByDisplayProduct(displayProduct);
+		var cache = getCacheByDisplayProductInternal(displayProduct);
 		return getIssuesForPath(path, cache);
 	}
 
@@ -77,6 +80,9 @@ public class SnykIssueCache {
 	 * @param issues The collection of issues to add
 	 */
 	public void addCodeIssues(String path, Collection<Issue> issues) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
 		var qualityIssues = new TreeSet<Issue>(new IssueComparator());
 		var securityIssues = new TreeSet<Issue>(new IssueComparator());
 		for (Issue issue : issues) {
@@ -106,6 +112,9 @@ public class SnykIssueCache {
 	 * @return An unmodifiable collection of issues, or an empty list if none exist
 	 */
 	public Collection<Issue> getCodeSecurityIssuesForPath(String path) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
 		return getIssuesForPath(path, codeSecurityIssues);
 	}
 
@@ -116,6 +125,9 @@ public class SnykIssueCache {
 	 * @return An unmodifiable collection of issues, or an empty list if none exist
 	 */
 	public Collection<Issue> getCodeQualityIssuesForPath(String path) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
 		return getIssuesForPath(path, codeQualityIssues);
 	}
 
@@ -126,6 +138,9 @@ public class SnykIssueCache {
 	 * @param path The file path
 	 */
 	public void removeCodeIssuesForPath(String path) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
 		codeSecurityIssues.remove(path);
 		codeQualityIssues.remove(path);
 	}
@@ -139,6 +154,10 @@ public class SnykIssueCache {
 	 * @param issues The collection of issues to add
 	 */
 	public void addOssIssues(String path, Collection<Issue> issues) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
+		
 		if (issues.size() > 0) {
 			var treeSet = new TreeSet<Issue>(new IssueComparator());
 			treeSet.addAll(issues);
@@ -155,6 +174,9 @@ public class SnykIssueCache {
 	 * @return An unmodifiable collection of issues, or an empty list if none exist
 	 */
 	public Collection<Issue> getOssIssuesForPath(String path) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
 		return getIssuesForPath(path, ossIssues);
 	}
 
@@ -164,6 +186,9 @@ public class SnykIssueCache {
 	 * @param path The file path
 	 */
 	public void removeOssIssuesForPath(String path) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
 		ossIssues.remove(path);
 	}
 
@@ -176,6 +201,9 @@ public class SnykIssueCache {
 	 * @param issues The collection of issues to add
 	 */
 	public void addIacIssues(String path, Collection<Issue> issues) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
 		if (issues.size() > 0) {
 			var treeSet = new TreeSet<Issue>(new IssueComparator());
 			treeSet.addAll(issues);
@@ -192,6 +220,9 @@ public class SnykIssueCache {
 	 * @return An unmodifiable collection of issues, or an empty list if none exist
 	 */
 	public Collection<Issue> getIacIssuesForPath(String path) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
 		return getIssuesForPath(path, iacIssues);
 	}
 
@@ -201,6 +232,9 @@ public class SnykIssueCache {
 	 * @param path The file path
 	 */
 	public void removeIacIssuesForPath(String path) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+		}
 		iacIssues.remove(path);
 	}
 
@@ -211,10 +245,14 @@ public class SnykIssueCache {
 	 * @return
 	 */
 	public long getTotalCount(String product) {
-		return getCacheByDisplayProduct(product).values().stream().flatMap(Collection::stream).count();
+		return getCacheByDisplayProductInternal(product).values().stream().flatMap(Collection::stream).count();
 	}
 
 	public Map<String, Collection<Issue>> getCacheByDisplayProduct(String displayProduct) {
+		return Collections.unmodifiableMap(getCacheByDisplayProductInternal(displayProduct));
+	}
+	
+	private Map<String, Collection<Issue>> getCacheByDisplayProductInternal(String displayProduct) {
 		switch (displayProduct) {
 		case ProductConstants.DISPLAYED_OSS:
 			return ossIssues;
@@ -230,7 +268,7 @@ public class SnykIssueCache {
 	}
 
 	public Collection<Issue> getFilteredIssue(String displayProduct, Predicate<? super Issue> filter) {
-		var cache = getCacheByDisplayProduct(displayProduct);
+		var cache = getCacheByDisplayProductInternal(displayProduct);
 		return cache.values().stream().flatMap(Collection::stream).filter(filter).toList();
 	}
 

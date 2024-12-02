@@ -12,6 +12,7 @@ import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_N
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.reset;
@@ -21,13 +22,18 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WorkDoneProgressBegin;
@@ -179,11 +185,19 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@Test
 	void testPublishDiagnosticsShouldChangeCache() {
 		// Test Add to cache
-		String folderPath = "/a/b";
-
+		var folderPath = "/a/b";
 		var uri = "file://" + folderPath + "/c/";
-		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
-		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(filePath);
+
+		if(SystemUtils.IS_OS_WINDOWS) {
+			folderPath = "C://a/b";
+			uri = "file:///" + folderPath + "/c/";
+		}
+		
+
+		File pathFromUri = LSPEclipseUtils.fromUri(URI.create(uri));
+		var filePath = pathFromUri.getAbsolutePath();
+		var issueCache = new SnykIssueCache(Paths.get(folderPath));
+		IssueCacheHolder.getInstance().addCacheForTest(issueCache);
 
 		var param = new PublishDiagnostics316Param();
 		param.setUri(uri);
@@ -363,17 +377,19 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private void runInfoNodeTest(SnykScanParam param, int issueCount, int fixableCount, int ignoredCount,
 			int expectedInfoNodeUpdateCount, String expectedFirstInfoNode, String expectedSecondInfoNode,
 			String expectedThirdInfoNode) {
-
+		
 		var productNodes = setupProductNodes(param);
 
 		var infoNodeCaptor = ArgumentCaptor.forClass(InfoTreeNode.class);
 		var parentCaptor = ArgumentCaptor.forClass(ProductTreeNode.class);
 
+		Path folderPath = Paths.get(param.getFolderPath());
 		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
 
 		Set<Issue> issues = getIssues(issueCount, fixableCount, ignoredCount);
 
-		var cache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
+		var cache = new SnykIssueCache(folderPath);
+		IssueCacheHolder.getInstance().addCacheForTest(cache);
 		cache.addCodeIssues(dummyFilePath, issues);
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
@@ -546,10 +562,10 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testGetTotal() {
+	void testGetTotal() throws IOException {
 		cut = new SnykExtendedLanguageClient();
 		ProductTreeNode productTreeNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
-		SnykIssueCache issueCache = new SnykIssueCache();
+		SnykIssueCache issueCache = new SnykIssueCache(Path.of("a/b"));
 		var issues = new HashSet<Issue>();
 		var highIssue = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), getSecurityIssue())
 				.set(Select.field(Issue::severity), "high").create();

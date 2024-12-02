@@ -1,8 +1,8 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -11,33 +11,24 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.lsp4e.LSPEclipseUtils;
-import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
-import org.eclipse.swt.browser.BrowserFunction;
-import org.eclipse.swt.browser.LocationEvent;
-import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
-import org.osgi.framework.Bundle;
 
-import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
 
@@ -57,9 +48,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	private TreeViewer treeViewer;
 	private Browser browser;
-	private BaseTreeNode rootObject = new RootNode();
 	private BrowserHandler browserHandler;
-	private final static Shell SHELL = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -79,7 +68,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		treeViewer.setLabelProvider(new TreeLabelProvider());
 
 		// Create and set the root object
-		treeViewer.setInput(rootObject);
+		treeViewer.setInput(new RootNode());
 		treeViewer.expandAll();
 
 		registerTreeContextMeny(parent);
@@ -99,7 +88,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			public void selectionChanged(SelectionChangedEvent event) {
 				Display.getDefault().asyncExec(() -> {
 					IStructuredSelection selection = (IStructuredSelection) event.getSelection();
-					if (selection.isEmpty()) return;
+					if (selection.isEmpty())
+						return;
 					TreeNode node = (TreeNode) selection.getFirstElement();
 					browserHandler.updateBrowserContent(node);
 					if (node instanceof IssueTreeNode) {
@@ -107,9 +97,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						FileTreeNode fileNode = (FileTreeNode) issueTreeNode.getParent();
 						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(),
 								issueTreeNode.getIssue().getLSP4JRange());
-						}
-					});
-		}});
+					}
+				});
+			}
+		});
 	}
 
 	private void registerTreeContextMeny(Composite parent) {
@@ -168,10 +159,13 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			return null;
 		}
 
-		for (TreeNode child : rootObject.getChildren()) {
+		for (TreeNode child : getRoot().getChildren()) {
 			if (child instanceof ContentRootNode) {
 				ContentRootNode contentRoot = (ContentRootNode) child;
 				var givenPath = Paths.get(folderPath);
+				if (contentRoot.getPath().toString().isBlank()) {
+					throw new RuntimeException("unexpected blank content root node " + child);
+				}
 				if (givenPath.startsWith(contentRoot.getPath())) {
 					return contentRoot.getProductNode(product);
 				}
@@ -182,7 +176,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public BaseTreeNode getRoot() {
-		return this.rootObject;
+		return ((RootNode) treeViewer.getInput());
 	}
 
 	@Override
@@ -219,9 +213,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	private void clearRoot() {
-		if (this.rootObject != null) {
-			this.rootObject.removeChildren();
-			this.rootObject.reset();
+		var root = getRoot();
+		if (root != null) {
+			root.reset();
 		}
 	}
 

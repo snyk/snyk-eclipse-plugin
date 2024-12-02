@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.TreeNode;
 
-import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class ProductTreeNode extends BaseTreeNode {
 
@@ -72,6 +71,20 @@ public class ProductTreeNode extends BaseTreeNode {
 		}
 		super.setText(cleanedValue);
 		super.setValue(cleanedValue);
+	}
+
+	@Override
+	public void addChild(BaseTreeNode child) {
+		if (child instanceof FileTreeNode) {
+			var ftNode = (FileTreeNode) child;
+			var crNode = (ContentRootNode) this.getParent();
+			if (!ftNode.getPath().startsWith(crNode.getPath())) {
+				throw new IllegalArgumentException(
+						ftNode.getPath().toString() + " is not a sub path of " + crNode.getPath().toString());
+			}
+		}
+		
+		super.addChild(child);
 	}
 
 	private String removePrefix(String value) {

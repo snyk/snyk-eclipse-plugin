@@ -6,7 +6,9 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.Base64;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
 import org.osgi.framework.Bundle;
 
@@ -45,5 +47,16 @@ public class ResourceUtils {
 
 	public static Path getFullPath(IResource resource) {	
 		return resource.getLocation().toPath().toAbsolutePath();
+	}
+
+	public static IProject getProjectByPath(Path path) {
+		var projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		for (IProject iProject : projects) {
+			Path projectPath = ResourceUtils.getFullPath(iProject);
+			if (iProject.isAccessible() && path.normalize().startsWith(projectPath)) {
+				return iProject;
+			}
+		}
+		return null;
 	}
 }

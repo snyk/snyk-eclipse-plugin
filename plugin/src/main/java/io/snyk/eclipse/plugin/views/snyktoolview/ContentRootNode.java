@@ -7,12 +7,14 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
 
 import java.nio.file.Path;
 
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class ContentRootNode extends BaseTreeNode {
 	private Path path;
@@ -27,11 +29,11 @@ public class ContentRootNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		WorkbenchLabelProvider labelProvider = new WorkbenchLabelProvider();
+		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		try {
-			var object = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
+			var object = ResourceUtils.getProjectByPath(path);
 			Image image = labelProvider.getImage(object);
-			if (image == null)
+			if (image == null || image.isDisposed())
 				return null;
 
 			return ImageDescriptor.createFromImage(image);
@@ -71,7 +73,8 @@ public class ContentRootNode extends BaseTreeNode {
 		var iacRootNode = new ProductTreeNode(DISPLAYED_IAC);
 		iacRootNode.setParent(this);
 
-		ProductTreeNode[] productNodes = new ProductTreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode, iacRootNode, };
+		ProductTreeNode[] productNodes = new ProductTreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode,
+				iacRootNode, };
 		this.setChildren(productNodes);
 	}
 
@@ -85,6 +88,9 @@ public class ContentRootNode extends BaseTreeNode {
 	}
 
 	public void setPath(Path path) {
-		this.path = path;
+		if (!path.toString().endsWith(this.name)) {
+			throw new IllegalArgumentException(value + " does not end with " + name);
+		}
+		this.path = path.normalize();
 	}
 }
