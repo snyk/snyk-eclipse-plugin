@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import io.snyk.languageserver.LsRuntimeEnvironment;
-import io.snyk.languageserver.protocolextension.messageObjects.OAuthToken;
-
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -27,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.EnvironmentConstants;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.LsRuntimeEnvironment;
+import io.snyk.languageserver.protocolextension.messageObjects.OAuthToken;
 
 public class ProcessRunner {
 

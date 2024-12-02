@@ -1,17 +1,16 @@
 package io.snyk.eclipse.plugin.views;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import io.snyk.eclipse.plugin.domain.ContentError;
-import io.snyk.eclipse.plugin.domain.MonitorResult;
-import io.snyk.eclipse.plugin.domain.ScanResult;
-import io.snyk.eclipse.plugin.domain.Vuln;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.runner.ProcessResult;
-import io.snyk.eclipse.plugin.runner.SnykCliRunner;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -30,16 +29,19 @@ import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+
+import io.snyk.eclipse.plugin.domain.ContentError;
+import io.snyk.eclipse.plugin.domain.MonitorResult;
+import io.snyk.eclipse.plugin.domain.ScanResult;
+import io.snyk.eclipse.plugin.domain.Vuln;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.runner.ProcessResult;
+import io.snyk.eclipse.plugin.runner.SnykCliRunner;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class DataProvider {
 

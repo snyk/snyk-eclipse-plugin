@@ -14,7 +14,6 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class ContentRootNode extends BaseTreeNode {
 	private Path path;

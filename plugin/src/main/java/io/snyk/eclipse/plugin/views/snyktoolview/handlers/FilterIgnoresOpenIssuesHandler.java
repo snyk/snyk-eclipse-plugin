@@ -7,7 +7,6 @@ import org.eclipse.ui.commands.IElementUpdater;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
-import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresFilter;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresOpenIssuesFilter;
 
 public class FilterIgnoresOpenIssuesHandler extends BaseHandler implements IElementUpdater {

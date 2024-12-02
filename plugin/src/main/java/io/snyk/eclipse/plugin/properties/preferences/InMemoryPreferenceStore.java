@@ -1,12 +1,10 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
-import org.apache.commons.lang3.NotImplementedException;
-import org.eclipse.jface.preference.IPreferenceStore;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.lang3.NotImplementedException;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 public class InMemoryPreferenceStore implements PreferenceStore {
 

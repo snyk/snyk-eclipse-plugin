@@ -1,9 +1,9 @@
 package io.snyk.eclipse.plugin.views;
 
-import org.eclipse.core.resources.IProject;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.eclipse.core.resources.IProject;
 
 public class DisplayModel {
 

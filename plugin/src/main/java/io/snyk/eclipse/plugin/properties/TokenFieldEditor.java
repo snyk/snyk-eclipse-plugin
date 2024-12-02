@@ -1,8 +1,9 @@
 package io.snyk.eclipse.plugin.properties;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
+
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 
 public class TokenFieldEditor extends StringFieldEditor {

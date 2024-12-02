@@ -10,8 +10,6 @@ import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-import io.snyk.eclipse.plugin.utils.SnykLogger;
-
 public class FileTreeNode extends BaseTreeNode {
 	private Path path;
 
@@ -55,6 +53,7 @@ public class FileTreeNode extends BaseTreeNode {
 
 	@Override
 	public void setParent(TreeNode parent) {
+		if (parent == null) return;
 		if (!(parent instanceof ProductTreeNode))
 			throw new IllegalArgumentException(
 					parent.getClass().getName() + " cannot be a parent node to a FileTreeNode");

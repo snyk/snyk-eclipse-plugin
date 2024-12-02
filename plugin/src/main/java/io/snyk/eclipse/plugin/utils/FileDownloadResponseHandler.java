@@ -1,14 +1,14 @@
 package io.snyk.eclipse.plugin.utils;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ResponseHandler;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubMonitor;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ResponseHandler;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 
 public class FileDownloadResponseHandler implements ResponseHandler<File> {
 

@@ -27,6 +27,7 @@ public record AdditionalData(
     String publicId
 ) {
 	public String customUIContent() {
-		return SnykExtendedLanguageClient.getInstance().getIssueDescription(key);
+		var result = SnykExtendedLanguageClient.getInstance().getIssueDescription(key);
+		return result;
 	}
 }

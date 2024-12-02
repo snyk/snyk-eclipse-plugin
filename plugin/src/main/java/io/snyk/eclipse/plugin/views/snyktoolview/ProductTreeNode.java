@@ -8,7 +8,6 @@ import org.eclipse.jface.viewers.TreeNode;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class ProductTreeNode extends BaseTreeNode {
 

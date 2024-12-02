@@ -1,12 +1,12 @@
 package io.snyk.eclipse.plugin.utils;
 
-import io.snyk.eclipse.plugin.runner.ProcessResult;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+
+import io.snyk.eclipse.plugin.runner.ProcessResult;
 
 public class MockHandler {
 

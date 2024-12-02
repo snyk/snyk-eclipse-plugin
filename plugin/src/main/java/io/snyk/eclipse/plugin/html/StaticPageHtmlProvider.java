@@ -61,28 +61,4 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 			    """.formatted(base64Image, snykWarningText);
 		return replaceCssVariables(html);
 	}
-	
-	public String getLoadingHtml() {
-		var html = """
-			    <!DOCTYPE html>
-			    <html lang="en">
-			    <head>
-			        <meta charset="UTF-8">
-			        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-			        <title>Snyk for Eclipse</title>
-			        <style>
-			            body {
-			            	font-family: var(--default-font);
-			                background-color: var(--background-color);
-			                color: var(--text-color);
-			            }
-			        </style>
-			    </head>
-			    <body>
-			        Loading...
-			    </body>
-			    </html>
-			    """;
-		return replaceCssVariables(html);
-	}
 }

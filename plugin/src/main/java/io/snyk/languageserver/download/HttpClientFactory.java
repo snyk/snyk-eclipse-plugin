@@ -1,8 +1,12 @@
 package io.snyk.languageserver.download;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.languageserver.LsRuntimeEnvironment;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -21,11 +25,9 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.ssl.SSLContexts;
 import org.eclipse.core.net.proxy.IProxyData;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.LsRuntimeEnvironment;
 
 public class HttpClientFactory {
   private static HttpClientFactory instance;

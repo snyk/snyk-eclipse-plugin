@@ -1,18 +1,18 @@
 package io.snyk.eclipse.plugin.runner;
 
-import io.snyk.eclipse.plugin.exception.NotSupportedException;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.Lists;
-import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-
-import org.apache.commons.lang3.SystemUtils;
+import static io.snyk.eclipse.plugin.utils.MockHandler.MOCK;
+import static io.snyk.eclipse.plugin.utils.MockHandler.getMockScanResult;
 
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-import static io.snyk.eclipse.plugin.utils.MockHandler.MOCK;
-import static io.snyk.eclipse.plugin.utils.MockHandler.getMockScanResult;
+import org.apache.commons.lang3.SystemUtils;
+
+import io.snyk.eclipse.plugin.exception.NotSupportedException;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.Lists;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class SnykCliRunner {
 

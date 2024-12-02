@@ -2,12 +2,9 @@ package io.snyk.eclipse.plugin.utils;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.statushandlers.StatusManager;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.languageserver.SnykLanguageServer;
 
 public class SnykLogger {
 

@@ -1,10 +1,5 @@
 package io.snyk.eclipse.plugin.html;
 
-import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.themes.ITheme;
-import org.eclipse.ui.themes.IThemeManager;
-
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 public class CodeHtmlProvider extends BaseHtmlProvider {

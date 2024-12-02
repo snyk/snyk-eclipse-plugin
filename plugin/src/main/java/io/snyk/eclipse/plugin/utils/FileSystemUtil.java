@@ -1,12 +1,13 @@
 package io.snyk.eclipse.plugin.utils;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import org.apache.commons.lang3.SystemUtils;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import org.apache.commons.lang3.SystemUtils;
+
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 public final class FileSystemUtil {
 
