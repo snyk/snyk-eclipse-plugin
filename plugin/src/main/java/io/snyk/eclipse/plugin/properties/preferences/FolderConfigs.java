@@ -10,17 +10,17 @@ import com.google.gson.Gson;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
-public class EclipsePreferenceState {
-	private static EclipsePreferenceState instance;
+public class FolderConfigs {
+	private static FolderConfigs instance;
 	private static final IEclipsePreferences preferenceState = InstanceScope.INSTANCE.getNode("io.snyk.eclipse.plugin");
 	private static final Gson gson = new Gson();
 
-	private EclipsePreferenceState() {
+	private FolderConfigs() {
 	}
 
-	public static synchronized EclipsePreferenceState getInstance() {
+	public static synchronized FolderConfigs getInstance() {
 		if (instance == null) {
-			instance = new EclipsePreferenceState();
+			instance = new FolderConfigs();
 		}
 		return instance;
 	}

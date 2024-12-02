@@ -32,7 +32,7 @@ import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 
-import io.snyk.eclipse.plugin.properties.preferences.EclipsePreferenceState;
+import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
@@ -57,7 +57,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private Browser browser;
 	private BrowserHandler browserHandler;
 	private Map<TreeItem, Listener> itemListeners = new HashMap<>();
-	private EclipsePreferenceState preferenceState = EclipsePreferenceState.getInstance();
+	private FolderConfigs preferenceState = FolderConfigs.getInstance();
 
 	@Override
 	public void createPartControl(Composite parent) {

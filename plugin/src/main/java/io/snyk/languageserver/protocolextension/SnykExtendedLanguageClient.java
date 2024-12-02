@@ -544,6 +544,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (var kv : cacheHashMap.entrySet()) {
 			var fileName = kv.getKey();
 			var issues = new ArrayList<>(kv.getValue());
+			
 			if (issues.isEmpty())
 				continue;
 			FileTreeNode fileNode = new FileTreeNode(fileName);

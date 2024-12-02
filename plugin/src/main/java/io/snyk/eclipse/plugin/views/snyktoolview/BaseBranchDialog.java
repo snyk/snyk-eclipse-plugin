@@ -14,12 +14,12 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
-import io.snyk.eclipse.plugin.properties.preferences.EclipsePreferenceState;
+import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class BaseBranchDialog {
-	private EclipsePreferenceState preferenceState = EclipsePreferenceState.getInstance();
+	private FolderConfigs preferenceState = FolderConfigs.getInstance();
 
 	public BaseBranchDialog() {
 	}
