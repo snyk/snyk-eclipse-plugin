@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WorkDoneProgressBegin;
@@ -184,9 +185,15 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@Test
 	void testPublishDiagnosticsShouldChangeCache() {
 		// Test Add to cache
-		String folderPath = "/a/b";
-
+		var folderPath = "/a/b";
 		var uri = "file://" + folderPath + "/c/";
+
+		if(SystemUtils.IS_OS_WINDOWS) {
+			folderPath = "C://a/b";
+			uri = "file:///" + folderPath + "/c/";
+		}
+		
+
 		File pathFromUri = LSPEclipseUtils.fromUri(URI.create(uri));
 		var filePath = pathFromUri.getAbsolutePath();
 		var issueCache = new SnykIssueCache(Paths.get(folderPath));
