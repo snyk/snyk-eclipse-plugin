@@ -365,8 +365,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		case SCAN_STATE_SUCCESS:
 			scanState.setScanInProgress(inProgressKey, false);
 			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
-				SnykLogger.logInfo(
-						"resetting: " + productTreeNode.getProduct() + ", parent: " + productTreeNode.getParent());
 				addInfoNodes(productTreeNode, param.getFolderPath(), issueCache);
 				populateFileAndIssueNodes(productTreeNode, param.getFolderPath(), issueCache);
 			}
