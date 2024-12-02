@@ -20,6 +20,7 @@ public class RootNode extends BaseTreeNode {
 		if (openProjects.isEmpty()) {
 			var contentRoot = new ContentRootNode("No projects in workspace to scan", null);
 			this.addChild(contentRoot);
+			return;
 		}
 
 		for (IProject project : openProjects) {

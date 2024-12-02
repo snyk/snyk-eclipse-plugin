@@ -56,7 +56,7 @@ public class LsConfigurationUpdater {
         if (useTokenAuth) {
         	authMethod = "token";
         }
-		String enableDeltaFindings = preferences.getPref(Preferences.FILTER_DELTA_NEW_ISSUES, "");
+		String enableDeltaFindings = preferences.getPref(Preferences.FILTER_DELTA_NEW_ISSUES, Boolean.FALSE.toString());
 		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac, insecure, endpoint, additionalParams,
             additionalEnv, path, sendErrorReports, enableTelemetry, organization, manageBinariesAutomatically, cliPath,
             token, integrationName, integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature,

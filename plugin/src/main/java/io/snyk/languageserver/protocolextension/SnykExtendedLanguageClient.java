@@ -69,7 +69,7 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
-import io.snyk.eclipse.plugin.properties.preferences.EclipsePreferenceState;
+import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
@@ -109,7 +109,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	// this field is for testing only
 	private LanguageServer ls;
 	private LsConfigurationUpdater configurationUpdater = new LsConfigurationUpdater();
-	private EclipsePreferenceState preferenceState = EclipsePreferenceState.getInstance();
+	private FolderConfigs preferenceState = FolderConfigs.getInstance();
 
 	private static SnykExtendedLanguageClient instance = null;
 
@@ -388,13 +388,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonNotification(value = LsNotificationID.SNYK_FOLDER_CONFIG)
 	public void folderConfig(FolderConfigsParam folderConfigParam) {
 		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
-		CompletableFuture.runAsync(() -> addAll(folderConfigs));
-	}
-
-	public void addAll(List<FolderConfig> folderConfigs) {
-		for (FolderConfig folderConfig : folderConfigs) {
-			preferenceState.addFolderConfig(folderConfig);
-		}
+		CompletableFuture.runAsync(() -> FolderConfigs.getInstance().addAll(folderConfigs));
 	}
 
 	private void openToolView() {

@@ -67,4 +67,10 @@ public class FolderConfigs {
 		FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
 		return folderConfig.getBaseBranch();
 	}
+	
+	public void addAll(List<FolderConfig> folderConfigs) {
+		for (FolderConfig folderConfig : folderConfigs) {
+			addFolderConfig(folderConfig);
+		}
+	}
 }
