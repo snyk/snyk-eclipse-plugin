@@ -216,8 +216,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void ensureLanguageServerRunning() {
-		boolean wait = true;
-		while (wait && !Thread.interrupted()) {
+		while (getConnectedLanguageServer() == null && !Thread.interrupted()) {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -230,7 +229,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			} catch (Exception e) {
 				SnykLogger.logError(e);
 			}
-			wait = getConnectedLanguageServer() == null;
 		}
 	}
 
@@ -354,7 +352,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			issueCache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
 		}
 		openToolView();
-		
+
 		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(),
 				param.getFolderPath());
 
@@ -365,6 +363,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		case SCAN_STATE_SUCCESS:
 			scanState.setScanInProgress(inProgressKey, false);
 			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+				this.toolView.resetNode(productTreeNode);
 				addInfoNodes(productTreeNode, param.getFolderPath(), issueCache);
 				populateFileAndIssueNodes(productTreeNode, param.getFolderPath(), issueCache);
 			}

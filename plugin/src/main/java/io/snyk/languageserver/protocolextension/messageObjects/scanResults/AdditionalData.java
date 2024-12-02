@@ -1,5 +1,8 @@
 package io.snyk.languageserver.protocolextension.messageObjects.scanResults;
 
+import java.time.Instant;
+
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public record AdditionalData(
@@ -27,6 +30,7 @@ public record AdditionalData(
     String publicId
 ) {
 	public String customUIContent() {
-		return SnykExtendedLanguageClient.getInstance().getIssueDescription(key);
+		var result = SnykExtendedLanguageClient.getInstance().getIssueDescription(key);
+		return result;
 	}
 }
