@@ -8,6 +8,7 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
 import java.nio.file.Path;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
@@ -27,7 +28,7 @@ public class ContentRootNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		WorkbenchLabelProvider labelProvider = new WorkbenchLabelProvider();
+		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		try {
 			var object = ResourceUtils.getProjectByPath(path);
 			Image image = labelProvider.getImage(object);
@@ -71,7 +72,8 @@ public class ContentRootNode extends BaseTreeNode {
 		var iacRootNode = new ProductTreeNode(DISPLAYED_IAC);
 		iacRootNode.setParent(this);
 
-		ProductTreeNode[] productNodes = new ProductTreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode, iacRootNode, };
+		ProductTreeNode[] productNodes = new ProductTreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode,
+				iacRootNode, };
 		this.setChildren(productNodes);
 	}
 
@@ -85,6 +87,9 @@ public class ContentRootNode extends BaseTreeNode {
 	}
 
 	public void setPath(Path path) {
+		if (!path.toString().endsWith(this.name)) {
+			throw new IllegalArgumentException(value + " does not end with " + name);
+		}
 		this.path = path.normalize();
 	}
 }

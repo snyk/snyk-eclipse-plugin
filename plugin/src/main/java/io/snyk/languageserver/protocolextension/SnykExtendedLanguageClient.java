@@ -177,8 +177,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				runSnykWizard();
 			} else {
 				openToolView();
-				this.toolView.resetNode(this.toolView.getRoot());
 				try {
+					this.toolView.resetNode(this.toolView.getRoot());
 					if (window == null) {
 						executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 						return;
@@ -199,8 +199,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 					if (project != null) {
 						runForProject(project.getName());
+						
+						String projectPath = project.getLocation().toOSString();
 						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN,
-								List.of(project.getLocation().toOSString()));
+								List.of(projectPath));
 					}
 				} catch (Exception e) {
 					SnykLogger.logError(e);

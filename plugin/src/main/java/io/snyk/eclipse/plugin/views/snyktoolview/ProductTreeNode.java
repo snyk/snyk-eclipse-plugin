@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.TreeNode;
 
-import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 
@@ -72,6 +70,21 @@ public class ProductTreeNode extends BaseTreeNode {
 		}
 		super.setText(cleanedValue);
 		super.setValue(cleanedValue);
+	}
+	
+	
+
+	@Override
+	public void addChild(BaseTreeNode child) {
+		if (child instanceof FileTreeNode) {
+			var fileNodePath = ((FileTreeNode)child).getPath();
+			var rootPath = ((ContentRootNode)this.getParent()).getPath();
+			if (!fileNodePath.startsWith(rootPath)
+					|| !rootPath.endsWith(this.getParent().getValue().toString())) {
+				throw new IllegalArgumentException();
+			}
+		}
+		super.addChild(child);
 	}
 
 	private String removePrefix(String value) {
