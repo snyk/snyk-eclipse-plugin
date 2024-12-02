@@ -5,17 +5,29 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.statushandlers.StatusManager;
 
+import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.SnykStartup;
+import io.snyk.languageserver.SnykLanguageServer;
+
 public class SnykLogger {
 
-  public static void logError(Exception exception) {
-    Status status = new Status(IStatus.ERROR, PlatformUI.PLUGIN_ID, "Snyk plugin: " + exception.getMessage(), exception);
+	public static void logError(Exception exception) {
+		Status status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, exception.getMessage(),
+				exception);
 
-    StatusManager.getManager().handle(status, StatusManager.SHOW | StatusManager.LOG);
-  }
-  
-  public static void logInfo(String message) {
-    Status status = new Status(IStatus.INFO, PlatformUI.PLUGIN_ID, "Snyk plugin: " + message);
+		StatusManager.getManager().handle(status, StatusManager.SHOW | StatusManager.LOG);
+	}
 
-    StatusManager.getManager().handle(status, StatusManager.SHOW | StatusManager.LOG);
-  }
+	public static void logInfo(String message) {
+		Status status = new Status(IStatus.INFO, Activator.PLUGIN_ID, message);
+
+		StatusManager.getManager().handle(status, StatusManager.LOG);
+	}
+
+	public static void logAndShow(String message) {
+		Status status = new Status(IStatus.INFO, Activator.PLUGIN_ID, message);
+
+		StatusManager.getManager().handle(status, StatusManager.LOG | StatusManager.SHOW);
+	}
+
 }

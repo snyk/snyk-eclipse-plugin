@@ -8,6 +8,7 @@ import org.eclipse.jface.viewers.TreeNode;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class ProductTreeNode extends BaseTreeNode {
 
@@ -71,19 +72,19 @@ public class ProductTreeNode extends BaseTreeNode {
 		super.setText(cleanedValue);
 		super.setValue(cleanedValue);
 	}
-	
-	
 
 	@Override
 	public void addChild(BaseTreeNode child) {
 		if (child instanceof FileTreeNode) {
-			var fileNodePath = ((FileTreeNode)child).getPath();
-			var rootPath = ((ContentRootNode)this.getParent()).getPath();
-			if (!fileNodePath.startsWith(rootPath)
-					|| !rootPath.endsWith(this.getParent().getValue().toString())) {
-				throw new IllegalArgumentException();
+			var ftNode = (FileTreeNode) child;
+			var crNode = (ContentRootNode) this.getParent();
+			SnykLogger.logInfo("addChild: adding " + child.getText() + " to " + this.getText());
+			if (!ftNode.getPath().startsWith(crNode.getPath())) {
+				throw new IllegalArgumentException(
+						ftNode.getPath().toString() + " is not a sub path of " + crNode.getPath().toString());
 			}
 		}
+		
 		super.addChild(child);
 	}
 

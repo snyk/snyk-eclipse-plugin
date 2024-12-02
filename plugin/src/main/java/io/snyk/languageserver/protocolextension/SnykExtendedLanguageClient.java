@@ -27,6 +27,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -133,7 +134,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private void toggleIgnores(Boolean enableConsistentIgnores) {
-		if(Preferences.getInstance().isTest()) {
+		if (Preferences.getInstance().isTest()) {
 			return;
 		}
 		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
@@ -199,10 +200,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 					if (project != null) {
 						runForProject(project.getName());
-						
+
 						String projectPath = project.getLocation().toOSString();
-						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN,
-								List.of(projectPath));
+						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath));
 					}
 				} catch (Exception e) {
 					SnykLogger.logError(e);
@@ -353,30 +353,26 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (!param.getFolderPath().isBlank()) {
 			issueCache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
 		}
-
 		openToolView();
-
+		
 		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(),
 				param.getFolderPath());
 
 		switch (param.getStatus()) {
 		case SCAN_STATE_IN_PROGRESS:
 			scanState.setScanInProgress(inProgressKey, true);
-			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
-				toolView.resetNode(productTreeNode);
-			}
 			break;
 		case SCAN_STATE_SUCCESS:
 			scanState.setScanInProgress(inProgressKey, false);
 			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
-				productTreeNode.reset();
+				SnykLogger.logInfo(
+						"resetting: " + productTreeNode.getProduct() + ", parent: " + productTreeNode.getParent());
 				addInfoNodes(productTreeNode, param.getFolderPath(), issueCache);
 				populateFileAndIssueNodes(productTreeNode, param.getFolderPath(), issueCache);
 			}
 			break;
 		case SCAN_STATE_ERROR:
 			scanState.setScanInProgress(inProgressKey, false);
-			// Show error state
 			break;
 		}
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
@@ -399,6 +395,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private Set<ProductTreeNode> getAffectedProductNodes(String snykScanProduct, String folderPath) {
+		SnykLogger.logInfo(
+				"getting affected product tree nodes for path: " + folderPath + ", product: " + snykScanProduct);
 		Set<ProductTreeNode> affectedProductTreeNodes = new HashSet<>();
 		var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(snykScanProduct);
 		if (displayProduct != null) {
@@ -416,7 +414,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				affectedProductTreeNodes.add(productNode);
 			}
 		}
-		return affectedProductTreeNodes;
+		return Collections.unmodifiableSet(affectedProductTreeNodes);
 	}
 
 	private void setNodeState(String status, Set<ProductTreeNode> affectedProductTreeNodes, SnykIssueCache cache) {
@@ -431,11 +429,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		} else if (status.equals(SCAN_STATE_ERROR)) {
 			nodeText = ISnykToolView.NODE_TEXT_ERROR;
 			setProductNodeText(affectedProductTreeNodes, nodeText);
+			toolView.refreshTree();
 		} else if (status.equals(SCAN_STATE_SUCCESS)) {
 			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
 				var displayCounts = getCountsSuffix(productTreeNode, cache);
 				setProductNodeText(Set.of(productTreeNode), displayCounts);
 			}
+			toolView.refreshTree();
 		}
 	}
 
@@ -496,12 +496,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (totalCount > 0 && ignoredCount == totalCount
 				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
 				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
-			toolView.addInfoNode(productNode,
-					new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE));
+			toolView.addInfoNode(productNode, new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
 
-		if (totalCount > 0 && ignoredCount == 0
-				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
+		if (totalCount > 0 && ignoredCount == 0 && pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
 				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES)) {
 			toolView.addInfoNode(productNode, new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
@@ -519,16 +517,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
 			return;
 		}
-		
+
 		populateIssueCache(param, filePath);
 	}
 
-	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, String folderPath, SnykIssueCache issueCache) {
+	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, String folderPath,
+			SnykIssueCache issueCache) {
 		var cacheHashMap = issueCache.getCacheByDisplayProduct(productTreeNode.getProduct());
 		for (var kv : cacheHashMap.entrySet()) {
 			var fileName = kv.getKey();
 			var issues = new ArrayList<>(kv.getValue());
-			if(issues.isEmpty())
+			if (issues.isEmpty())
 				continue;
 			FileTreeNode fileNode = new FileTreeNode(fileName);
 			toolView.addFileNode(productTreeNode, fileNode);
@@ -556,7 +555,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (diagnostic.getData() == null) {
 				continue;
 			}
-			if(!isIgnoresEnabled && diagnostic.getData().isIgnored()) {
+			if (!isIgnoresEnabled && diagnostic.getData().isIgnored()) {
 				toggleIgnores(true);
 				isIgnoresEnabled = true;
 			}

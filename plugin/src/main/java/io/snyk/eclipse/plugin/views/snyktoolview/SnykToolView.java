@@ -28,6 +28,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
 
@@ -168,7 +169,12 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			if (child instanceof ContentRootNode) {
 				ContentRootNode contentRoot = (ContentRootNode) child;
 				var givenPath = Paths.get(folderPath);
+				if (contentRoot.getPath().toString().isBlank()) {
+					throw new RuntimeException("unexpected blank content root node " + child);
+				}
 				if (givenPath.startsWith(contentRoot.getPath())) {
+					SnykLogger.logInfo("getProductNode: folderPath given: " + givenPath);
+					SnykLogger.logInfo("getProductNode: contentRootPath: " + contentRoot.getPath());
 					return contentRoot.getProductNode(product);
 				}
 			}
