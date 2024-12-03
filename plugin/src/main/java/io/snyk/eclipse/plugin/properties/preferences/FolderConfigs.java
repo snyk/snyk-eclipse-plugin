@@ -1,14 +1,18 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
+import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 
 public class FolderConfigs {
 	private static FolderConfigs instance;
@@ -72,5 +76,17 @@ public class FolderConfigs {
 		for (FolderConfig folderConfig : folderConfigs) {
 			addFolderConfig(folderConfig);
 		}
+	}
+	
+	public FolderConfigsParam getFolderConfigs(List<String> folderPaths) {
+	    List<FolderConfig> folderConfigs = new ArrayList<>();
+	    for (String folderPath : folderPaths) {
+	        String json = preferenceState.get(folderPath, null);
+	        if (json != null) {
+	            FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
+	            folderConfigs.add(folderConfig);
+	        }
+	    }
+	    return new FolderConfigsParam(folderConfigs);
 	}
 }

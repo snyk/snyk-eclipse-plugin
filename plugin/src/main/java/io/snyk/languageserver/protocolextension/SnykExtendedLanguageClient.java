@@ -109,7 +109,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	// this field is for testing only
 	private LanguageServer ls;
 	private LsConfigurationUpdater configurationUpdater = new LsConfigurationUpdater();
-	private FolderConfigs preferenceState = FolderConfigs.getInstance();
 
 	private static SnykExtendedLanguageClient instance = null;
 
@@ -119,6 +118,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		registerPluginInstalledEventTask();
 		registerRefreshFeatureFlagsTask();
+	}
+
+	public static SnykExtendedLanguageClient getInstance() {
+		return instance; // we leave instantiation to LSP4e, no lazy construction here
+	}
+
+	public LanguageServer getConnectedLanguageServer() {
+		if (this.ls != null) {
+			return ls;
+		}
+		return super.getLanguageServer();
 	}
 
 	private void registerRefreshFeatureFlagsTask() {
@@ -147,6 +157,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		});
 	}
 
+	private void createIssueCaches() {
+		List<IProject> openProjects = getOpenProjects();
+		for (IProject iProject : openProjects) {
+			IssueCacheHolder.getInstance().getCacheInstance(iProject);
+		}
+	}
+
 	private void registerPluginInstalledEventTask() {
 		if (!Preferences.getInstance().getBooleanPref(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, false)) {
 			if (taskProcessor == null) {
@@ -160,17 +177,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 			taskProcessor.registerTask(analyticsTask, analyticsCallback);
 		}
-	}
-
-	public static SnykExtendedLanguageClient getInstance() {
-		return instance; // we leave instantiation to LSP4e, no lazy construction here
-	}
-
-	public LanguageServer getConnectedLanguageServer() {
-		if (this.ls != null) {
-			return ls;
-		}
-		return super.getLanguageServer();
 	}
 
 	public void triggerScan(IProject project) {
@@ -537,7 +543,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (var kv : cacheHashMap.entrySet()) {
 			var fileName = kv.getKey();
 			var issues = new ArrayList<>(kv.getValue());
-			
+
 			if (issues.isEmpty())
 				continue;
 			FileTreeNode fileNode = new FileTreeNode(fileName);
@@ -701,9 +707,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void clearCache() {
-		var workspace = ResourcesPlugin.getWorkspace();
-		IProject[] allProjects = workspace.getRoot().getProjects();
-		List<IProject> openProjects = Arrays.stream(allProjects).filter(IProject::isOpen).collect(Collectors.toList());
+		List<IProject> openProjects = getOpenProjects();
 		for (IProject iProject : openProjects) {
 			IssueCacheHolder.getInstance().getCacheInstance(iProject).clearAll();
 		}
