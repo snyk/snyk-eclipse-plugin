@@ -179,7 +179,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	public void triggerScan(IProject project) {
+	public void triggerScan(String projectPath) {
 		CompletableFuture.runAsync(() -> {
 			if (Preferences.getInstance().getAuthToken().isBlank()) {
 				runSnykWizard();
@@ -190,31 +190,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					this.toolView.enableDelta();
 
 				try {
-					if (project != null) {
-						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN,
-								List.of(project.getLocation().toOSString()));
+					if (projectPath != null) {
+						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath));
 						return;
 					}
 
 					this.toolView.resetNode(this.toolView.getRoot());
 					executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
-
-					Object firstElement = structured.getFirstElement();
-					IProject project = null;
-					if (firstElement instanceof JavaProject) {
-						project = ((JavaProject) firstElement).getProject();
-					}
-
-					if (firstElement instanceof IProject) {
-						project = (IProject) firstElement;
-					}
-
-					if (project != null) {
-						runForProject(project.getName());
-
-						String projectPath = project.getLocation().toOSString();
-						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath));
-					}
 				} catch (Exception e) {
 					SnykLogger.logError(e);
 				}

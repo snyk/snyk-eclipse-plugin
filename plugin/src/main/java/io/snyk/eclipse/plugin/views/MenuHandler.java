@@ -32,7 +32,7 @@ public class MenuHandler extends AbstractHandler {
 			project = (IProject) firstElement;
 		}
 
-		SnykExtendedLanguageClient.getInstance().triggerScan(project);
+		SnykExtendedLanguageClient.getInstance().triggerScan(project.getFullPath().toOSString());
 		return null;
 	}
 }

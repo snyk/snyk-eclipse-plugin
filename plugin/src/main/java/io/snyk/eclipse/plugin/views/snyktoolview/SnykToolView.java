@@ -1,11 +1,7 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -22,11 +18,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
@@ -56,8 +49,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private TreeViewer treeViewer;
 	private Browser browser;
 	private BrowserHandler browserHandler;
-	private Map<TreeItem, Listener> itemListeners = new HashMap<>();
-	private FolderConfigs preferenceState = FolderConfigs.getInstance();
+	private FolderConfigs folderConfigs = FolderConfigs.getInstance();
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -107,6 +99,15 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(),
 								issueTreeNode.getIssue().getLSP4JRange());
 					}
+					boolean deltaEnabled = Preferences.getInstance()
+							.getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES);
+					if (node instanceof ContentRootNode && deltaEnabled) {
+						ContentRootNode contentNode = (ContentRootNode) node;
+						String projectPath = contentNode.getPath().toString();
+						String[] localBranches = folderConfigs.getLocalBranches(projectPath).toArray(new String[0]);
+
+						new BaseBranchDialog().baseBranchDialog(Display.getDefault(), projectPath, localBranches);
+					}
 				});
 			}
 		});
@@ -131,7 +132,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void setNodeText(BaseTreeNode node, String text) {
 		node.setText(text);
 		Display.getDefault().asyncExec(() -> {
-			this.treeViewer.refresh(node, true);
+			this.treeViewer.update(node, null);
 		});
 	}
 
@@ -273,69 +274,44 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	 * Sets up for doing a Net New Issues scan.
 	 */
 	public void enableDelta() {
-		clearDeltaNodeListeners();
 
-		Display.getDefault().asyncExec(() -> {
-			if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
+		if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
+			BaseTreeNode[] children = (BaseTreeNode[]) getRoot().getChildren();
 
-				TreeItem[] rootItems = getTreeViewer().getTree().getItems();
-				for (TreeItem item : rootItems) {
-					ContentRootNode node = (ContentRootNode) item.getData();
-					String projectName = node.getName();
-					String projectPath = node.getPath().toString();
-					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-					String baseBranch = preferenceState.getBaseBranch(projectPath);
-					String[] localBranches = preferenceState.getLocalBranches(projectPath).toArray(String[]::new);
+			for (BaseTreeNode node : children) {
+				if (node instanceof ContentRootNode) {
+					ContentRootNode contentNode = (ContentRootNode) node;
+					String projectPath = contentNode.getPath().toString();
+					String projectName = ResourceUtils.getProjectByPath(contentNode.getPath()).getName();
+					String baseBranch = folderConfigs.getBaseBranch(projectPath);
 
-					item.setText(String.format("%s - Click here choose base branch [ current: %s ]", projectName,
-							baseBranch));
+					setNodeText(contentNode, String.format("%s - Click here choose base branch [ current: %s ]",
+							projectName, baseBranch));
 
-					Listener selectionListener = new Listener() {
-						@Override
-						public void handleEvent(Event event) {
-							if (event.item == item) {
-								new BaseBranchDialog().baseBranchDialog(event.display, projectPath, project,
-										localBranches);
-							}
-						}
-					};
-
-					itemListeners.put(item, selectionListener);
-
-					item.getParent().addListener(SWT.Selection, selectionListener);
 				}
 			}
-		});
+		}
 	}
 
 	/*
 	 * Disables Net New Issues scan, and starts a regular scan.
 	 */
 	public void disableDelta() {
-		clearDeltaNodeListeners();
+		if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
+			BaseTreeNode[] children = (BaseTreeNode[]) getRoot().getChildren();
+
+			for (BaseTreeNode node : children) {
+				if (node instanceof ContentRootNode) {
+					ContentRootNode contentNode = (ContentRootNode) node;
+
+					String projectName = ResourceUtils.getProjectByPath(contentNode.getPath()).getName();
+
+					setNodeText(contentNode, projectName);
+				}
+			}
+		}
 
 		SnykExtendedLanguageClient.getInstance().triggerScan(null);
-	}
-
-	private void clearDeltaNodeListeners() {
-		Display.getDefault().asyncExec(() -> {
-			if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
-				for (Map.Entry<TreeItem, Listener> entry : itemListeners.entrySet()) {
-					TreeItem item = entry.getKey();
-					Listener listener = entry.getValue();
-
-					ContentRootNode node = (ContentRootNode) item.getData();
-					String project = node.getName();
-
-					// Revert text to original
-					item.setText(project);
-
-					item.getParent().removeListener(SWT.Selection, listener);
-				}
-
-				itemListeners.clear();
-			}
-		});
 	}
 
 	// Helper method to add a command if it's not already present
