@@ -1,6 +1,8 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +20,9 @@ import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
 
+import com.google.gson.Gson;
+
+import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
 import io.snyk.eclipse.plugin.html.StaticPageHtmlProvider;
 
@@ -87,23 +92,51 @@ public class BrowserHandler {
 		initBrowserText();
 	}
 
+	private record ErrorMessage(String error, String path) {
+	}
+
 	public CompletableFuture<Void> updateBrowserContent(TreeNode node) {
 		// Generate HTML content based on the selected node
+		var htmlProvider = getHtmlProvider(node);
+		initScript = htmlProvider.getInitScript();
+		if (node instanceof ProductTreeNode) {
+			var ptn = (ProductTreeNode) node;
+			String errorJson = ptn.getErrorMessage();
+			if (errorJson != null && !errorJson.isBlank()) {
+				var error = new Gson().fromJson(errorJson, ErrorMessage.class);
+				String errorHtml = htmlProvider.getErrorHtml(error.error, error.path);
+				Display.getDefault().syncExec(() -> {
+					browser.setText(errorHtml);
+				});
+			}
+		}
+
 		if (!(node instanceof IssueTreeNode))
 			return CompletableFuture.completedFuture(null);
 
 		return CompletableFuture.supplyAsync(() -> {
 			return generateHtmlContent(node);
 		}).thenAccept(htmlContent -> {
+			var content = htmlProvider.replaceCssVariables(htmlContent);
 			Display.getDefault().syncExec(() -> {
-				var product = ((ProductTreeNode) node.getParent().getParent()).getProduct();
-				var htmlProvider = HtmlProviderFactory.GetHtmlProvider(product);
-				var content = htmlProvider.replaceCssVariables(htmlContent);
-				initScript = htmlProvider.getInitScript();
 				browser.setText(content);
 			});
 		});
 
+	}
+
+	private BaseHtmlProvider getHtmlProvider(TreeNode node) {
+		var product = "";
+		if (node instanceof IssueTreeNode) {
+			product = ((ProductTreeNode) node.getParent().getParent()).getProduct();
+		} else if (node instanceof ProductTreeNode) {
+			product = ((ProductTreeNode) node).getProduct();
+		} else {
+			return new BaseHtmlProvider();
+		}
+
+		var htmlProvider = HtmlProviderFactory.GetHtmlProvider(product);
+		return htmlProvider;
 	}
 
 	public String generateHtmlContent(TreeNode node) {

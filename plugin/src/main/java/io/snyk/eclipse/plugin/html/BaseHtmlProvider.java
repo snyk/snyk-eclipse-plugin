@@ -110,4 +110,46 @@ public class BaseHtmlProvider {
         currentTheme = themeManager.getCurrentTheme();
         return currentTheme;
     }    
+    
+    public String getErrorHtml(String errorMessage, String path) {
+		var html = """
+			    <!DOCTYPE html>
+			    <html lang="en">
+			    <head>
+			        <meta charset="UTF-8">
+			        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+			        <title>Snyk for Eclipse</title>
+			        <style>
+			            body {
+			            	font-family: var(--default-font);
+			                background-color: var(--background-color);
+			                color: var(--text-color);
+			            }			        
+			            .container {
+			                display: flex;
+			                align-items: center;
+			            }
+			            .logo {
+			                margin-right: 20px;
+			            }
+			        </style>
+			    </head>
+			    <body>
+			        <div class="container">
+			            <div>
+			                <p><strong>An error occurred:</strong></p>
+			                <p>
+			                <table>
+			                	<tr><td width="150"	>Error message:</td><td>%s</td></tr>
+			                	<tr></tr>
+			                	<tr><td>Path:</td><td>%s</td></tr>
+			                </table>
+			                </p>
+			            </div>
+			        </div>
+			    </body>
+			    </html>
+			    """.formatted(errorMessage, path);
+		return replaceCssVariables(html);
+	}
 }
