@@ -91,17 +91,20 @@ public class BrowserHandler {
 		});
 		initBrowserText();
 	}
-	
-	private record ErrorMessage(String error, String path) {}
+
+	private record ErrorMessage(String error, String path) {
+	}
 
 	public CompletableFuture<Void> updateBrowserContent(TreeNode node) {
 		// Generate HTML content based on the selected node
+		var htmlProvider = getHtmlProvider(node);
+		initScript = htmlProvider.getInitScript();
 		if (node instanceof ProductTreeNode) {
 			var ptn = (ProductTreeNode) node;
 			String errorJson = ptn.getErrorMessage();
 			if (errorJson != null && !errorJson.isBlank()) {
 				var error = new Gson().fromJson(errorJson, ErrorMessage.class);
-				String errorHtml = getHtmlProvider(node).getErrorHtml(error.error, error.path);
+				String errorHtml = htmlProvider.getErrorHtml(error.error, error.path);
 				Display.getDefault().syncExec(() -> {
 					browser.setText(errorHtml);
 				});
@@ -114,9 +117,8 @@ public class BrowserHandler {
 		return CompletableFuture.supplyAsync(() -> {
 			return generateHtmlContent(node);
 		}).thenAccept(htmlContent -> {
+			var content = htmlProvider.replaceCssVariables(htmlContent);
 			Display.getDefault().syncExec(() -> {
-				var htmlProvider = getHtmlProvider(node);
-				var content = htmlProvider.replaceCssVariables(htmlContent);
 				browser.setText(content);
 			});
 		});
