@@ -1,6 +1,5 @@
 package io.snyk.languageserver;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearAllCaches;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,7 +15,6 @@ import io.snyk.eclipse.plugin.properties.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
 public class LsBaseTest {
   protected LsRuntimeEnvironment environment = null;
   protected IProxyService proxyServiceMock;

@@ -24,6 +24,7 @@ import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +43,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
@@ -54,8 +57,10 @@ import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressEnd;
 import org.eclipse.lsp4j.WorkDoneProgressKind;
 import org.eclipse.lsp4j.WorkDoneProgressNotification;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
+import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.swt.widgets.Display;
@@ -73,6 +78,7 @@ import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
@@ -94,6 +100,7 @@ import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
+import io.snyk.languageserver.protocolextension.messageObjects.LsSdk;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
@@ -748,5 +755,26 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public void setLs(LanguageServer ls) {
 		this.ls = ls;
+	}
+
+	@JsonRequest(value = "workspace/snyk.sdks")
+	public CompletableFuture<List<LsSdk>> getSdks(WorkspaceFolder workspaceFolder) {
+		return CompletableFuture.supplyAsync(() -> {
+			var uri = URI.create(workspaceFolder.getUri());
+			var path = Path.of(uri);
+			var sdkHelper = new SdkHelper();
+			List<LsSdk> list = new ArrayList<>();
+			var project = ResourceUtils.getProjectByPath(path);
+			try {
+				if (!project.hasNature(JavaCore.NATURE_ID))
+					return List.of();
+
+				list.add(sdkHelper.getJDK(project));
+			} catch (CoreException e) {
+				SnykLogger.logError(e);
+				return List.of();
+			}
+			return list;
+		});
 	}
 }

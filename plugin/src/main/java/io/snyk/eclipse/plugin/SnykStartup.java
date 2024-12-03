@@ -164,7 +164,6 @@ public class SnykStartup implements IStartup {
 		return new LsDownloader(HttpClientFactory.getInstance(), runtimeEnvironment, logger);
 	}
 
-	@SuppressWarnings("ResultOfMethodCallIgnored")
 	public static IStatus download(IProgressMonitor monitor) {
 		final File lsFile = new File(Preferences.getInstance().getCliPath());
 		try {
@@ -183,6 +182,6 @@ public class SnykStartup implements IStartup {
 	}
 
 	public void setLogger(ILog logger) {
-		this.logger = logger;
+		SnykStartup.logger = logger;
 	}
 }
