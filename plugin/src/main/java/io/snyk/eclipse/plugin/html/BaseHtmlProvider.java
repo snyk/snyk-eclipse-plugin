@@ -140,7 +140,7 @@ public class BaseHtmlProvider {
 			                <p><strong>An error occurred:</strong></p>
 			                <p>
 			                <table>
-			                	<tr><td width="150">Error message:</td><td>%s</td></tr>
+			                	<tr><td width="150"	>Error message:</td><td>%s</td></tr>
 			                	<tr></tr>
 			                	<tr><td>Path:</td><td>%s</td></tr>
 			                </table>
