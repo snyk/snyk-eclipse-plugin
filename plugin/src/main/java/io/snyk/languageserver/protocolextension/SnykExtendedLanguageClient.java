@@ -770,8 +770,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					return List.of();
 
 				list.add(sdkHelper.getJDK(project));
-			} catch (CoreException e) {
-				SnykLogger.logError(e);
+			} catch (Exception e) {
+				SnykLogger.logInfo(ExceptionUtils.getStackTrace(e));
 				return List.of();
 			}
 			return list;

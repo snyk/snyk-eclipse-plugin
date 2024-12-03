@@ -1,5 +1,6 @@
 package io.snyk.languageserver.protocolextension;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -31,7 +32,7 @@ public class SdkHelper {
 				}
 			}
 		} catch (Exception e) {
-			SnykLogger.logError(e);
+			SnykLogger.logInfo(ExceptionUtils.getStackTrace(e));
 			return null;
 		}
 		return null;
