@@ -13,7 +13,6 @@ import org.mockito.Mockito;
 import io.snyk.eclipse.plugin.EnvironmentConstants;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 
-@SuppressWarnings("restriction")
 class PreferencesTest {
 
   @BeforeEach

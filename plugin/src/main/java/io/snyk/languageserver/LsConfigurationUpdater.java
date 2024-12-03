@@ -10,7 +10,6 @@ import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
-@SuppressWarnings("restriction")
 public class LsConfigurationUpdater {
 
     public void configurationChanged() {
