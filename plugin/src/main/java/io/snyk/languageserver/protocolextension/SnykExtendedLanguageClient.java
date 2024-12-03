@@ -195,7 +195,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 						return;
 					}
 
-					this.toolView.resetNode(this.toolView.getRoot());
 					executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 				} catch (Exception e) {
 					SnykLogger.logError(e);

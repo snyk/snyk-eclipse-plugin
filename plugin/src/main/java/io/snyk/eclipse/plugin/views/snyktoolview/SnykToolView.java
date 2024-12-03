@@ -132,7 +132,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void setNodeText(BaseTreeNode node, String text) {
 		node.setText(text);
 		Display.getDefault().asyncExec(() -> {
-			this.treeViewer.update(node, null);
+			this.treeViewer.refresh(node, true);
+			this.treeViewer.refresh(node.getParent(), true);
 		});
 	}
 
@@ -267,14 +268,12 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			menuManager.update(true);
 
 		});
-
 	}
 
 	/*
 	 * Sets up for doing a Net New Issues scan.
 	 */
 	public void enableDelta() {
-
 		if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
 			BaseTreeNode[] children = (BaseTreeNode[]) getRoot().getChildren();
 
@@ -285,9 +284,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					String projectName = ResourceUtils.getProjectByPath(contentNode.getPath()).getName();
 					String baseBranch = folderConfigs.getBaseBranch(projectPath);
 
-					setNodeText(contentNode, String.format("%s - Click here choose base branch [ current: %s ]",
+					contentNode.setName(String.format("%s - Click here choose base branch [ current: %s ]",
 							projectName, baseBranch));
-
 				}
 			}
 		}
@@ -303,10 +301,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			for (BaseTreeNode node : children) {
 				if (node instanceof ContentRootNode) {
 					ContentRootNode contentNode = (ContentRootNode) node;
-
 					String projectName = ResourceUtils.getProjectByPath(contentNode.getPath()).getName();
-
-					setNodeText(contentNode, projectName);
+					contentNode.setName(projectName);
 				}
 			}
 		}
