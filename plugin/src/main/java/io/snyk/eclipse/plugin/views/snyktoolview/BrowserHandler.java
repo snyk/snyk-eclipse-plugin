@@ -1,8 +1,6 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.lang3.StringUtils;
