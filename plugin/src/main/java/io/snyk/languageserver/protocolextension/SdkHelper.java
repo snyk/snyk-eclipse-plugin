@@ -14,7 +14,7 @@ public class SdkHelper {
 	private static final String JAVA = "java";
 
 	public LsSdk getJDK(IProject project) {
-		try {
+		try {	
 			IJavaProject javaProject = JavaCore.create(project);
 			IClasspathEntry[] classpathEntries;
 			classpathEntries = javaProject.getResolvedClasspath(true);
