@@ -1,11 +1,8 @@
 package io.snyk.languageserver;
 
 import java.io.File;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 
 import io.snyk.eclipse.plugin.Activator;
@@ -65,30 +62,12 @@ public class LsConfigurationUpdater {
 			authMethod = "token";
 		}
 		String enableDeltaFindings = preferences.getPref(Preferences.FILTER_DELTA_NEW_ISSUES, Boolean.FALSE.toString());
-		FolderConfigsParam folderConfigsParam = updateFolderConfigs();
+		FolderConfigsParam folderConfigsParam = FolderConfigs.getInstance().updateFolderConfigs();
 		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac,
 				insecure, endpoint, additionalParams, additionalEnv, path, sendErrorReports, enableTelemetry,
 				organization, manageBinariesAutomatically, cliPath, token, integrationName, integrationVersion,
 				automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode, enableDeltaFindings,
 				authMethod, folderConfigsParam);
-	}
-
-	// TODO is there a better place for this function?
-	private FolderConfigsParam updateFolderConfigs() {
-		SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-		if (lc != null) {
-			List<IProject> openProjects = lc.getOpenProjects();
-
-			List<String> projectPaths = openProjects.stream().map(project -> project.getLocation().toOSString())
-					.collect(Collectors.toList());
-
-			FolderConfigs configs = FolderConfigs.getInstance();
-			FolderConfigsParam folderConfigs = configs.getFolderConfigs(projectPaths);
-
-			return folderConfigs;
-		}
-
-		return null;
 	}
 
 	static class Settings {

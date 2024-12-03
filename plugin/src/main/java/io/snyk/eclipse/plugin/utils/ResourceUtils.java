@@ -106,4 +106,3 @@ public class ResourceUtils {
 		
 		return new ArrayList<>(topLevel);
 	}
-}

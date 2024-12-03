@@ -2,14 +2,15 @@ package io.snyk.eclipse.plugin.properties.preferences;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.osgi.service.prefs.BackingStoreException;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
@@ -71,22 +72,34 @@ public class FolderConfigs {
 		FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
 		return folderConfig.getBaseBranch();
 	}
-	
+
 	public void addAll(List<FolderConfig> folderConfigs) {
 		for (FolderConfig folderConfig : folderConfigs) {
 			addFolderConfig(folderConfig);
 		}
 	}
-	
-	public FolderConfigsParam getFolderConfigs(List<String> folderPaths) {
-	    List<FolderConfig> folderConfigs = new ArrayList<>();
-	    for (String folderPath : folderPaths) {
-	        String json = preferenceState.get(folderPath, null);
-	        if (json != null) {
-	            FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
-	            folderConfigs.add(folderConfig);
-	        }
-	    }
-	    return new FolderConfigsParam(folderConfigs);
+
+	public FolderConfigsParam updateFolderConfigs() {
+		List<IProject> openProjects = ResourceUtils.getOpenProjects();
+
+		List<String> projectPaths = openProjects.stream().map(project -> project.getLocation().toOSString())
+				.collect(Collectors.toList());
+
+		FolderConfigsParam folderConfigs = getFolderConfigs(projectPaths);
+
+		return folderConfigs;
+
+	}
+
+	private FolderConfigsParam getFolderConfigs(List<String> folderPaths) {
+		List<FolderConfig> folderConfigs = new ArrayList<>();
+		for (String folderPath : folderPaths) {
+			String json = preferenceState.get(folderPath, null);
+			if (json != null) {
+				FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
+				folderConfigs.add(folderConfig);
+			}
+		}
+		return new FolderConfigsParam(folderConfigs);
 	}
 }

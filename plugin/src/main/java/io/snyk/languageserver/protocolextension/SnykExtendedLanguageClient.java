@@ -157,13 +157,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		});
 	}
 
-	private void createIssueCaches() {
-		List<IProject> openProjects = getOpenProjects();
-		for (IProject iProject : openProjects) {
-			IssueCacheHolder.getInstance().getCacheInstance(iProject);
-		}
-	}
-
 	private void registerPluginInstalledEventTask() {
 		if (!Preferences.getInstance().getBooleanPref(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, false)) {
 			if (taskProcessor == null) {
@@ -688,11 +681,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void clearCache() {
-		List<IProject> openProjects = getOpenProjects();
+		List<IProject> openProjects = ResourceUtils.getOpenProjects();
 		for (IProject iProject : openProjects) {
 			IssueCacheHolder.getInstance().getCacheInstance(iProject).clearAll();
 		}
 
+	}
+
+	public void setProgressMgr(ProgressManager progressMgr) {
+		this.progressManager = progressMgr;
 	}
 
 	@Override
