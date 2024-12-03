@@ -14,10 +14,9 @@ public class SdkHelper {
 	private static final String JAVA = "java";
 
 	public LsSdk getJDK(IProject project) {
-		// java
-		IJavaProject javaProject = JavaCore.create(project);
-		IClasspathEntry[] classpathEntries;
 		try {
+			IJavaProject javaProject = JavaCore.create(project);
+			IClasspathEntry[] classpathEntries;
 			classpathEntries = javaProject.getResolvedClasspath(true);
 			for (IClasspathEntry entry : classpathEntries) {
 				if (entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
@@ -25,6 +24,8 @@ public class SdkHelper {
 					var segments = classPath.segments();
 					for (String segment : segments) {
 						if (segment.toLowerCase().contains("jdk") || segment.toLowerCase().contains("jre")) {
+							// the classpath contains the rt.jar, which is located in the lib folder
+							// thus, we go two segments up in the path, to get the java home
 							String javaHome = classPath.removeLastSegments(2).toOSString();
 							return new LsSdk(JAVA, javaHome);
 						}
