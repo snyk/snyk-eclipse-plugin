@@ -370,6 +370,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			break;
 		case SCAN_STATE_ERROR:
 			scanState.setScanInProgress(inProgressKey, false);
+			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+				productTreeNode.setErrorMessage(param.getErrorMessage());
+			}
 			break;
 		}
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);

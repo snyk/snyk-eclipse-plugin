@@ -12,6 +12,7 @@ import io.snyk.eclipse.plugin.utils.SnykIcons;
 public class ProductTreeNode extends BaseTreeNode {
 
 	private String product;
+	private String errorMessage;
 
 	public ProductTreeNode(String value) {
 		super(value);
@@ -96,6 +97,7 @@ public class ProductTreeNode extends BaseTreeNode {
 	public void reset() {
 		this.removeChildren();
 		this.setValue(product);
+		this.setErrorMessage(null);
 	}
 
 	public String getProduct() {
@@ -104,5 +106,13 @@ public class ProductTreeNode extends BaseTreeNode {
 
 	public void setProduct(String product) {
 		this.product = product;
+	}
+
+	public String getErrorMessage() {
+		return errorMessage;
+	}
+
+	public void setErrorMessage(String errorMessage) {
+		this.errorMessage = errorMessage;
 	}
 }
