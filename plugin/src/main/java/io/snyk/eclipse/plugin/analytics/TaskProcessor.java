@@ -1,7 +1,6 @@
 package io.snyk.eclipse.plugin.analytics;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;

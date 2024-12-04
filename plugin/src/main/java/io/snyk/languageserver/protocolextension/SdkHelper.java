@@ -6,7 +6,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -31,7 +30,6 @@ import io.snyk.languageserver.protocolextension.messageObjects.LsSdk;
 
 public class SdkHelper {
 	public static final String PYDEV_NATURE = "org.python.pydev.pythonNature";
-	private static final String PYDEV_PYTHON_INTERPRETER_PROP_NAME = "org.python.pydev.PYTHON_PROJECT_INTERPRETER";
 	private static final String PYDEV_PREFERENCES_KEY = "org.python.pydev";
 	private static final String JAVA = "java";
 	private static final String RT_JAR_JAVA9_PLUS = "jrt-fs.jar";
