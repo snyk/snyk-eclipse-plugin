@@ -71,6 +71,7 @@ import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
@@ -713,10 +714,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 			return sdks;
 		});
-	}
-	
-	public void setProgressMgr(ProgressManager progressMgr) {
-		this.progressManager = progressMgr;
 	}
 	
 	public ProgressManager getProgressManager() {
