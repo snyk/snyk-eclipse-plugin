@@ -719,7 +719,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonRequest(value = "workspace/snyk.sdks")
 	public CompletableFuture<List<LsSdk>> getSdks(WorkspaceFolder workspaceFolder) {
 		return CompletableFuture.supplyAsync(() -> {
-			return new SdkHelper().getSdk(workspaceFolder);
+			List<LsSdk> sdks = new SdkHelper().getSdk(workspaceFolder);
+			for (LsSdk lsSdk : sdks) {
+				SnykLogger.logInfo("returning sdk to ls: "+lsSdk);
+			}
+			return sdks;
 		});
 	}
 	
