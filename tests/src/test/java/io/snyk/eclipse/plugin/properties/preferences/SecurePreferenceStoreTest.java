@@ -13,7 +13,8 @@ import static org.mockito.Mockito.when;
 
 class SecurePreferenceStoreTest {
 
-  @Test
+  @SuppressWarnings("restriction")
+@Test
   void usesSecureStorageByDefault() throws StorageException {
     PreferencesUtils.reset();
     try (MockedStatic<SecurePreferencesFactory> mockedSecurePreferencesFactory = Mockito

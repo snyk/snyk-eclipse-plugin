@@ -24,7 +24,6 @@ import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,8 +42,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
@@ -52,13 +49,10 @@ import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.ProgressParams;
-import org.eclipse.lsp4j.WorkDoneProgressCancelParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
-import org.eclipse.lsp4j.WorkDoneProgressEnd;
 import org.eclipse.lsp4j.WorkDoneProgressKind;
 import org.eclipse.lsp4j.WorkDoneProgressNotification;
 import org.eclipse.lsp4j.WorkspaceFolder;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
@@ -78,7 +72,6 @@ import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
@@ -116,7 +109,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	// this field is for testing only
 	private LanguageServer ls;
 	private LsConfigurationUpdater configurationUpdater = new LsConfigurationUpdater();
-
 	private static SnykExtendedLanguageClient instance = null;
 
 	public SnykExtendedLanguageClient() {
@@ -228,6 +220,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				SnykLogger.logInfo("waiting for language server startup was interrupted");
+				Thread.currentThread().interrupt();
 				break;
 			}
 
@@ -650,6 +643,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			try {
 				result.get(timeout - 1, TimeUnit.SECONDS);
 			} catch (InterruptedException | ExecutionException | TimeoutException e) {
+				Thread.currentThread().interrupt();
 				return "";
 			}
 			while (token.equals(p.getAuthToken())) {
@@ -710,10 +704,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	}
 
-	public void setProgressMgr(ProgressManager progressMgr) {
-		this.progressManager = progressMgr;
-	}
-
 	@Override
 	public void notifyProgress(final ProgressParams params) {
 		if (params.getValue() == null) {
@@ -726,58 +716,26 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		super.notifyProgress(params);
 	}
 
-	/**
-	 * This cancels a progress in language server.
-	 *
-	 * @param token
-	 */
-	public void cancelProgress(String token) {
-		// call language server to cancel
-		var workDoneProgressCancelParams = new WorkDoneProgressCancelParams();
-		workDoneProgressCancelParams.setToken(token);
-		getConnectedLanguageServer().cancelProgress(workDoneProgressCancelParams);
-
-		// call notify progress with end message
-		var progressParam = getEndProgressParam(token);
-		super.notifyProgress(progressParam);
-	}
-
-	ProgressParams getEndProgressParam(String token) {
-		WorkDoneProgressEnd workDoneProgressEnd = new WorkDoneProgressEnd();
-		workDoneProgressEnd.setMessage("Operation canceled.");
-		Either<WorkDoneProgressNotification, Object> value = Either.forLeft(workDoneProgressEnd);
-		Either<String, Integer> tokenEither = Either.forLeft(token);
-
-		var progressParam = new ProgressParams(tokenEither, value);
-		return progressParam;
-	}
-
-	public ProgressManager getProgressManager() {
-		return this.progressManager;
-	}
-
-	public void setLs(LanguageServer ls) {
-		this.ls = ls;
-	}
-
 	@JsonRequest(value = "workspace/snyk.sdks")
 	public CompletableFuture<List<LsSdk>> getSdks(WorkspaceFolder workspaceFolder) {
 		return CompletableFuture.supplyAsync(() -> {
-			var uri = URI.create(workspaceFolder.getUri());
-			var path = Path.of(uri);
-			var sdkHelper = new SdkHelper();
-			List<LsSdk> list = new ArrayList<>();
-			var project = ResourceUtils.getProjectByPath(path);
-			try {
-				if (!project.hasNature(JavaCore.NATURE_ID))
-					return List.of();
-
-				list.add(sdkHelper.getJDK(project));
-			} catch (Exception e) {
-				SnykLogger.logInfo(ExceptionUtils.getStackTrace(e));
-				return List.of();
+			List<LsSdk> sdks = new SdkHelper().getSdk(workspaceFolder);
+			for (LsSdk lsSdk : sdks) {
+				SnykLogger.logInfo("determined sdk: "+lsSdk);
 			}
-			return list;
+			return sdks;
 		});
+	}
+	
+	public void setProgressMgr(ProgressManager progressMgr) {
+		this.progressManager = progressMgr;
+	}
+	
+	public ProgressManager getProgressManager() {
+		return this.progressManager;
+	}
+	
+	public void setLs(LanguageServer ls) {
+		this.ls = ls;
 	}
 }

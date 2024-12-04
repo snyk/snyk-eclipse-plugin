@@ -186,7 +186,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public void resetNode(BaseTreeNode node) {
-		node.reset();
+		if (node != null)
+			node.reset();
+		
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(node, true);
 		});

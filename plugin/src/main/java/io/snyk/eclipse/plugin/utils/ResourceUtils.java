@@ -40,7 +40,7 @@ public class ResourceUtils {
 
 			return output.toByteArray();
 		} catch (Exception e) {
-			e.printStackTrace();
+			SnykLogger.logError(e);
 			return null;
 		}
 	}

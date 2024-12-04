@@ -11,8 +11,8 @@ public class ScanState {
 	
     private static ScanState instance = new ScanState();    
 	public static ScanState getInstance() {
-		if (instance == null) {
-			synchronized (ScanState.class) {
+		synchronized (ScanState.class) {
+			if (instance == null) {
 				if (instance == null) {
 					instance = new ScanState();
 				}

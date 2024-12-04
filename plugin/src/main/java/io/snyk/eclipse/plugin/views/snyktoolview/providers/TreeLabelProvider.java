@@ -39,7 +39,7 @@ public class TreeLabelProvider implements ILabelProvider {
 		}
 
 		if (images.get(imageDescriptor) == null) {
-			images.put(imageDescriptor, imageDescriptor.createImage());
+			images.putIfAbsent(imageDescriptor, imageDescriptor.createImage());
 		}
 		return images.get(imageDescriptor);
 	}
@@ -51,8 +51,8 @@ public class TreeLabelProvider implements ILabelProvider {
 
 	@Override
 	public void dispose() {
-		for (ImageDescriptor descriptor : images.keySet()) {
-			var image = images.get(descriptor);
+		for (var entry : images.entrySet()) {
+			var image = entry.getValue();
 			image.dispose();
 		}
 		images.clear();

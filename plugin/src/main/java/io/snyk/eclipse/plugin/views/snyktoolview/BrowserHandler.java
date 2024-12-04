@@ -1,8 +1,6 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.lang3.StringUtils;
@@ -25,7 +23,9 @@ import com.google.gson.Gson;
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
 import io.snyk.eclipse.plugin.html.StaticPageHtmlProvider;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
+@SuppressWarnings("restriction")
 public class BrowserHandler {
 	private Browser browser;
 	private String initScript = "";
@@ -36,7 +36,6 @@ public class BrowserHandler {
 
 	public void initialize() {
 		new BrowserFunction(browser, "openInEditor") {
-			@SuppressWarnings("restriction")
 			@Override
 			public Object function(Object[] arguments) {
 				if (arguments.length != 5) {
@@ -59,7 +58,7 @@ public class BrowserHandler {
 						LSPEclipseUtils.openInEditor(location);
 
 					} catch (Exception e) {
-						e.printStackTrace();
+						SnykLogger.logError(e);
 					}
 				});
 				return null;

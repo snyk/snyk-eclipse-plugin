@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.analytics;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
@@ -19,14 +20,16 @@ public class TaskProcessor {
 	private final ConcurrentLinkedQueue<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> taskQueue = new ConcurrentLinkedQueue<>();
 
 	private TaskProcessor() {
-		CompletableFuture.runAsync(() -> { start(); });
+		CompletableFuture.runAsync(() -> {
+			start();
+		});
 	}
 
 	private static TaskProcessor instance;
 
 	public static TaskProcessor getInstance() {
-		if (instance == null) {
-			synchronized (TaskProcessor.class) {
+		synchronized (TaskProcessor.class) {
+			if (instance == null) {
 				if (instance == null) {
 					instance = new TaskProcessor();
 				}
@@ -36,39 +39,39 @@ public class TaskProcessor {
 	}
 
 	private void start() {
-	    while (true) {
-	        String authToken = Preferences.getInstance().getAuthToken();
-	        var lc = SnykExtendedLanguageClient.getInstance();
-	        if (taskQueue.isEmpty() || authToken == null || authToken.isBlank() || lc == null) {
-	            try {
-	                Thread.sleep(1000);
-	            } catch (InterruptedException e) {
-	                Thread.currentThread().interrupt();
-	            }
-	            continue;
-	        }
-	        LinkedList<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> copyForSending 
-	        	= new LinkedList<>(taskQueue);
-	        
-	        for (Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>> event : copyForSending) {
-	            try {
-	                // Execute the task with the language client
-	                event.getLeft().accept(lc);
-	                // Execute the callback
-	                if(event.getRight() != null) {
-		                event.getRight().accept(null);	
-	                }
-	            } catch (Exception e) {
-	                SnykLogger.logError(e);
-	            } finally {
-	                taskQueue.remove(event);
-	            }
-	        }
-	    }
+		while (true) {
+			String authToken = Preferences.getInstance().getAuthToken();
+			var lc = SnykExtendedLanguageClient.getInstance();
+			if (taskQueue.isEmpty() || authToken == null || authToken.isBlank() || lc == null) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				continue;
+			}
+			List<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> copyForSending = new ArrayList<>(
+					taskQueue);
+
+			for (Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>> event : copyForSending) {
+				try {
+					// Execute the task with the language client
+					event.getLeft().accept(lc);
+					// Execute the callback
+					if (event.getRight() != null) {
+						event.getRight().accept(null);
+					}
+				} catch (Exception e) {
+					SnykLogger.logError(e);
+				} finally {
+					taskQueue.remove(event);
+				}
+			}
+		}
 	}
 
 	public void registerTask(Consumer<SnykExtendedLanguageClient> task, Consumer<Void> callback) {
-	    var pair = Pair.of(task, callback);
-	    taskQueue.add(pair);
+		var pair = Pair.of(task, callback);
+		taskQueue.add(pair);
 	}
 }

@@ -127,9 +127,10 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		snykView.disableRunAbortActions();
 		snykView.toggleRunActionEnablement();
 		disableSnykCodeIfOrgDisabled();
-		new LsConfigurationUpdater().configurationChanged();
-		SnykExtendedLanguageClient.getInstance().refreshFeatureFlags();	
-		
+        CompletableFuture.runAsync(() -> {
+            new LsConfigurationUpdater().configurationChanged();
+            SnykExtendedLanguageClient.getInstance().refreshFeatureFlags();
+        });
 		return superOK;
 	}
 
