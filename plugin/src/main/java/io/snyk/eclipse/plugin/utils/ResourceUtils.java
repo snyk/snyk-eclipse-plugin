@@ -22,7 +22,7 @@ import org.osgi.framework.Bundle;
 
 public class ResourceUtils {
 
-	private static final Comparator<IProject> projectByPathComparator = new Comparator<IProject>() {		
+	private static final Comparator<IProject> projectByPathComparator = new Comparator<IProject>() {
 		@Override
 		public int compare(IProject o1, IProject o2) {
 			Path fullPath = ResourceUtils.getFullPath(o1);
@@ -68,7 +68,7 @@ public class ResourceUtils {
 
 	public static IProject getProjectByPath(Path path) {
 		var projects = getAccessibleTopLevelProjects();
-		
+
 		for (IProject iProject : projects) {
 			Path projectPath = ResourceUtils.getFullPath(iProject);
 			if (path.normalize().startsWith(projectPath)) {
@@ -79,15 +79,10 @@ public class ResourceUtils {
 	}
 
 	public static List<IProject> getAccessibleTopLevelProjects() {
-		var projects = Arrays.stream(ResourcesPlugin.getWorkspace().getRoot().getProjects())
-				.filter((project) -> {
-					return project.isAccessible() 
-							&& !project.isDerived() 
-							&& !project.isHidden();
-				})
-				.sorted(projectByPathComparator)
-				.collect(Collectors.toList());
-		
+		var projects = Arrays.stream(ResourcesPlugin.getWorkspace().getRoot().getProjects()).filter((project) -> {
+			return project.isAccessible() && !project.isDerived() && !project.isHidden();
+		}).sorted(projectByPathComparator).collect(Collectors.toList());
+
 		Set<IProject> topLevel = new TreeSet<>(projectByPathComparator);
 		boolean add = true;
 		for (IProject iProject : projects) {
@@ -103,6 +98,7 @@ public class ResourceUtils {
 				topLevel.add(iProject);
 			}
 		}
-		
+
 		return new ArrayList<>(topLevel);
 	}
+}

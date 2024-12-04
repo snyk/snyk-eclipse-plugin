@@ -77,7 +77,7 @@ class LsConfigurationUpdaterTest {
 			assertEquals("false", settings.getActivateSnykCodeQuality());
 			assertEquals("/usr/local/bin/snyk", settings.getCliPath());
 			assertEquals("my-token", settings.getToken());
-			assertArrayEquals(new String[] { "/path1", "/path2" }, settings.getTrustedFolders());
+			assertArrayEquals(new String[] { "path1", "path2" }, settings.getTrustedFolders());
 			assertEquals("automatic", settings.getScanningMode());
 			assertEquals("token", settings.getAuthenticationMethod());
 			assertEquals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, settings.getRequiredProtocolVersion());
@@ -114,7 +114,7 @@ class LsConfigurationUpdaterTest {
 				.thenReturn("false");
 		when(preferenceMock.getPref(Preferences.CLI_PATH, "")).thenReturn("/usr/local/bin/snyk");
 		when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY, "")).thenReturn("my-token");
-		when(preferenceMock.getPref(Preferences.TRUSTED_FOLDERS)).thenReturn("/path1:/path2");
+		when(preferenceMock.getPref(Preferences.TRUSTED_FOLDERS)).thenReturn("path1:path2");
 		when(preferenceMock.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(true);
 		when(preferenceMock.getBooleanPref(Preferences.USE_TOKEN_AUTH, false)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.FILTER_DELTA_NEW_ISSUES, Boolean.FALSE.toString())).thenReturn("true");

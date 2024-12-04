@@ -80,7 +80,7 @@ public class FolderConfigs {
 	}
 
 	public FolderConfigsParam updateFolderConfigs() {
-		List<IProject> openProjects = ResourceUtils.getOpenProjects();
+		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
 
 		List<String> projectPaths = openProjects.stream().map(project -> project.getLocation().toOSString())
 				.collect(Collectors.toList());
