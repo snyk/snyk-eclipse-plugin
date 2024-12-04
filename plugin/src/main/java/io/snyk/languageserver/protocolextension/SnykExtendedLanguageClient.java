@@ -721,7 +721,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return CompletableFuture.supplyAsync(() -> {
 			List<LsSdk> sdks = new SdkHelper().getSdk(workspaceFolder);
 			for (LsSdk lsSdk : sdks) {
-				SnykLogger.logInfo("returning sdk to ls: "+lsSdk);
+				SnykLogger.logInfo("determined sdk: "+lsSdk);
 			}
 			return sdks;
 		});
