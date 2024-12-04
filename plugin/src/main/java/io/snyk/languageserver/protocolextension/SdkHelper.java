@@ -1,12 +1,15 @@
 package io.snyk.languageserver.protocolextension;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,6 +25,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
@@ -99,15 +103,48 @@ public class SdkHelper {
 
 	private LsSdk getPyDevExecutable(String interpreterName) {
 		IEclipsePreferences preferences = InstanceScope.INSTANCE.getNode(PYDEV_PREFERENCES_KEY);
-		String interpretersPref = preferences.get("PYTHON_INTERPRETERS", "");
-		String[] interpreters = interpretersPref.split(",");
-		for (String interpreter : interpreters) {
-			String[] parts = interpreter.split("=");
-			if (parts[0].trim().equalsIgnoreCase(interpreterName)) {
-				var path = parts[1].trim();
-				LsSdk lsSdk = new LsSdk("python", path);
-				return lsSdk;
+		String interpretersPref = preferences.get("INTERPRETER_PATH_NEW", "");
+		String[] interpreters = interpretersPref.split("&&&&&");
+		if (interpreters.length > 0 && interpreterName.equalsIgnoreCase("default")) {
+			var sdkMap = parseInterpreterXML(interpreters[0]);
+			if (sdkMap.size() > 0) {
+				return sdkMap.values().iterator().next();
 			}
+		} else {
+			for (String interpreter : interpreters) {
+				var sdkMap = parseInterpreterXML(interpreter);
+				LsSdk lsSdk = sdkMap.get(interpreter);
+				if (lsSdk != null) {
+					return lsSdk;
+				}
+			}
+		}
+		return null;
+	}
+
+	private Map<String, LsSdk> parseInterpreterXML(String xmlString) {
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			ByteArrayInputStream input = new ByteArrayInputStream(xmlString.getBytes(StandardCharsets.UTF_8));
+			Document document = builder.parse(input);
+
+			Element root = document.getDocumentElement();
+
+			String name = getElementValue(root, "name");
+			String executable = getElementValue(root, "executable");
+			return Map.of(name, new LsSdk("python", executable));
+		} catch (Exception e) {
+			SnykLogger.logInfo(ExceptionUtils.getStackTrace(e));
+		}
+		return Map.of();
+	}
+
+	private static String getElementValue(Element parent, String tagName) {
+		NodeList nodeList = parent.getElementsByTagName(tagName);
+		if (nodeList.getLength() > 0) {
+			Node node = nodeList.item(0);
+			return node.getTextContent();
 		}
 		return null;
 	}
