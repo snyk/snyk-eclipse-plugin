@@ -16,7 +16,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 
 public class FolderConfigs {
-	private static FolderConfigs instance;
+	protected static FolderConfigs instance;
 	private static final IEclipsePreferences preferenceState = InstanceScope.INSTANCE.getNode("io.snyk.eclipse.plugin");
 	private static final Gson gson = new Gson();
 
@@ -101,5 +101,10 @@ public class FolderConfigs {
 			}
 		}
 		return new FolderConfigsParam(folderConfigs);
+	}
+
+	public static void setInstance(FolderConfigs folderConfigs) {
+		instance = folderConfigs;
+
 	}
 }

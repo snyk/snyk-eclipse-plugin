@@ -1,32 +1,45 @@
 package io.snyk.languageserver;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-//import static org.junit.Assert.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.Platform;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import io.snyk.languageserver.download.LsBinaries;
+import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 
 class LsConfigurationUpdaterTest {
 	private Preferences preferenceMock;
+
+	@Mock
+	private FolderConfigsParam folderConfigsParamMock;
+
+	FolderConfigs mockFolderConfigs;
 
 	@BeforeEach
 	protected void setUp() {
 		preferenceMock = mock(Preferences.class);
 		PreferencesUtils.setPreferences(preferenceMock);
+
+		mockFolderConfigs = mock(FolderConfigs.class);
+		FolderConfigs.setInstance(mockFolderConfigs);
+
 	}
 
 	@Test
@@ -105,5 +118,9 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(true);
 		when(preferenceMock.getBooleanPref(Preferences.USE_TOKEN_AUTH, false)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.FILTER_DELTA_NEW_ISSUES, Boolean.FALSE.toString())).thenReturn("true");
+
+		FolderConfigsParam mockFolderConfigsParam = new FolderConfigsParam(new ArrayList<>());
+		when(mockFolderConfigs.updateFolderConfigs()).thenReturn(mockFolderConfigsParam);
+
 	}
 }
