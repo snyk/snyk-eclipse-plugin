@@ -40,7 +40,7 @@ public class ScanState {
      * @param inProgress true if the scan is in progress, false otherwise
      */
     public void setScanInProgress(ScanInProgressKey key, boolean inProgress) {
-        scanInProgress.putIfAbsent(key, inProgress);
+        scanInProgress.put(key, inProgress);
     }
 
     /**
