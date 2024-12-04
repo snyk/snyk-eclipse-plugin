@@ -6,8 +6,8 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
     private static CodeHtmlProvider instance = new CodeHtmlProvider();
 
 	public static CodeHtmlProvider getInstance() {
-		if (instance == null) {
-			synchronized (CodeHtmlProvider.class) {
+		synchronized (CodeHtmlProvider.class) {
+			if (instance == null) {
 				if (instance == null) {
 					instance = new CodeHtmlProvider();
 				}

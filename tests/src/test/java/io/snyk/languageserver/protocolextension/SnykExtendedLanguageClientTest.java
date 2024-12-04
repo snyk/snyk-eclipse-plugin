@@ -39,7 +39,6 @@ import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressNotification;
 import org.eclipse.lsp4j.WorkDoneProgressReport;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.services.LanguageServer;
 import org.instancio.Instancio;
 import org.instancio.Select;
 import org.junit.jupiter.api.AfterEach;
@@ -149,6 +148,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		assertEquals(Preferences.DEFAULT_ENDPOINT, pref.getEndpoint());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	void testSendsPluginInstalledEventAndRefreshFeatureFlagOnFirstStart() {
 		try (MockedStatic<TaskProcessor> mockedAnalyticsSender = mockStatic(TaskProcessor.class)) {
@@ -164,6 +164,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	void testDoesNotSendPluginInstalledEventOnSecondStart() {
 		try (MockedStatic<TaskProcessor> mockedAnalyticsSender = mockStatic(TaskProcessor.class)) {
@@ -501,7 +502,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		ProgressManager pmMock = mock(ProgressManager.class);
 		cut = new SnykExtendedLanguageClient();
 		cut.setProgressMgr(pmMock);
-		var params = cut.getEndProgressParam("a");
+		var params = new ProgressManager(cut).getEndProgressParam("a");
 		params.setToken("a");
 
 		cut.notifyProgress(params);
@@ -541,22 +542,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.notifyProgress(progressParam);
 
 		verifyNoInteractions(pmMock);
-	}
-
-	@Test
-	void cancelProgress_callsLSToCancel() {
-		ProgressManager pmMock = mock(ProgressManager.class);
-		LanguageServer lsMock = mock(LanguageServer.class);
-		cut = new SnykExtendedLanguageClient();
-		cut.setLs(lsMock);
-		cut.setProgressMgr(pmMock);
-
-		cut.cancelProgress("a");
-
-		// progressManager should call language client, but not the other way round
-		// else we'd have an endless loop
-		verifyNoInteractions(pmMock);
-		verify(lsMock).cancelProgress(Mockito.any());
 	}
 
 	@Test

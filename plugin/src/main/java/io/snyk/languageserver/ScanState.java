@@ -11,8 +11,8 @@ public class ScanState {
 	
     private static ScanState instance = new ScanState();    
 	public static ScanState getInstance() {
-		if (instance == null) {
-			synchronized (ScanState.class) {
+		synchronized (ScanState.class) {
+			if (instance == null) {
 				if (instance == null) {
 					instance = new ScanState();
 				}
@@ -40,7 +40,7 @@ public class ScanState {
      * @param inProgress true if the scan is in progress, false otherwise
      */
     public void setScanInProgress(ScanInProgressKey key, boolean inProgress) {
-        scanInProgress.put(key, inProgress);
+        scanInProgress.putIfAbsent(key, inProgress);
     }
 
     /**

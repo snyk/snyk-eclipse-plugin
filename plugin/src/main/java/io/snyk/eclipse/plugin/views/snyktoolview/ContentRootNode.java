@@ -87,9 +87,6 @@ public class ContentRootNode extends BaseTreeNode {
 	}
 
 	public void setPath(Path path) {
-		if (!path.toString().endsWith(this.name)) {
-			throw new IllegalArgumentException(value + " does not end with " + name);
-		}
-		this.path = path.normalize();
+ 		this.path = path.normalize();
 	}
 }

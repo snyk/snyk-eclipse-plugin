@@ -9,8 +9,8 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
     private static StaticPageHtmlProvider instance = new StaticPageHtmlProvider();
 
 	public static StaticPageHtmlProvider getInstance() {
-		if (instance == null) {
-			synchronized (StaticPageHtmlProvider.class) {
+		synchronized (StaticPageHtmlProvider.class) {
+			if (instance == null) {
 				if (instance == null) {
 					instance = new StaticPageHtmlProvider();
 				}

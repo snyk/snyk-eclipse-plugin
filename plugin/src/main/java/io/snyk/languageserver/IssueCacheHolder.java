@@ -15,8 +15,8 @@ public class IssueCacheHolder {
 	private static IssueCacheHolder instance = new IssueCacheHolder();
 
 	public static IssueCacheHolder getInstance() {
-		if (instance == null) {
-			synchronized (IssueCacheHolder.class) {
+		synchronized (IssueCacheHolder.class) {
+			if (instance == null) {
 				if (instance == null) {
 					instance = new IssueCacheHolder();
 				}
@@ -26,15 +26,16 @@ public class IssueCacheHolder {
 	}
 
 	public SnykIssueCache getCacheInstance(Path path) {
-		for (Path p : caches.keySet()) {
+		for (var entry : caches.entrySet()) {
+			var p = entry.getKey();
 			if (path.startsWith(p)) {
-				return caches.get(p);
+				return entry.getValue();
 			}
 		}
 		
 		var project = getProjectByPath(path);
 		Path projectPath = getFullPath(project);
-		caches.put(projectPath, new SnykIssueCache(projectPath));
+		caches.putIfAbsent(projectPath, new SnykIssueCache(projectPath));
 		
 		return caches.get(projectPath);
 	}
