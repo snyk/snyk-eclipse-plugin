@@ -118,6 +118,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		registerRefreshFeatureFlagsTask();
 	}
 
+
 	public static SnykExtendedLanguageClient getInstance() {
 		return instance; // we leave instantiation to LSP4e, no lazy construction here
 	}
@@ -127,6 +128,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return ls;
 		}
 		return super.getLanguageServer();
+	}
+	
+	@Override
+	public CompletableFuture<List<WorkspaceFolder>> workspaceFolders() {
+		return CompletableFuture.completedFuture(ResourceUtils.getAccessibleTopLevelProjects().stream()
+				.map(LSPEclipseUtils::toWorkspaceFolder).toList());
+
 	}
 
 	private void registerRefreshFeatureFlagsTask() {
@@ -187,6 +195,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					}
 
 					executeCommand(LsCommandID.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
+
 				} catch (Exception e) {
 					SnykLogger.logError(e);
 				}
@@ -301,10 +310,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			refreshFeatureFlags();
 		}
 
-		if (!newToken.isBlank() && PlatformUI.isWorkbenchRunning()) {
-			enableSnykViewRunActions();
-		}
-
 		if (differentToken && !newToken.isBlank()) {
 			triggerScan(null);
 		}
@@ -313,7 +318,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonNotification(value = LsNotificationID.SNYK_IS_AVAILABLE_CLI)
 	public void isAvailableCli(SnykIsAvailableCliParams param) {
 		Preferences.getInstance().store(Preferences.CLI_PATH, param.getCliPath());
-		enableSnykViewRunActions();
 	}
 
 	@JsonNotification(value = LsNotificationID.SNYK_ADD_TRUSTED_FOLDERS)
@@ -589,14 +593,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		dialog.open();
 	}
 
-	private void enableSnykViewRunActions() {
-		PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
-			var snykView = SnykStartup.getSnykView();
-			if (snykView != null)
-				snykView.toggleRunActionEnablement();
-		});
-	}
-
 	private CompletableFuture<Object> executeCommand(@NonNull String command, List<Object> arguments) {
 		ensureLanguageServerRunning();
 		ExecuteCommandParams params = new ExecuteCommandParams(command, arguments);
@@ -707,16 +703,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return CompletableFuture.supplyAsync(() -> {
 			List<LsSdk> sdks = new SdkHelper().getSdk(workspaceFolder);
 			for (LsSdk lsSdk : sdks) {
-				SnykLogger.logInfo("determined sdk: "+lsSdk);
+				SnykLogger.logInfo("determined sdk: " + lsSdk);
 			}
 			return sdks;
 		});
 	}
-	
+
 	public ProgressManager getProgressManager() {
 		return this.progressManager;
 	}
-	
+
 	public void setLs(LanguageServer ls) {
 		this.ls = ls;
 	}

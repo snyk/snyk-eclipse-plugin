@@ -44,8 +44,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	 */
 	public static final String ID = "io.snyk.eclipse.plugin.views.snyktoolview";
 
-	ResourceUtils data = new ResourceUtils();
-
 	private TreeViewer treeViewer;
 	private Browser browser;
 	private BrowserHandler browserHandler;

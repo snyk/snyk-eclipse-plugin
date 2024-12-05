@@ -20,13 +20,11 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
@@ -38,16 +36,12 @@ import io.snyk.languageserver.download.LsDownloader;
 
 public class SnykStartup implements IStartup {
 	private static LsRuntimeEnvironment runtimeEnvironment;
-	private SnykView snykView = null;
 	private static SnykToolView snykToolView = null;
 	private static boolean downloading = true;
 	private static ILog logger;
 
-	private static SnykStartup instance;
-
 	@Override
 	public void earlyStartup() {
-		instance = this;
 		if (logger == null) {
 			logger = Platform.getLog(getClass());
 		}
@@ -96,26 +90,6 @@ public class SnykStartup implements IStartup {
 		};
 		initJob.setPriority(Job.LONG);
 		initJob.schedule();
-	}
-
-	public static SnykView getSnykView() {
-		if (instance.snykView == null) {
-			IWorkbench workbench = PlatformUI.getWorkbench();
-
-			workbench.getDisplay().syncExec(() -> {
-				IWorkbenchWindow workbenchWindow = workbench.getActiveWorkbenchWindow();
-
-				if (workbenchWindow != null) {
-					try {
-						instance.snykView = SnykView.getInstance();
-					} catch (PartInitException partInitException) {
-						logError(partInitException);
-					}
-				}
-			});
-		}
-
-		return instance.snykView;
 	}
 
 	public static ISnykToolView getView() {
