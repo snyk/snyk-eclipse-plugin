@@ -26,7 +26,6 @@ import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
 
@@ -41,8 +40,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	 * The ID of the view as specified by the extension.
 	 */
 	public static final String ID = "io.snyk.eclipse.plugin.views.snyktoolview";
-
-	ResourceUtils data = new ResourceUtils();
 
 	private TreeViewer treeViewer;
 	private Browser browser;

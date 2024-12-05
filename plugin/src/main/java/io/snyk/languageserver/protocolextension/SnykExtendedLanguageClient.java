@@ -72,8 +72,8 @@ import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.views.SnykView;
 import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
@@ -117,6 +117,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		registerPluginInstalledEventTask();
 		registerRefreshFeatureFlagsTask();
+	}
+
+	@Override
+	public CompletableFuture<List<WorkspaceFolder>> workspaceFolders() {
+		return CompletableFuture.completedFuture(ResourceUtils.getAccessibleTopLevelProjects().stream()
+				.map(LSPEclipseUtils::toWorkspaceFolder).toList());
 	}
 
 	private void registerRefreshFeatureFlagsTask() {
@@ -198,8 +204,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					}
 
 					if (project != null) {
-						runForProject(project.getName());
-
 						String projectPath = project.getLocation().toOSString();
 						executeCommand(LsCommandID.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath));
 					}
@@ -317,10 +321,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			refreshFeatureFlags();
 		}
 
-		if (!newToken.isBlank() && PlatformUI.isWorkbenchRunning()) {
-			enableSnykViewRunActions();
-		}
-
 		if (differentToken && !newToken.isBlank()) {
 			triggerScan(null);
 		}
@@ -329,7 +329,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonNotification(value = LsNotificationID.SNYK_IS_AVAILABLE_CLI)
 	public void isAvailableCli(SnykIsAvailableCliParams param) {
 		Preferences.getInstance().store(Preferences.CLI_PATH, param.getCliPath());
-		enableSnykViewRunActions();
 	}
 
 	@JsonNotification(value = LsNotificationID.SNYK_ADD_TRUSTED_FOLDERS)
@@ -598,21 +597,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		dialog.open();
 	}
 
-	private void enableSnykViewRunActions() {
-		PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
-			var snykView = SnykStartup.getSnykView();
-			if (snykView != null)
-				snykView.toggleRunActionEnablement();
-		});
-	}
-
-	private void runForProject(String projectName) {
-		SnykView snykView = SnykStartup.getSnykView();
-		if (snykView != null) {
-			snykView.testProject(projectName);
-		}
-	}
-
 	private CompletableFuture<Object> executeCommand(@NonNull String command, List<Object> arguments) {
 		ensureLanguageServerRunning();
 		ExecuteCommandParams params = new ExecuteCommandParams(command, arguments);
@@ -721,20 +705,20 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return CompletableFuture.supplyAsync(() -> {
 			List<LsSdk> sdks = new SdkHelper().getSdk(workspaceFolder);
 			for (LsSdk lsSdk : sdks) {
-				SnykLogger.logInfo("determined sdk: "+lsSdk);
+				SnykLogger.logInfo("determined sdk: " + lsSdk);
 			}
 			return sdks;
 		});
 	}
-	
+
 	public void setProgressMgr(ProgressManager progressMgr) {
 		this.progressManager = progressMgr;
 	}
-	
+
 	public ProgressManager getProgressManager() {
 		return this.progressManager;
 	}
-	
+
 	public void setLs(LanguageServer ls) {
 		this.ls = ls;
 	}
