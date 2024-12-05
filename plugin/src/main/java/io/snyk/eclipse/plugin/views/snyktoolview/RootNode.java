@@ -25,7 +25,7 @@ public class RootNode extends BaseTreeNode {
 
 		for (IProject project : openProjects) {
 			Path path = ResourceUtils.getFullPath(project);
-			var contentRoot = new ContentRootNode(project.getName(), path);
+			BaseTreeNode contentRoot = new ContentRootNode(project.getName(), path);
 			this.addChild(contentRoot);
 		}
 	}
