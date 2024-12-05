@@ -78,6 +78,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.IssueTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
+import io.snyk.languageserver.CommandHandler;
 import io.snyk.languageserver.FeatureFlagConstants;
 import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsConfigurationUpdater;
@@ -107,6 +108,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	// this field is for testing only
 	private LanguageServer ls;
 	private LsConfigurationUpdater configurationUpdater = new LsConfigurationUpdater();
+	private Object chSyncObject = new Object();
+	private CommandHandler commandHandler;
 
 	private static SnykExtendedLanguageClient instance = null;
 
@@ -128,7 +131,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		return super.getLanguageServer();
 	}
-	
+
 	@Override
 	public CompletableFuture<List<WorkspaceFolder>> workspaceFolders() {
 		return CompletableFuture.completedFuture(ResourceUtils.getAccessibleTopLevelProjects().stream()
@@ -193,12 +196,21 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					}
 
 					executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
-					
+
 				} catch (Exception e) {
 					SnykLogger.logError(e);
 				}
 			}
 		});
+	}
+
+	private CompletableFuture<Object> executeCommand(String cmd, List<Object> args) {
+		synchronized (chSyncObject) {
+			if (commandHandler == null) {
+				commandHandler = CommandHandler.getInstance();
+			}
+		}
+		return commandHandler.executeCommand(cmd, args);
 	}
 
 	public void triggerAuthentication() {
@@ -591,17 +603,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		dialog.open();
 	}
 
-	private CompletableFuture<Object> executeCommand(@NonNull String command, List<Object> arguments) {
-		ensureLanguageServerRunning();
-		ExecuteCommandParams params = new ExecuteCommandParams(command, arguments);
-		try {
-			return getLanguageServer().getWorkspaceService().executeCommand(params);
-		} catch (Exception e) {
-			SnykLogger.logError(e);
-		}
-		return CompletableFuture.completedFuture(null);
-	}
-
 	/**
 	 * Refresh the token using language server. Waits up to 2s for the token change.
 	 *
@@ -706,7 +707,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return sdks;
 		});
 	}
-	
+
 	public ProgressManager getProgressManager() {
 		return this.progressManager;
 	}
@@ -714,4 +715,5 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void setLs(LanguageServer ls) {
 		this.ls = ls;
 	}
+
 }

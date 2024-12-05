@@ -2,7 +2,16 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -18,6 +27,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Tree;
@@ -26,12 +36,16 @@ import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 
+import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
+import io.snyk.languageserver.CommandHandler;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
@@ -49,6 +63,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private Browser browser;
 	private BrowserHandler browserHandler;
 	private FolderConfigs folderConfigs = FolderConfigs.getInstance();
+	private TreeNode selectedNode;
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -71,7 +86,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		treeViewer.setInput(new RootNode());
 		treeViewer.expandAll();
 
-		registerTreeContextMeny(parent);
+		registerTreeContextMenu(treeViewer.getControl());
 
 		// Create Browser
 		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
@@ -83,6 +98,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		// Add selection listener to the tree
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+
 			@SuppressWarnings("restriction")
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -90,22 +106,21 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					IStructuredSelection selection = (IStructuredSelection) event.getSelection();
 					if (selection.isEmpty())
 						return;
-					TreeNode node = (TreeNode) selection.getFirstElement();
-					browserHandler.updateBrowserContent(node);
-					if (node instanceof IssueTreeNode) {
-						IssueTreeNode issueTreeNode = (IssueTreeNode) node;
+					selectedNode = (TreeNode) selection.getFirstElement();
+					browserHandler.updateBrowserContent(selectedNode);
+					if (selectedNode instanceof IssueTreeNode) {
+						IssueTreeNode issueTreeNode = (IssueTreeNode) selectedNode;
 						FileTreeNode fileNode = (FileTreeNode) issueTreeNode.getParent();
 						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(),
 								issueTreeNode.getIssue().getLSP4JRange());
 					}
 					boolean deltaEnabled = Preferences.isDeltaEnabled();
-					if (node instanceof ContentRootNode && deltaEnabled) {
-						ContentRootNode contentNode = (ContentRootNode) node;
+					if (selectedNode instanceof ContentRootNode && deltaEnabled) {
+						ContentRootNode contentNode = (ContentRootNode) selectedNode;
 						String[] localBranches = folderConfigs.getLocalBranches(contentNode.getPath())
 								.toArray(new String[0]);
 
-						new BaseBranchDialog().open(Display.getDefault(), contentNode.getPath(),
-								localBranches);
+						new BaseBranchDialog().open(Display.getDefault(), contentNode.getPath(), localBranches);
 					}
 				});
 			}
@@ -115,11 +130,96 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			this.enableDelta();
 	}
 
-	private void registerTreeContextMeny(Composite parent) {
+	private void registerTreeContextMenu(Control control) {
 		MenuManager menuMgr = new MenuManager("treemenu");
-		Menu menu = menuMgr.createContextMenu(parent);
+		Menu menu = menuMgr.createContextMenu(control);
 		getSite().registerContextMenu(menuMgr, null);
-		parent.setMenu(menu);
+		control.setMenu(menu);
+
+		Action ignoreAction = getIgnoreAction();
+		Action monitorAction = getMonitorAction();
+
+		menuMgr.add(ignoreAction);
+		menuMgr.add(monitorAction);
+	}
+
+	private Action getIgnoreAction() {
+		return new Action("Ignore issue in .snyk") {
+			@Override
+			public void run() {
+				CompletableFuture.runAsync(() -> {
+					IssueTreeNode itn = (IssueTreeNode) selectedNode;
+					Issue issue = itn.getIssue();
+					new Job("Ignoring issue " + issue.getDisplayTitle()) {
+
+						@Override
+						protected IStatus run(IProgressMonitor monitor) {
+							try {
+								var result = CommandHandler.getInstance().ignoreIssue(issue).get(10, TimeUnit.SECONDS);
+								itn.setText("[ IGNORED ] " + itn.getText());
+								SnykLogger.logAndShow("Ignore result:" + result);
+								refreshTree();
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+								SnykLogger.logError(e);
+								return Status.CANCEL_STATUS;
+							} catch (ExecutionException | TimeoutException e) {
+								SnykLogger.logError(e);
+								return Status.CANCEL_STATUS;
+							}
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				});
+			}
+
+			public boolean isEnabled() {
+				return selectedNode instanceof IssueTreeNode
+						&& !(getProduct().equals(ProductConstants.DISPLAYED_CODE_QUALITY)
+								|| getProduct().equals(ProductConstants.DISPLAYED_CODE_SECURITY));
+			}
+
+			protected String getProduct() {
+				var pn = (ProductTreeNode) selectedNode.getParent().getParent();
+				String product = pn.getProduct();
+				return product;
+			}
+		};
+	}
+
+	private Action getMonitorAction() {
+		return new Action("Monitor project") {
+			@Override
+			public void run() {
+				CompletableFuture.runAsync(() -> {
+					IssueTreeNode itn = (IssueTreeNode) selectedNode;
+					Issue issue = itn.getIssue();
+					IProject project = ResourceUtils.getProjectByPath(Paths.get(issue.filePath()));
+					new Job("Monitoring project " + project.getName()) {
+
+						@Override
+						protected IStatus run(IProgressMonitor monitor) {
+							try {
+								var result = CommandHandler.getInstance().monitorProject(project).get();
+								SnykLogger.logAndShow("Monitor result:" + result);
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+								SnykLogger.logError(e);
+								return Status.CANCEL_STATUS;
+							} catch (ExecutionException e) {
+								SnykLogger.logError(e);
+								return Status.CANCEL_STATUS;
+							}
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				});
+			}
+
+			public boolean isEnabled() {
+				return true;
+			}
+		};
 	}
 
 	@Override
