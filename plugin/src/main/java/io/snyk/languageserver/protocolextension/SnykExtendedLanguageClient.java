@@ -118,7 +118,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		registerRefreshFeatureFlagsTask();
 	}
 
-
 	public static SnykExtendedLanguageClient getInstance() {
 		return instance; // we leave instantiation to LSP4e, no lazy construction here
 	}
@@ -134,7 +133,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public CompletableFuture<List<WorkspaceFolder>> workspaceFolders() {
 		return CompletableFuture.completedFuture(ResourceUtils.getAccessibleTopLevelProjects().stream()
 				.map(LSPEclipseUtils::toWorkspaceFolder).toList());
-
 	}
 
 	private void registerRefreshFeatureFlagsTask() {
@@ -195,7 +193,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					}
 
 					executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
-
+					
 				} catch (Exception e) {
 					SnykLogger.logError(e);
 				}
@@ -708,7 +706,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return sdks;
 		});
 	}
-
+	
 	public ProgressManager getProgressManager() {
 		return this.progressManager;
 	}

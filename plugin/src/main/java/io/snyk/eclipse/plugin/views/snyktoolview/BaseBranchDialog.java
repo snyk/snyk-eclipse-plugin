@@ -21,12 +21,12 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class BaseBranchDialog {
-	private FolderConfigs preferenceState = FolderConfigs.getInstance();
+	private FolderConfigs folderConfigs = FolderConfigs.getInstance();
 
 	public BaseBranchDialog() {
 	}
 
-	public void baseBranchDialog(Display display, Path projectPath, String[] localBranches) {
+	public void open(Display display, Path projectPath, String[] localBranches) {
 		Shell shell = new Shell(display, SWT.APPLICATION_MODAL | SWT.DIALOG_TRIM);
 		shell.setText("Choose base branch for net-new issues scanning");
 		shell.setLayout(new GridLayout(1, false));
@@ -37,7 +37,7 @@ public class BaseBranchDialog {
 		Combo dropdown = new Combo(shell, SWT.DROP_DOWN);
 		dropdown.setItems(localBranches);
 		dropdown.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		dropdown.setText(preferenceState.getBaseBranch(projectPath));
+		dropdown.setText(folderConfigs.getBaseBranch(projectPath));
 
 		Button okButton = new Button(shell, SWT.PUSH);
 		okButton.setText("OK");
@@ -48,7 +48,7 @@ public class BaseBranchDialog {
 				// Handle OK button press
 				String selectedBranch = dropdown.getText();
 				if (Arrays.asList(localBranches).contains(selectedBranch)) {
-					preferenceState.setBaseBranch(projectPath, selectedBranch);
+					folderConfigs.setBaseBranch(projectPath, selectedBranch);
 					shell.close();
 					CompletableFuture.runAsync(() -> {
 						SnykExtendedLanguageClient.getInstance().triggerScan(projectPath);

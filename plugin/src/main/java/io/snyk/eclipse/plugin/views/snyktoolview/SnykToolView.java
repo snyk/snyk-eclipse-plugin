@@ -98,14 +98,13 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(),
 								issueTreeNode.getIssue().getLSP4JRange());
 					}
-					boolean deltaEnabled = Preferences.getInstance()
-							.getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES);
+					boolean deltaEnabled = Preferences.isDeltaEnabled();
 					if (node instanceof ContentRootNode && deltaEnabled) {
 						ContentRootNode contentNode = (ContentRootNode) node;
 						String[] localBranches = folderConfigs.getLocalBranches(contentNode.getPath())
 								.toArray(new String[0]);
 
-						new BaseBranchDialog().baseBranchDialog(Display.getDefault(), contentNode.getPath(),
+						new BaseBranchDialog().open(Display.getDefault(), contentNode.getPath(),
 								localBranches);
 					}
 				});
