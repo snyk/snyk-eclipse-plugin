@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
+import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -101,16 +102,17 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 							.getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES);
 					if (node instanceof ContentRootNode && deltaEnabled) {
 						ContentRootNode contentNode = (ContentRootNode) node;
-						String projectPath = contentNode.getPath().toString();
-						String[] localBranches = folderConfigs.getLocalBranches(projectPath).toArray(new String[0]);
+						String[] localBranches = folderConfigs.getLocalBranches(contentNode.getPath())
+								.toArray(new String[0]);
 
-						new BaseBranchDialog().baseBranchDialog(Display.getDefault(), projectPath, localBranches);
+						new BaseBranchDialog().baseBranchDialog(Display.getDefault(), contentNode.getPath(),
+								localBranches);
 					}
 				});
 			}
 		});
 
-		if (Preferences.getInstance().getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES))
+		if (Preferences.isDeltaEnabled())
 			this.enableDelta();
 	}
 
@@ -131,7 +133,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		node.setText(text);
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(node, true);
-			this.treeViewer.refresh(node.getParent(), true);
 		});
 	}
 
@@ -202,7 +203,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void resetNode(BaseTreeNode node) {
 		if (node != null)
 			node.reset();
-		
+
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(node, true);
 		});
@@ -278,12 +279,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			for (BaseTreeNode node : children) {
 				if (node instanceof ContentRootNode) {
 					ContentRootNode contentNode = (ContentRootNode) node;
-					String projectPath = contentNode.getPath().toString();
-					String projectName = ResourceUtils.getProjectByPath(contentNode.getPath()).getName();
-					String baseBranch = folderConfigs.getBaseBranch(projectPath);
+					String baseBranch = folderConfigs.getBaseBranch(contentNode.getPath());
 
 					contentNode.setName(String.format("%s - Click here choose base branch [ current: %s ]",
-							projectName, baseBranch));
+							contentNode.getName(), baseBranch));
 				}
 			}
 		}
@@ -305,7 +304,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			}
 		}
 
-		SnykExtendedLanguageClient.getInstance().triggerScan(null);
+		CompletableFuture.runAsync(() -> {
+			SnykExtendedLanguageClient.getInstance().triggerScan(null);
+		});
 	}
 
 	// Helper method to add a command if it's not already present

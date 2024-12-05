@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,8 +40,8 @@ public class FolderConfigs {
 		}
 	}
 
-	public List<String> getLocalBranches(String folderPath) {
-		String json = preferenceState.get(folderPath, null);
+	public List<String> getLocalBranches(Path projectPath) {
+		String json = preferenceState.get(normalizePath(projectPath), null);
 		if (json != null) {
 			FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
 			return folderConfig.getLocalBranches();
@@ -48,16 +49,21 @@ public class FolderConfigs {
 		return List.of();
 	}
 
-	public void setBaseBranch(String folderPath, String newBaseBranch) {
-		String json = preferenceState.get(folderPath, null);
+	private String normalizePath(Path projectPath) {
+		return projectPath.normalize().toString();
+	}
+
+	public void setBaseBranch(Path projectPath, String newBaseBranch) {
+		String path = normalizePath(projectPath);
+		String json = preferenceState.get(path, null);
 		if (json == null) {
-			SnykLogger.logInfo("No valid configuration for project: " + folderPath);
+			SnykLogger.logInfo("No valid configuration for project: " + path);
 			return;
 		}
 		FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
 		folderConfig.setBaseBranch(newBaseBranch);
 		String updatedJson = gson.toJson(folderConfig);
-		preferenceState.put(folderPath, updatedJson);
+		preferenceState.put(path, updatedJson);
 		try {
 			preferenceState.flush();
 		} catch (Exception e) {
@@ -65,8 +71,8 @@ public class FolderConfigs {
 		}
 	}
 
-	public String getBaseBranch(String folderPath) {
-		String json = preferenceState.get(folderPath, null);
+	public String getBaseBranch(Path projectPath) {
+		String json = preferenceState.get(normalizePath(projectPath), null);
 		if (json == null)
 			return null;
 		FolderConfig folderConfig = gson.fromJson(json, FolderConfig.class);
@@ -82,7 +88,7 @@ public class FolderConfigs {
 	public FolderConfigsParam updateFolderConfigs() {
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
 
-		List<String> projectPaths = openProjects.stream().map(project -> project.getLocation().toOSString())
+		List<String> projectPaths = openProjects.stream().map(project -> ResourceUtils.getFullPath(project).toString())
 				.collect(Collectors.toList());
 
 		FolderConfigsParam folderConfigs = getFolderConfigs(projectPaths);

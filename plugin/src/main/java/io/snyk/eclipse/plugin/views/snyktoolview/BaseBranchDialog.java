@@ -1,6 +1,8 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;
@@ -24,7 +26,7 @@ public class BaseBranchDialog {
 	public BaseBranchDialog() {
 	}
 
-	public void baseBranchDialog(Display display, String projectPath, String[] localBranches) {
+	public void baseBranchDialog(Display display, Path projectPath, String[] localBranches) {
 		Shell shell = new Shell(display, SWT.APPLICATION_MODAL | SWT.DIALOG_TRIM);
 		shell.setText("Choose base branch for net-new issues scanning");
 		shell.setLayout(new GridLayout(1, false));
@@ -48,7 +50,9 @@ public class BaseBranchDialog {
 				if (Arrays.asList(localBranches).contains(selectedBranch)) {
 					preferenceState.setBaseBranch(projectPath, selectedBranch);
 					shell.close();
-					SnykExtendedLanguageClient.getInstance().triggerScan(projectPath);
+					CompletableFuture.runAsync(() -> {
+						SnykExtendedLanguageClient.getInstance().triggerScan(projectPath);
+					});
 				} else {
 					SnykLogger.logInfo("Branch is not a valid local branch for repository: " + projectPath);
 				}

@@ -261,4 +261,8 @@ public class Preferences {
 		return getBooleanPref("isTesting");
 	}
 
+	public static boolean isDeltaEnabled() {
+		return Preferences.getInstance().getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES);
+	}
+
 }

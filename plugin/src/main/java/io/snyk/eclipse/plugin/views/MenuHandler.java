@@ -1,5 +1,8 @@
 package io.snyk.eclipse.plugin.views;
 
+import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -10,7 +13,7 @@ import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 
-import io.snyk.languageserver.LsCommandID;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class MenuHandler extends AbstractHandler {
@@ -23,7 +26,7 @@ public class MenuHandler extends AbstractHandler {
 
 		Object firstElement = structured.getFirstElement();
 		IProject project = null;
-		
+
 		if (firstElement instanceof JavaProject) {
 			project = ((JavaProject) firstElement).getProject();
 		}
@@ -32,7 +35,12 @@ public class MenuHandler extends AbstractHandler {
 			project = (IProject) firstElement;
 		}
 
-		SnykExtendedLanguageClient.getInstance().triggerScan(project.getFullPath().toOSString());
+		Path fullPath = ResourceUtils.getFullPath(project);
+
+		CompletableFuture.runAsync(() -> {
+			SnykExtendedLanguageClient.getInstance().triggerScan(fullPath);
+		});
+
 		return null;
 	}
 }
