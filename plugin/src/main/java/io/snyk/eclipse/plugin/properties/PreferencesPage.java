@@ -14,7 +14,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsConfigurationUpdater;
@@ -123,9 +122,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	@Override
 	public boolean performOk() {
 		boolean superOK = super.performOk();
-		var snykView = SnykStartup.getSnykView();
-		snykView.disableRunAbortActions();
-		snykView.toggleRunActionEnablement();
 		disableSnykCodeIfOrgDisabled();
         CompletableFuture.runAsync(() -> {
             new LsConfigurationUpdater().configurationChanged();

@@ -9,14 +9,6 @@
             id="io.snyk.eclipse.plugin">
         </category>
         <view
-            id="io.snyk.eclipse.plugin.views.SnykView"
-            name="%view.name"
-            icon="icons/patch.png"
-            class="io.snyk.eclipse.plugin.views.SnykView"
-            category="io.snyk.eclipse.plugin"
-            inject="true">
-        </view>
-        <view
             id="io.snyk.eclipse.plugin.views.snyktoolview"
             name="%toolView.name"
             icon="icons/patch.png"
@@ -28,14 +20,12 @@
     <extension point="org.eclipse.ui.perspectiveExtensions">
         <perspectiveExtension
             targetID="org.eclipse.jdt.ui.JavaPerspective">
-            <view
-                id="io.snyk.eclipse.plugin.views.SnykView"
-                relative="org.eclipse.ui.views.ProblemView"
-                relationship="right"
-                ratio="0.5">
+            <view 
+            	id="io.snyk.eclipse.plugin.views.snyktoolview" 
+            	ratio="0.5" 
+            	relative="org.eclipse.ui.views.ProblemView"
+                relationship="right">
             </view>
-            <!-- <view id="io.snyk.eclipse.plugin.views.snyktoolview" ratio="0.5"> 
-                </view> -->
         </perspectiveExtension>
     </extension>
     <extension point="org.eclipse.help.contexts">
