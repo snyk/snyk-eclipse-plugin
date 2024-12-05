@@ -7,6 +7,8 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
 
 import java.nio.file.Path;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.graphics.Image;
@@ -28,17 +30,8 @@ public class ContentRootNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
-		try {
-			var object = ResourceUtils.getProjectByPath(path);
-			Image image = labelProvider.getImage(object);
-			if (image == null || image.isDisposed())
-				return null;
-
-			return ImageDescriptor.createFromImage(image);
-		} finally {
-			labelProvider.dispose();
-		}
+		var iResource = ResourceUtils.getProjectByPath(path);
+		return getImageDescriptor(iResource);
 	}
 
 	public ProductTreeNode getProductNode(String product) {

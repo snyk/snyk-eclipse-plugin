@@ -2,12 +2,16 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageDataProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 public class FileTreeNode extends BaseTreeNode {
@@ -21,21 +25,14 @@ public class FileTreeNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
-		try {
-			var files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(getPath().toUri());
-			var object = files[0];
-			if (object == null) {
-				return null;
+		var files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(getPath().toUri());
+		for (IFile file : files) {
+			var descriptor = getImageDescriptor(file);
+			if (descriptor != null) {
+				return descriptor;
 			}
-			Image image = labelProvider.getImage(object);
-			if (image == null)
-				return null;
-
-			return ImageDescriptor.createFromImage(image);
-		} finally {
-			labelProvider.dispose();
 		}
+		return null;
 	}
 
 	@Override

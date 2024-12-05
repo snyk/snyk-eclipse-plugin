@@ -5,8 +5,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.TreeNode;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageDataProvider;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 public class BaseTreeNode extends TreeNode {
 	private ImageDescriptor imageDescriptor;
@@ -52,6 +58,19 @@ public class BaseTreeNode extends TreeNode {
 	public void setImageDescriptor(ImageDescriptor imageDescriptor) {
 		this.imageDescriptor = imageDescriptor;
 	}
+	
+	protected ImageDescriptor getImageDescriptor(IResource object) {
+		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+		try {
+			Image image = labelProvider.getImage(object);
+			if (image == null || image.isDisposed())
+				return null;
+			
+			return getImageDescriptorFromImage(image);
+		} finally {
+			labelProvider.dispose();
+		}
+	}
 
 	public ImageDescriptor getImageDescriptor() {
 		return this.imageDescriptor;
@@ -84,5 +103,17 @@ public class BaseTreeNode extends TreeNode {
 	 */
 	public String getDetails() {
 		return "";
+	}
+
+	protected ImageDescriptor getImageDescriptorFromImage(Image image) {
+		final var data = image.getImageData();
+	
+		ImageDataProvider provider = new ImageDataProvider() {
+			@Override
+			public ImageData getImageData(int zoom) {
+				return data;
+			}
+		};
+		return ImageDescriptor.createFromImageDataProvider(provider);
 	}
 }

@@ -38,10 +38,13 @@ public class TreeLabelProvider implements ILabelProvider {
 			return null;
 		}
 
-		if (images.get(imageDescriptor) == null) {
-			images.putIfAbsent(imageDescriptor, imageDescriptor.createImage());
+		synchronized (images) {
+			Image image = images.get(imageDescriptor);
+			if (image == null || image.isDisposed()) {
+				images.put(imageDescriptor, imageDescriptor.createImage());
+			}
+			return images.get(imageDescriptor);
 		}
-		return images.get(imageDescriptor);
 	}
 
 	@Override
