@@ -23,7 +23,22 @@ public class FileTreeNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		return SnykIcons.FILE;
+
+		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+		try {
+			var files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(getPath().toUri());
+			var object = files[0];
+			if (object == null) {
+				return null;
+			}
+			Image image = labelProvider.getImage(object);
+			if (image == null)
+				return SnykIcons.FILE;
+
+			return ImageDescriptor.createFromImage(image);
+		} finally {
+			labelProvider.dispose();
+		}
 	}
 
 	@Override
@@ -41,7 +56,8 @@ public class FileTreeNode extends BaseTreeNode {
 
 	@Override
 	public void setParent(TreeNode parent) {
-		if (parent == null) return;
+		if (parent == null)
+			return;
 		if (!(parent instanceof ProductTreeNode))
 			throw new IllegalArgumentException(
 					parent.getClass().getName() + " cannot be a parent node to a FileTreeNode");
