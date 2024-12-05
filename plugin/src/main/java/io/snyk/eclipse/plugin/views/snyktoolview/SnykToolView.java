@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
+import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -25,9 +26,12 @@ import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 
+import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeLabelProvider;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 /**
  * TODO This view will replace the old SnykView. Move the snyktoolview classes
@@ -44,6 +48,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private TreeViewer treeViewer;
 	private Browser browser;
 	private BrowserHandler browserHandler;
+	private FolderConfigs folderConfigs = FolderConfigs.getInstance();
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -93,9 +98,21 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(),
 								issueTreeNode.getIssue().getLSP4JRange());
 					}
+					boolean deltaEnabled = Preferences.isDeltaEnabled();
+					if (node instanceof ContentRootNode && deltaEnabled) {
+						ContentRootNode contentNode = (ContentRootNode) node;
+						String[] localBranches = folderConfigs.getLocalBranches(contentNode.getPath())
+								.toArray(new String[0]);
+
+						new BaseBranchDialog().open(Display.getDefault(), contentNode.getPath(),
+								localBranches);
+					}
 				});
 			}
 		});
+
+		if (Preferences.isDeltaEnabled())
+			this.enableDelta();
 	}
 
 	private void registerTreeContextMeny(Composite parent) {
@@ -185,7 +202,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void resetNode(BaseTreeNode node) {
 		if (node != null)
 			node.reset();
-		
+
 		Display.getDefault().asyncExec(() -> {
 			this.treeViewer.refresh(node, true);
 		});
@@ -249,7 +266,46 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			menuManager.update(true);
 
 		});
+	}
 
+	/*
+	 * Sets up for doing a Net New Issues scan.
+	 */
+	public void enableDelta() {
+		if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
+			BaseTreeNode[] children = (BaseTreeNode[]) getRoot().getChildren();
+
+			for (BaseTreeNode node : children) {
+				if (node instanceof ContentRootNode) {
+					ContentRootNode contentNode = (ContentRootNode) node;
+					String baseBranch = folderConfigs.getBaseBranch(contentNode.getPath());
+
+					contentNode.setName(String.format("%s - Click here choose base branch [ current: %s ]",
+							contentNode.getName(), baseBranch));
+				}
+			}
+		}
+	}
+
+	/*
+	 * Disables Net New Issues scan, and starts a regular scan.
+	 */
+	public void disableDelta() {
+		if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
+			BaseTreeNode[] children = (BaseTreeNode[]) getRoot().getChildren();
+
+			for (BaseTreeNode node : children) {
+				if (node instanceof ContentRootNode) {
+					ContentRootNode contentNode = (ContentRootNode) node;
+					String projectName = ResourceUtils.getProjectByPath(contentNode.getPath()).getName();
+					contentNode.setName(projectName);
+				}
+			}
+		}
+
+		CompletableFuture.runAsync(() -> {
+			SnykExtendedLanguageClient.getInstance().triggerScan(null);
+		});
 	}
 
 	// Helper method to add a command if it's not already present

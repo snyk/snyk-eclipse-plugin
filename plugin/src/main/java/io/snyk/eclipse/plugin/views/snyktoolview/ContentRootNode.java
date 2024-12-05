@@ -22,7 +22,7 @@ public class ContentRootNode extends BaseTreeNode {
 	public ContentRootNode(String name, Path value) {
 		super(value);
 		reset();
-		this.name = name;
+		this.setName(name);
 		this.setPath(value);
 	}
 
@@ -79,7 +79,7 @@ public class ContentRootNode extends BaseTreeNode {
 
 	@Override
 	public String getText() {
-		return name;
+		return getName();
 	}
 
 	public Path getPath() {
@@ -88,5 +88,13 @@ public class ContentRootNode extends BaseTreeNode {
 
 	public void setPath(Path path) {
  		this.path = path.normalize();
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

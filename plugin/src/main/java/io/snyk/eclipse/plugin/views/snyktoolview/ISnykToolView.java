@@ -2,7 +2,6 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import org.eclipse.jface.viewers.TreeViewer;
 
-
 /**
  * This interface captures the externally used methods with the tool window.
  * Having it, should allow for easier testing of the business logic apart from
@@ -96,5 +95,24 @@ public interface ISnykToolView {
 
 	abstract TreeViewer getTreeViewer();
 
+	/**
+	 * Hides or shows the Ignore buttons.
+	 * 
+	 * @return
+	 */
 	abstract void toggleIgnoresButtons();
+
+	/**
+	 * Enables the net new issues scans.
+	 * 
+	 * @return
+	 */
+	abstract void enableDelta();
+
+	/**
+	 * Disable the net new issues scans.
+	 * 
+	 * @return
+	 */
+	abstract void disableDelta();
 }
