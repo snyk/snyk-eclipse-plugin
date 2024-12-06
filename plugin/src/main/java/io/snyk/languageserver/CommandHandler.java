@@ -3,7 +3,6 @@ package io.snyk.languageserver;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.core.resources.IProject;
@@ -51,13 +50,13 @@ public class CommandHandler {
 
 	protected Path getWorkingDirectory(Issue issue) {
 		IProject project = ResourceUtils.getProjectByPath(Paths.get(issue.filePath()));
+		if (project == null) return Path.of(".");
 		var workingDir = ResourceUtils.getFullPath(project);
 		return workingDir;
 	}
 
-	public CompletableFuture<Object> monitorProject(IProject project) {
-		Path workingDir = ResourceUtils.getFullPath(project);
-		List<Object> args = List.of(workingDir.toString(), "monitor", "--all-projects");
+	public CompletableFuture<Object> monitorProject(Path path) {
+		List<Object> args = List.of(path.toString(), "monitor", "--all-projects");
 		return this.executeCommand(LsConstants.COMMAND_SNYK_CLI, args);
 	}
 

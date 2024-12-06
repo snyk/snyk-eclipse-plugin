@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -203,7 +204,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						@Override
 						protected IStatus run(IProgressMonitor monitor) {
 							try {
-								var result = CommandHandler.getInstance().monitorProject(project).get();
+								Path workingDir = ResourceUtils.getFullPath(project);
+								var result = CommandHandler.getInstance().monitorProject(workingDir).get();
 								outputCommandResult(result);
 							} catch (InterruptedException e) {
 								Thread.currentThread().interrupt();
