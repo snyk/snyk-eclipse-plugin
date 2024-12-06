@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +21,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.lsp4e.LSPEclipseUtils;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.MessageType;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
@@ -156,8 +159,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						protected IStatus run(IProgressMonitor monitor) {
 							try {
 								var result = CommandHandler.getInstance().ignoreIssue(issue).get(10, TimeUnit.SECONDS);
+								outputCommandResult(result); 
 								itn.setText("[ IGNORED ] " + itn.getText());
-								SnykLogger.logAndShow("Ignore result:" + result);
 								refreshTree();
 							} catch (InterruptedException e) {
 								Thread.currentThread().interrupt();
@@ -201,7 +204,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						protected IStatus run(IProgressMonitor monitor) {
 							try {
 								var result = CommandHandler.getInstance().monitorProject(project).get();
-								SnykLogger.logAndShow("Monitor result:" + result);
+								outputCommandResult(result);
 							} catch (InterruptedException e) {
 								Thread.currentThread().interrupt();
 								SnykLogger.logError(e);
@@ -415,6 +418,22 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					null, commandId, CommandContributionItem.STYLE_PUSH);
 			CommandContributionItem item = new CommandContributionItem(param);
 			menu.add(item);
+		}
+	}
+
+	@SuppressWarnings("restriction")
+	protected void outputCommandResult(Object result) {
+		if (result != null && result instanceof Map) {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> resultMap = (Map<String, Object>) result;
+			String stdOut = resultMap.get("stdOut").toString();
+			boolean exitCode = (Double) resultMap.get("exitCode") == 0;
+			if (exitCode) {
+				MessageParams messageParams = new MessageParams(MessageType.Info, stdOut);
+				SnykExtendedLanguageClient.getInstance().showMessage(messageParams);
+			} else {
+				SnykLogger.logError(new RuntimeException(stdOut));
+			}
 		}
 	}
 

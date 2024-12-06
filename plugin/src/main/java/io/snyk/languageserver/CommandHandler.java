@@ -45,12 +45,13 @@ public class CommandHandler {
 
 	public CompletableFuture<Object> ignoreIssue(Issue issue) {
 		Path workingDir = getWorkingDirectory(issue);
-		List<Object> args = List.of(workingDir.toString(), "ignore", "--id=" + issue.additionalData().ruleId(), "--path=" + issue.filePath());
+		List<Object> args = List.of(workingDir.toString(), "ignore", "--id=" + issue.additionalData().ruleId());
 		return this.executeCommand(LsConstants.COMMAND_SNYK_CLI, args);
 	}
 
 	protected Path getWorkingDirectory(Issue issue) {
-		Path workingDir = Paths.get(issue.filePath()).getParent().toAbsolutePath();
+		IProject project = ResourceUtils.getProjectByPath(Paths.get(issue.filePath()));
+		var workingDir = ResourceUtils.getFullPath(project);
 		return workingDir;
 	}
 
