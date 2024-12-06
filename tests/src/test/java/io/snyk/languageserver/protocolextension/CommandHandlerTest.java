@@ -55,7 +55,7 @@ public class CommandHandlerTest extends LsBaseTest {
 
 	@Test
 	void testIgnore_CodeIssue_ignoreNotCalled() {
-		Issue issue = getIssue(ProductConstants.SCAN_PARAMS_CODE);
+		Issue issue = getIssue(ProductConstants.FILTERABLE_ISSUE_CODE_SECURITY);
 
 		cut.ignoreIssue(issue);
 
@@ -64,7 +64,7 @@ public class CommandHandlerTest extends LsBaseTest {
 	
 	@Test
 	void testIgnore_OSSIssue_pathIsNotAdded() {
-		Issue issue = getIssue(ProductConstants.SCAN_PARAMS_OSS);
+		Issue issue = getIssue(ProductConstants.FILTERABLE_ISSUE_OPEN_SOURCE);
 
 		cut.ignoreIssue(issue);
 		
@@ -74,14 +74,14 @@ public class CommandHandlerTest extends LsBaseTest {
 
 	@Test
 	void testIgnore_IaCIssue_pathIsAdded() {
-		Issue issue = getIssue(ProductConstants.SCAN_PARAMS_IAC);
+		Issue issue = getIssue(ProductConstants.FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE);
 		
 		var expectedPath = "file > a > b > c";
 		
 
 		cut.ignoreIssue(issue);
 		
-		List<Object> args = List.of(".", "ignore", "--id=" + issue.additionalData().ruleId(), "--path="+expectedPath);
+		List<Object> args = List.of(".", "ignore", "--path="+expectedPath, "--id=" + issue.additionalData().publicId());
 		verifyExecuteCommand(args);
 	}
 
@@ -93,13 +93,13 @@ public class CommandHandlerTest extends LsBaseTest {
 		verifyExecuteCommand(args);
 	}
 
-	private Issue getIssue(String product) {
+	private Issue getIssue(String filterableIssueType) {
 		List<String> path = List.of("a", "b", "c");
 		var additionalData = Instancio.of(AdditionalData.class).set(Select.field(AdditionalData::path), path).create();
 		Issue issue = Instancio.of(Issue.class)
 				.set(Select.field(Issue::additionalData), additionalData)
 				.set(Select.field(Issue::additionalData), additionalData)
-				.set(Select.field(Issue::product), product)
+				.set(Select.field(Issue::filterableIssueType), filterableIssueType)
 				.set(Select.field(Issue::filePath), Paths.get(".", "file").toString())
 				.create();
 		return issue;

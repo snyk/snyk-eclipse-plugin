@@ -3,10 +3,10 @@ package io.snyk.eclipse.plugin.domain;
 import java.util.Map;
 
 public interface ProductConstants {
-	String SCAN_STATE_IN_PROGRESS="inProgress";
-	String SCAN_STATE_SUCCESS="success";
-	String SCAN_STATE_ERROR="error";
-		
+	String SCAN_STATE_IN_PROGRESS = "inProgress";
+	String SCAN_STATE_SUCCESS = "success";
+	String SCAN_STATE_ERROR = "error";
+
 	String SCAN_PARAMS_OSS = "oss";
 	String SCAN_PARAMS_CODE = "code";
 	String SCAN_PARAMS_IAC = "iac";
@@ -24,10 +24,20 @@ public interface ProductConstants {
 	String SEVERITY_HIGH = "high";
 	String SEVERITY_MEDIUM = "medium";
 	String SEVERITY_LOW = "low";
-	
+
+	String FILTERABLE_ISSUE_OPEN_SOURCE = "Open Source";
+	String FILTERABLE_ISSUE_CODE_SECURITY = "Code Security";
+	String FILTERABLE_ISSUE_CODE_QUALITY = "Code Quality";
+	String FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE = "Infrastructure As Code";
+
+	Map<String, String> FILTERABLE_ISSUE_TYPE_TO_DISPLAY = Map.of(FILTERABLE_ISSUE_CODE_QUALITY, DISPLAYED_CODE_QUALITY,
+			FILTERABLE_ISSUE_CODE_SECURITY, DISPLAYED_CODE_SECURITY, FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE,
+			DISPLAYED_IAC, FILTERABLE_ISSUE_OPEN_SOURCE, DISPLAYED_OSS);
+
 	Map<String, String> LSP_SOURCE_TO_SCAN_PARAMS = Map.of(DIAGNOSTIC_SOURCE_SNYK_CODE, SCAN_PARAMS_CODE,
 			DIAGNOSTIC_SOURCE_SNYK_IAC, SCAN_PARAMS_IAC, DIAGNOSTIC_SOURCE_SNYK_OSS, SCAN_PARAMS_OSS);
 
 	// code cannot be mapped easily
-	Map<String, String> SCAN_PARAMS_TO_DISPLAYED = Map.of(SCAN_PARAMS_OSS, DISPLAYED_OSS, SCAN_PARAMS_IAC, DISPLAYED_IAC);
+	Map<String, String> SCAN_PARAMS_TO_DISPLAYED = Map.of(SCAN_PARAMS_OSS, DISPLAYED_OSS, SCAN_PARAMS_IAC,
+			DISPLAYED_IAC);
 }

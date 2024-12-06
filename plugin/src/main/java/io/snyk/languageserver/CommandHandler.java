@@ -49,21 +49,29 @@ public class CommandHandler {
 	}
 
 	public CompletableFuture<Object> ignoreIssue(Issue issue) {
-		String displayProduct = ProductConstants.SCAN_PARAMS_TO_DISPLAYED.get(issue.product());
-		if (!canBeIgnored(displayProduct)) return CompletableFuture.completedFuture(null);
-		
+		String displayProduct = ProductConstants.FILTERABLE_ISSUE_TYPE_TO_DISPLAY.get(issue.filterableIssueType());
+		if (!canBeIgnored(displayProduct))
+			return CompletableFuture.completedFuture(null);
+
 		Path workingDir = getWorkingDirectory(issue);
 		String pathArg = null;
-		List<Object> args = List.of(workingDir.toString(), "ignore", "--id=" + issue.additionalData().ruleId());
+		String idArg = "--id=" + issue.additionalData().ruleId();
+		
+		List<Object> args = new ArrayList<>();
+		args.add(workingDir.toString());
+		args.add("ignore");
 
-		if (issue.product().equals(ProductConstants.SCAN_PARAMS_IAC)) {
+		if (issue.filterableIssueType().equals(ProductConstants.FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE)) {
 			Path relativePath = workingDir.relativize(Paths.get(issue.filePath()));
 			var separator = " > ";
 			pathArg = "--path=" + relativePath.toString() + separator
 					+ issue.additionalData().path().stream().collect(Collectors.joining(separator));
-			args = new ArrayList<Object>(args);
 			args.add(pathArg);
+			idArg = "--id=" + issue.additionalData().publicId();
 		}
+
+		args.add(idArg);
+
 		return this.executeCommand(LsConstants.COMMAND_SNYK_CLI, args);
 	}
 
@@ -82,11 +90,13 @@ public class CommandHandler {
 
 	/**
 	 * checks if a product can be ignored
+	 * 
 	 * @param product the DISPLAY product from ProductConstants
 	 * @return
 	 */
 	public boolean canBeIgnored(String product) {
-		if (product == null) return false;
+		if (product == null)
+			return false;
 		return allowedProducts.contains(product);
 	}
 
