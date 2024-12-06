@@ -387,6 +387,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private Set<ProductTreeNode> getAffectedProductNodes(String snykScanProduct, String folderPath) {
+		Preferences pref = Preferences.getInstance();
 		Set<ProductTreeNode> affectedProductTreeNodes = new HashSet<>();
 		var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(snykScanProduct);
 		if (displayProduct != null) {
@@ -396,11 +397,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 		} else {
 			ProductTreeNode productNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY, folderPath);
-			if (productNode != null) {
+			if (productNode != null && pref.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)) {
 				affectedProductTreeNodes.add(productNode);
 			}
 			productNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY, folderPath);
-			if (productNode != null) {
+			if (productNode != null && pref.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY)) {
 				affectedProductTreeNodes.add(productNode);
 			}
 		}
