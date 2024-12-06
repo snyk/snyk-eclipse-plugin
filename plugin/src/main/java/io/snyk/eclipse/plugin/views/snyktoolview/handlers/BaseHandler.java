@@ -24,12 +24,14 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		String commandId = event.getCommand().getId();
 
-		// Update the application state for the preference.
-		Preferences.getInstance().store(preferenceKey,
-				Boolean.valueOf(!Preferences.getInstance().getBooleanPref(preferenceKey)).toString());
+		if (preferenceKey != null) {
+			// Update the application state for the preference.
+			Preferences.getInstance().store(preferenceKey,
+					Boolean.valueOf(!Preferences.getInstance().getBooleanPref(preferenceKey)).toString());
 
-		// Update the Snyk Language Server configuration.
-		new LsConfigurationUpdater().configurationChanged();
+			// Update the Snyk Language Server configuration.
+			new LsConfigurationUpdater().configurationChanged();
+		}
 
 		// Lastly update the UI.
 		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);

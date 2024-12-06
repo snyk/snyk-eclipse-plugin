@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import org.eclipse.jface.viewers.TreeViewer;
@@ -83,6 +84,20 @@ public class TreeFilterManager {
 		treeView.refresh();
 		treeView.getControl().setRedraw(true);
 		treeView.expandAll();
+	}
+
+	public void removeFilters(List<String> severityLevels) {
+		for (String severityLevel : severityLevels) {
+			this.removeTreeFilter(severityLevel);
+		}
+	}
+
+	public void addFilters(List<String> severityLevels) {
+
+		for (String severityLevel : severityLevels) {
+			this.addTreeFilter(severityLevel, issue -> !issue.severity().equals(severityLevel));
+		}
+
 	}
 
 }

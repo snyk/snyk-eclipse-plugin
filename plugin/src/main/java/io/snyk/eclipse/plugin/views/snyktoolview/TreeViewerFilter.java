@@ -20,39 +20,44 @@ public class TreeViewerFilter extends ViewerFilter {
 
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element) {
-	    if (element instanceof FileTreeNode) {
-	        return hasVisibleChildren((FileTreeNode) element, viewer);
-	    }
-	    
-	    if (!(element instanceof IssueTreeNode) || !(viewer instanceof TreeViewer)) {
-	        return true;
-	    }
+		if (element instanceof FileTreeNode) {
+			return hasVisibleChildren((FileTreeNode) element, viewer);
+		}
 
-	    return isIssueVisible((IssueTreeNode) element);
+		if (!(element instanceof IssueTreeNode) || !(viewer instanceof TreeViewer)) {
+			return true;
+		}
+
+		return isIssueVisible((IssueTreeNode) element);
 	}
 
 	private boolean hasVisibleChildren(FileTreeNode fileNode, Viewer viewer) {
-	    Object[] children = ((ITreeContentProvider) ((TreeViewer) viewer).getContentProvider()).getChildren(fileNode);
-	    for (Object child : children) {
-	        if (child instanceof IssueTreeNode && isIssueVisible((IssueTreeNode) child)) {
-	            return true;
-	        }
-	    }
-	    return false;
+		Object[] children = ((ITreeContentProvider) ((TreeViewer) viewer).getContentProvider()).getChildren(fileNode);
+		if (children == null || children.length == 0) {
+			return false; // TODO should return true?
+		}
+
+		for (Object child : children) {
+			if (child instanceof IssueTreeNode && isIssueVisible((IssueTreeNode) child)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private boolean isIssueVisible(IssueTreeNode issueNode) {
-	    Issue issue = issueNode.getIssue();
-	    if (issue == null) {
-	        return true;
-	    }
+		Issue issue = issueNode.getIssue();
+		if (issue == null) {
+			return true;
+		}
 
-	    for (var filter : this.filters.values()) {
-	        if (!filter.test(issue)) {
-	            return false;
-	        }
-	    }
-	    return true;
+		for (var filter : this.filters.values()) {
+			if (!filter.test(issue)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public void setFilterPredicate(String filterName, Predicate<? super Issue> predicate) {
