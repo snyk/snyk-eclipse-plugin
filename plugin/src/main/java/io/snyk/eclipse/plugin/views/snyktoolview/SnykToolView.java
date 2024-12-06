@@ -3,6 +3,7 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -162,7 +163,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 								var result = CommandHandler.getInstance().ignoreIssue(issue).get(10, TimeUnit.SECONDS);
 								outputCommandResult(result); 
 								itn.setText("[ IGNORED ] " + itn.getText());
-								refreshTree();
+								Display.getDefault().asyncExec(() -> {
+									treeViewer.refresh(itn, true);
+								});
 							} catch (InterruptedException e) {
 								Thread.currentThread().interrupt();
 								SnykLogger.logError(e);
@@ -178,9 +181,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			}
 
 			public boolean isEnabled() {
-				return selectedNode instanceof IssueTreeNode
-						&& !(getProduct().equals(ProductConstants.DISPLAYED_CODE_QUALITY)
-								|| getProduct().equals(ProductConstants.DISPLAYED_CODE_SECURITY));
+				return selectedNode instanceof IssueTreeNode && CommandHandler.getInstance().canBeIgnored(getProduct());
 			}
 
 			protected String getProduct() {
