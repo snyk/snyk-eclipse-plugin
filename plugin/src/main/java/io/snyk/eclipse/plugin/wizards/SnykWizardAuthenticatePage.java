@@ -17,20 +17,22 @@ import org.eclipse.swt.widgets.Text;
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 
 public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
-  private Text endpoint;
-  private Button unknownCerts;
-  private String trustMessage = "⚠️ When scanning folder files, Snyk may automatically execute code such as invoking the package manager to get dependency information. "
-		    + "You should only scan projects you trust. <a href=\"https://docs.snyk.io/ide-tools/eclipse-plugin/folder-trust\">More Info</a>"
-		    + "\n\nOn finishing the wizard, the plugin will open a browser to authenticate you, trust the current workspace projects and trigger a scan.";
+	private Text endpoint;
+	private Button unknownCerts;
+	private String trustMessage = "⚠️ When scanning folder files, Snyk may automatically execute code such as invoking the package manager to get dependency information. "
+			+ "You should only scan projects you trust. <a href=\"https://docs.snyk.io/ide-tools/eclipse-plugin/folder-trust\">More Info</a>"
+			+ "\n\nOn finishing the wizard, the plugin will open a browser to authenticate you, trust the current workspace projects and trigger a scan.";
+	private Color blackColor;
 
-  public SnykWizardAuthenticatePage() {
-    super("Snyk Wizard");
-    setTitle("Authenticate");
-    setDescription("Review the endpoint configuration, clicking 'Finish' will authenticate with Snyk; this will open a new browser window.");
-  }
+	public SnykWizardAuthenticatePage() {
+		super("Snyk Wizard");
+		setTitle("Authenticate");
+		setDescription(
+				"Review the endpoint configuration, clicking 'Finish' will authenticate with Snyk; this will open a new browser window.");
+	}
 
-  @Override
-  public void createControl(Composite parent) {
+	@Override
+	public void createControl(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 
@@ -58,24 +60,32 @@ public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
 		trustText.setText(trustMessage);
 		gd = new GridData(GridData.FILL_BOTH);
 		trustText.setLayoutData(gd);
-		trustText.setBackground(new Color(0, 0, 0, 0));
+		this.blackColor = new Color(0, 0, 0, 0);
+		trustText.setBackground(blackColor);
 		trustText.addListener(SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
 
 		// required to avoid an error in the system
 		setControl(composite);
 		setPageComplete(false);
-  }
+	}
 
-  public void handleEvent(Event e) {
-    getWizard().getContainer().updateButtons();
-  }
+	@Override
+	public void dispose() {
+		this.blackColor.dispose();
+		this.blackColor = null;
+		super.dispose();
+	}
 
-  public boolean isPageComplete() {
-    return true;
-  }
+	public void handleEvent(Event e) {
+		getWizard().getContainer().updateButtons();
+	}
 
-  void onEnterPage() {
-    endpoint.setText(Preferences.getInstance().getEndpoint());
-    unknownCerts.setSelection(Preferences.getInstance().getBooleanPref(Preferences.INSECURE_KEY));
-  }
+	public boolean isPageComplete() {
+		return true;
+	}
+
+	void onEnterPage() {
+		endpoint.setText(Preferences.getInstance().getEndpoint());
+		unknownCerts.setSelection(Preferences.getInstance().getBooleanPref(Preferences.INSECURE_KEY));
+	}
 }
