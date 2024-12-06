@@ -13,6 +13,7 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
 import io.snyk.eclipse.plugin.SnykStartup;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
@@ -83,8 +84,8 @@ public class SnykWizard extends Wizard implements INewWizard {
 				SnykExtendedLanguageClient.getInstance().triggerAuthentication();
 				monitor.worked(20);
 				monitor.subTask("trusting workspace folders...");
-				var projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-				if (projects != null && projects.length > 0 && Arrays.stream(projects).filter(p -> p.isAccessible()).count() > 0) {
+				var projects = ResourceUtils.getAccessibleTopLevelProjects();
+				if (projects != null && projects.size()>0) {
 					SnykExtendedLanguageClient.getInstance().trustWorkspaceFolders();
 				}
 				monitor.worked(20);
