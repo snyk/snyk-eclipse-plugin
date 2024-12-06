@@ -191,7 +191,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			folderPath = "C://a/b";
 			uri = "file:///" + folderPath + "/c/";
 		}
-		
+
 
 		File pathFromUri = LSPEclipseUtils.fromUri(URI.create(uri));
 		var filePath = pathFromUri.getAbsolutePath();
@@ -237,6 +237,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setFolderPath("a/b/c");
 		ProductTreeNode productNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
 		when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath())).thenReturn(productNode);
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
@@ -253,6 +255,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus(SCAN_STATE_SUCCESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
 		int issueCount = 0;
 		String expectedFirstInfoNode = CONGRATS_NO_ISSUES_FOUND;
@@ -288,6 +292,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
 		runInfoNodeTest(param, issueCount, 0, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode,
 				expectedThirdInfoNode);
@@ -305,6 +311,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
 		runInfoNodeTest(param, 1, 1, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
 	}
@@ -321,6 +329,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
 		runInfoNodeTest(param, 4, 2, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
 	}
@@ -328,6 +338,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@Test
 	void testSnykScanSuccessAddsInfoNodes_IssuesFound_oneIgnored() {
 		var param = new SnykScanParam();
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 		param.setStatus(SCAN_STATE_SUCCESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
@@ -348,6 +360,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
 		String expectedFirstInfoNode = "✋ 4 issues found by Snyk, 4 ignored";
 		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
@@ -365,6 +379,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
 		String expectedFirstInfoNode = "✋ 4 issues found by Snyk";
 		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
@@ -376,7 +392,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private void runInfoNodeTest(SnykScanParam param, int issueCount, int fixableCount, int ignoredCount,
 			int expectedInfoNodeUpdateCount, String expectedFirstInfoNode, String expectedSecondInfoNode,
 			String expectedThirdInfoNode) {
-		
+
 		var productNodes = setupProductNodes(param);
 
 		var infoNodeCaptor = ArgumentCaptor.forClass(InfoTreeNode.class);
