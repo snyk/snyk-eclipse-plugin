@@ -1,5 +1,7 @@
 package io.snyk.languageserver.protocolextension.messageObjects.scanResults;
 
+import java.util.List;
+
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public record AdditionalData(
@@ -24,7 +26,8 @@ public record AdditionalData(
     String displayTargetFile,
     boolean isUpgradable,
     // IaC
-    String publicId
+    String publicId,
+    List<String> path
 ) {
 	public String customUIContent() {
 		var result = SnykExtendedLanguageClient.getInstance().getIssueDescription(key);
