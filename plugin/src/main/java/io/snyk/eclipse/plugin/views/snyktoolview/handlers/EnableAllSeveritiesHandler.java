@@ -2,6 +2,8 @@ package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
 
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.commands.IElementUpdater;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
@@ -23,10 +25,13 @@ public class EnableAllSeveritiesHandler extends BaseHandler implements IElementU
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		super.execute(event);
 
-		new ToggleSeverityFilters(TreeFilterManager.getInstance(), Preferences.getInstance())
-				.applyFilter();
-		
-		//TODO Handle UI updates, tickbox on buttons on view menu
+		new ToggleSeverityFilters(TreeFilterManager.getInstance(), Preferences.getInstance()).applyFilter();
+
+		// Lastly update the UI.
+		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
+		if (commandService != null) {
+			commandService.refreshElements("io.snyk.eclipse.plugin.views.snyktoolview.filterSeverityMenu", null);
+		}
 
 		return null;
 	}

@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
+import io.snyk.languageserver.LsConfigurationUpdater;
 
 public class ToggleSeverityFilters implements BaseFilter {
 	private TreeFilterManager filterManager;
@@ -34,5 +35,7 @@ public class ToggleSeverityFilters implements BaseFilter {
 			// If no severity preferences are in use, this will enable all the filters.
 			this.preferences.setPreferences(severityPreferenceStrings, true);
 		}
+
+		new LsConfigurationUpdater().configurationChanged();
 	}
 }

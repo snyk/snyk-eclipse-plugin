@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
+import io.snyk.languageserver.LsConfigurationUpdater;
 
 public class ToggleProductFilters implements BaseFilter {
 	private TreeFilterManager filterManager;
@@ -31,5 +32,7 @@ public class ToggleProductFilters implements BaseFilter {
 			this.filterManager.addFilters(productPreferenceStrings);
 			this.preferences.setPreferences(productPreferenceStrings, false);
 		}
+		
+		new LsConfigurationUpdater().configurationChanged();
 	}
 }

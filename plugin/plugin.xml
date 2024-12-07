@@ -141,7 +141,7 @@
             name="Fixable">
         </command>
         <command
-              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllAiFixHandler"
+              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllSeveritiesHandler"
               id="io.snyk.eclipse.plugin.snykShowAllSeverities"
               name="Show All Severities">
         </command>
