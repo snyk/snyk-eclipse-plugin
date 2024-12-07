@@ -3,6 +3,7 @@ package io.snyk.eclipse.plugin.properties.preferences;
 import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getBinaryDirectory;
 
 import java.io.File;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -69,7 +70,6 @@ public class Preferences {
 	public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
-	
 
 	private final PreferenceStore store;
 
@@ -114,7 +114,7 @@ public class Preferences {
 		if (getPref(FILTER_OSS_FIXABLE_ISSUES) == null) {
 			store(FILTER_OSS_FIXABLE_ISSUES, "false");
 		}
-		
+
 		if (getPref(SEND_ERROR_REPORTS) == null) {
 			store(SEND_ERROR_REPORTS, "true");
 		}
@@ -263,6 +263,26 @@ public class Preferences {
 
 	public static boolean isDeltaEnabled() {
 		return Preferences.getInstance().getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES);
+	}
+
+	public boolean anyPreferenceFalse(List<String> preferenceKeys) {
+		for (String key : preferenceKeys) {
+			boolean booleanPref = getBooleanPref(key);
+			if (!booleanPref) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean anyPreferenceTrue(List<String> preferenceKeys) {
+		for (String key : preferenceKeys) {
+			boolean booleanPref = getBooleanPref(key);
+			if (booleanPref) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
