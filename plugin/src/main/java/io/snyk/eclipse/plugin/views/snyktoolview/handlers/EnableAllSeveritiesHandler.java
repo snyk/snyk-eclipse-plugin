@@ -28,12 +28,19 @@ public class EnableAllSeveritiesHandler extends BaseHandler implements IElementU
 		new ToggleSeverityFilters(TreeFilterManager.getInstance(), Preferences.getInstance()).applyFilter();
 
 		// Lastly update the UI.
-		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
-		if (commandService != null) {
-			commandService.refreshElements("io.snyk.eclipse.plugin.views.snyktoolview.filterSeverityMenu", null);
-		}
+		refreshCommands();
 
 		return null;
 	}
 
+	private void refreshCommands() {
+		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
+		if (commandService != null) {
+			commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterCritical", null);
+			commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterHigh", null);
+			commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterMedium", null);
+			commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterLow", null);
+			commandService.refreshElements("io.snyk.eclipse.plugin.snykShowAllSeverities", null);
+		}
+	}
 }

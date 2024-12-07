@@ -25,16 +25,22 @@ public class EnableAllProductHandler extends BaseHandler implements IElementUpda
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		super.execute(event);
 
-		new ToggleProductFilters(TreeFilterManager.getInstance(), Preferences.getInstance())
-				.applyFilter();
-		
+		new ToggleProductFilters(TreeFilterManager.getInstance(), Preferences.getInstance()).applyFilter();
+
 		// Lastly update the UI.
-		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
-		if (commandService != null) {
-			commandService.refreshElements("io.snyk.eclipse.plugin.views.snyktoolview.filterProductTypeMenu", null);
-		}
+		refreshCommands();
 
 		return null;
 	}
 
+	private void refreshCommands() {
+		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
+		if (commandService != null) {
+			commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableOSS", null);
+			commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableCodeSecurity", null);
+			commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableCodeQuality", null);
+			commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableIAC", null);
+			commandService.refreshElements("io.snyk.eclipse.plugin.command.snykShowAllProducts", null);
+		}
+	}
 }
