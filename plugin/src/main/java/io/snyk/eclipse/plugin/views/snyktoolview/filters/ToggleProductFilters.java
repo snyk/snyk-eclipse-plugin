@@ -26,8 +26,10 @@ public class ToggleProductFilters implements BaseFilter {
 
 		if (anyPreferenceFalse) {
 			this.filterManager.removeFilters(productPreferenceStrings);
+			this.preferences.setPreferences(productPreferenceStrings, true);
 		} else {
 			this.filterManager.addFilters(productPreferenceStrings);
+			this.preferences.setPreferences(productPreferenceStrings, false);
 		}
 	}
 }

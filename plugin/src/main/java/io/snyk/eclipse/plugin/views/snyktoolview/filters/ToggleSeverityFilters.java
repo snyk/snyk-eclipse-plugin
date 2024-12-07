@@ -21,12 +21,18 @@ public class ToggleSeverityFilters implements BaseFilter {
 	public void applyFilter() {
 		// All filters are false by default, so all issues are displayed. But if one of
 		// the filters are true, then all filters are removed and all issues are show.
-		boolean anyPreferenceFalse = preferences.anyPreferenceTrue(severityPreferenceStrings);
+		boolean anyPreferenceTrue = preferences.anyPreferenceTrue(severityPreferenceStrings);
 
-		if (anyPreferenceFalse) {
+		if (anyPreferenceTrue) {
 			this.filterManager.removeFilters(severityPreferenceStrings);
+
+			// Return all severity preferences to default; false.
+			this.preferences.setPreferences(severityPreferenceStrings, false);
 		} else {
 			this.filterManager.addFilters(severityPreferenceStrings);
+
+			// If no severity preferences are in use, this will enable all the filters.
+			this.preferences.setPreferences(severityPreferenceStrings, true);
 		}
 	}
 }

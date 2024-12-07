@@ -285,4 +285,10 @@ public class Preferences {
 		return false;
 	}
 
+	public void setPreferences(List<String> preferenceStrings, boolean value) {
+		for (String preferenceKey : preferenceStrings) {
+			store.put(preferenceKey, Boolean.toString(value));
+		}
+	}
+
 }
