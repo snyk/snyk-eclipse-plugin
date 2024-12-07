@@ -20,6 +20,8 @@ public class ToggleProductFilters implements BaseFilter {
 
 	@Override
 	public void applyFilter() {
+		// OSS and IAC are enabled by default, when all products are selected then all
+		// products are enabled if any one of them are disabled (== false).
 		boolean anyPreferenceFalse = preferences.anyPreferenceFalse(productPreferenceStrings);
 
 		if (anyPreferenceFalse) {

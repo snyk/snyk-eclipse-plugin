@@ -19,6 +19,8 @@ public class ToggleSeverityFilters implements BaseFilter {
 
 	@Override
 	public void applyFilter() {
+		// All filters are false by default, so all issues are displayed. But if one of
+		// the filters are true, then all filters are removed and all issues are show.
 		boolean anyPreferenceFalse = preferences.anyPreferenceTrue(severityPreferenceStrings);
 
 		if (anyPreferenceFalse) {

@@ -3,7 +3,10 @@ package io.snyk.eclipse.plugin.properties.preferences;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.SystemUtils;
@@ -17,9 +20,17 @@ import io.snyk.languageserver.LsRuntimeEnvironment;
 
 class PreferencesTest {
 
+	private Preferences preferences;
+
 	@BeforeEach
 	void setUp() {
 		PreferencesUtils.setPreferences(null);
+
+		preferences = Mockito.mock(Preferences.class);
+
+		Mockito.doCallRealMethod().when(preferences).anyPreferenceFalse(Mockito.anyList());
+		Mockito.doCallRealMethod().when(preferences).anyPreferenceTrue(Mockito.anyList());
+
 	}
 
 	@Test
@@ -155,6 +166,80 @@ class PreferencesTest {
 		assertEquals("1", prefs.getLspVersion());
 		prefs.store(Preferences.LSP_VERSION, "2");
 		assertEquals("2", prefs.getLspVersion());
+	}
+
+	@Test
+	void anyPreferenceFalse_allTrue_returnsFalse() {
+		List<String> keys = Arrays.asList("key1", "key2", "key3");
+		when(preferences.getBooleanPref("key1")).thenReturn(true);
+		when(preferences.getBooleanPref("key2")).thenReturn(true);
+		when(preferences.getBooleanPref("key3")).thenReturn(true);
+
+		assertFalse(preferences.anyPreferenceFalse(keys));
+	}
+
+	@Test
+	void anyPreferenceFalse_oneFalse_returnsTrue() {
+		List<String> keys = Arrays.asList("key1", "key2", "key3");
+		when(preferences.getBooleanPref("key1")).thenReturn(true);
+		when(preferences.getBooleanPref("key2")).thenReturn(false);
+		when(preferences.getBooleanPref("key3")).thenReturn(true);
+
+		assertTrue(preferences.anyPreferenceFalse(keys));
+	}
+
+	@Test
+	void anyPreferenceFalse_allFalse_returnsTrue() {
+		List<String> keys = Arrays.asList("key1", "key2", "key3");
+		when(preferences.getBooleanPref("key1")).thenReturn(false);
+		when(preferences.getBooleanPref("key2")).thenReturn(false);
+		when(preferences.getBooleanPref("key3")).thenReturn(false);
+
+		assertTrue(preferences.anyPreferenceFalse(keys));
+	}
+
+	@Test
+	void anyPreferenceFalse_emptyList_returnsFalse() {
+		List<String> keys = Arrays.asList();
+
+		assertFalse(preferences.anyPreferenceFalse(keys));
+	}
+
+	@Test
+	void anyPreferenceTrue_allFalse_returnsFalse() {
+		List<String> keys = Arrays.asList("key1", "key2", "key3");
+		when(preferences.getBooleanPref("key1")).thenReturn(false);
+		when(preferences.getBooleanPref("key2")).thenReturn(false);
+		when(preferences.getBooleanPref("key3")).thenReturn(false);
+
+		assertFalse(preferences.anyPreferenceTrue(keys));
+	}
+
+	@Test
+	void anyPreferenceTrue_oneTrue_returnsTrue() {
+		List<String> keys = Arrays.asList("key1", "key2", "key3");
+		when(preferences.getBooleanPref("key1")).thenReturn(false);
+		when(preferences.getBooleanPref("key2")).thenReturn(true);
+		when(preferences.getBooleanPref("key3")).thenReturn(false);
+
+		assertTrue(preferences.anyPreferenceTrue(keys));
+	}
+
+	@Test
+	void anyPreferenceTrue_allTrue_returnsTrue() {
+		List<String> keys = Arrays.asList("key1", "key2", "key3");
+		when(preferences.getBooleanPref("key1")).thenReturn(true);
+		when(preferences.getBooleanPref("key2")).thenReturn(true);
+		when(preferences.getBooleanPref("key3")).thenReturn(true);
+
+		assertTrue(preferences.anyPreferenceTrue(keys));
+	}
+
+	@Test
+	void anyPreferenceTrue_emptyList_returnsFalse() {
+		List<String> keys = Arrays.asList();
+
+		assertFalse(preferences.anyPreferenceTrue(keys));
 	}
 
 }
