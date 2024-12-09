@@ -13,19 +13,19 @@ import io.snyk.eclipse.plugin.EnvironmentConstants;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 
 public class Preferences {
-	public static Preferences CURRENT_PREFERENCES;
-	public static LsRuntimeEnvironment LS_RUNTIME_ENV = new LsRuntimeEnvironment();
+	private static Preferences CURRENT_PREFERENCES;
+	private static LsRuntimeEnvironment LS_RUNTIME_ENV = new LsRuntimeEnvironment();
 
 	public static synchronized Preferences getInstance() {
 		if (CURRENT_PREFERENCES == null) {
-			CURRENT_PREFERENCES = new Preferences(new SecurePreferenceStore());
+			setCurrentPreferences(new Preferences(new SecurePreferenceStore()));
 		}
 		return CURRENT_PREFERENCES;
 	}
 
 	public static synchronized Preferences getInstance(PreferenceStore store) {
 		Preferences preferences = new Preferences(store);
-		CURRENT_PREFERENCES = preferences;
+		setCurrentPreferences(preferences);
 		return preferences;
 	}
 
@@ -263,6 +263,10 @@ public class Preferences {
 
 	public static boolean isDeltaEnabled() {
 		return Preferences.getInstance().getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES);
+	}
+
+	public static void setCurrentPreferences(Preferences prefs) {
+		CURRENT_PREFERENCES = prefs;
 	}
 
 }
