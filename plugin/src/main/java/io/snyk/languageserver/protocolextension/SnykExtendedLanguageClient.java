@@ -129,6 +129,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		return super.getLanguageServer();
 	}
+	
+	public void updateConfiguration() {
+		this.configurationUpdater.configurationChanged();
+	}
 
 	@Override
 	public CompletableFuture<List<WorkspaceFolder>> workspaceFolders() {

@@ -123,8 +123,10 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		boolean superOK = super.performOk();
 		disableSnykCodeIfOrgDisabled();
         CompletableFuture.runAsync(() -> {
-            new LsConfigurationUpdater().configurationChanged();
-            SnykExtendedLanguageClient.getInstance().refreshFeatureFlags();
+            SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+            
+			lc.updateConfiguration();
+            lc.refreshFeatureFlags();
         });
 		return superOK;
 	}

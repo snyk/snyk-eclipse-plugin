@@ -1,5 +1,7 @@
 package io.snyk.eclipse.plugin.properties;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IAdaptable;
@@ -10,6 +12,7 @@ import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 /**
  * Configure project-specific settings for Snyk
@@ -36,6 +39,14 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			projectNode = projectScope.getNode(Activator.PLUGIN_ID);
 			setPreferenceStore(new PreferencesToPreferenceStoreWrapper(projectNode));
 		}
+	}
+
+	@Override
+	public boolean performOk() {
+		var retValue = super.performOk();
+		CompletableFuture
+				.runAsync(() -> SnykExtendedLanguageClient.getInstance().updateConfiguration());
+		return retValue;
 	}
 
 	@Override

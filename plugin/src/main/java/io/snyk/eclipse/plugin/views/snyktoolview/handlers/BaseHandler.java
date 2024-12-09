@@ -12,7 +12,7 @@ import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.languageserver.LsConfigurationUpdater;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class BaseHandler extends AbstractHandler implements IElementUpdater {
 
@@ -29,7 +29,7 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater {
 				Boolean.valueOf(!Preferences.getInstance().getBooleanPref(preferenceKey)).toString());
 
 		// Update the Snyk Language Server configuration.
-		new LsConfigurationUpdater().configurationChanged();
+		SnykExtendedLanguageClient.getInstance().updateConfiguration();
 
 		// Lastly update the UI.
 		ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);

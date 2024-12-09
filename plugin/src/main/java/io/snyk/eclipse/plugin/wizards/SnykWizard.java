@@ -11,7 +11,6 @@ import org.eclipse.ui.IWorkbench;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
-import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class SnykWizard extends Wizard implements INewWizard {
@@ -75,15 +74,16 @@ public class SnykWizard extends Wizard implements INewWizard {
 					}
 				}
 				monitor.subTask("updating language server configuration");
-				new LsConfigurationUpdater().configurationChanged();
+				SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+				lc.updateConfiguration();
 				monitor.worked(20);
 				monitor.subTask("ensuring authentication...");
-				SnykExtendedLanguageClient.getInstance().triggerAuthentication();
+				lc.triggerAuthentication();
 				monitor.worked(20);
 				monitor.subTask("trusting workspace folders...");
 				var projects = ResourceUtils.getAccessibleTopLevelProjects();
 				if (projects != null && projects.size()>0) {
-					SnykExtendedLanguageClient.getInstance().trustWorkspaceFolders();
+					lc.trustWorkspaceFolders();
 				}
 				monitor.worked(20);
 				monitor.done();
