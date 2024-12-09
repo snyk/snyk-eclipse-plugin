@@ -11,7 +11,7 @@ import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.languageserver.LsConfigurationUpdater;
 
 public class BaseHandler extends AbstractHandler implements IElementUpdater {

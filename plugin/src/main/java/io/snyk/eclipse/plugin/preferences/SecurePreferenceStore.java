@@ -1,4 +1,4 @@
-package io.snyk.eclipse.plugin.properties.preferences;
+package io.snyk.eclipse.plugin.preferences;
 
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
@@ -12,7 +12,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public class SecurePreferenceStore extends ScopedPreferenceStore implements PreferenceStore {
-  static final String QUALIFIER = "io.snyk.eclipse.plugin";
+  public static final String QUALIFIER = "io.snyk.eclipse.plugin";
 
   private final ISecurePreferences node;
 

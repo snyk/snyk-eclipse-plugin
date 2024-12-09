@@ -1,6 +1,6 @@
 package io.snyk.eclipse.plugin.html;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 
 public class CodeHtmlProvider extends BaseHtmlProvider {
     private static CodeHtmlProvider instance = new CodeHtmlProvider();

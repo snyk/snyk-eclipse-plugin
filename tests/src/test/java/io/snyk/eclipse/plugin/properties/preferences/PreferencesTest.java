@@ -13,6 +13,8 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import io.snyk.eclipse.plugin.EnvironmentConstants;
+import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 
 class PreferencesTest {

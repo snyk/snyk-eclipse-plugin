@@ -62,7 +62,7 @@ public class ResourceUtils {
 	}
 
 	public static Path getFullPath(IResource resource) {
-		return resource.getLocation().toPath().toAbsolutePath();
+		return resource.getLocation().toPath().normalize().toAbsolutePath();
 	}
 
 	public static IProject getProjectByPath(Path path) {

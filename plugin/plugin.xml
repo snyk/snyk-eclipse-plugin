@@ -34,7 +34,7 @@
     </extension>
     <extension point="org.eclipse.ui.preferencePages">
         <page
-            class="io.snyk.eclipse.plugin.properties.PreferencesPage"
+            class="io.snyk.eclipse.plugin.preferences.PreferencesPage"
             id="io.snyk.eclipse.plugin.properties.preferencespage"
             name="%page.name">
         </page>
@@ -533,4 +533,15 @@
             name="SnykWizard">
         </wizard>
     </extension>
+    <extension point="org.eclipse.ui.propertyPages">
+    <page
+        class="io.snyk.eclipse.plugin.properties.ProjectPropertyPage"
+        icon="icons/patch.png"
+        id="io.snyk.eclipse.plugin.properties.projectPropertyPage"
+        name="Snyk">
+        <enabledWhen>
+            <adapt type="org.eclipse.core.resources.IProject"/>
+        </enabledWhen>
+    </page>
+</extension>
 </plugin>

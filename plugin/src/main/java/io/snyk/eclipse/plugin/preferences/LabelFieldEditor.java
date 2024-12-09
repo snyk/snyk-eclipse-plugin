@@ -1,4 +1,4 @@
-package io.snyk.eclipse.plugin.properties;
+package io.snyk.eclipse.plugin.preferences;
 
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.layout.GridData;

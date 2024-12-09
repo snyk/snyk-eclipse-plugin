@@ -1,4 +1,4 @@
-package io.snyk.eclipse.plugin.properties.preferences;
+package io.snyk.eclipse.plugin.preferences;
 
 import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getBinaryDirectory;
 
@@ -13,8 +13,8 @@ import io.snyk.eclipse.plugin.EnvironmentConstants;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 
 public class Preferences {
-	static Preferences CURRENT_PREFERENCES;
-	static LsRuntimeEnvironment LS_RUNTIME_ENV = new LsRuntimeEnvironment();
+	public static Preferences CURRENT_PREFERENCES;
+	public static LsRuntimeEnvironment LS_RUNTIME_ENV = new LsRuntimeEnvironment();
 
 	public static synchronized Preferences getInstance() {
 		if (CURRENT_PREFERENCES == null) {

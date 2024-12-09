@@ -1,6 +1,6 @@
 package io.snyk.eclipse.plugin.wizards;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.languageserver.LsConfigurationUpdater;
 
 public class SnykWizardModel {

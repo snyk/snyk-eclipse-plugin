@@ -25,7 +25,7 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.ssl.SSLContexts;
 import org.eclipse.core.net.proxy.IProxyData;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 

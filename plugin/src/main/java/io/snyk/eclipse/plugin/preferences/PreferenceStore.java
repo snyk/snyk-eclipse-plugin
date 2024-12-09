@@ -1,4 +1,4 @@
-package io.snyk.eclipse.plugin.properties.preferences;
+package io.snyk.eclipse.plugin.preferences;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 

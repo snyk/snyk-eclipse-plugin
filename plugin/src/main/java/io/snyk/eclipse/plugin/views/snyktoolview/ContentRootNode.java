@@ -7,12 +7,7 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
 
 import java.nio.file.Path;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.ILabelProvider;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;

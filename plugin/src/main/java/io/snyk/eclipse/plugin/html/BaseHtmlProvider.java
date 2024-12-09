@@ -11,7 +11,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.themes.ITheme;
 import org.eclipse.ui.themes.IThemeManager;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 
 public class BaseHtmlProvider {
 	private final Random random = new Random();

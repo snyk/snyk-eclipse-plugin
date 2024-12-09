@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 
 import org.apache.commons.lang3.SystemUtils;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 
 public final class FileSystemUtil {
 

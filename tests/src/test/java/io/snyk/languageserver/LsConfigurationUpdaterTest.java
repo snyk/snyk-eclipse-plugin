@@ -1,6 +1,5 @@
 package io.snyk.languageserver;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -18,8 +17,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;

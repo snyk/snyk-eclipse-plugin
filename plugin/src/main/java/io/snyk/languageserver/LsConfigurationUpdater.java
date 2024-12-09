@@ -6,8 +6,8 @@ import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
@@ -245,6 +245,10 @@ public class LsConfigurationUpdater {
 
 		public FolderConfigsParam getFolderConfigsParam() {
 			return folderConfigsParam;
+		}
+
+		public String getEnableDeltaFindings() {
+			return enableDeltaFindings;
 		}
 	}
 }

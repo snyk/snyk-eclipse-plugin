@@ -2,7 +2,7 @@ package io.snyk.languageserver.download;
 
 import org.apache.http.client.methods.HttpGet;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 
 public class LsVersionRequest extends HttpGet {
   public LsVersionRequest() {

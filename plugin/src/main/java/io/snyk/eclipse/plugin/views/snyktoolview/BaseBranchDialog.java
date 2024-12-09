@@ -4,7 +4,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -16,7 +15,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
-import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
+import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 

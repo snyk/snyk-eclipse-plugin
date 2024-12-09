@@ -1,16 +1,14 @@
-package io.snyk.eclipse.plugin.properties;
+package io.snyk.eclipse.plugin.preferences;
 
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-
 
 public class TokenFieldEditor extends StringFieldEditor {
 
-  private final io.snyk.eclipse.plugin.properties.preferences.Preferences store;
+  private final io.snyk.eclipse.plugin.preferences.Preferences store;
 
-  protected TokenFieldEditor(io.snyk.eclipse.plugin.properties.preferences.Preferences store, String name, String labelText,
+  protected TokenFieldEditor(io.snyk.eclipse.plugin.preferences.Preferences store, String name, String labelText,
                              Composite parent) {
     super(name, labelText, 80, parent);
     this.store = store;

@@ -1,4 +1,4 @@
-package io.snyk.eclipse.plugin.properties.preferences;
+package io.snyk.eclipse.plugin.preferences;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,8 +1,5 @@
 package io.snyk.eclipse.plugin.wizards;
 
-import java.util.Arrays;
-
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;

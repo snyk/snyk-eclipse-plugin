@@ -13,7 +13,7 @@ import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
 
 import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 

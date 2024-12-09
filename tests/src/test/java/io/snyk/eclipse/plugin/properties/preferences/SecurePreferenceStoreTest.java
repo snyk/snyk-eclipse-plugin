@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.SecurePreferenceStore;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 

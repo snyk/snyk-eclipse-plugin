@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 

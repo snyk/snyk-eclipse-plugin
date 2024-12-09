@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.languageserver.CommandHandler;
 import io.snyk.languageserver.LsBaseTest;
 import io.snyk.languageserver.LsConstants;

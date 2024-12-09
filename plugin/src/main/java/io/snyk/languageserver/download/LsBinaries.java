@@ -1,10 +1,10 @@
 package io.snyk.languageserver.download;
 
-import static io.snyk.eclipse.plugin.properties.preferences.Preferences.CLI_BASE_URL;
+import static io.snyk.eclipse.plugin.preferences.Preferences.CLI_BASE_URL;
 
 import java.net.URI;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 
 public class LsBinaries {
   private static final Preferences PREFERENCES = Preferences.getInstance();
