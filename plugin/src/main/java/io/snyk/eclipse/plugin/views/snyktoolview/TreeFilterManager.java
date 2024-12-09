@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 import org.eclipse.jface.viewers.TreeViewer;
 
 import io.snyk.eclipse.plugin.SnykStartup;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.FixableFilter;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresFilter;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresOpenIssuesFilter;

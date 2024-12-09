@@ -19,7 +19,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 
 public class LsRuntimeEnvironment {
   public static final Map<String, String> map = new HashMap<>();

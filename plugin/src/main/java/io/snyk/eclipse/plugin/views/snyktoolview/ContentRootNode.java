@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import org.eclipse.jface.resource.ImageDescriptor;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
 public class ContentRootNode extends BaseTreeNode {

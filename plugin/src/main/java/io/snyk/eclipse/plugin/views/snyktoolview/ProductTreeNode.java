@@ -7,7 +7,7 @@ import java.util.HashSet;
 import org.eclipse.jface.viewers.TreeNode;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 
 public class ProductTreeNode extends BaseTreeNode {

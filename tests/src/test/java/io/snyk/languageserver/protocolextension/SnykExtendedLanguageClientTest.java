@@ -49,7 +49,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;

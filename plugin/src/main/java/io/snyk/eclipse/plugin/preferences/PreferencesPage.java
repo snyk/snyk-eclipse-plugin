@@ -1,4 +1,4 @@
-package io.snyk.eclipse.plugin.properties;
+package io.snyk.eclipse.plugin.preferences;
 
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
@@ -14,9 +14,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
@@ -124,8 +122,10 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		boolean superOK = super.performOk();
 		disableSnykCodeIfOrgDisabled();
         CompletableFuture.runAsync(() -> {
-            new LsConfigurationUpdater().configurationChanged();
-            SnykExtendedLanguageClient.getInstance().refreshFeatureFlags();
+            SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+            
+			lc.updateConfiguration();
+            lc.refreshFeatureFlags();
         });
 		return superOK;
 	}

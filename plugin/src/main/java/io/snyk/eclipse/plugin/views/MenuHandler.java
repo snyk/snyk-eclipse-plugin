@@ -18,6 +18,7 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class MenuHandler extends AbstractHandler {
 
+	@SuppressWarnings("restriction")
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 

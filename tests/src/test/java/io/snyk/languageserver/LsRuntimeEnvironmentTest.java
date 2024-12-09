@@ -1,7 +1,7 @@
 package io.snyk.languageserver;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import org.eclipse.core.internal.net.ProxyData;
 import org.eclipse.core.net.proxy.IProxyData;
@@ -55,6 +55,7 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 			Bundle bundleMock = mock(Bundle.class);
 			BundleContext ctxMock = mock(BundleContext.class);
 			IProxyService proxyServiceMock = mock(IProxyService.class);
+			@SuppressWarnings("restriction")
 			IProxyData[] proxyData = new IProxyData[] { new ProxyData("https", "http://localhost", 3128, false, "") };
 			platformMockedStatic.when(() -> Platform.getBundle(Activator.PLUGIN_ID)).thenReturn(bundleMock);
 			when(bundleMock.getBundleContext()).thenReturn(ctxMock);

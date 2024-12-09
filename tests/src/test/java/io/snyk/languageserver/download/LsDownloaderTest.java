@@ -31,7 +31,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
 import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
 import io.snyk.languageserver.LsBaseTest;

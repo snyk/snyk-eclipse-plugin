@@ -11,8 +11,8 @@ import org.eclipse.core.net.proxy.IProxyService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-import io.snyk.eclipse.plugin.properties.preferences.InMemoryPreferenceStore;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 
 public class LsBaseTest {

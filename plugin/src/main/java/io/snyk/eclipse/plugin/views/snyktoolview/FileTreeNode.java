@@ -2,17 +2,11 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.TreeNode;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageDataProvider;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 public class FileTreeNode extends BaseTreeNode {
 	private Path path;

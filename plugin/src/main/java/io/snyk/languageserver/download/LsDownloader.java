@@ -21,7 +21,7 @@ import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.FileDownloadResponseHandler;
 import io.snyk.eclipse.plugin.utils.LsMetadataResponseHandler;
 import io.snyk.eclipse.plugin.utils.SnykLogger;

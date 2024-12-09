@@ -1,7 +1,7 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.filters;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 
 public class SeverityMediumFilter implements BaseFilter {

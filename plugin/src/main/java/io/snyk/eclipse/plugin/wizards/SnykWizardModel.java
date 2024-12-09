@@ -1,7 +1,7 @@
 package io.snyk.eclipse.plugin.wizards;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
-import io.snyk.languageserver.LsConfigurationUpdater;
+import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class SnykWizardModel {
   private String initialEndpoint;
@@ -19,6 +19,6 @@ public class SnykWizardModel {
     Preferences.getInstance().setIsInsecure(initialUnknownCerts);
     Preferences.getInstance().store(Preferences.AUTH_TOKEN_KEY, initialAuthToken);
     
-    new LsConfigurationUpdater().configurationChanged();
+    SnykExtendedLanguageClient.getInstance().updateConfiguration();
   }
 }

@@ -14,8 +14,8 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_CRITICAL;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_HIGH;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_LOW;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_MEDIUM;
-import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
-import static io.snyk.eclipse.plugin.properties.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NODE_TEXT_SCANNING;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_FIXABLE_ISSUES;
@@ -45,7 +45,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
-import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressKind;
@@ -53,7 +52,6 @@ import org.eclipse.lsp4j.WorkDoneProgressNotification;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
-import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchPage;
@@ -67,8 +65,8 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
-import io.snyk.eclipse.plugin.properties.preferences.FolderConfigs;
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
@@ -130,6 +128,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return ls;
 		}
 		return super.getLanguageServer();
+	}
+	
+	public void updateConfiguration() {
+		this.configurationUpdater.configurationChanged();
 	}
 
 	@Override

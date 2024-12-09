@@ -4,7 +4,7 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
-import io.snyk.eclipse.plugin.properties.preferences.Preferences;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.SeverityCriticalFilter;
