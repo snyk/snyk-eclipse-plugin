@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.properties;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,12 +36,8 @@ public class FolderConfigs {
 	}
 
 	public void addFolderConfig(FolderConfig folderConfig) {
-		instancePreferences.put(folderConfig.getFolderPath(), gson.toJson(folderConfig));
-		try {
-			instancePreferences.flush();
-		} catch (Exception e) {
-			SnykLogger.logError(e);
-		}
+		var folderPath = Paths.get(folderConfig.getFolderPath());
+		persist(folderPath, folderConfig);
 	}
 
 	public List<String> getLocalBranches(Path projectPath) {
@@ -94,7 +91,11 @@ public class FolderConfigs {
 		return param;
 	}
 
-	// returns null if nothing found
+	/**
+	 * Gets folder config for given path, if none exists it is created with defaults and returned
+	 * @param folderPath the path of the folder (usually the project)
+	 * @return a folder config (always)
+	 */
 	public FolderConfig getFolderConfig(Path folderPath) {
 		Path path = folderPath.normalize();
 		String json = instancePreferences.get(path.toString(), null);

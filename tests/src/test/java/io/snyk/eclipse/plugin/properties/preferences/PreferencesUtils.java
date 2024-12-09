@@ -4,10 +4,10 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 
 public abstract class PreferencesUtils {
   public static void setPreferences(Preferences p) {
-    Preferences.CURRENT_PREFERENCES = p;
+    Preferences.setCurrentPreferences(p);
   }
 
   public static void reset() {
-    Preferences.CURRENT_PREFERENCES = null;
+    Preferences.setCurrentPreferences(null);
   }
 }
