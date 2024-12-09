@@ -7,12 +7,14 @@ import java.util.HashSet;
 import org.eclipse.jface.viewers.TreeNode;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
+import io.snyk.eclipse.plugin.properties.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 
 public class ProductTreeNode extends BaseTreeNode {
 
 	private String product;
 	private String errorMessage;
+	private String prefEnablementKey;
 
 	public ProductTreeNode(String value) {
 		super(value);
@@ -21,17 +23,40 @@ public class ProductTreeNode extends BaseTreeNode {
 		switch (value) {
 		case ProductConstants.DISPLAYED_OSS:
 			setImageDescriptor(SnykIcons.OSS);
+			prefEnablementKey = Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
 			break;
 		case ProductConstants.DISPLAYED_IAC:
 			setImageDescriptor(SnykIcons.IAC);
+			prefEnablementKey = Preferences.ACTIVATE_SNYK_IAC;
 			break;
 		case ProductConstants.DISPLAYED_CODE_QUALITY:
 			setImageDescriptor(SnykIcons.CODE);
+			prefEnablementKey = Preferences.ACTIVATE_SNYK_CODE_QUALITY;
 			break;
 		case ProductConstants.DISPLAYED_CODE_SECURITY:
 			setImageDescriptor(SnykIcons.CODE);
+			prefEnablementKey = Preferences.ACTIVATE_SNYK_CODE_SECURITY;
 			break;
 		}
+		
+		
+	}
+	
+	
+	
+	@Override
+	public String getText() {
+		if (!isEnabled()) {
+			return super.getText() + " (disabled)";
+		}
+		return super.getText();
+	}
+
+
+
+	private boolean isEnabled() {
+		Preferences pref = Preferences.getInstance();
+		return pref.getBooleanPref(this.prefEnablementKey);
 	}
 
 	@Override
@@ -56,11 +81,14 @@ public class ProductTreeNode extends BaseTreeNode {
 
 		setChildren(newList.toArray(new BaseTreeNode[0]));
 	}
-
+	
 	@Override
 	public void setValue(Object value) {
 		if (!(value instanceof String))
 			throw new IllegalArgumentException("value of product node must be a string");
+		if (!isEnabled()) {
+			value = "(disabled)";
+		}
 		var cleanedValue = removePrefix(value.toString());
 
 		// we don't want to override the product text
@@ -75,6 +103,7 @@ public class ProductTreeNode extends BaseTreeNode {
 
 	@Override
 	public void addChild(BaseTreeNode child) {
+		if (!isEnabled()) return;
 		if (child instanceof FileTreeNode) {
 			var ftNode = (FileTreeNode) child;
 			var crNode = (ContentRootNode) this.getParent();
