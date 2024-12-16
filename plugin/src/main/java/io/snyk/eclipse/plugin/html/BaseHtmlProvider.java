@@ -56,7 +56,7 @@ public class BaseHtmlProvider {
         html = html.replace("var(--text-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR", "#000000"));
         html = html.replace("var(--background-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_END", "#FFFFFF"));
     	html = html.replace("var(--code-background-color)", getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
-    	html = html.replace("var(--circle-color)",  getColorAsHex("org.eclipse.ui.workbench.DARK_BACKGROUND", "#F0F0F0"));
+    	html = html.replace("var(--circle-color)",  getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
 
         html = html.replace("var(--border-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
         html = html.replace("var(--link-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
