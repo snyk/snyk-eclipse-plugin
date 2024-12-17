@@ -1,28 +1,13 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.filters;
 
-import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
+import java.util.function.Predicate;
 
-public class FixableFilter implements BaseFilter {
-	private TreeFilterManager filterManager;
-	private Preferences preferences;
-	private String preferenceKey;
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
-	public FixableFilter(TreeFilterManager filterManager, Preferences preferences, String preferenceKey) {
-		this.filterManager = filterManager;
-		this.preferences = preferences;
-		this.preferenceKey = preferenceKey;
-
-	}
-
-	@Override
-	public void applyFilter() {
-		boolean booleanPref = this.preferences.getBooleanPref(this.preferenceKey);
-
-		if (booleanPref) {
-			this.filterManager.addTreeFilter(this.preferenceKey, issue -> issue.hasFix());
-		} else {
-			this.filterManager.removeTreeFilter(this.preferenceKey);
-		}
+public class FixableFilter extends BaseFilter {	
+	private static final Predicate<Issue> predicate = issue -> issue.hasFix();
+	
+	public FixableFilter(String preferenceKey) {
+		super(preferenceKey, predicate);
 	}
 }

@@ -17,11 +17,6 @@ public class StopScanHandler extends AbstractHandler {
 
 	private ISnykToolView toolView;
 
-	public StopScanHandler() {
-		super();
-
-	}
-
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		SnykExtendedLanguageClient.getInstance().getProgressManager().cancelAll();

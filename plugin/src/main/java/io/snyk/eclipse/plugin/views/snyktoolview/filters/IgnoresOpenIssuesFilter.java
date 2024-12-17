@@ -1,28 +1,16 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.filters;
 
+import java.util.function.Predicate;
+
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
-public class IgnoresOpenIssuesFilter implements BaseFilter {
-	private TreeFilterManager filterManager;
-	private Preferences preferences;
-	private String preferenceKey;
+public class IgnoresOpenIssuesFilter extends BaseFilter {
+	// FIXME think about what happens if this and ignores are both set
+	private static final Predicate<Issue> predicate = issue -> !issue.isIgnored();
 
-	public IgnoresOpenIssuesFilter(TreeFilterManager filterManager, Preferences preferences, String preferenceKey) {
-		this.filterManager = filterManager;
-		this.preferences = preferences;
-		this.preferenceKey = preferenceKey;
-	}
-
-	@Override
-	public void applyFilter() {
-		boolean booleanPref = this.preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
-
-		if (booleanPref) {
-			filterManager.removeTreeFilter(preferenceKey);
-		} else {
-			filterManager.addTreeFilter(preferenceKey, issue -> issue.isIgnored());
-		}
-
+	public IgnoresOpenIssuesFilter(String preferenceKey) {
+		super(preferenceKey, predicate);
 	}
 }

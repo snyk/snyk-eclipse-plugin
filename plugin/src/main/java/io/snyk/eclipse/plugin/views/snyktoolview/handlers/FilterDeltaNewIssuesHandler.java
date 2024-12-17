@@ -6,16 +6,12 @@ import org.eclipse.ui.commands.IElementUpdater;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.SnykIcons;
 
 public class FilterDeltaNewIssuesHandler extends BaseHandler implements IElementUpdater {
 
 	public FilterDeltaNewIssuesHandler() {
 		super();
-
-		iconEnabled = SnykIcons.ENABLED;
-		iconDisabled = SnykIcons.DISABLED;
-		preferenceKey = Preferences.FILTER_DELTA_NEW_ISSUES;
+		preferenceKey = Preferences.ENABLE_DELTA;
 
 	}
 

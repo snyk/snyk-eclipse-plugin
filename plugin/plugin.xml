@@ -41,7 +41,7 @@
     </extension>
     <extension point="org.eclipse.ui.commands">
         <command
-            defaultHandler="io.snyk.eclipse.plugin.views.MenuHandler"
+            defaultHandler="io.snyk.eclipse.plugin.views.ScanWorkspaceFolderHandler"
             id="io.snyk.eclipse.plugin.commands.execute"
             name="%command.name">
         </command>
@@ -73,7 +73,7 @@
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterHigh"
             name="High Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHighHandler">
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.BaseSeverityFilterHandler">
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterMedium"
@@ -102,7 +102,7 @@
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.enableIAC"
-            name="Infrastructure as Code"
+            name="Configuration"
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableIacProductHandler">
         </command>
         <command
@@ -133,27 +133,17 @@
         <command
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterFixableIssuesHandler"
             id="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
-            name="AI Fixable">
-        </command>
-        <command
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterOssFixableIssuesHandler"
-            id="io.snyk.eclipse.plugin.commands.snykFilterOssFixableIssues"
             name="Fixable">
         </command>
         <command
-              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllAiFixHandler"
-              id="io.snyk.eclipse.plugin.snykShowAllSeverities"
+              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllSeveritiesHandler"
+              id="io.snyk.eclipse.plugin.commands.snykShowAllSeverities"
               name="Show All Severities">
         </command>
         <command
               defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllProductHandler"
               id="io.snyk.eclipse.plugin.command.snykShowAllProducts"
               name="Show All Products">
-        </command>
-        <command
-              defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllIssuesHandler"
-              id="io.snyk.eclipse.plugin.command.snykShowAllIssuesStatus"
-              name="Show All Issues">
         </command>
     </extension>
     <extension point="org.eclipse.ui.menus">
@@ -284,7 +274,7 @@
                       visible="true">
                 </separator>
                 <command
-                      commandId="io.snyk.eclipse.plugin.snykShowAllSeverities"
+                      commandId="io.snyk.eclipse.plugin.commands.snykShowAllSeverities"
                       icon="icons/enabled.png"
                       style="push"
                       tooltip="Show Issues of all Severities">
@@ -351,23 +341,13 @@
                 </command>
             </menu>
             <menu
-                  id="io.snyk.eclipse.plugin.views.snyktoolview.filtersAiFixMenu"
-                  label="Open Source Fixability">
-               <command
-                     commandId="io.snyk.eclipse.plugin.commands.snykFilterOssFixableIssues"
-                     icon="icons/enabled.png"
-                     style="push"
-                     tooltip="Show only issues with Open Source Upgrade suggestions">
-               </command>
-            </menu>
-            <menu
-                  id="io.snyk.eclipse.plugin.views.snyktoolview.filtersOssMenu"
-                  label="Code AI Fixability">
+                  id="io.snyk.eclipse.plugin.views.snyktoolview.filtersFixability"
+                  label="Fixability">
                <command
                      commandId="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
                      icon="icons/enabled.png"
                      style="push"
-                     tooltip="Show only issues with AIFix or Fix suggestions">
+                     tooltip="Show only issues that can be automatically fixed">
                </command>
             </menu>
         </menuContribution>
