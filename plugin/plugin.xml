@@ -73,7 +73,7 @@
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterHigh"
             name="High Severity"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.BaseSeverityFilterHandler">
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterHighHandler">
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterMedium"
