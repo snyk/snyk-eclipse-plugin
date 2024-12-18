@@ -112,7 +112,7 @@ public class Preferences {
 			store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 		}
 		if (getPref(FILTER_SHOW_ONLY_FIXABLE) == null) {
-			store(FILTER_SHOW_ONLY_FIXABLE, "true");
+			store(FILTER_SHOW_ONLY_FIXABLE, "false");
 		}
 		
 		if (getPref(SEND_ERROR_REPORTS) == null) {
