@@ -117,23 +117,23 @@
         </command>
         <command
             id="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
-            name="Net New Issues"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterDeltaNewIssuesHandler">
+            name="Show only Net New Issues"
+            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterNetNewIssuesHandler">
         </command>
         <command
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresOpenIssuesHandler"
             id="io.snyk.eclipse.plugin.commands.snykShowOpenIgnored"
-            name="Open Issues">
+            name="Show open Issues">
         </command>
         <command
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterIgnoresIgnoredIssuesHandler"
             id="io.snyk.eclipse.plugin.commands.snykShowIgnored"
-            name="Ignored Issues">
+            name="Show ignored Issues">
         </command>
         <command
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.FilterFixableIssuesHandler"
             id="io.snyk.eclipse.plugin.commands.snykFilterFixableIssues"
-            name="Fixable">
+            name="Show only fixable issues">
         </command>
         <command
               defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableAllSeveritiesHandler"

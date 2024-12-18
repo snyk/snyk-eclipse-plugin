@@ -1,8 +1,8 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_QUALITY;
-import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_CRITICAL;
@@ -25,7 +25,6 @@ import org.eclipse.ui.menus.UIElement;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
-import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class BaseHandler extends AbstractHandler implements IElementUpdater, IHandlerCommands {
 	protected ImageDescriptor iconEnabled = null;
@@ -44,9 +43,6 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater, IHa
 		// Update the application state for the preference.
 		Preferences.getInstance().store(preferenceKey,
 				Boolean.toString(!Preferences.getInstance().getBooleanPref(preferenceKey)));
-
-		// Update the Snyk Language Server configuration.
-		SnykExtendedLanguageClient.getInstance().updateConfiguration();
 
 		updateUIForCommand(commandId);
 
@@ -111,8 +107,8 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater, IHa
 		for (String p : prefs) {			
 			preferences.store(p, Boolean.toString(!allEnabled));
 			updateUIForCommand(getCommandByPref(p));
+
 		}
-		
 		TreeFilterManager.getInstance().reset();
 	}
 

@@ -9,7 +9,7 @@ import static io.snyk.eclipse.plugin.preferences.Preferences.CLI_BASE_URL;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ENABLE_DELTA;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ENABLE_TELEMETRY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ENDPOINT_KEY;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_FIXABLE_ISSUES;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_ONLY_FIXABLE;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_CRITICAL;
@@ -63,7 +63,7 @@ class PreferencesTest {
 		assertEquals("false", preferences.getPref(ENABLE_DELTA));
 		assertEquals("true", preferences.getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES));
 		assertEquals("false", preferences.getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES));
-		assertEquals("false", preferences.getPref(FILTER_FIXABLE_ISSUES));
+		assertEquals("false", preferences.getPref(FILTER_SHOW_ONLY_FIXABLE));
 		assertEquals("true", preferences.getPref(SEND_ERROR_REPORTS));
 		assertEquals("true", preferences.getPref(ENABLE_TELEMETRY));
 		assertEquals("true", preferences.getPref(MANAGE_BINARIES_AUTOMATICALLY));

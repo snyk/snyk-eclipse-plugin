@@ -1,8 +1,9 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_FIXABLE_ISSUES;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_QUALITY;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_SECURITY;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_CRITICAL;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_HIGH;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_LOW;
@@ -14,14 +15,15 @@ import org.eclipse.jface.viewers.TreeViewer;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.FixableFilter;
-import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresIgnoredIssuesFilter;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresOpenIssuesFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.ProductFilter;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.SeverityFilter;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 public class TreeFilterManager {
 
-	private TreeViewer treeView;
+	private TreeViewer treeViewer;
 	private TreeViewerFilter filter;
 	private static TreeFilterManager filterManager;
 
@@ -29,56 +31,60 @@ public class TreeFilterManager {
 		if (filterManager != null) {
 			return filterManager;
 		}
-		filterManager = new TreeFilterManager();
+		filterManager = new TreeFilterManager(SnykStartup.getView().getTreeViewer());
+		filterManager.reset();
 		return filterManager;
 	}
 
-	private static void setupFilters() {
+	private void setupFilters(TreeFilterManager tfm) {
 		// Severity filters
-		new SeverityFilter(FILTER_SHOW_CRITICAL).applyFilter();
-		new SeverityFilter(FILTER_SHOW_HIGH).applyFilter();
-		new SeverityFilter(FILTER_SHOW_MEDIUM).applyFilter();
-		new SeverityFilter(FILTER_SHOW_LOW).applyFilter();
+		new SeverityFilter(tfm, FILTER_SHOW_CRITICAL).applyFilter();
+		new SeverityFilter(tfm, FILTER_SHOW_HIGH).applyFilter();
+		new SeverityFilter(tfm, FILTER_SHOW_MEDIUM).applyFilter();
+		new SeverityFilter(tfm, FILTER_SHOW_LOW).applyFilter();
+		
+		// Product filters
+		new ProductFilter(tfm, ACTIVATE_SNYK_OPEN_SOURCE).applyFilter();
+		new ProductFilter(tfm, ACTIVATE_SNYK_IAC).applyFilter();
+		new ProductFilter(tfm, ACTIVATE_SNYK_CODE_SECURITY).applyFilter();
+		new ProductFilter(tfm, ACTIVATE_SNYK_CODE_QUALITY).applyFilter();
 
 		// Ignores filters
-		new IgnoresFilter(FILTER_IGNORES_SHOW_IGNORED_ISSUES).applyFilter();
-		new IgnoresOpenIssuesFilter(FILTER_IGNORES_SHOW_OPEN_ISSUES).applyFilter();
+		new IgnoresIgnoredIssuesFilter(tfm).applyFilter();
+		new IgnoresOpenIssuesFilter(tfm).applyFilter();
 
 		// Fix
-		new FixableFilter(FILTER_FIXABLE_ISSUES).applyFilter();
+		new FixableFilter(tfm).applyFilter();
 	}
 	
 	public void reset() {
-		treeView = SnykStartup.getView().getTreeViewer();
 		filter = new TreeViewerFilter();
-		setupFilters();
+		treeViewer.resetFilters();
+		treeViewer.setFilters(filter);
+		setupFilters(this);
 	}
 
-	private TreeFilterManager() {
-		reset();
+	private TreeFilterManager(TreeViewer treeViewer) {
+		this.treeViewer = treeViewer;
 	}
 
 	public void addTreeFilter(String filterName, Predicate<? super Issue> filterPredicate) {
-		filter.setFilterPredicate(filterName, filterPredicate);
-		treeView.addFilter(filter);
-		updateTree(treeView);
+		filter.putFilterPredicate(filterName, filterPredicate);
+		updateTree(treeViewer);
 	}
 
 	public void removeTreeFilter(String filterName) {
 		filter.removeFilterPredicate(filterName);
-		treeView.addFilter(filter);
-		updateTree(treeView);
+		updateTree(treeViewer);
 	}
 
 	public void removeTreeFilters() {
-		treeView.resetFilters();
-		updateTree(treeView);
+		treeViewer.resetFilters();
+		updateTree(treeViewer);
 	}
 
 	private void updateTree(TreeViewer treeView) {
-		treeView.getControl().setRedraw(false);
 		treeView.refresh();
-		treeView.getControl().setRedraw(true);
 		treeView.expandAll();
 	}
 

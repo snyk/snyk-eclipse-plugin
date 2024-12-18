@@ -1,15 +1,18 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
-public class FilterDeltaNewIssuesHandler extends BaseHandler implements IElementUpdater {
+public class FilterNetNewIssuesHandler extends BaseHandler implements IElementUpdater {
 
-	public FilterDeltaNewIssuesHandler() {
+	public FilterNetNewIssuesHandler() {
 		super();
 		preferenceKey = Preferences.ENABLE_DELTA;
 
@@ -26,6 +29,13 @@ public class FilterDeltaNewIssuesHandler extends BaseHandler implements IElement
 		} else {
 			SnykStartup.getView().disableDelta();
 		}
+		
+		CompletableFuture.runAsync(() -> {
+			// Update the Snyk Language Server configuration.
+			final var lc = SnykExtendedLanguageClient.getInstance();
+			lc.updateConfiguration();
+			lc.triggerScan(null);
+		});
 
 		return null;
 	}

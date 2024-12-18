@@ -46,14 +46,17 @@ public class Preferences {
 	public static final String LSP_VERSION = "LSP_VERSION";
 	public static final String USE_TOKEN_AUTH = "useTokenAuth";
 	public static final String ANALYTICS_PLUGIN_INSTALLED_SENT = "analyticsPluginInstalledSent";
-	public static final String FILTER_SHOW_CRITICAL = "FILTER_SNYK_CRITICAL";
-	public static final String FILTER_SHOW_HIGH = "FILTER_SNYK_HIGH";
-	public static final String FILTER_SHOW_MEDIUM = "FILTER_SNYK_MEDIUM";
-	public static final String FILTER_SHOW_LOW = "FILTER_SNYK_LOW";
-	public static final String ENABLE_DELTA = "FILTER_SNYK_NEW_ISSUES";
-	public static final String FILTER_IGNORES_SHOW_OPEN_ISSUES = "FILTER_IGNORES_OPEN_ISSUES";
-	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_IGNORED_ISSUES";
-	public static final String FILTER_FIXABLE_ISSUES = "FILTER_FIXABLE_ISSUES";
+	public static final String ENABLE_DELTA = "ENABLE_DELTA";
+	
+	
+	// all filter preferences are positive: SHOW = true, HIDE = false
+	public static final String FILTER_SHOW_CRITICAL = "FILTER_SHOW_CRITICAL";
+	public static final String FILTER_SHOW_HIGH = "FILTER_SHOW_HIGH";
+	public static final String FILTER_SHOW_MEDIUM = "FILTER_SHOW_MEDIUM";
+	public static final String FILTER_SHOW_LOW = "FILTER_SHOW_LOW";
+	public static final String FILTER_IGNORES_SHOW_OPEN_ISSUES = "FILTER_IGNORES_SHOW_OPEN_ISSUES";
+	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_SHOW_IGNORED_ISSUES";
+	public static final String FILTER_SHOW_ONLY_FIXABLE = "FILTER_SHOW_FIXABLE_AND_UNFIXABLE_ISSUES";
 
 	// Feature flags
 	public static final String IS_GLOBAL_IGNORES_FEATURE_ENABLED = "IS_GLOBAL_IGNORES_FEATURE_ENABLED";
@@ -107,8 +110,8 @@ public class Preferences {
 		if (getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES) == null) {
 			store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 		}
-		if (getPref(FILTER_FIXABLE_ISSUES) == null) {
-			store(FILTER_FIXABLE_ISSUES, "false");
+		if (getPref(FILTER_SHOW_ONLY_FIXABLE) == null) {
+			store(FILTER_SHOW_ONLY_FIXABLE, "true");
 		}
 		
 		if (getPref(SEND_ERROR_REPORTS) == null) {

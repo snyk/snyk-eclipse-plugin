@@ -11,9 +11,16 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
+import io.snyk.eclipse.plugin.utils.SnykIcons;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class EnableAllProductHandler extends BaseHandler implements IElementUpdater {
+	public EnableAllProductHandler() {
+		super();
+		iconEnabled = SnykIcons.ENABLED;
+		iconDisabled = SnykIcons.DISABLED;
+	}
+
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		List<String> productPrefs = List.of(ACTIVATE_SNYK_CODE_QUALITY, ACTIVATE_SNYK_CODE_SECURITY, ACTIVATE_SNYK_IAC,

@@ -55,7 +55,7 @@ public class TreeViewerFilter extends ViewerFilter {
 	    return true;
 	}
 
-	public void setFilterPredicate(String filterName, Predicate<? super Issue> predicate) {
+	public void putFilterPredicate(String filterName, Predicate<? super Issue> predicate) {
 		this.filters.put(filterName, predicate);
 	}
 

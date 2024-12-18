@@ -1,14 +1,14 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
 
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
+
 import org.eclipse.ui.commands.IElementUpdater;
 
-import io.snyk.eclipse.plugin.preferences.Preferences;
-
-public class EnableIacProductHandler extends BaseHandler implements IElementUpdater {
+public class EnableIacProductHandler extends BaseProductFilterHandler implements IElementUpdater {
 
 	public EnableIacProductHandler() {
-		super();
-		preferenceKey = Preferences.ACTIVATE_SNYK_IAC;
+		super(ACTIVATE_SNYK_IAC);
+		preferenceKey = ACTIVATE_SNYK_IAC;
 	}
 
 }

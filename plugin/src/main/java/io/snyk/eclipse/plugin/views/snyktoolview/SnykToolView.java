@@ -131,6 +131,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		if (Preferences.isDeltaEnabled())
 			this.enableDelta();
+		
+		// initialize the filters
+		TreeFilterManager.getInstance();
 	}
 
 	private void registerTreeContextMenu(Control control) {
@@ -406,10 +409,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				}
 			}
 		}
-
-		CompletableFuture.runAsync(() -> {
-			SnykExtendedLanguageClient.getInstance().triggerScan(null);
-		});
 	}
 
 	// Helper method to add a command if it's not already present

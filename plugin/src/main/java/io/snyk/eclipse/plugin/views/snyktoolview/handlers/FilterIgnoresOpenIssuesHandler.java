@@ -5,6 +5,7 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresOpenIssuesFilter;
 
 public class FilterIgnoresOpenIssuesHandler extends BaseHandler implements IElementUpdater {
@@ -18,7 +19,7 @@ public class FilterIgnoresOpenIssuesHandler extends BaseHandler implements IElem
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		super.execute(event);
 
-		new IgnoresOpenIssuesFilter(preferenceKey).applyFilter();
+		new IgnoresOpenIssuesFilter(TreeFilterManager.getInstance()).applyFilter();
 
 		return null;
 	}

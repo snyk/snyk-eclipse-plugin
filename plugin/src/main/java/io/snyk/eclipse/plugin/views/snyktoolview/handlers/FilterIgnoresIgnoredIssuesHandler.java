@@ -5,7 +5,8 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresIgnoredIssuesFilter;
 
 public class FilterIgnoresIgnoredIssuesHandler extends BaseHandler implements IElementUpdater {
 
@@ -18,7 +19,7 @@ public class FilterIgnoresIgnoredIssuesHandler extends BaseHandler implements IE
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		super.execute(event);
 
-		new IgnoresFilter(preferenceKey).applyFilter();
+		new IgnoresIgnoredIssuesFilter(TreeFilterManager.getInstance()).applyFilter();
 
 		return null;
 	}

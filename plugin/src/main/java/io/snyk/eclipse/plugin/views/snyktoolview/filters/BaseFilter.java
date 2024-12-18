@@ -7,24 +7,25 @@ import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 
 @SuppressWarnings("rawtypes")
 public abstract class BaseFilter {
-	private TreeFilterManager filterManager;
-	private Preferences preferences;
-	protected String preferenceKey;
+	protected Preferences preferences = Preferences.getInstance();
+	protected TreeFilterManager filterManager;
+	protected String filterName;
 	protected Predicate predicate;
 
-	public BaseFilter(String preferenceKey, Predicate predicate) {
-		this.preferenceKey = preferenceKey;
+	public BaseFilter(String filterName, Predicate predicate, TreeFilterManager tfm) {
+		this.filterName = filterName;
 		this.predicate = predicate;
+		this.filterManager = tfm;
 	}
 
 	@SuppressWarnings("unchecked")
 	public void applyFilter() {
-		boolean booleanPref = this.preferences.getBooleanPref(this.preferenceKey);
+		boolean booleanPref = this.preferences.getBooleanPref(this.filterName);
 
 		if (booleanPref) {
-			this.filterManager.addTreeFilter(this.preferenceKey, predicate);
+			this.filterManager.removeTreeFilter(this.filterName);
 		} else {
-			this.filterManager.removeTreeFilter(this.preferenceKey);
+			this.filterManager.addTreeFilter(this.filterName, predicate);
 		}
 	}
 }
