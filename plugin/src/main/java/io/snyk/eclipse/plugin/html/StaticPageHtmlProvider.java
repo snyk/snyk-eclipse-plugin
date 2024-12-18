@@ -44,7 +44,12 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				            align-items: center;
 				        }
 				        .welcome-text {
-				            width: 530px;
+				            width: 520px;
+				        }
+				        .agreement-text {
+				            font-size: smaller;
+				            display: inline-block;
+				            width: 350px;
 				        }
 				        .logo {
 				            margin-right: 20px;
@@ -81,7 +86,7 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				            </ol>
 				            <p>%s</p>
 				            <button type="button" onclick="window.initiateLogin()">Trust project and scan</button>
-				            <p>
+				            <p class="agreement-text">
 				                By connecting your account with Snyk, you agree to
 				                the Snyk <a href="https://snyk.io/policies/privacy/">Privacy Policy</a>,
 				                and the Snyk <a href="https://snyk.io/policies/terms-of-service/">Terms of Service</a>.
