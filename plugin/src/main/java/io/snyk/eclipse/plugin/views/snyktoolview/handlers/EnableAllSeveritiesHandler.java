@@ -1,26 +1,27 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
 
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_CRITICAL;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_HIGH;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_LOW;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_MEDIUM;
+
+import java.util.List;
+
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
-import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.SnykIcons;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class EnableAllSeveritiesHandler extends BaseHandler implements IElementUpdater {
-
-	public EnableAllSeveritiesHandler() {
-		super();
-
-		iconEnabled = SnykIcons.ENABLED;
-		iconDisabled = SnykIcons.DISABLED;
-		preferenceKey = Preferences.ACTIVATE_SNYK_CODE_QUALITY;
-	}
-
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		super.execute(event);
+		List<String> preferenceOptions = List.of(FILTER_SHOW_CRITICAL, FILTER_SHOW_HIGH, FILTER_SHOW_MEDIUM,
+				FILTER_SHOW_LOW);
 
+		updateMultiplePrefs(preferenceOptions);
+
+		SnykExtendedLanguageClient.getInstance().updateConfiguration();
 		return null;
 	}
 

@@ -4,14 +4,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ColorRegistry;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.themes.ITheme;
 import org.eclipse.ui.themes.IThemeManager;
+import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
 public class BaseHtmlProvider {
 	private final Random random = new Random();
@@ -42,6 +45,55 @@ public class BaseHtmlProvider {
         nonce =  nonceBuilder.toString();
         return nonce;
     }
+    
+    public String getNoDescriptionHtml() {
+		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
+				"%snyk.trust.dialog.warning.text");
+
+		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
+		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
+
+		var html = """
+				<!DOCTYPE html>
+				<html lang="en">
+				<head>
+				    <meta charset="UTF-8">
+				    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+				    <style>
+				        body {
+				        	font-family: var(--default-font);
+				            background-color: var(--background-color);
+				            color: var(--text-color);
+				        }
+				        .container {
+				            display: flex;
+				            align-items: center;
+				        }
+				        .logo {
+				            margin-right: 20px;
+				        }
+						a {
+							color: var(--link-color)
+						}
+						
+						div {
+							padding: 20px
+						}
+				    </style>
+				</head>
+				<body>
+				    <div class="container">
+				        <img src='data:image/png;base64,%s' alt='Snyk Logo'>
+				        <div>
+				            <p><strong>Please rescan to see the issue description.</strong></p>
+				        </div>
+				    </div>
+				</body>
+				</html>
+				""".formatted(base64Image, snykWarningText);
+		return html;
+	}
+
 
     public String replaceCssVariables(String html) {
         // Build the CSS with the nonce

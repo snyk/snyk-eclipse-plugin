@@ -46,15 +46,18 @@ public class Preferences {
 	public static final String LSP_VERSION = "LSP_VERSION";
 	public static final String USE_TOKEN_AUTH = "useTokenAuth";
 	public static final String ANALYTICS_PLUGIN_INSTALLED_SENT = "analyticsPluginInstalledSent";
-	public static final String FILTER_CRITICAL = "FILTER_SNYK_CRITICAL";
-	public static final String FILTER_HIGH = "FILTER_SNYK_HIGH";
-	public static final String FILTER_MEDIUM = "FILTER_SNYK_MEDIUM";
-	public static final String FILTER_LOW = "FILTER_SNYK_LOW";
-	public static final String FILTER_DELTA_NEW_ISSUES = "FILTER_SNYK_NEW_ISSUES";
-	public static final String FILTER_IGNORES_SHOW_OPEN_ISSUES = "FILTER_IGNORES_OPEN_ISSUES";
-	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_IGNORED_ISSUES";
-	public static final String FILTER_FIXABLE_ISSUES = "FILTER_FIXABLE_ISSUES";
-	public static final String FILTER_OSS_FIXABLE_ISSUES = "FILTER_OSS_FIXABLE_ISSUES";
+	public static final String ENABLE_DELTA = "ENABLE_DELTA";
+	
+	
+	// all filter preferences are positive: SHOW = true, HIDE = false
+	public static final String FILTER_SHOW_CRITICAL = "FILTER_SHOW_CRITICAL";
+	public static final String FILTER_SHOW_HIGH = "FILTER_SHOW_HIGH";
+	public static final String FILTER_SHOW_MEDIUM = "FILTER_SHOW_MEDIUM";
+	public static final String FILTER_SHOW_LOW = "FILTER_SHOW_LOW";
+	
+	public static final String FILTER_IGNORES_SHOW_OPEN_ISSUES = "FILTER_IGNORES_SHOW_OPEN_ISSUES";
+	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_SHOW_IGNORED_ISSUES";
+	public static final String FILTER_SHOW_ONLY_FIXABLE = "FILTER_SHOW_FIXABLE_AND_UNFIXABLE_ISSUES";
 
 	// Feature flags
 	public static final String IS_GLOBAL_IGNORES_FEATURE_ENABLED = "IS_GLOBAL_IGNORES_FEATURE_ENABLED";
@@ -87,32 +90,29 @@ public class Preferences {
 		if (getPref(ACTIVATE_SNYK_IAC) == null) {
 			store(ACTIVATE_SNYK_IAC, "true");
 		}
-		if (getPref(FILTER_CRITICAL) == null) {
-			store(FILTER_CRITICAL, "false");
+		if (getPref(FILTER_SHOW_CRITICAL) == null) {
+			store(FILTER_SHOW_CRITICAL, "true");
 		}
-		if (getPref(FILTER_HIGH) == null) {
-			store(FILTER_HIGH, "false");
+		if (getPref(FILTER_SHOW_HIGH) == null) {
+			store(FILTER_SHOW_HIGH, "true");
 		}
-		if (getPref(FILTER_MEDIUM) == null) {
-			store(FILTER_MEDIUM, "false");
+		if (getPref(FILTER_SHOW_MEDIUM) == null) {
+			store(FILTER_SHOW_MEDIUM, "true");
 		}
-		if (getPref(FILTER_LOW) == null) {
-			store(FILTER_LOW, "false");
+		if (getPref(FILTER_SHOW_LOW) == null) {
+			store(FILTER_SHOW_LOW, "true");
 		}
-		if (getPref(FILTER_DELTA_NEW_ISSUES) == null) {
-			store(FILTER_DELTA_NEW_ISSUES, "false");
+		if (getPref(ENABLE_DELTA) == null) {
+			store(ENABLE_DELTA, "false");
 		}
 		if (getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES) == null) {
 			store(FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		}
 		if (getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES) == null) {
-			store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+			store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 		}
-		if (getPref(FILTER_FIXABLE_ISSUES) == null) {
-			store(FILTER_FIXABLE_ISSUES, "false");
-		}
-		if (getPref(FILTER_OSS_FIXABLE_ISSUES) == null) {
-			store(FILTER_OSS_FIXABLE_ISSUES, "false");
+		if (getPref(FILTER_SHOW_ONLY_FIXABLE) == null) {
+			store(FILTER_SHOW_ONLY_FIXABLE, "false");
 		}
 		
 		if (getPref(SEND_ERROR_REPORTS) == null) {
@@ -262,7 +262,7 @@ public class Preferences {
 	}
 
 	public static boolean isDeltaEnabled() {
-		return Preferences.getInstance().getBooleanPref(Preferences.FILTER_DELTA_NEW_ISSUES);
+		return Preferences.getInstance().getBooleanPref(Preferences.ENABLE_DELTA);
 	}
 
 	public static void setCurrentPreferences(Preferences prefs) {

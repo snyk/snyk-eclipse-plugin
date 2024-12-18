@@ -18,7 +18,7 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 		}
 		return instance;
 	}
-
+	
 	public String getInitHtml() {
 		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
 				"%snyk.panel.auth.trust.warning.text");
@@ -98,4 +98,6 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				""".formatted(base64Image, snykWarningText);
 		return replaceCssVariables(html);
 	}
+	
+	
 }

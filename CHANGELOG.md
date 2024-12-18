@@ -1,10 +1,14 @@
 # Snyk Security Changelog
 
-## [Unreleased]
+## [3.0.0]
 ### Changes
 - process api URL from hasAuthenticated message
 - add release channel preference to select which CLI is downloaded
 - added plugin installed event and analytics sender
+- added new UI view to display issue details for all scan types
+- removed legacy UI view
+- added Snyk Code consistent ignores support
+- added Net new issues support
 
 ## [2.2.0] - v20241024.154007
 ### Changes

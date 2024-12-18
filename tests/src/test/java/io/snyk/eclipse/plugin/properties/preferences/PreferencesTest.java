@@ -1,5 +1,28 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_QUALITY;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_SECURITY;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT;
+import static io.snyk.eclipse.plugin.preferences.Preferences.CLI_BASE_URL;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ENABLE_DELTA;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ENABLE_TELEMETRY;
+import static io.snyk.eclipse.plugin.preferences.Preferences.ENDPOINT_KEY;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_ONLY_FIXABLE;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_CRITICAL;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_HIGH;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_LOW;
+import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_MEDIUM;
+import static io.snyk.eclipse.plugin.preferences.Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED;
+import static io.snyk.eclipse.plugin.preferences.Preferences.LSP_VERSION;
+import static io.snyk.eclipse.plugin.preferences.Preferences.MANAGE_BINARIES_AUTOMATICALLY;
+import static io.snyk.eclipse.plugin.preferences.Preferences.RELEASE_CHANNEL;
+import static io.snyk.eclipse.plugin.preferences.Preferences.SCANNING_MODE_AUTOMATIC;
+import static io.snyk.eclipse.plugin.preferences.Preferences.SEND_ERROR_REPORTS;
+import static io.snyk.eclipse.plugin.preferences.Preferences.USE_TOKEN_AUTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,30 +52,29 @@ class PreferencesTest {
 		Preferences preferences = Preferences.getInstance(new InMemoryPreferenceStore());
 		LsRuntimeEnvironment lsRuntimeEnv = new LsRuntimeEnvironment();
 
-		assertEquals("false", preferences.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
-		assertEquals("false", preferences.getPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY));
-		assertEquals("true", preferences.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
-		assertEquals("true", preferences.getPref(Preferences.ACTIVATE_SNYK_IAC));
-		assertEquals("false", preferences.getPref(Preferences.FILTER_CRITICAL));
-		assertEquals("false", preferences.getPref(Preferences.FILTER_HIGH));
-		assertEquals("false", preferences.getPref(Preferences.FILTER_MEDIUM));
-		assertEquals("false", preferences.getPref(Preferences.FILTER_LOW));
-		assertEquals("false", preferences.getPref(Preferences.FILTER_DELTA_NEW_ISSUES));
-		assertEquals("true", preferences.getPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES));
-		assertEquals("true", preferences.getPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES));
-		assertEquals("false", preferences.getPref(Preferences.FILTER_FIXABLE_ISSUES));
-		assertEquals("false", preferences.getPref(Preferences.FILTER_OSS_FIXABLE_ISSUES));
-		assertEquals("true", preferences.getPref(Preferences.SEND_ERROR_REPORTS));
-		assertEquals("true", preferences.getPref(Preferences.ENABLE_TELEMETRY));
-		assertEquals("true", preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
-		assertEquals("1", preferences.getPref(Preferences.LSP_VERSION));
-		assertEquals("false", preferences.getPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED));
-		assertEquals("https://api.snyk.io", preferences.getPref(Preferences.ENDPOINT_KEY));
-		assertEquals("https://downloads.snyk.io", preferences.getPref(Preferences.CLI_BASE_URL));
-		assertEquals("true", preferences.getPref(Preferences.SCANNING_MODE_AUTOMATIC));
-		assertEquals("false", preferences.getPref(Preferences.USE_TOKEN_AUTH));
-		assertEquals("false", preferences.getPref(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT));
-		assertEquals("stable", preferences.getPref(Preferences.RELEASE_CHANNEL));
+		assertEquals("false", preferences.getPref(ACTIVATE_SNYK_CODE_SECURITY));
+		assertEquals("false", preferences.getPref(ACTIVATE_SNYK_CODE_QUALITY));
+		assertEquals("true", preferences.getPref(ACTIVATE_SNYK_OPEN_SOURCE));
+		assertEquals("true", preferences.getPref(ACTIVATE_SNYK_IAC));
+		assertEquals("true", preferences.getPref(FILTER_SHOW_CRITICAL));
+		assertEquals("true", preferences.getPref(FILTER_SHOW_HIGH));
+		assertEquals("true", preferences.getPref(FILTER_SHOW_MEDIUM));
+		assertEquals("true", preferences.getPref(FILTER_SHOW_LOW));
+		assertEquals("false", preferences.getPref(ENABLE_DELTA));
+		assertEquals("true", preferences.getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES));
+		assertEquals("false", preferences.getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES));
+		assertEquals("false", preferences.getPref(FILTER_SHOW_ONLY_FIXABLE));
+		assertEquals("true", preferences.getPref(SEND_ERROR_REPORTS));
+		assertEquals("true", preferences.getPref(ENABLE_TELEMETRY));
+		assertEquals("true", preferences.getPref(MANAGE_BINARIES_AUTOMATICALLY));
+		assertEquals("1", preferences.getPref(LSP_VERSION));
+		assertEquals("false", preferences.getPref(IS_GLOBAL_IGNORES_FEATURE_ENABLED));
+		assertEquals("https://api.snyk.io", preferences.getPref(ENDPOINT_KEY));
+		assertEquals("https://downloads.snyk.io", preferences.getPref(CLI_BASE_URL));
+		assertEquals("true", preferences.getPref(SCANNING_MODE_AUTOMATIC));
+		assertEquals("false", preferences.getPref(USE_TOKEN_AUTH));
+		assertEquals("false", preferences.getPref(ANALYTICS_PLUGIN_INSTALLED_SENT));
+		assertEquals("stable", preferences.getPref(RELEASE_CHANNEL));
 		assertTrue(preferences.getCliPath().endsWith(lsRuntimeEnv.getDownloadBinaryName()));
 	}
 
@@ -96,8 +118,8 @@ class PreferencesTest {
 	void test_GetBoolean_returnsBooleanProperty() {
 		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
 
-		assertFalse(prefs.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
-		assertTrue(prefs.getBooleanPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+		assertFalse(prefs.getBooleanPref(ACTIVATE_SNYK_CODE_SECURITY));
+		assertTrue(prefs.getBooleanPref(ACTIVATE_SNYK_OPEN_SOURCE));
 	}
 
 	@Test
@@ -131,7 +153,7 @@ class PreferencesTest {
 	public void testIsManagedBinaries() {
 		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
 		assertTrue(prefs.isManagedBinaries());
-		prefs.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "false");
+		prefs.store(MANAGE_BINARIES_AUTOMATICALLY, "false");
 		assertFalse(prefs.isManagedBinaries());
 	}
 
@@ -139,7 +161,7 @@ class PreferencesTest {
 	public void testGetReleaseChannel() {
 		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
 		assertEquals("stable", prefs.getReleaseChannel());
-		prefs.store(Preferences.RELEASE_CHANNEL, "beta");
+		prefs.store(RELEASE_CHANNEL, "beta");
 		assertEquals("beta", prefs.getReleaseChannel());
 	}
 
@@ -155,7 +177,7 @@ class PreferencesTest {
 	public void testGetLspVersion() {
 		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
 		assertEquals("1", prefs.getLspVersion());
-		prefs.store(Preferences.LSP_VERSION, "2");
+		prefs.store(LSP_VERSION, "2");
 		assertEquals("2", prefs.getLspVersion());
 	}
 

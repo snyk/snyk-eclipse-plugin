@@ -4,24 +4,16 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
-import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
-import io.snyk.eclipse.plugin.views.snyktoolview.filters.FixableFilter;
+import io.snyk.eclipse.plugin.views.snyktoolview.filters.SeverityFilter;
 
-public class FilterFixableIssuesHandler extends BaseHandler implements IElementUpdater {
-
-	public FilterFixableIssuesHandler() {
-		super();
-		preferenceKey = Preferences.FILTER_SHOW_ONLY_FIXABLE;
-	}
-
+public abstract class BaseSeverityFilterHandler extends BaseHandler implements IElementUpdater {	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		super.execute(event);
 
-		new FixableFilter(TreeFilterManager.getInstance()).applyFilter();
+		new SeverityFilter(TreeFilterManager.getInstance(), preferenceKey).applyFilter();
 
 		return null;
 	}
-
 }

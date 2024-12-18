@@ -16,7 +16,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
-public class MenuHandler extends AbstractHandler {
+public class ScanWorkspaceFolderHandler extends AbstractHandler {
 
 	@SuppressWarnings("restriction")
 	public Object execute(ExecutionEvent event) throws ExecutionException {
