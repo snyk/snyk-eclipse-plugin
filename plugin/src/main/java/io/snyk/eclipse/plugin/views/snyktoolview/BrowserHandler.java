@@ -18,8 +18,6 @@ import org.eclipse.swt.browser.ProgressAdapter;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
-
 import com.google.gson.Gson;
 
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
@@ -105,7 +103,6 @@ public class BrowserHandler {
 		});
 
 		initBrowserText();
-
 	}
 
 	private record ErrorMessage(String error, String path) {
@@ -138,7 +135,6 @@ public class BrowserHandler {
 				browser.setText(content);
 			});
 		});
-
 	}
 
 	private BaseHtmlProvider getHtmlProvider(TreeNode node) {

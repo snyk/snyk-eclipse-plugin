@@ -45,7 +45,6 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
                         }
                     }
                 }
-
                 // Disable AIfix
                 if(document.getElementById('ai-fix-wrapper') && document.getElementById('no-ai-fix-wrapper')){
                     document.getElementById('ai-fix-wrapper').className = 'hidden';
