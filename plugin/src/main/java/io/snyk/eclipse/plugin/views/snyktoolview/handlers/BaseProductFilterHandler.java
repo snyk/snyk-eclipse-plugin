@@ -5,6 +5,7 @@ import org.eclipse.core.commands.ExecutionException;
 
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.ProductFilter;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class BaseProductFilterHandler extends BaseHandler {
 	private String filterName;
@@ -21,6 +22,10 @@ public class BaseProductFilterHandler extends BaseHandler {
 		
 		// now we can apply the filter
 		new ProductFilter(TreeFilterManager.getInstance(), filterName).applyFilter();
+		
+		final var lc = SnykExtendedLanguageClient.getInstance();
+		lc.updateConfiguration();
+		
 		return returnValue;
 	}
 }

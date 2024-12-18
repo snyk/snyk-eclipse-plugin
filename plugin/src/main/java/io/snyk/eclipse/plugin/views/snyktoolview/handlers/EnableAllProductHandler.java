@@ -12,7 +12,6 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
 import io.snyk.eclipse.plugin.utils.SnykIcons;
-import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class EnableAllProductHandler extends BaseHandler implements IElementUpdater {
 	public EnableAllProductHandler() {
@@ -28,7 +27,6 @@ public class EnableAllProductHandler extends BaseHandler implements IElementUpda
 
 		updateMultiplePrefs(productPrefs);
 
-		SnykExtendedLanguageClient.getInstance().updateConfiguration();
 		return null;
 	}
 }

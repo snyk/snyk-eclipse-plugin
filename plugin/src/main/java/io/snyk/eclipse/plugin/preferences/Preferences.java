@@ -54,6 +54,7 @@ public class Preferences {
 	public static final String FILTER_SHOW_HIGH = "FILTER_SHOW_HIGH";
 	public static final String FILTER_SHOW_MEDIUM = "FILTER_SHOW_MEDIUM";
 	public static final String FILTER_SHOW_LOW = "FILTER_SHOW_LOW";
+	
 	public static final String FILTER_IGNORES_SHOW_OPEN_ISSUES = "FILTER_IGNORES_SHOW_OPEN_ISSUES";
 	public static final String FILTER_IGNORES_SHOW_IGNORED_ISSUES = "FILTER_IGNORES_SHOW_IGNORED_ISSUES";
 	public static final String FILTER_SHOW_ONLY_FIXABLE = "FILTER_SHOW_FIXABLE_AND_UNFIXABLE_ISSUES";
