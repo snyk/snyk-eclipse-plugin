@@ -44,7 +44,7 @@ class TreeViewerFilterTest {
         when(issueNode.getIssue()).thenReturn(issue);
 
         Predicate<Issue> predicate = i -> true; // Always matches
-        filter.setFilterPredicate("test", predicate);
+        filter.putFilterPredicate("test", predicate);
 
         assertTrue(filter.select(mockViewer, null, issueNode));
     }
@@ -56,7 +56,7 @@ class TreeViewerFilterTest {
         when(issueNode.getIssue()).thenReturn(issue);
 
         Predicate<Issue> predicate = i -> false; // Never matches
-        filter.setFilterPredicate("test", predicate);
+        filter.putFilterPredicate("test", predicate);
 
         assertFalse(filter.select(mockViewer, null, issueNode));
     }
@@ -86,7 +86,7 @@ class TreeViewerFilterTest {
     @Test
     void testRemoveFilterPredicate() {
         Predicate<Issue> predicate = i -> false;
-        filter.setFilterPredicate("test", predicate);
+        filter.putFilterPredicate("test", predicate);
 
         assertTrue(filter.select(mockViewer, null, mock(IssueTreeNode.class)));
 

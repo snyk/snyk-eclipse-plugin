@@ -1,9 +1,10 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Location;
@@ -83,7 +84,7 @@ public class BrowserHandler {
 		browser.addProgressListener(new ProgressAdapter() {
 			@Override
 			public void completed(ProgressEvent event) {
-				if (!StringUtils.isEmpty(initScript)) {
+				if (!isEmpty(initScript)) {
 					browser.execute(initScript);
 				}
 			}
@@ -116,9 +117,14 @@ public class BrowserHandler {
 		return CompletableFuture.supplyAsync(() -> {
 			return generateHtmlContent(node);
 		}).thenAccept(htmlContent -> {
-			var content = htmlProvider.replaceCssVariables(htmlContent);
+			if (isEmpty(htmlContent)) {
+				htmlContent = htmlProvider.getNoDescriptionHtml();
+			}
+
+			final var browserContent = htmlProvider.replaceCssVariables(htmlContent);
+			
 			Display.getDefault().syncExec(() -> {
-				browser.setText(content);
+				browser.setText(browserContent);
 			});
 		});
 

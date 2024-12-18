@@ -5,7 +5,6 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.utils.SnykIcons;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresOpenIssuesFilter;
 
@@ -13,9 +12,6 @@ public class FilterIgnoresOpenIssuesHandler extends BaseHandler implements IElem
 
 	public FilterIgnoresOpenIssuesHandler() {
 		super();
-
-		iconEnabled = SnykIcons.ENABLED;
-		iconDisabled = SnykIcons.DISABLED;
 		preferenceKey = Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
 	}
 
@@ -23,8 +19,7 @@ public class FilterIgnoresOpenIssuesHandler extends BaseHandler implements IElem
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		super.execute(event);
 
-		new IgnoresOpenIssuesFilter(TreeFilterManager.getInstance(), Preferences.getInstance(), preferenceKey)
-				.applyFilter();
+		new IgnoresOpenIssuesFilter(TreeFilterManager.getInstance()).applyFilter();
 
 		return null;
 	}
