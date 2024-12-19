@@ -48,7 +48,7 @@ public class BaseHtmlProvider {
     
     public String getNoDescriptionHtml() {
 		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
-				"%snyk.trust.dialog.warning.text");
+				"snyk.panel.auth.trust.warning.text");
 
 		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
 		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
