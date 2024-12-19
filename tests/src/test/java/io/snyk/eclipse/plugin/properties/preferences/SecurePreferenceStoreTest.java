@@ -10,11 +10,12 @@ import org.mockito.Mockito;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.preferences.SecurePreferenceStore;
+import io.snyk.languageserver.LsBaseTest;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class SecurePreferenceStoreTest {
+class SecurePreferenceStoreTest extends LsBaseTest {
 
   @SuppressWarnings("restriction")
 @Test

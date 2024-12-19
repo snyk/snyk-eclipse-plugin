@@ -42,6 +42,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
@@ -99,6 +101,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 
 @SuppressWarnings("restriction")
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
+	private static final String MARKER_TYPE = "io.snyk.languageserver.marker";
 	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
 	private TaskProcessor taskProcessor;
@@ -187,10 +190,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				runSnykWizard();
 			} else {
 				openToolView();
-
-				if (Preferences.isDeltaEnabled())
-					this.toolView.enableDelta();
-
 				try {
 					if (projectPath != null) {
 						executeCommand(LsConstants.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath));
@@ -680,6 +679,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
 		for (IProject iProject : openProjects) {
 			IssueCacheHolder.getInstance().getCacheInstance(iProject).clearAll();
+			try {
+				iProject.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
+			} catch (CoreException e) {
+				SnykLogger.logError(e);
+			}
 		}
 
 	}
