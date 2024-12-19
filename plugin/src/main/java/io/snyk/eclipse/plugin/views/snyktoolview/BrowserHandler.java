@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.jface.viewers.TreeNode;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -18,13 +19,13 @@ import org.eclipse.swt.browser.ProgressAdapter;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
-
 import com.google.gson.Gson;
 
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
 import io.snyk.eclipse.plugin.html.StaticPageHtmlProvider;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.eclipse.plugin.wizards.SnykWizard;
 
 @SuppressWarnings("restriction")
 public class BrowserHandler {
@@ -66,6 +67,18 @@ public class BrowserHandler {
 			}
 		};
 
+		new BrowserFunction(browser, "initiateLogin") {
+			@Override
+			public Object function(Object[] arguments) {
+				SnykWizard wizard = new SnykWizard();
+				WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(),wizard);
+
+				dialog.setBlockOnOpen(true);
+				dialog.open();
+				return null;
+			}
+		};
+
 		browser.addLocationListener(new LocationListener() {
 			@Override
 			public void changing(LocationEvent event) {
@@ -89,6 +102,7 @@ public class BrowserHandler {
 				}
 			}
 		});
+
 		initBrowserText();
 	}
 
@@ -127,7 +141,6 @@ public class BrowserHandler {
 				browser.setText(browserContent);
 			});
 		});
-
 	}
 
 	private BaseHtmlProvider getHtmlProvider(TreeNode node) {

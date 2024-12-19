@@ -21,7 +21,7 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 	
 	public String getInitHtml() {
 		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
-				"%snyk.trust.dialog.warning.text");
+				"%snyk.panel.auth.trust.warning.text");
 
 		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
 		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
@@ -35,7 +35,7 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				    <title>Snyk for Eclipse</title>
 				    <style>
 				        body {
-				        	font-family: var(--default-font);
+				            font-family: var(--default-font);
 				            background-color: var(--background-color);
 				            color: var(--text-color);
 				        }
@@ -43,27 +43,54 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				            display: flex;
 				            align-items: center;
 				        }
+				        .welcome-text {
+				            width: 520px;
+				        }
+				        .agreement-text {
+				            font-size: smaller;
+				            display: inline-block;
+				            width: 350px;
+				        }
 				        .logo {
 				            margin-right: 20px;
 				        }
-						a {
-							color: var(--link-color)
-						}
-						
-						div {
-							padding: 20px
-						}
+				        a {
+				            color: var(--link-color);
+				        }
+				        div {
+				            padding: 20px;
+				        }
+				        button {
+				            text-align: center;
+				            text-decoration: none;
+				            background-color: var(--button-color);
+				            display: inline-block;
+				            border-color: var(--border-color);
+				            border-style: solid;
+				            border-radius: 5px;
+				            font-family: inherit;
+				            font-size: inherit;
+				            color: inherit;
+				        }
 				    </style>
 				</head>
 				<body>
 				    <div class="container">
 				        <img src='data:image/png;base64,%s' alt='Snyk Logo'>
-				        <div>
+				        <div class="welcome-text">
 				            <p><strong>Welcome to Snyk for Eclipse</strong></p>
+				            <ol>
+				                <li align="left">Authenticate to Snyk.io</li>
+				                <li align="left">Analyze code for issues and vulnerabilities</li>
+				                <li align="left">Improve your code and upgrade dependencies</li>
+				            </ol>
 				            <p>%s</p>
-				         By connecting your account with Snyk, you agree to<br>
-				         the Snyk <a href="https://snyk.io/policies/privacy/">Privacy Policy</a>,
-				         and the Snyk <a href="https://snyk.io/policies/terms-of-service/">Terms of Service</a>.
+				            <button type="button" onclick="window.initiateLogin()">Trust project and scan</button>
+				            <p class="agreement-text">
+				                By connecting your account with Snyk, you agree to
+				                the Snyk <a href="https://snyk.io/policies/privacy/">Privacy Policy</a>,
+				                and the Snyk <a href="https://snyk.io/policies/terms-of-service/">Terms of Service</a>.
+				            </p>
 				        </div>
 				    </div>
 				</body>
