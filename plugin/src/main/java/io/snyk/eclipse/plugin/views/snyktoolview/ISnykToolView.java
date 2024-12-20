@@ -76,6 +76,11 @@ public interface ISnykToolView {
 	abstract void refreshTree();
 
 	/**
+	 * Refreshes the browser
+	 */
+	abstract void refreshBrowser(String status);
+
+	/**
 	 * Returns the tree root
 	 * 
 	 * @return

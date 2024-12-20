@@ -19,29 +19,31 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 		return instance;
 	}
 	
-	public String getInitHtml() {
-		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
-				"%snyk.panel.auth.trust.warning.text");
-
-		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
-		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
-
-		var html = """
-				<!DOCTYPE html>
-				<html lang="en">
+	private String head = """
 				<head>
 				    <meta charset="UTF-8">
 				    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 				    <title>Snyk for Eclipse</title>
 				    <style>
+				        html {
+				            height:100%;
+				        }
 				        body {
 				            font-family: var(--default-font);
 				            background-color: var(--background-color);
 				            color: var(--text-color);
+				            display: flex;
+				            align-items: center;
+				            justify-content: center;
+				            height: 100%;
 				        }
 				        .container {
 				            display: flex;
 				            align-items: center;
+				            justify-content: center;
+				        }
+				        .status {
+				            text-align: center;
 				        }
 				        .welcome-text {
 				            width: 520px;
@@ -74,11 +76,59 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				        }
 				    </style>
 				</head>
+			""";
+
+	public String getScanningHtml() {
+		var html = """
+				<!DOCTYPE html>
+				<html lang="en">
+				%s
+				<body>
+				    <div class="container">
+				        <p>
+				            Scanning project for vulnerabilities...<br/>
+				            <a class="stop_scan" onclick="window.stopScan();">Stop Scanning</a>
+				        </p>
+				    </div>
+				</body>
+				</html>
+				""".formatted(head);
+		return replaceCssVariables(html);
+	}
+
+	public String getDefaultHtml() {
+		var html = """
+				<!DOCTYPE html>
+				<html lang="en">
+				%s
+				<body>
+				    <div class="container">
+				        <p>
+				            Select an issue and start improving your project.
+				        </p>
+				    </div>
+				</body>
+				</html>
+				""".formatted(head);
+		return replaceCssVariables(html);
+	}
+
+	public String getInitHtml() {
+		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
+				"%snyk.panel.auth.trust.warning.text");
+
+		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
+		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
+
+		var html = """
+				<!DOCTYPE html>
+				<html lang="en">
+				%s
 				<body>
 				    <div class="container">
 				        <img src='data:image/png;base64,%s' alt='Snyk Logo'>
 				        <div class="welcome-text">
-				            <p><strong>Welcome to Snyk for Eclipse</strong></p>
+				            <p><strong>Welcome to Snyk for Eclipse!</strong></p>
 				            <ol>
 				                <li align="left">Authenticate to Snyk.io</li>
 				                <li align="left">Analyze code for issues and vulnerabilities</li>
@@ -95,7 +145,7 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				    </div>
 				</body>
 				</html>
-				""".formatted(base64Image, snykWarningText);
+				""".formatted(head, base64Image, snykWarningText);
 		return replaceCssVariables(html);
 	}
 	

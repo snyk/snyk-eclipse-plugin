@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
 import io.snyk.eclipse.plugin.html.StaticPageHtmlProvider;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 
@@ -79,6 +80,14 @@ public class BrowserHandler {
 			}
 		};
 
+		new BrowserFunction(browser, "stopScan") {
+			@Override
+			public Object function(Object[] arguments) {
+				//TODO Implement this!
+				return null;
+			}
+		};
+
 		browser.addLocationListener(new LocationListener() {
 			@Override
 			public void changing(LocationEvent event) {
@@ -103,7 +112,7 @@ public class BrowserHandler {
 			}
 		});
 
-		initBrowserText();
+		setDefaultBrowserText();
 	}
 
 	private record ErrorMessage(String error, String path) {
@@ -113,10 +122,12 @@ public class BrowserHandler {
 		// Generate HTML content based on the selected node
 		var htmlProvider = getHtmlProvider(node);
 		initScript = htmlProvider.getInitScript();
+		boolean shouldShowDefaultMessage = true;
 		if (node instanceof ProductTreeNode) {
 			var ptn = (ProductTreeNode) node;
 			String errorJson = ptn.getErrorMessage();
 			if (errorJson != null && !errorJson.isBlank()) {
+				shouldShowDefaultMessage = false;
 				var error = new Gson().fromJson(errorJson, ErrorMessage.class);
 				String errorHtml = htmlProvider.getErrorHtml(error.error, error.path);
 				Display.getDefault().syncExec(() -> {
@@ -125,8 +136,12 @@ public class BrowserHandler {
 			}
 		}
 
-		if (!(node instanceof IssueTreeNode))
+		if (!(node instanceof IssueTreeNode)) {
+			if (shouldShowDefaultMessage) {
+				setDefaultBrowserText();
+			}
 			return CompletableFuture.completedFuture(null);
+		}
 
 		return CompletableFuture.supplyAsync(() -> {
 			return generateHtmlContent(node);
@@ -168,7 +183,16 @@ public class BrowserHandler {
 		return "<html><body<p>" + text + "</p></body></html>";
 	}
 
-	public void initBrowserText() {
-		browser.setText(StaticPageHtmlProvider.getInstance().getInitHtml());
+	public void setDefaultBrowserText() {
+		// If we are not authenticated, show the welcome page, else show the issue placeholder.
+		if (Preferences.getInstance().getAuthToken().isBlank()) {
+			browser.setText(StaticPageHtmlProvider.getInstance().getInitHtml());
+		} else {
+			browser.setText(StaticPageHtmlProvider.getInstance().getDefaultHtml());
+		}
+	}
+
+	public void setScanningBrowserText() {
+		browser.setText(StaticPageHtmlProvider.getInstance().getScanningHtml());
 	}
 }
