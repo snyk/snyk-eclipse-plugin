@@ -34,7 +34,8 @@ public class HtmlProviderFactoryTest extends LsBaseTest {
     assertTrue(!htmlContent.contains("${ideScript})"));
     assertTrue(!htmlContent.contains("ideNonce"));
     assertTrue(!htmlContent.contains("var(--text-color)"));
-    assertTrue(!htmlContent.contains("var(----background-color)"));
+    assertTrue(!htmlContent.contains("var(--background-color)"));
+    assertTrue(!htmlContent.contains("var(--button-color)"));
     assertTrue(!htmlContent.contains("var(--border-color)"));
     assertTrue(!htmlContent.contains("var(--link-color)"));
     assertTrue(!htmlContent.contains("var(--text-color)"));

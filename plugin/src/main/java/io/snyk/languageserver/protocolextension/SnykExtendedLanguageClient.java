@@ -135,6 +135,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	
 	public void updateConfiguration() {
 		this.configurationUpdater.configurationChanged();
+		if (this.toolView != null) {
+			this.toolView.refreshBrowser(null);
+		}
 	}
 
 	@Override
@@ -202,6 +205,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					SnykLogger.logError(e);
 				}
 			}
+		});
+	}
+
+	public void stopScan() {
+		CompletableFuture.runAsync(() -> {
+			executeCommand("STOP_SCAN", new ArrayList<>());
 		});
 	}
 
@@ -375,6 +384,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			break;
 		}
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
+		this.toolView.refreshBrowser(param.getStatus());
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)

@@ -1,5 +1,7 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -304,6 +306,17 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			this.treeViewer.refresh(true);
 		});
 	}
+
+	@Override
+	public void refreshBrowser(String status) {
+		Display.getDefault().asyncExec(() -> {
+			if (status != null && status.equals(SCAN_STATE_IN_PROGRESS)) {
+				this.browserHandler.setScanningBrowserText();
+			} else {
+				this.browserHandler.setDefaultBrowserText();
+			}
+		});
+	};
 
 	@Override
 	public void resetNode(BaseTreeNode node) {
