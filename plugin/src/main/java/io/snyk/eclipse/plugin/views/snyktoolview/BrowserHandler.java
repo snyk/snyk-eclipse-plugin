@@ -86,7 +86,6 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "stopScan") {
 			@Override
 			public Object function(Object[] arguments) {
-				
 				IHandlerService handlerService = 
 						(IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
 				try {
@@ -94,7 +93,6 @@ public class BrowserHandler {
 				} catch (CommandException e) {
 					SnykLogger.logError(e);
 				} 
-				
 				return null;
 			}
 		};
