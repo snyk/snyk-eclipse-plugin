@@ -97,7 +97,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 	
 	public static Object createAndLaunch() {
 		SnykWizard wizard = new SnykWizard();
-		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(),wizard);
+		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 		dialog.setBlockOnOpen(true);
 		dialog.open();
 		return null;

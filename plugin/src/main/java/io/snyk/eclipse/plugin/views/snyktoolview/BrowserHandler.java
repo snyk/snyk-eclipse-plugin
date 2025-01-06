@@ -5,6 +5,11 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.NotEnabledException;
+import org.eclipse.core.commands.NotHandledException;
+import org.eclipse.core.commands.common.CommandException;
+import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Location;
@@ -18,6 +23,9 @@ import org.eclipse.swt.browser.ProgressAdapter;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.handlers.IHandlerService;
+
 import com.google.gson.Gson;
 
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
@@ -25,6 +33,7 @@ import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
 import io.snyk.eclipse.plugin.html.StaticPageHtmlProvider;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 
 @SuppressWarnings("restriction")
@@ -77,7 +86,15 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "stopScan") {
 			@Override
 			public Object function(Object[] arguments) {
-				//TODO Implement this!
+				
+				IHandlerService handlerService = 
+						(IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
+				try {
+					handlerService.executeCommand(IHandlerCommands.STOP_SCAN, null);
+				} catch (CommandException e) {
+					SnykLogger.logError(e);
+				} 
+				
 				return null;
 			}
 		};

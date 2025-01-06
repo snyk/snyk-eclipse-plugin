@@ -76,6 +76,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.IssueTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
+import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.CommandHandler;
 import io.snyk.languageserver.FeatureFlagConstants;
@@ -204,12 +205,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					SnykLogger.logError(e);
 				}
 			}
-		});
-	}
-
-	public void stopScan() {
-		CompletableFuture.runAsync(() -> {
-			executeCommand("STOP_SCAN", new ArrayList<>());
 		});
 	}
 
