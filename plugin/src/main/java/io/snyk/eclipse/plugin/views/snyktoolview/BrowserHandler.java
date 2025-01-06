@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.jface.viewers.TreeNode;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -71,12 +70,7 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "initiateLogin") {
 			@Override
 			public Object function(Object[] arguments) {
-				SnykWizard wizard = new SnykWizard();
-				WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(),wizard);
-
-				dialog.setBlockOnOpen(true);
-				dialog.open();
-				return null;
+				return SnykWizard.createAndLaunch();
 			}
 		};
 

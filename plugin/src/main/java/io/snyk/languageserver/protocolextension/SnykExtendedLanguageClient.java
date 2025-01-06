@@ -44,7 +44,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4j.ProgressParams;
@@ -190,7 +189,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void triggerScan(Path projectPath) {
 		CompletableFuture.runAsync(() -> {
 			if (Preferences.getInstance().getAuthToken().isBlank()) {
-				runSnykWizard();
+				SnykWizard.createAndLaunch();
 			} else {
 				openToolView();
 				try {
@@ -604,15 +603,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public CompletableFuture<Void> createProgress(WorkDoneProgressCreateParams params) {
 		this.progressManager.addProgress(params.getToken().getLeft());
 		return super.createProgress(params);
-	}
-
-	private void runSnykWizard() {
-		SnykWizard wizard = new SnykWizard();
-
-		WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
-
-		dialog.setBlockOnOpen(true);
-		dialog.open();
 	}
 
 	/**
