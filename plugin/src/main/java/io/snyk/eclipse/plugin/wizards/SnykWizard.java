@@ -95,11 +95,10 @@ public class SnykWizard extends Wizard implements INewWizard {
 		return true;
 	}
 
-	public static Object createAndLaunch() {
+	public static void createAndLaunch() {
 		SnykWizard wizard = new SnykWizard();
 		WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
 		dialog.setBlockOnOpen(true);
 		dialog.open();
-		return null;
 	}
 }

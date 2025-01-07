@@ -79,7 +79,8 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "initiateLogin") {
 			@Override
 			public Object function(Object[] arguments) {
-				return SnykWizard.createAndLaunch();
+				SnykWizard.createAndLaunch();
+				return null;
 			}
 		};
 
