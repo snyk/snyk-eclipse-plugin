@@ -75,7 +75,9 @@ public class ContentRootNode extends BaseTreeNode {
 	}
 
 	public void setPath(Path path) {
- 		this.path = path.normalize();
+		if (path != null) {
+			this.path = path.normalize();
+		}
 	}
 
 	public String getName() {
