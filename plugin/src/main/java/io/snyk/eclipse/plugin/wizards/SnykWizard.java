@@ -6,8 +6,10 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
@@ -91,5 +93,12 @@ public class SnykWizard extends Wizard implements INewWizard {
 			}
 		}.schedule();
 		return true;
+	}
+
+	public static void createAndLaunch() {
+		SnykWizard wizard = new SnykWizard();
+		WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(), wizard);
+		dialog.setBlockOnOpen(true);
+		dialog.open();
 	}
 }

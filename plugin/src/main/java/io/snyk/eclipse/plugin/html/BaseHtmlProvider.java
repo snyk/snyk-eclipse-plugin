@@ -48,7 +48,7 @@ public class BaseHtmlProvider {
     
     public String getNoDescriptionHtml() {
 		String snykWarningText = Platform.getResourceString(Platform.getBundle("io.snyk.eclipse.plugin"),
-				"%snyk.trust.dialog.warning.text");
+				"snyk.panel.auth.trust.warning.text");
 
 		Bundle bundle = Platform.getBundle("io.snyk.eclipse.plugin");
 		String base64Image = ResourceUtils.getBase64Image(bundle, "logo_snyk.png");
@@ -107,8 +107,9 @@ public class BaseHtmlProvider {
         // Replace CSS variables with actual color values
         html = html.replace("var(--text-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR", "#000000"));
         html = html.replace("var(--background-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_END", "#FFFFFF"));
-    	html = html.replace("var(--code-background-color)", getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
-    	html = html.replace("var(--circle-color)",  getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+        html = html.replace("var(--code-background-color)", getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+        html = html.replace("var(--button-color)", getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+        html = html.replace("var(--circle-color)",  getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
 
         html = html.replace("var(--border-color)", getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
         html = html.replace("var(--link-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));

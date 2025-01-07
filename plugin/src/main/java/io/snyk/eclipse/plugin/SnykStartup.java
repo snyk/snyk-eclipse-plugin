@@ -16,7 +16,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -68,11 +67,7 @@ public class SnykStartup implements IStartup {
 					Preferences prefs = Preferences.getInstance();
 					if (prefs.getAuthToken().isBlank() && !prefs.isTest()) {
 						monitor.subTask("Starting Snyk Wizard to configure initial settings...");
-						SnykWizard wizard = new SnykWizard();
-						WizardDialog dialog = new WizardDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell(),
-								wizard);
-						dialog.setBlockOnOpen(true);
-						dialog.open();
+						SnykWizard.createAndLaunch();
 					}
 				});
 				monitor.done();
