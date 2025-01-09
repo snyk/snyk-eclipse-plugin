@@ -2,7 +2,7 @@
 <feature
       id="io.snyk.scanner"
       label="Snyk Security"
-      version="2.2.0.qualifier"
+      version="3.0.0.qualifier"
       provider-name="Snyk">
 
    <description url="https://snyk.io">
