@@ -132,7 +132,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		return super.getLanguageServer();
 	}
-	
+
 	public void updateConfiguration() {
 		this.configurationUpdater.configurationChanged();
 		if (this.toolView != null) {
@@ -379,6 +379,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
 		this.toolView.refreshBrowser(param.getStatus());
+	}
+
+	// TODO what data is returned in the SNYK_SCAN_SUMMARY?
+	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
+	public void updateSummaryPanel(String summary) {
+		this.toolView.refreshSummary(summary);
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)

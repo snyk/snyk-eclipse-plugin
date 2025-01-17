@@ -5,11 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.commands.NotEnabledException;
-import org.eclipse.core.commands.NotHandledException;
 import org.eclipse.core.commands.common.CommandException;
-import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Location;

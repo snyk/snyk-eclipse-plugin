@@ -81,6 +81,11 @@ public interface ISnykToolView {
 	abstract void refreshBrowser(String status);
 
 	/**
+	 * Refreshes the SummaryPanel
+	 */
+	abstract void refreshSummary(String status);
+
+	/**
 	 * Returns the tree root
 	 * 
 	 * @return

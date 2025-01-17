@@ -18,7 +18,7 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 		}
 		return instance;
 	}
-	
+
 	private String head = """
 				<head>
 				    <meta charset="UTF-8">
@@ -148,6 +148,31 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				""".formatted(head, base64Image, snykWarningText);
 		return replaceCssVariables(html);
 	}
-	
-	
+
+	public String getSummaryInitHtml() {
+		var html = """
+				<!DOCTYPE html>
+				<html lang="en">
+				<body>
+				    <div class="container">
+				        <h3 class="summary-header">SUMMARY</h3>
+		                    <button type="button" onclick="window.showAllIssuesTab()">All issues</button>
+		                    <button type="button" onclick="window.showDeltaIssuesTab()">Delta issues</button>
+				        <div class="summary-row">
+				            <span class="icon">⚠️</span>
+				            <span class="text">312 issues found in your project</span>
+				        </div>
+				        <div class="summary-row">
+				            <span class="icon">⚡</span>
+				            <span class="text">183 issues are fixable</span>
+				        </div>
+
+				    </div>
+				</body>
+				</html>
+				"""
+				.formatted(head);
+		return replaceCssVariables(html);
+	}
+
 }

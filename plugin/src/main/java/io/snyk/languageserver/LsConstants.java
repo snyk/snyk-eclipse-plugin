@@ -12,11 +12,12 @@ public interface LsConstants {
 	String COMMAND_GET_FEATURE_FLAG_STATUS = "snyk.getFeatureFlagStatus";
 	String COMMAND_CODE_FIX_DIFFS = "snyk.code.fixDiffs";
 	String COMMAND_CODE_SUBMIT_FIX_FEEDBACK = "snyk.code.submitFixFeedback";
+	String COMMAND_SNYK_CLI = "snyk.executeCLI";
 	String SNYK_HAS_AUTHENTICATED = "$/snyk.hasAuthenticated";
 	String SNYK_IS_AVAILABLE_CLI = "$/snyk.isAvailableCli";
 	String SNYK_ADD_TRUSTED_FOLDERS = "$/snyk.addTrustedFolders";
 	String SNYK_SCAN = "$/snyk.scan";
 	String SNYK_PUBLISH_DIAGNOSTICS_316 = "$/snyk.publishDiagnostics316";
 	String SNYK_FOLDER_CONFIG = "$/snyk.folderConfigs";
-	String COMMAND_SNYK_CLI = "snyk.executeCLI";
+	String SNYK_SCAN_SUMMARY = "$/snyk.scanSummary";
 }
