@@ -58,6 +58,8 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
  * removed.
  */
 public class SnykToolView extends ViewPart implements ISnykToolView {
+	public SnykToolView() {
+	}
 
 	/**
 	 * The ID of the view as specified by the extension.
@@ -112,7 +114,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		browserHandler = new BrowserHandler(browser);
 		browserHandler.initialize();
 		// Set sash weights
-		horizontalSashForm.setWeights(new int[] { 1, 1 });
+		horizontalSashForm.setWeights(new int[] { 1, 2 });
 
 		// Add selection listener to the tree
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {

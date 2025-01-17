@@ -97,6 +97,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostic
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
+import io.snyk.languageserver.protocolextension.messageObjects.SummaryPanelParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 @SuppressWarnings("restriction")
@@ -383,8 +384,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	// TODO what data is returned in the SNYK_SCAN_SUMMARY?
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
-	public void updateSummaryPanel(String summary) {
-		this.toolView.refreshSummary(summary);
+	public void updateSummaryPanel(SummaryPanelParams summary) {
+		this.toolView.refreshSummary(summary.getSummary());
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
