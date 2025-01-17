@@ -1,13 +1,13 @@
 package io.snyk.languageserver.protocolextension.messageObjects;
 
 public class SummaryPanelParams {
-	  private String summary;
+	  private String scanSummary;
 
 	  public String getSummary() {
-	    return summary;
+	    return scanSummary;
 	  }
 
-	  public void setSummary(String summary) {
-	    this.summary = summary;
+	  public void setSummary(String scanSummary) {
+	    this.scanSummary = scanSummary;
 	  }
 }

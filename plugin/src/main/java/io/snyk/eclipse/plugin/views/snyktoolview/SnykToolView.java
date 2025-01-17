@@ -335,7 +335,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public void refreshSummary(String summary) {
-		this.summaryBrowserHandler.setBrowserText(summary);
+		Display.getDefault().asyncExec(() -> {
+			this.summaryBrowserHandler.setBrowserText(summary);
+		});
 	}
 
 	@Override
