@@ -156,8 +156,8 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				<body>
 				    <div class="container">
 				        <h3 class="summary-header">SUMMARY</h3>
-		                    <button type="button" onclick="window.showAllIssuesTab()">All issues</button>
-		                    <button type="button" onclick="window.showDeltaIssuesTab()">Delta issues</button>
+				                  <button type="button" onclick="window.showAllIssuesTab()">All issues</button>
+				                  <button type="button" onclick="window.showDeltaIssuesTab()">Delta issues</button>
 				        <div class="summary-row">
 				            <span class="icon">⚠️</span>
 				            <span class="text">312 issues found in your project</span>
@@ -170,9 +170,17 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				    </div>
 				</body>
 				</html>
+				""".formatted(head);
+		return replaceCssVariables(html);
+	}
 				"""
 				.formatted(head);
 		return replaceCssVariables(html);
 	}
 
+	public String getFormattedSummaryHtml(String summary) {
+		var html = summary
+				.formatted(head);
+		return replaceCssVariables(html);
+	}
 }

@@ -64,7 +64,7 @@ public class SummaryBrowserHandler {
 	}
 
 	public void setBrowserText(String summary) {
-		browser.setText(summary);
+		browser.setText(StaticPageHtmlProvider.getInstance().getFormattedSummaryHtml(summary));
 	}
 
 }
