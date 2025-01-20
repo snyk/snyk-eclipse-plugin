@@ -83,7 +83,7 @@ public interface ISnykToolView {
 	/**
 	 * Refreshes the SummaryPanel
 	 */
-	abstract void refreshSummary(String status);
+	abstract void updateSummary(String status);
 
 	/**
 	 * Returns the tree root

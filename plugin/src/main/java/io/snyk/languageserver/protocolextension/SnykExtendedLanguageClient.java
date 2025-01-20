@@ -385,7 +385,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
 	public void updateSummaryPanel(SummaryPanelParams summary) {
 		openToolView();
-		this.toolView.refreshSummary(summary.getSummary());
+		this.toolView.updateSummary(summary.getSummary());
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
