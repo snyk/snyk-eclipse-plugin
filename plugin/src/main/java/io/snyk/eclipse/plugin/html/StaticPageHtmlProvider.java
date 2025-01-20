@@ -149,6 +149,7 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 		return replaceCssVariables(html);
 	}
 
+	//TODO update this when we got new design from Andy
 	public String getSummaryInitHtml() {
 		var html = """
 				<!DOCTYPE html>

@@ -24,9 +24,6 @@ public class SummaryBrowserHandler {
 				Preferences.getInstance().store(Preferences.ENABLE_DELTA, Boolean.FALSE.toString());
 				updateConfiguration();
 
-				// TODO remove this when we get the HTML from Snyk Language Server
-				browser.execute("document.body.innerHTML += '<p>All issues tab clicked</p>';");
-
 				return null;
 			}
 		};
@@ -36,9 +33,6 @@ public class SummaryBrowserHandler {
 			public Object function(Object[] arguments) {
 				Preferences.getInstance().store(Preferences.ENABLE_DELTA, Boolean.TRUE.toString());
 				updateConfiguration();
-
-				// TODO remove this when we get the HTML from Snyk Language Server
-				browser.execute("document.body.innerHTML += '<p>Delta issues tab clicked</p>';");
 
 				return null;
 			}
@@ -53,14 +47,11 @@ public class SummaryBrowserHandler {
 			// Update the Snyk Language Server configuration.
 			final var lc = SnykExtendedLanguageClient.getInstance();
 			lc.updateConfiguration();
-
-			// TODO do we want to start scan here?
-			lc.triggerScan(null);
 		});
 	}
 
 	public void setDefaultBrowserText() {
-		browser.setText(StaticPageHtmlProvider.getInstance().getSummaryInitHtml2());
+		browser.setText(StaticPageHtmlProvider.getInstance().getSummaryInitHtml());
 	}
 
 	public void setBrowserText(String summary) {
