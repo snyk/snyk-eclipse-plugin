@@ -174,14 +174,8 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				""".formatted(head);
 		return replaceCssVariables(html);
 	}
-				"""
-				.formatted(head);
-		return replaceCssVariables(html);
-	}
 
 	public String getFormattedSummaryHtml(String summary) {
-		var html = summary
-				.formatted(head);
-		return replaceCssVariables(html);
+		return replaceCssVariables(summary);
 	}
 }
