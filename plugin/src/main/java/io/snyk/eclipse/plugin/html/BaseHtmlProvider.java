@@ -75,7 +75,7 @@ public class BaseHtmlProvider {
 						a {
 							color: var(--link-color)
 						}
-						
+
 						div {
 							padding: 20px
 						}
@@ -94,6 +94,13 @@ public class BaseHtmlProvider {
 		return html;
 	}
 
+	public String replaceCssVariables(String html, String ideScript) {
+		html = replaceCssVariables(html);
+		html = html.replace("${ideScript}", ideScript);
+
+		return html;
+	}
+
 	public String replaceCssVariables(String html) {
 		// Build the CSS with the nonce
 		String nonce = getNonce();
@@ -106,8 +113,11 @@ public class BaseHtmlProvider {
 		// Replace CSS variables with actual color values
 		html = html.replace("var(--text-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR", "#000000"));
-		html = html.replace("var(--ide-background-color)",
-				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_END", "#FFFFFF"));
+
+//		html = html.replace("var(--ide-background-color)",
+//				getColorAsHex("org.eclipse.ui.workbench.DARK_BACKGROUND", "#FFFFFF"));
+		html = html.replace("var(--ide-background-color)", "#2F2F2F");
+
 		html = html.replace("var(--background-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_END", "#FFFFFF"));
 		html = html.replace("var(--code-background-color)",
@@ -126,7 +136,6 @@ public class BaseHtmlProvider {
 		html = html.replace("${headerEnd}", "");
 		html = html.replace("${nonce}", nonce);
 		html = html.replace("ideNonce", nonce);
-		html = html.replace("${ideScript}", "");
 
 		return html;
 	}

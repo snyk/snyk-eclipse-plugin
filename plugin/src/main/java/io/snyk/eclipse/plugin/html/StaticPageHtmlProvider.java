@@ -149,17 +149,17 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 		return replaceCssVariables(html);
 	}
 
-	//TODO update this when we got new design from Andy
+	// TODO update this when we got new design from Andy
 	public String getSummaryInitHtml() {
+
 		var html = """
 				<!DOCTYPE html>
 				<html lang="en">
 				<body>
 				    <div class="container">
 				        <h3 class="summary-header">SUMMARY</h3>
-				                  <button type="button" onclick="window.showAllIssuesTab()">All issues</button>
-				                  <button type="button" onclick="window.showDeltaIssuesTab()">Delta issues</button>
-				        <div class="summary-row">
+				           <div class="snx-header">
+							<div class="summary-row">
 				            <span class="icon">⚠️</span>
 				            <span class="text">312 issues found in your project</span>
 				        </div>
@@ -175,7 +175,26 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 		return replaceCssVariables(html);
 	}
 
+	public String ideScript() {
+		return """
+				<script>
+				document.addEventListener('DOMContentLoaded', function() {
+					const totalIssuesRadio = document.getElementById('totalIssues');
+					const newIssuesRadio = document.getElementById('newIssues');
+
+					totalIssuesRadio.addEventListener('change', function() {
+						window.totalIssues();
+					});
+
+					 newIssuesRadio.addEventListener('change', function() {
+							window.newIssues();
+					});
+				});
+				</script>
+				 """;
+	}
+
 	public String getFormattedSummaryHtml(String summary) {
-		return replaceCssVariables(summary);
+		return replaceCssVariables(summary, ideScript());
 	}
 }

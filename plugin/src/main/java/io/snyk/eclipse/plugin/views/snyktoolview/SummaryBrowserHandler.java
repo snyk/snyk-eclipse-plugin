@@ -18,7 +18,7 @@ public class SummaryBrowserHandler {
 
 	public void initialize() {
 
-		new BrowserFunction(browser, "showAllIssuesTab") {
+		new BrowserFunction(browser, "totalIssues") {
 			@Override
 			public Object function(Object[] arguments) {
 				Preferences.getInstance().store(Preferences.ENABLE_DELTA, Boolean.FALSE.toString());
@@ -28,7 +28,7 @@ public class SummaryBrowserHandler {
 			}
 		};
 
-		new BrowserFunction(browser, "showDeltaIssuesTab") {
+		new BrowserFunction(browser, "newIssues") {
 			@Override
 			public Object function(Object[] arguments) {
 				Preferences.getInstance().store(Preferences.ENABLE_DELTA, Boolean.TRUE.toString());
