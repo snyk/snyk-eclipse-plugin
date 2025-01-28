@@ -94,7 +94,7 @@ public class BaseHtmlProvider {
 		return html;
 	}
 
-	public String replaceCssVariables(String html, String ideScript) {
+	public String replaceCssVariablesAndScript(String html, String ideScript) {
 		html = replaceCssVariables(html);
 		html = html.replace("${ideScript}", ideScript);
 
@@ -114,9 +114,8 @@ public class BaseHtmlProvider {
 		html = html.replace("var(--text-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR", "#000000"));
 
-//		html = html.replace("var(--ide-background-color)",
-//				getColorAsHex("org.eclipse.ui.workbench.DARK_BACKGROUND", "#FFFFFF"));
-		html = html.replace("var(--ide-background-color)", "#2F2F2F");
+		html = html.replace("var(--ide-background-color)",
+				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_START", "#FFFFFF"));
 
 		html = html.replace("var(--background-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_END", "#FFFFFF"));

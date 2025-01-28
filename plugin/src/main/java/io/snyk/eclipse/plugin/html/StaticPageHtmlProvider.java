@@ -1,5 +1,9 @@
 package io.snyk.eclipse.plugin.html;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
 
@@ -149,30 +153,18 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 		return replaceCssVariables(html);
 	}
 
-	// TODO update this when we got new design from Andy
 	public String getSummaryInitHtml() {
-
-		var html = """
-				<!DOCTYPE html>
-				<html lang="en">
-				<body>
-				    <div class="container">
-				        <h3 class="summary-header">SUMMARY</h3>
-				           <div class="snx-header">
-							<div class="summary-row">
-				            <span class="icon">⚠️</span>
-				            <span class="text">312 issues found in your project</span>
-				        </div>
-				        <div class="summary-row">
-				            <span class="icon">⚡</span>
-				            <span class="text">183 issues are fixable</span>
-				        </div>
-
-				    </div>
-				</body>
-				</html>
-				""".formatted(head);
-		return replaceCssVariables(html);
+		String htmlContent = "";
+		try {
+			InputStream inputStream = getClass().getResourceAsStream("/ui/html/ScanSummaryInit.html");
+			if (inputStream != null) {
+				htmlContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+				inputStream.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return replaceCssVariables(htmlContent);
 	}
 
 	public String ideScript() {
@@ -195,6 +187,6 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 	}
 
 	public String getFormattedSummaryHtml(String summary) {
-		return replaceCssVariables(summary, ideScript());
+		return replaceCssVariablesAndScript(summary, ideScript());
 	}
 }
