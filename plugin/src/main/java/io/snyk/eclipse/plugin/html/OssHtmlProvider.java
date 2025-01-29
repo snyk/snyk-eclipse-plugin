@@ -14,9 +14,8 @@ public class OssHtmlProvider extends BaseHtmlProvider {
 
     @Override
     public String replaceCssVariables(String html) {
-        html = super.replaceCssVariables(html);
-        html = html.replace("var(--container-background-color)",
+        var returnValue = super.replaceCssVariables(html);
+        return returnValue.replace("var(--container-background-color)",
             super.getColorAsHex("org.eclipse.ui.workbench.DARK_BACKGROUND", "#F0F0F0"));
-        return html;
     }
 }
