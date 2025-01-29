@@ -44,9 +44,9 @@ jobs:
             sourcePath: 'plugin/src/main/java'
             analyzeModifiedFilesOnly: true
 
-      -   name: Fail build if violations found
-          if: steps.pmd.outputs.violations != 0
-          run: exit 1
+      - name: Fail build if violations found
+        if: steps.pmd.outputs.violations != 0
+        run: exit 1
 
       - name: Build with Maven
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
