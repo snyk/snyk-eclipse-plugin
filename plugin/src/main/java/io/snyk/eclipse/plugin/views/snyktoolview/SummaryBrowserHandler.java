@@ -27,21 +27,14 @@ public class SummaryBrowserHandler {
 				}
 
 				Preferences.getInstance().store(Preferences.ENABLE_DELTA, Boolean.toString(value));
-				updateConfiguration();
+
+				CompletableFuture.runAsync(() -> SnykExtendedLanguageClient.getInstance().updateConfiguration());
 
 				return null;
 			}
 		};
 
 		setDefaultBrowserText();
-	}
-
-	private void updateConfiguration() {
-		CompletableFuture.runAsync(() -> {
-			// Update the Snyk Language Server configuration.
-			final var lc = SnykExtendedLanguageClient.getInstance();
-			lc.updateConfiguration();
-		});
 	}
 
 	public void setDefaultBrowserText() {

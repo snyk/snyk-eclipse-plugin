@@ -41,7 +41,7 @@ public class TaskProcessor {
 	private void start() {
 		while (true) {
 			String authToken = Preferences.getInstance().getAuthToken();
-			var lc = SnykExtendedLanguageClient.getInstance();
+			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 			if (taskQueue.isEmpty() || authToken == null || authToken.isBlank() || lc == null) {
 				try {
 					Thread.sleep(1000);

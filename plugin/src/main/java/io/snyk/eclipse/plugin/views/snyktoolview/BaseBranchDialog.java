@@ -50,7 +50,8 @@ public class BaseBranchDialog {
 					folderConfigs.setBaseBranch(projectPath, selectedBranch);
 					shell.close();
 					CompletableFuture.runAsync(() -> {
-						SnykExtendedLanguageClient.getInstance().triggerScan(projectPath);
+						SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+						lc.triggerScan(projectPath);
 					});
 				} else {
 					SnykLogger.logInfo("Branch is not a valid local branch for repository: " + projectPath);
