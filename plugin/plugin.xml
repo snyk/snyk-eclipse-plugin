@@ -412,13 +412,14 @@
     </extension>
     <extension point="org.eclipse.lsp4e.languageServer">
         <server
-            class="io.snyk.languageserver.SnykLanguageServer"
-            id="io.snyk.languageserver"
-            label="Snyk Language Server"
-            clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
-            lastDocumentDisconnectedTimeout="3000000"
-            singleton="true"
-            markerType="io.snyk.languageserver.marker">
+              class="io.snyk.languageserver.SnykLanguageServer"
+              clientImpl="io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient"
+              id="io.snyk.languageserver"
+              label="Snyk Language Server"
+              lastDocumentDisconnectedTimeout="3000000"
+              markerAttributeComputer="io.snyk.languageserver.SnykMarkerAttributeComputer"
+              markerType="io.snyk.languageserver.marker"
+              singleton="true">
         </server>
         <!-- snyk code -->
         <contentTypeMapping
