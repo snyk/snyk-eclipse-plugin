@@ -36,13 +36,19 @@ jobs:
           echo "$sha  $fileName" > sha256.txt
           sha256sum -c sha256.txt
 
-      - name: Run PMD
-        uses: pmd/pmd-github-action@main
+      - uses: pmd/pmd-github-action@v2
+        name: Lint
+        id: pmd
         if: ${{ matrix.os == 'ubuntu-latest' }}
         with:
             rulesets: 'plugin/src/main/resources/pmd-ruleset.xml'
             sourcePath: 'plugin/src/main/java'
             analyzeModifiedFilesOnly: true
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+            sarif_file: pmd-report.sarif
 
       - name: Fail build if violations found
         if: steps.pmd.outputs.violations != 0
