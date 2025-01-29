@@ -27,7 +27,6 @@ public class SnykWizard extends Wizard implements INewWizard {
 	public SnykWizard() {
 		super();
 		model = new SnykWizardModel();
-		setNeedsProgressMonitor(true);
 	}
 
 	@Override
@@ -42,6 +41,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 		authenticatePage = new SnykWizardAuthenticatePage();
 		addPage(authenticatePage);
+		setNeedsProgressMonitor(true);
 	}
 
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
