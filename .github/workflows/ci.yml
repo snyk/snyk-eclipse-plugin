@@ -38,6 +38,7 @@ jobs:
 
       - name: Run PMD
         uses: pmd/pmd-github-action@main
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         with:
             rulesets: 'plugin/src/main/resources/pmd-ruleset.xml'
             sourcePath: 'plugin/src/main/java'
