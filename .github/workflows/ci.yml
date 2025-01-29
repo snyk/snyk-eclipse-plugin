@@ -36,6 +36,13 @@ jobs:
           echo "$sha  $fileName" > sha256.txt
           sha256sum -c sha256.txt
 
+      - name: Run PMD
+        uses: pmd/pmd-github-action@main
+        with:
+            rulesets: 'pmd-rulesets.xml'
+            sourcePath: 'plugin/src/main/java'
+            analyzeModifiedFilesOnly: true
+
       - name: Build with Maven
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
         run: ./mvnw clean verify -P sign -DtrimStackTrace=false

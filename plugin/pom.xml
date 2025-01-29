@@ -8,8 +8,12 @@
     <version>3.0.0-SNAPSHOT</version>
   </parent>
 
+    <properties>
+        <pmdRuleDir>${project.parent.basedir}</pmdRuleDir>
+    </properties>
 
-  <artifactId>io.snyk.eclipse.plugin</artifactId>
+
+    <artifactId>io.snyk.eclipse.plugin</artifactId>
   <url>https://snyk.io/ide-plugins/</url>
   <packaging>eclipse-plugin</packaging>
 

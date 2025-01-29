@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<ruleset name="Custom Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>Sensible PMD rules focusing on important code quality issues</description>
+
+    <!-- Error Prone - Critical issues that are likely bugs -->
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="BeanMembersShouldSerialize"/>
+    </rule>
+
+    <!-- Best Practices - Important coding standards -->
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="GuardLogStatement"/>
+        <exclude name="JUnitTestsShouldIncludeAssert"/>
+    </rule>
+
+    <!-- Performance - Critical performance issues -->
+    <rule ref="category/java/performance.xml"/>
+
+    <!-- Security - Basic security checks -->
+    <rule ref="category/java/security.xml"/>
+
+    <!-- Exclude generated sources -->
+    <exclude-pattern>.*/generated/.*</exclude-pattern>
+    <exclude-pattern>.*/target/.*</exclude-pattern>
+</ruleset>
