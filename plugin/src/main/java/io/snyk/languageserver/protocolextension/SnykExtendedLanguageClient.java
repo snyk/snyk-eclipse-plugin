@@ -381,7 +381,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		this.toolView.refreshBrowser(param.getStatus());
 	}
 
-	// TODO what data is returned in the SNYK_SCAN_SUMMARY?
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
 	public void updateSummaryPanel(SummaryPanelParams summary) {
 		openToolView();

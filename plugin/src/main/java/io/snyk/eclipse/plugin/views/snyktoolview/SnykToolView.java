@@ -468,7 +468,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				SnykExtendedLanguageClient.getInstance().showMessage(messageParams);
 			} else {
 				SnykLogger.logError(new RuntimeException(stdOut));
-
 			}
 		}
 	}

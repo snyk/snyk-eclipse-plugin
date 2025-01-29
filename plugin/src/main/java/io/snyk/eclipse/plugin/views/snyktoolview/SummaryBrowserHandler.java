@@ -18,25 +18,19 @@ public class SummaryBrowserHandler {
 
 	public void initialize() {
 
-		new BrowserFunction(browser, "totalIssues") {
+		new BrowserFunction(browser, "enableDelta") {
 			@Override
 			public Object function(Object[] arguments) {
-				Preferences.getInstance().store(Preferences.ENABLE_DELTA, Boolean.FALSE.toString());
+				boolean value = false;
+				if (arguments.length > 0 && arguments[0] instanceof Boolean) {
+					value = (Boolean) arguments[0];
+				}
+
+				Preferences.getInstance().store(Preferences.ENABLE_DELTA, Boolean.toString(value));
 				updateConfiguration();
 
 				return null;
 			}
-		};
-
-		new BrowserFunction(browser, "newIssues") {
-			@Override
-			public Object function(Object[] arguments) {
-				Preferences.getInstance().store(Preferences.ENABLE_DELTA, Boolean.TRUE.toString());
-				updateConfiguration();
-
-				return null;
-			}
-
 		};
 
 		setDefaultBrowserText();

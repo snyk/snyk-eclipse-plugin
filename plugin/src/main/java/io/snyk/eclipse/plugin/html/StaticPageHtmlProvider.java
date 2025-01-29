@@ -1,16 +1,20 @@
 package io.snyk.eclipse.plugin.html;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
 
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
 public class StaticPageHtmlProvider extends BaseHtmlProvider {
 	private static StaticPageHtmlProvider instance = new StaticPageHtmlProvider();
+	private static ILog logger;
 
 	public static StaticPageHtmlProvider getInstance() {
 		synchronized (StaticPageHtmlProvider.class) {
@@ -154,39 +158,27 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 	}
 
 	public String getSummaryInitHtml() {
-		String htmlContent = "";
-		try {
-			InputStream inputStream = getClass().getResourceAsStream("/ui/html/ScanSummaryInit.html");
-			if (inputStream != null) {
-				htmlContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-				inputStream.close();
+		if (logger == null) {
+			logger = Platform.getLog(getClass());
+		}
+		StringBuilder content = new StringBuilder();
+
+		try (InputStream inputStream = getClass().getResourceAsStream("/ui/html/ScanSummaryInit.html");
+				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+
+			String line;
+			while ((line = reader.readLine()) != null) {
+				content.append(line).append("\n");
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			SnykLogger.logError(e);
 		}
-		return replaceCssVariables(htmlContent);
-	}
 
-	public String ideScript() {
-		return """
-				<script>
-				document.addEventListener('DOMContentLoaded', function() {
-					const totalIssuesRadio = document.getElementById('totalIssues');
-					const newIssuesRadio = document.getElementById('newIssues');
-
-					totalIssuesRadio.addEventListener('change', function() {
-						window.totalIssues();
-					});
-
-					 newIssuesRadio.addEventListener('change', function() {
-							window.newIssues();
-					});
-				});
-				</script>
-				 """;
+		return replaceCssVariables(content.toString());
 	}
 
 	public String getFormattedSummaryHtml(String summary) {
-		return replaceCssVariablesAndScript(summary, ideScript());
+		summary = summary.replace("${ideFunc}", "window.enableDelta(isEnabled);");
+		return replaceCssVariables(summary);
 	}
 }
