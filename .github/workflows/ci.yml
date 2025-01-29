@@ -39,7 +39,7 @@ jobs:
       - name: Run PMD
         uses: pmd/pmd-github-action@main
         with:
-            rulesets: 'pmd-rulesets.xml'
+            rulesets: 'src/main/resources/pmd-ruleset.xml'
             sourcePath: 'plugin/src/main/java'
             analyzeModifiedFilesOnly: true
 

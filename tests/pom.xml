@@ -6,9 +6,6 @@
         <artifactId>parent</artifactId>
         <version>3.0.0-SNAPSHOT</version>
     </parent>
-    <properties>
-        <pmdRuleDir>${project.parent.basedir}</pmdRuleDir>
-    </properties>
 
     <artifactId>io.snyk.eclipse.plugin.tests</artifactId>
     <packaging>eclipse-test-plugin</packaging>
