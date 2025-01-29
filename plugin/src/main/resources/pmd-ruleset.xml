@@ -7,14 +7,11 @@
     <description>Sensible PMD rules focusing on important code quality issues</description>
 
     <!-- Error Prone - Critical issues that are likely bugs -->
-    <rule ref="category/java/errorprone.xml">
-        <exclude name="BeanMembersShouldSerialize"/>
-    </rule>
+    <rule ref="category/java/errorprone.xml"/>
 
     <!-- Best Practices - Important coding standards -->
     <rule ref="category/java/bestpractices.xml">
         <exclude name="GuardLogStatement"/>
-        <exclude name="JUnitTestsShouldIncludeAssert"/>
     </rule>
 
     <!-- Performance - Critical performance issues -->

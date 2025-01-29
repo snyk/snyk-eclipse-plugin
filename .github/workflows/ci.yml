@@ -45,7 +45,7 @@ jobs:
             analyzeModifiedFilesOnly: true
 
       -   name: Fail build if violations found
-          if: ${{ matrix.os == 'ubuntu-latest' && steps.pmd.outputs.violations != 0 }}
+          if: steps.pmd.outputs.violations != 0
           run: exit 1
 
       - name: Build with Maven
