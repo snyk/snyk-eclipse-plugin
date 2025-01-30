@@ -127,6 +127,7 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
 		htmlStyled = htmlStyled.replace("${nonce}", nonce);
 		htmlStyled = htmlStyled.replace("ideNonce", nonce);
+		htmlStyled = htmlStyled.replace("${ideScript}", "");
 
 		return htmlStyled;
 	}
