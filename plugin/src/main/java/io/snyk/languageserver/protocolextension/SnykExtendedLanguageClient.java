@@ -367,7 +367,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
 				this.toolView.resetNode(productTreeNode);
 				addInfoNodes(productTreeNode, param.getFolderPath(), issueCache);
-				populateFileAndIssueNodes(productTreeNode, param.getFolderPath(), issueCache);
+				populateFileAndIssueNodes(productTreeNode, issueCache);
 			}
 			break;
 		case SCAN_STATE_ERROR:
@@ -535,7 +535,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		populateIssueCache(param, filePath);
 	}
 
-	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, String folderPath,
+	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode,
 			SnykIssueCache issueCache) {
 		var cacheHashMap = issueCache.getCacheByDisplayProduct(productTreeNode.getProduct());
 		for (var kv : cacheHashMap.entrySet()) {

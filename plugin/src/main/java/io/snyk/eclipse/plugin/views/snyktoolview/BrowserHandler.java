@@ -34,6 +34,7 @@ import io.snyk.eclipse.plugin.wizards.SnykWizard;
 
 @SuppressWarnings("restriction")
 public class BrowserHandler {
+	private static final int validNumberOfArguments = 5;
 	private Browser browser;
 	private String initScript = "";
 
@@ -45,7 +46,7 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "openInEditor") {
 			@Override
 			public Object function(Object[] arguments) {
-				if (arguments.length != 5) {
+				if (arguments.length != validNumberOfArguments) {
 					return null;
 				}
 				String filePath = (String) arguments[0];
@@ -165,7 +166,7 @@ public class BrowserHandler {
 	}
 
 	private BaseHtmlProvider getHtmlProvider(TreeNode node) {
-		var product = "";
+		String product;
 		if (node instanceof IssueTreeNode) {
 			product = ((ProductTreeNode) node.getParent().getParent()).getProduct();
 		} else if (node instanceof ProductTreeNode) {

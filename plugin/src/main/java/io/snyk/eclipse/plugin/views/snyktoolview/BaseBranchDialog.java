@@ -25,7 +25,7 @@ public class BaseBranchDialog {
 	public BaseBranchDialog() {
 	}
 
-	public void open(Display display, Path projectPath, String[] localBranches) {
+	public void open(Display display, Path projectPath, String... localBranches) {
 		Shell shell = new Shell(display, SWT.APPLICATION_MODAL | SWT.DIALOG_TRIM);
 		shell.setText("Choose base branch for net-new issues scanning");
 		shell.setLayout(new GridLayout(1, false));

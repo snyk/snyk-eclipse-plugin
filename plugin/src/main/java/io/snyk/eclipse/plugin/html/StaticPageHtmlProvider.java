@@ -161,14 +161,16 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 		if (logger == null) {
 			logger = Platform.getLog(getClass());
 		}
-		StringBuilder content = new StringBuilder();
 
+		StringBuilder content = new StringBuilder();
 		try (InputStream inputStream = getClass().getResourceAsStream("/ui/html/ScanSummaryInit.html");
 				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
 
-			String line;
-			while ((line = reader.readLine()) != null) {
-				content.append(line).append("\n");
+			String line = reader.readLine();
+			while (line != null) {
+				// Process the line here
+				content.append(line).append(System.lineSeparator());
+				line = reader.readLine();
 			}
 		} catch (IOException e) {
 			SnykLogger.logError(e);
