@@ -14,6 +14,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.IssueComparator;
 
 public class SnykIssueCache {
+	private static final String IS_NOT_A_SUBPATH_OF = "is not a subpath of ";
 	final Path basePath;
 	private final Map<String, Collection<Issue>> codeSecurityIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> codeQualityIssues = new ConcurrentHashMap<>();
@@ -81,7 +82,7 @@ public class SnykIssueCache {
 	 */
 	public void addCodeIssues(String path, Collection<Issue> issues) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF + basePath);
 		}
 		var qualityIssues = new TreeSet<Issue>(new IssueComparator());
 		var securityIssues = new TreeSet<Issue>(new IssueComparator());
@@ -92,13 +93,13 @@ public class SnykIssueCache {
 				qualityIssues.add(issue);
 			}
 		}
-		if (qualityIssues.size() > 0) {
+		if (!qualityIssues.isEmpty()) {
 			codeQualityIssues.put(path, qualityIssues);
 		} else {
 			codeQualityIssues.remove(path);
 		}
 
-		if (securityIssues.size() > 0) {
+		if (!securityIssues.isEmpty()) {
 			codeSecurityIssues.put(path, securityIssues);
 		} else {
 			codeSecurityIssues.remove(path);
@@ -113,7 +114,7 @@ public class SnykIssueCache {
 	 */
 	public Collection<Issue> getCodeSecurityIssuesForPath(String path) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF+ basePath);
 		}
 		return getIssuesForPath(path, codeSecurityIssues);
 	}
@@ -126,7 +127,7 @@ public class SnykIssueCache {
 	 */
 	public Collection<Issue> getCodeQualityIssuesForPath(String path) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF+ basePath);
 		}
 		return getIssuesForPath(path, codeQualityIssues);
 	}
@@ -139,7 +140,7 @@ public class SnykIssueCache {
 	 */
 	public void removeCodeIssuesForPath(String path) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF+ basePath);
 		}
 		codeSecurityIssues.remove(path);
 		codeQualityIssues.remove(path);
@@ -155,10 +156,10 @@ public class SnykIssueCache {
 	 */
 	public void addOssIssues(String path, Collection<Issue> issues) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF+ basePath);
 		}
 		
-		if (issues.size() > 0) {
+		if (!issues.isEmpty()) {
 			var treeSet = new TreeSet<Issue>(new IssueComparator());
 			treeSet.addAll(issues);
 			ossIssues.put(path, treeSet);
@@ -175,7 +176,7 @@ public class SnykIssueCache {
 	 */
 	public Collection<Issue> getOssIssuesForPath(String path) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF+ basePath);
 		}
 		return getIssuesForPath(path, ossIssues);
 	}
@@ -187,7 +188,7 @@ public class SnykIssueCache {
 	 */
 	public void removeOssIssuesForPath(String path) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF+ basePath);
 		}
 		ossIssues.remove(path);
 	}
@@ -202,9 +203,9 @@ public class SnykIssueCache {
 	 */
 	public void addIacIssues(String path, Collection<Issue> issues) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF+ basePath);
 		}
-		if (issues.size() > 0) {
+		if (!issues.isEmpty()) {
 			var treeSet = new TreeSet<Issue>(new IssueComparator());
 			treeSet.addAll(issues);
 			iacIssues.put(path, treeSet);
@@ -221,7 +222,7 @@ public class SnykIssueCache {
 	 */
 	public Collection<Issue> getIacIssuesForPath(String path) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF+ basePath);
 		}
 		return getIssuesForPath(path, iacIssues);
 	}
@@ -233,7 +234,7 @@ public class SnykIssueCache {
 	 */
 	public void removeIacIssuesForPath(String path) {
 		if (!Paths.get(path).startsWith(basePath)) {
-			throw new IllegalArgumentException(path + "is not a subpath of "+ basePath);
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF+ basePath);
 		}
 		iacIssues.remove(path);
 	}

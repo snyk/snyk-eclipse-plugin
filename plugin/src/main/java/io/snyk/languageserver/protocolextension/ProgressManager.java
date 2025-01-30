@@ -12,7 +12,7 @@ import org.eclipse.lsp4j.WorkDoneProgressNotification;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 public class ProgressManager {
-	SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+	SnykExtendedLanguageClient lc;
 	Set<String> progresses = synchronizedSet(new HashSet<>());
 
 	ProgressManager(SnykExtendedLanguageClient lc) {
@@ -20,7 +20,7 @@ public class ProgressManager {
 	}
 
 	public void cancelAll() {
-		HashSet<String> copy = new HashSet<>(progresses);
+		Set<String> copy = new HashSet<>(progresses);
 		for (String token : copy) {
 			cancelProgress(token);
 		}

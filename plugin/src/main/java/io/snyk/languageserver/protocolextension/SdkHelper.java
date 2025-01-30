@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.xml.XMLConstants;
@@ -48,7 +49,7 @@ public class SdkHelper {
 			for (IClasspathEntry entry : classpathEntries) {
 				if (entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
 					IPath classPath = entry.getPath();
-					var last = classPath.lastSegment().toLowerCase();
+					var last = classPath.lastSegment().toLowerCase(Locale.getDefault());
 
 					if (last.contains(RT_JAR_JAVA9_PLUS) || last.contains(RT_JAR_JAVA3_PLUS)) {
 						// the classpath contains the rt.jar, which is located in the lib folder
@@ -107,9 +108,9 @@ public class SdkHelper {
 		IEclipsePreferences preferences = InstanceScope.INSTANCE.getNode(PYDEV_PREFERENCES_KEY);
 		String interpretersPref = preferences.get("INTERPRETER_PATH_NEW", "");
 		String[] interpreters = interpretersPref.split("&&&&&");
-		if (interpreters.length > 0 && interpreterName.equalsIgnoreCase("default")) {
+		if (interpreters.length > 0 && "default".equalsIgnoreCase(interpreterName)) {
 			var sdkMap = parseInterpreterXML(interpreters[0]);
-			if (sdkMap.size() > 0) {
+			if (!sdkMap.isEmpty()) {
 				return sdkMap.values().iterator().next();
 			}
 		} else {

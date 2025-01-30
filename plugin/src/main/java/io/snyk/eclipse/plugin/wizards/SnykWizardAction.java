@@ -8,26 +8,28 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 public class SnykWizardAction implements IObjectActionDelegate {
-  IWorkbenchPart part;
-  ISelection selection;
-  
-  public void setActivePart(IAction action, IWorkbenchPart part) {
-    this.part = part;
-  }
-  
-  public void run(IAction action) {
-    // Instantiates and initialises the wizard
-    SnykWizard wizard = new SnykWizard();
-    if ((selection instanceof IStructuredSelection) || (selection == null))
-    wizard.init(part.getSite().getWorkbenchWindow().getWorkbench(), 
-        (IStructuredSelection)selection);
-        
-    // Instantiates the wizard container with the wizard and opens it
-    WizardDialog dialog = new WizardDialog(part.getSite().getShell(), wizard);
-    dialog.open();
-  }
-  
-  public void selectionChanged(IAction action, ISelection selection) {
-    this.selection = selection;
-  }
+	IWorkbenchPart part;
+	ISelection selection;
+
+	@Override
+	public void setActivePart(IAction action, IWorkbenchPart part) {
+		this.part = part;
+	}
+
+	@Override
+	public void run(IAction action) {
+		// Instantiates and initialises the wizard
+		SnykWizard wizard = new SnykWizard();
+		if ((selection instanceof IStructuredSelection) || (selection == null))
+			wizard.init(part.getSite().getWorkbenchWindow().getWorkbench(), (IStructuredSelection) selection);
+
+		// Instantiates the wizard container with the wizard and opens it
+		WizardDialog dialog = new WizardDialog(part.getSite().getShell(), wizard);
+		dialog.open();
+	}
+
+	@Override
+	public void selectionChanged(IAction action, ISelection selection) {
+		this.selection = selection;
+	}
 }

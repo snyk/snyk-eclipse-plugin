@@ -76,7 +76,7 @@ public class FolderConfigs {
 
 		for (var project : openProjects) {
 			Path path = ResourceUtils.getFullPath(project);
-			IScopeContext projectScope = new ProjectScope(project);
+			IScopeContext projectScope = new ProjectScope(project); //NOPMD
 			var projectSettings = projectScope.getNode(Activator.PLUGIN_ID);
 			String additionalParams = projectSettings.get(ProjectPropertyPage.SNYK_ADDITIONAL_PARAMETERS, "");
 			var additionalParamsList = Arrays.asList(additionalParams.split(" "));

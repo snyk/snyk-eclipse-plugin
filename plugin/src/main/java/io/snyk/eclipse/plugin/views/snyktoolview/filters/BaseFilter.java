@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({ "rawtypes", "PMD.AbstractClassWithoutAbstractMethod" })
 public abstract class BaseFilter {
 	protected Preferences preferences = Preferences.getInstance();
 	protected TreeFilterManager filterManager;

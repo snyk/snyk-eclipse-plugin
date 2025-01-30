@@ -27,9 +27,9 @@ import io.snyk.eclipse.plugin.utils.SnykIcons;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 
 public class BaseHandler extends AbstractHandler implements IElementUpdater, IHandlerCommands {
-	protected ImageDescriptor iconEnabled = null;
-	protected ImageDescriptor iconDisabled = null;
-	protected String preferenceKey = null;
+	protected ImageDescriptor iconEnabled;
+	protected ImageDescriptor iconDisabled;
+	protected String preferenceKey;
 	
 	public BaseHandler() {
 		iconEnabled = SnykIcons.ENABLED;
