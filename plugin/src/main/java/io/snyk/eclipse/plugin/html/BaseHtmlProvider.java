@@ -98,37 +98,37 @@ public class BaseHtmlProvider {
 		// Build the CSS with the nonce
 		String nonce = getNonce();
 		String css = "<style nonce=\"" + nonce + "\">" + getCss() + "</style>";
-		html = html.replace("${ideStyle}", css);
-		html = html.replace("<style nonce=\"ideNonce\" data-ide-style></style>", css);
-		html = html.replace("var(--default-font)",
+		String htmlStyled = html.replace("${ideStyle}", css);
+		htmlStyled = htmlStyled.replace("<style nonce=\"ideNonce\" data-ide-style></style>", css);
+		htmlStyled = htmlStyled.replace("var(--default-font)",
 				" ui-sans-serif, \"SF Pro Text\", \"Segoe UI\", \"Ubuntu\", Tahoma, Geneva, Verdana, sans-serif;");
 
 		// Replace CSS variables with actual color values
-		html = html.replace("var(--text-color)",
+		htmlStyled = htmlStyled.replace("var(--text-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR", "#000000"));
 
-		html = html.replace("var(--ide-background-color)",
+		htmlStyled = htmlStyled.replace("var(--ide-background-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_NOFOCUS_TAB_BG_START", "#FFFFFF"));
-		html = html.replace("var(--background-color)",
+		htmlStyled = htmlStyled.replace("var(--background-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_END", "#FFFFFF"));
-		html = html.replace("var(--code-background-color)",
+		htmlStyled = htmlStyled.replace("var(--code-background-color)",
 				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
-		html = html.replace("var(--button-color)",
+		htmlStyled = htmlStyled.replace("var(--button-color)",
 				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
-		html = html.replace("var(--circle-color)",
+		htmlStyled = htmlStyled.replace("var(--circle-color)",
 				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
 
-		html = html.replace("var(--border-color)",
+		htmlStyled = htmlStyled.replace("var(--border-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
-		html = html.replace("var(--link-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
-		html = html.replace("var(--horizontal-border-color)",
+		htmlStyled = htmlStyled.replace("var(--link-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
+		htmlStyled = htmlStyled.replace("var(--horizontal-border-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
 
-		html = html.replace("${headerEnd}", "");
-		html = html.replace("${nonce}", nonce);
-		html = html.replace("ideNonce", nonce);
+		htmlStyled = htmlStyled.replace("${headerEnd}", "");
+		htmlStyled = htmlStyled.replace("${nonce}", nonce);
+		htmlStyled = htmlStyled.replace("ideNonce", nonce);
 
-		return html;
+		return htmlStyled;
 	}
 
 	public String getColorAsHex(String colorKey, String defaultColor) {

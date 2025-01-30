@@ -178,7 +178,7 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 	}
 
 	public String getFormattedSummaryHtml(String summary) {
-		summary = summary.replace("${ideFunc}", "window.enableDelta(isEnabled);");
-		return replaceCssVariables(summary);
+		String summaryWithFunc = summary.replace("${ideFunc}", "window.enableDelta(isEnabled);");
+		return replaceCssVariables(summaryWithFunc);
 	}
 }
