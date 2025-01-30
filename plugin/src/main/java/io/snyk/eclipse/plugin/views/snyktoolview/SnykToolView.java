@@ -58,6 +58,8 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
  * removed.
  */
 public class SnykToolView extends ViewPart implements ISnykToolView {
+	public SnykToolView() {
+	}
 
 	/**
 	 * The ID of the view as specified by the extension.
@@ -67,16 +69,27 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private TreeViewer treeViewer;
 	private Browser browser;
 	private BrowserHandler browserHandler;
+	private Browser summaryBrowser;
+	private SummaryBrowserHandler summaryBrowserHandler;
 	private FolderConfigs folderConfigs = FolderConfigs.getInstance();
 	private TreeNode selectedNode;
 
 	@Override
 	public void createPartControl(Composite parent) {
-		SashForm sashForm = new SashForm(parent, SWT.HORIZONTAL);
-		sashForm.setLayout(new FillLayout());
+		SashForm horizontalSashForm = new SashForm(parent, SWT.HORIZONTAL);
+		horizontalSashForm.setLayout(new FillLayout());
+
+		// Create vertical SashForm for new Browser and TreeViewer
+		SashForm verticalSashForm = new SashForm(horizontalSashForm, SWT.VERTICAL);
+		verticalSashForm.setLayout(new FillLayout());
+
+		// Create new Browser (top quarter)
+		summaryBrowser = new Browser(verticalSashForm, SWT.EDGE);
+		summaryBrowserHandler = new SummaryBrowserHandler(summaryBrowser);
+		summaryBrowserHandler.initialize();
 
 		// Create TreeViewer
-		treeViewer = new TreeViewer(sashForm, SWT.BORDER);
+		treeViewer = new TreeViewer(verticalSashForm, SWT.BORDER);
 		Tree tree = treeViewer.getTree();
 		tree.setHeaderVisible(false);
 		tree.setLinesVisible(false);
@@ -93,13 +106,15 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		registerTreeContextMenu(treeViewer.getControl());
 
+		verticalSashForm.setWeights(new int[] { 1, 3 });
+
 		// Create Browser
 		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
-		browser = new Browser(sashForm, SWT.EDGE);
+		browser = new Browser(horizontalSashForm, SWT.EDGE);
 		browserHandler = new BrowserHandler(browser);
 		browserHandler.initialize();
 		// Set sash weights
-		sashForm.setWeights(new int[] { 1, 2 });
+		horizontalSashForm.setWeights(new int[] { 1, 2 });
 
 		// Add selection listener to the tree
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -133,7 +148,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		if (Preferences.isDeltaEnabled())
 			this.enableDelta();
-		
+
 		// initialize the filters
 		TreeFilterManager.getInstance();
 	}
@@ -164,7 +179,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						protected IStatus run(IProgressMonitor monitor) {
 							try {
 								var result = CommandHandler.getInstance().ignoreIssue(issue).get(10, TimeUnit.SECONDS);
-								outputCommandResult(result); 
+								outputCommandResult(result);
 								itn.setText("[ IGNORED ] " + itn.getText());
 								Display.getDefault().asyncExec(() -> {
 									treeViewer.refresh(itn, true);
@@ -317,6 +332,13 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			}
 		});
 	};
+
+	@Override
+	public void updateSummary(String summary) {
+		Display.getDefault().asyncExec(() -> {
+			this.summaryBrowserHandler.setBrowserText(summary);
+		});
+	}
 
 	@Override
 	public void resetNode(BaseTreeNode node) {

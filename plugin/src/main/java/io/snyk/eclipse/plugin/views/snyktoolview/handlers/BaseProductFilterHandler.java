@@ -22,10 +22,9 @@ public class BaseProductFilterHandler extends BaseHandler {
 		
 		// now we can apply the filter
 		new ProductFilter(TreeFilterManager.getInstance(), filterName).applyFilter();
-		
-		final var lc = SnykExtendedLanguageClient.getInstance();
-		lc.updateConfiguration();
-		
+
+		SnykExtendedLanguageClient.getInstance().updateConfiguration();
+
 		return returnValue;
 	}
 }

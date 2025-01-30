@@ -1,12 +1,20 @@
 package io.snyk.eclipse.plugin.html;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
 public class StaticPageHtmlProvider extends BaseHtmlProvider {
 	private static StaticPageHtmlProvider instance = new StaticPageHtmlProvider();
+	private static ILog logger;
 
 	public static StaticPageHtmlProvider getInstance() {
 		synchronized (StaticPageHtmlProvider.class) {
@@ -18,7 +26,7 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 		}
 		return instance;
 	}
-	
+
 	private String head = """
 				<head>
 				    <meta charset="UTF-8">
@@ -148,6 +156,31 @@ public class StaticPageHtmlProvider extends BaseHtmlProvider {
 				""".formatted(head, base64Image, snykWarningText);
 		return replaceCssVariables(html);
 	}
-	
-	
+
+	public String getSummaryInitHtml() {
+		if (logger == null) {
+			logger = Platform.getLog(getClass());
+		}
+
+		StringBuilder content = new StringBuilder();
+		try (InputStream inputStream = getClass().getResourceAsStream("/ui/html/ScanSummaryInit.html");
+				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+
+			String line = reader.readLine();
+			while (line != null) {
+				// Process the line here
+				content.append(line).append(System.lineSeparator());
+				line = reader.readLine();
+			}
+		} catch (IOException e) {
+			SnykLogger.logError(e);
+		}
+
+		return replaceCssVariables(content.toString());
+	}
+
+	public String getFormattedSummaryHtml(String summary) {
+		String summaryWithFunc = summary.replace("${ideFunc}", "window.enableDelta(isEnabled);");
+		return replaceCssVariables(summaryWithFunc);
+	}
 }

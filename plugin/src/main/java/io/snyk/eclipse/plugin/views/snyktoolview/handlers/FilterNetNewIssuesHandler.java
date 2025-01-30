@@ -32,7 +32,7 @@ public class FilterNetNewIssuesHandler extends BaseHandler implements IElementUp
 		
 		CompletableFuture.runAsync(() -> {
 			// Update the Snyk Language Server configuration.
-			final var lc = SnykExtendedLanguageClient.getInstance();
+			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 			lc.updateConfiguration();
 			lc.triggerScan(null);
 		});

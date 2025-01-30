@@ -1,5 +1,9 @@
 # Snyk Security Changelog
 
+## [3.0.1]
+### Changes
+- New Summary Panel for scan information and net new issues filter.
+
 ## [3.0.0]
 ### Changes
 - process api URL from hasAuthenticated message

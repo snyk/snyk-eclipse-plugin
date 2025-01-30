@@ -5,11 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.commands.NotEnabledException;
-import org.eclipse.core.commands.NotHandledException;
 import org.eclipse.core.commands.common.CommandException;
-import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Location;
@@ -38,6 +34,7 @@ import io.snyk.eclipse.plugin.wizards.SnykWizard;
 
 @SuppressWarnings("restriction")
 public class BrowserHandler {
+	private static final int validNumberOfArguments = 5;
 	private Browser browser;
 	private String initScript = "";
 
@@ -49,7 +46,7 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "openInEditor") {
 			@Override
 			public Object function(Object[] arguments) {
-				if (arguments.length != 5) {
+				if (arguments.length != validNumberOfArguments) {
 					return null;
 				}
 				String filePath = (String) arguments[0];
@@ -169,7 +166,7 @@ public class BrowserHandler {
 	}
 
 	private BaseHtmlProvider getHtmlProvider(TreeNode node) {
-		var product = "";
+		String product;
 		if (node instanceof IssueTreeNode) {
 			product = ((ProductTreeNode) node.getParent().getParent()).getProduct();
 		} else if (node instanceof ProductTreeNode) {

@@ -2,6 +2,7 @@ package io.snyk.eclipse.plugin.analytics;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
@@ -17,7 +18,7 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
  */
 public class TaskProcessor {
 	// left = taskToExecute, right = callback function
-	private final ConcurrentLinkedQueue<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> taskQueue = new ConcurrentLinkedQueue<>();
+	private final Queue<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> taskQueue = new ConcurrentLinkedQueue<>();
 
 	private TaskProcessor() {
 		CompletableFuture.runAsync(() -> {
@@ -39,9 +40,11 @@ public class TaskProcessor {
 	}
 
 	private void start() {
+		final List<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> copyForSending = new ArrayList<>();
+
 		while (true) {
 			String authToken = Preferences.getInstance().getAuthToken();
-			var lc = SnykExtendedLanguageClient.getInstance();
+			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 			if (taskQueue.isEmpty() || authToken == null || authToken.isBlank() || lc == null) {
 				try {
 					Thread.sleep(1000);
@@ -50,8 +53,9 @@ public class TaskProcessor {
 				}
 				continue;
 			}
-			List<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> copyForSending = new ArrayList<>(
-					taskQueue);
+
+			copyForSending.clear(); // Clear the list before reuse
+			copyForSending.addAll(taskQueue); // Add all elements from taskQueue
 
 			for (Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>> event : copyForSending) {
 				try {

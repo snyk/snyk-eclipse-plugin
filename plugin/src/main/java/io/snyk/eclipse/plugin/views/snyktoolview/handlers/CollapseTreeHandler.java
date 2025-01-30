@@ -13,13 +13,13 @@ public class CollapseTreeHandler extends AbstractHandler {
 
 		String commandId = event.getCommand().getId();
 
-		switch (commandId) {
-		case "io.snyk.eclipse.plugin.commands.TreeCollapse":
+		String treeCollapse = "io.snyk.eclipse.plugin.commands.TreeCollapse";
+		String treeExpand = "io.snyk.eclipse.plugin.commands.TreeExpand";
+
+		if (commandId.equals(treeCollapse)) {
 			SnykStartup.getView().getTreeViewer().collapseAll();
-			break;
-		case "io.snyk.eclipse.plugin.commands.TreeExpand":
+		} else if (commandId.equals(treeExpand)) {
 			SnykStartup.getView().getTreeViewer().expandAll();
-			break;
 		}
 
 		return null;

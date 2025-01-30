@@ -19,10 +19,10 @@ public class SnykWizardModel {
     Preferences.getInstance().setIsInsecure(initialUnknownCerts);
     Preferences.getInstance().store(Preferences.AUTH_TOKEN_KEY, initialAuthToken);
     
-    SnykExtendedLanguageClient client = SnykExtendedLanguageClient.getInstance();
+    SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
     // The language client may be null when the extension first loads, so only update configuration if we are able.
-    if (client != null) { 
-        client.updateConfiguration(); 
+    if (lc != null) {
+        lc.updateConfiguration();
     };
   }
 }

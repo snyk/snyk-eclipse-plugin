@@ -1,5 +1,6 @@
 package io.snyk.languageserver;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ScanState {
@@ -7,7 +8,7 @@ public class ScanState {
 		
 	}
 
-	private final ConcurrentHashMap<ScanInProgressKey, Boolean> scanInProgress = new ConcurrentHashMap<>();
+	private final Map<ScanInProgressKey, Boolean> scanInProgress = new ConcurrentHashMap<>();
 	
     private static ScanState instance = new ScanState();    
 	public static ScanState getInstance() {
