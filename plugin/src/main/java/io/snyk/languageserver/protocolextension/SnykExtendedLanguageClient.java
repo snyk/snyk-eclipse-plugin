@@ -112,11 +112,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private Object chSyncObject = new Object();
 	private CommandHandler commandHandler;
 
-	private static SnykExtendedLanguageClient instance = null;
+	private static SnykExtendedLanguageClient instance;
 
 	public SnykExtendedLanguageClient() {
 		super();
-		instance = this;
+		//TODO, fix this; Identifies a possible unsafe usage of a static field. 
+		instance = this; //NOPMD
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		registerPluginInstalledEventTask();
 		registerRefreshFeatureFlagsTask();
@@ -376,6 +377,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				productTreeNode.setErrorMessage(param.getErrorMessage());
 			}
 			break;
+		default:
+			break;
 		}
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
 		this.toolView.refreshBrowser(param.getStatus());
@@ -435,7 +438,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (affectedProductTreeNodes.isEmpty()) {
 			return;
 		}
-		var nodeText = "";
+		String nodeText;
 
 		if (status.equals(SCAN_STATE_IN_PROGRESS)) {
 			nodeText = NODE_TEXT_SCANNING;
@@ -535,19 +538,21 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		populateIssueCache(param, filePath);
 	}
 
-	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode,
-			SnykIssueCache issueCache) {
+	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, SnykIssueCache issueCache) {
 		var cacheHashMap = issueCache.getCacheByDisplayProduct(productTreeNode.getProduct());
+		List<Issue> issuesList = new ArrayList<>();
 		for (var kv : cacheHashMap.entrySet()) {
 			var fileName = kv.getKey();
-			var issues = new ArrayList<>(kv.getValue());
+			issuesList.clear(); // Clear the list instead of creating a new one
+			issuesList.addAll(kv.getValue());
 
-			if (issues.isEmpty())
+			if (issuesList.isEmpty())
 				continue;
-			FileTreeNode fileNode = new FileTreeNode(fileName);
+			
+			FileTreeNode fileNode = new FileTreeNode(fileName); //NOPMD
 			toolView.addFileNode(productTreeNode, fileNode);
-			for (Issue issue : issues) {
-				toolView.addIssueNode(fileNode, new IssueTreeNode(issue));
+			for (Issue issue : issuesList) {
+				toolView.addIssueNode(fileNode, new IssueTreeNode(issue)); //NOPMD
 			}
 		}
 	}
@@ -586,6 +591,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			break;
 		case SCAN_PARAMS_IAC:
 			issueCache.addIacIssues(filePath, issueList);
+			break;
+		default:
 			break;
 		}
 	}
