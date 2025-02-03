@@ -11,7 +11,7 @@ public class IssueTreeNode extends BaseTreeNode {
 
 	public IssueTreeNode(Issue issue) {
 		super(issue);
-		this.setIssue(issue);
+		this.issue = issue;
 	}
 
 	@Override
