@@ -102,6 +102,7 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("<style nonce=\"ideNonce\" data-ide-style></style>", css);
 		htmlStyled = htmlStyled.replace("var(--default-font)",
 				" ui-sans-serif, \"SF Pro Text\", \"Segoe UI\", \"Ubuntu\", Tahoma, Geneva, Verdana, sans-serif;");
+		htmlStyled = htmlStyled.replace("var(--main-font-size)", "10px");
 
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace("var(--text-color)",
