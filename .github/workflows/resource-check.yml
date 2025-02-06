@@ -20,8 +20,8 @@ jobs:
           for key in ${!resources[@]}; do
             candidate=$(sha1sum $key | awk {'print $1'})
             candidate=${candidate:="null"}
-            reference=$(curl -s ${resources[$key]} | sha1sum | awk {'print $1'})
-            echo "Candidate file $key has sha1sum $candidate"
+            reference=$(curl -s ${resources[$key]} | sha512sum | awk {'print $1'})
+            echo "Candidate file $key has sha512sum $candidate"
             echo "Reference file ${resources[$key]} has sha1sum $reference"
             [[ $candidate == $reference ]]
           done
