@@ -209,7 +209,7 @@ public class LsConfigurationUpdater {
 		}
 
 		public String[] getTrustedFolders() {
-			return Arrays.copyOf(trustedFolders, trustedFolders.length);
+			return trustedFolders.clone();
 		}
 
 		public String getEnableTrustedFoldersFeature() {

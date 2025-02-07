@@ -5,14 +5,14 @@ import java.util.function.Predicate;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 
-@SuppressWarnings({ "rawtypes"})
-public class BaseFilter {
+@SuppressWarnings({"rawtypes"})
+public abstract class BaseFilter {
 	protected Preferences preferences = Preferences.getInstance();
 	protected TreeFilterManager filterManager;
 	protected String filterName;
 	protected Predicate predicate;
 
-	protected BaseFilter(String filterName, Predicate predicate, TreeFilterManager tfm) {
+	public BaseFilter(String filterName, Predicate predicate, TreeFilterManager tfm) {
 		this.filterName = filterName;
 		this.predicate = predicate;
 		this.filterManager = tfm;

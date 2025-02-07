@@ -4,23 +4,20 @@ import org.eclipse.lsp4j.Position;
 
 public record Issue(String id, String title, String severity, String filePath, Range range, boolean isIgnored,
 		boolean isNew, String filterableIssueType, IgnoreDetails ignoreDetails, AdditionalData additionalData) {
-
 	public String getDisplayTitle() {
 		if (title == null || title.isEmpty()) {
 			return additionalData != null ? additionalData.message() : null;
 		}
-
-		StringBuilder displayTitle = new StringBuilder(title);
-
+		String displayTitle = title;
 		if (isIgnored()) {
-			displayTitle.insert(0, " [ Ignored ] ");
+			displayTitle = " [ Ignored ] " + displayTitle;
 		}
 
 		if (hasFix()) {
-			displayTitle.insert(0, " ⚡");
+			displayTitle = " ⚡" + displayTitle;
 		}
-
-		return displayTitle.toString();
+		
+		return displayTitle;
 	}
 
 	public String getDisplayTitleWithLineNumber() {
@@ -53,17 +50,20 @@ public record Issue(String id, String title, String severity, String filePath, R
 		}
 		return additionalData.hasAIFix() || additionalData.isUpgradable();
 	}
-
+	
 	public Boolean isVisible(Boolean includeIgnoredIssues, Boolean includeOpenedIssues) {
-		if (includeIgnoredIssues && includeOpenedIssues) {
-			return true;
-		}
-		if (includeIgnoredIssues) {
-			return this.isIgnored();
-		}
-		if (includeOpenedIssues) {
-			return !this.isIgnored();
-		}
-		return false;
-	}
+        if (includeIgnoredIssues && includeOpenedIssues)
+        {
+            return true;
+        }
+        if (includeIgnoredIssues)
+        {
+            return this.isIgnored();
+        }
+        if (includeOpenedIssues)
+        {
+            return !this.isIgnored();
+        }
+        return false;
+	}	
 }
