@@ -9,7 +9,7 @@ public class PublishDiagnostics316Param {
 	}
 
 	private String uri;
-	private Diagnostic316[] diagnostics;
+	private Diagnostic316[] diagnostics = new Diagnostic316[0];
 
 	public String getUri() {
 		return uri;
@@ -20,19 +20,20 @@ public class PublishDiagnostics316Param {
 	}
 
 	public Diagnostic316[] getDiagnostics() {
-		if (diagnostics == null) {
-			return null;
-		}
-		return diagnostics.clone();
+	    if (diagnostics == null) {
+	        return new Diagnostic316[0];
+	    }
+	    return diagnostics.clone();
 	}
 
 	public void setDiagnostics(Diagnostic316... diagnostics) {
-		if (diagnostics == null) {
-			this.diagnostics = null;
-		}
-		this.diagnostics = diagnostics.clone();
+	    if (diagnostics != null) {
+	        this.diagnostics = diagnostics.clone();
+	    } else {
+	        this.diagnostics = new Diagnostic316[0]; // or null, depending on your needs
+	    }
 	}
-
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
