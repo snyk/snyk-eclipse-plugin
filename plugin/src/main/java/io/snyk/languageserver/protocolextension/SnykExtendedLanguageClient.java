@@ -314,7 +314,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		String newToken = param.getToken();
-		boolean differentToken = newToken != oldToken;
+		boolean differentToken = !newToken.equals(oldToken);
 
 		if (differentToken) {
 			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
@@ -440,14 +440,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		String nodeText;
 
-		if (status.equals(SCAN_STATE_IN_PROGRESS)) {
+		if (SCAN_STATE_IN_PROGRESS.equals(status)) {
 			nodeText = NODE_TEXT_SCANNING;
 			setProductNodeText(affectedProductTreeNodes, nodeText);
-		} else if (status.equals(SCAN_STATE_ERROR)) {
+		} else if (SCAN_STATE_ERROR.equals(status)) {
 			nodeText = ISnykToolView.NODE_TEXT_ERROR;
 			setProductNodeText(affectedProductTreeNodes, nodeText);
 			toolView.refreshTree();
-		} else if (status.equals(SCAN_STATE_SUCCESS)) {
+		} else if (SCAN_STATE_SUCCESS.equals(status)) {
 			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
 				var displayCounts = getCountsSuffix(productTreeNode, cache);
 				setProductNodeText(Set.of(productTreeNode), displayCounts);

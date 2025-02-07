@@ -1,6 +1,7 @@
 package io.snyk.languageserver;
 
 import java.io.File;
+import java.util.Arrays;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
@@ -127,7 +128,7 @@ public class LsConfigurationUpdater {
 			this.integrationName = integrationName;
 			this.integrationVersion = integrationVersion;
 			this.automaticAuthentication = automaticAuthentication;
-			this.trustedFolders = trustedFolders;
+			this.trustedFolders = trustedFolders.clone();
 			this.enableTrustedFoldersFeature = enableTrustedFoldersFeature;
 			this.scanningMode = scanningMode;
 			this.enableDeltaFindings = enableDeltaFindings;
@@ -208,7 +209,7 @@ public class LsConfigurationUpdater {
 		}
 
 		public String[] getTrustedFolders() {
-			return trustedFolders;
+			return trustedFolders.clone();
 		}
 
 		public String getEnableTrustedFoldersFeature() {

@@ -35,7 +35,7 @@ import io.snyk.languageserver.download.LsDownloader;
 
 public class SnykStartup implements IStartup {
 	private static LsRuntimeEnvironment runtimeEnvironment;
-	private static SnykToolView snykToolView = null;
+	private static SnykToolView snykToolView;
 	private static boolean downloading = true;
 	private static ILog logger;
 
@@ -116,7 +116,7 @@ public class SnykStartup implements IStartup {
 				basicFileAttributes = Files.readAttributes(lsFile.toPath(), BasicFileAttributes.class);
 				Instant lastModified = basicFileAttributes.lastModifiedTime().toInstant();
 				boolean needsUpdate = lastModified.isBefore(Instant.now().minus(4, ChronoUnit.DAYS))
-						|| !Preferences.getInstance().getLspVersion().equals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
+						|| !LsBinaries.REQUIRED_LS_PROTOCOL_VERSION.equals(Preferences.getInstance().getLspVersion());
 				logger.info(
 						String.format("LS: Needs update? %s. Required LSP version=%s, actual version=%s", needsUpdate,
 								LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, Preferences.getInstance().getLspVersion()));

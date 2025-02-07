@@ -9,29 +9,36 @@ public class PublishDiagnostics316Param {
 	}
 
 	private String uri;
-    private Diagnostic316[] diagnostics;
+	private Diagnostic316[] diagnostics = new Diagnostic316[0];
 
-    public String getUri() {
-        return uri;
-    }
+	public String getUri() {
+		return uri;
+	}
 
-    public void setUri(String uri) {
-        this.uri = uri;
-    }
+	public void setUri(String uri) {
+		this.uri = uri;
+	}
 
-    public Diagnostic316[] getDiagnostics() {
-        return diagnostics;
-    }
+	public Diagnostic316[] getDiagnostics() {
+	    if (diagnostics == null) {
+	        return new Diagnostic316[0];
+	    }
+	    return diagnostics.clone();
+	}
 
-    public void setDiagnostics(Diagnostic316[] diagnostics) {
-        this.diagnostics = diagnostics;
-    }
-    
-    @Override
+	public void setDiagnostics(Diagnostic316... diagnostics) {
+	    if (diagnostics != null) {
+	        this.diagnostics = diagnostics.clone();
+	    } else {
+	        this.diagnostics = new Diagnostic316[0]; // or null, depending on your needs
+	    }
+	}
+	
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(diagnostics);
+		result = prime * result + (diagnostics == null ? 0 : Arrays.hashCode(diagnostics));
 		result = prime * result + Objects.hash(uri);
 		return result;
 	}
@@ -45,11 +52,13 @@ public class PublishDiagnostics316Param {
 		if (getClass() != obj.getClass())
 			return false;
 		PublishDiagnostics316Param other = (PublishDiagnostics316Param) obj;
-		return Arrays.equals(diagnostics, other.diagnostics) && Objects.equals(uri, other.uri);
+		return (diagnostics == null ? other.diagnostics == null : Arrays.equals(diagnostics, other.diagnostics))
+				&& Objects.equals(uri, other.uri);
 	}
-	
+
 	@Override
 	public String toString() {
-		return "PublishDiagnostic316Param [uri=" + uri + ", diagnostics=" + Arrays.toString(diagnostics) + "]";
+		return "PublishDiagnostic316Param [uri=" + uri + ", diagnostics="
+				+ (diagnostics == null ? "null" : Arrays.toString(diagnostics)) + "]";
 	}
 }
