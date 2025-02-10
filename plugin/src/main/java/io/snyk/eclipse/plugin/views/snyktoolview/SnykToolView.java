@@ -71,7 +71,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private BrowserHandler browserHandler;
 	private Browser summaryBrowser;
 	private SummaryBrowserHandler summaryBrowserHandler;
-	private FolderConfigs folderConfigs = FolderConfigs.getInstance();
 	private TreeNode selectedNode;
 
 	@Override
