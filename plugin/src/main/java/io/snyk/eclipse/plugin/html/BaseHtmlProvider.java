@@ -136,15 +136,12 @@ public class BaseHtmlProvider {
 	}
 
 	private String getScaledFontSize() {
-		FontRegistry registry;
-		// Use the theme registry, if available. This may not be the case for unit tests.
+		int defaultHeight;
 		try {
-			registry = getCurrentTheme().getFontRegistry();
+			defaultHeight = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
 		} catch (IllegalStateException e) {
-			registry = JFaceResources.getFontRegistry();
+			defaultHeight = 13;
 		}
-		
-		int defaultHeight = registry.getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
 		// Language server HTML assumes a base font size of 10px. The default Eclipse font size is 17px (13pt), so we
 		// apply a scaling factor here. This ensures that HTML fonts scale correctly if the user changes the text size.
 		int scaledHeight = (int) (defaultHeight / 1.7);
