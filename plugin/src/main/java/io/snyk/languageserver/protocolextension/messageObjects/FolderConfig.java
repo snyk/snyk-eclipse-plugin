@@ -1,5 +1,6 @@
 package io.snyk.languageserver.protocolextension.messageObjects;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
@@ -10,19 +11,22 @@ public class FolderConfig {
     private String folderPath;
 
     @SerializedName("baseBranch")
-    private String baseBranch;
+    private String baseBranch = "";
 
     @SerializedName("localBranches")
-    private List<String> localBranches;
+    private List<String> localBranches = new ArrayList<>();
 
     @SerializedName("additionalParameters")
-    private List<String> additionalParameters;
+    private List<String> additionalParameters = new ArrayList<>();
+    
+    @SerializedName("referenceFolderPath") 
+    private String referenceFolderPath = "";
+    	    
+    @SerializedName("scanCommandConfig") 
+    private ScanCommandConfig scanCommandConfig;
 
-    public FolderConfig(String folderPath, String baseBranch, List<String> localBranches, List<String> additionalParameters) {
+    public FolderConfig(String folderPath) {
         this.folderPath = folderPath;
-        this.baseBranch = baseBranch;
-        this.localBranches = localBranches != null ? localBranches : List.of();
-        this.additionalParameters = additionalParameters != null ? additionalParameters : List.of();
     }
 
     public String getFolderPath() {
@@ -34,6 +38,7 @@ public class FolderConfig {
     }
 
     public String getBaseBranch() {
+    	if (baseBranch == null) return "";
         return baseBranch;
     }
 
@@ -42,6 +47,7 @@ public class FolderConfig {
     }
 
     public List<String> getLocalBranches() {
+    	if (localBranches == null) return new ArrayList<>();
         return localBranches;
     }
 
@@ -50,10 +56,28 @@ public class FolderConfig {
     }
 
     public List<String> getAdditionalParameters() {
+		if (additionalParameters == null) return new ArrayList<>();
         return additionalParameters;
     }
 
     public void setAdditionalParameters(List<String> additionalParameters) {
         this.additionalParameters = additionalParameters != null ? additionalParameters : List.of();
     }
+
+	public String getReferenceFolderPath() {
+		if (referenceFolderPath == null) return "";
+		return referenceFolderPath;
+	}
+
+	public void setReferenceFolderPath(String referenceFolderPath) {
+		this.referenceFolderPath = referenceFolderPath;
+	}
+
+	public ScanCommandConfig getScanCommandConfig() {
+		return scanCommandConfig;
+	}
+
+	public void setScanCommandConfig(ScanCommandConfig scanCommandConfig) {
+		this.scanCommandConfig = scanCommandConfig;
+	}
 }

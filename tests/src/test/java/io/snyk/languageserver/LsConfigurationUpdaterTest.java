@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.Platform;
@@ -21,6 +22,7 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import io.snyk.languageserver.download.LsBinaries;
+import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 
 class LsConfigurationUpdaterTest {
@@ -116,8 +118,8 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getBooleanPref(Preferences.USE_TOKEN_AUTH, false)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString())).thenReturn("true");
 
-		FolderConfigsParam mockFolderConfigsParam = new FolderConfigsParam(new ArrayList<>());
-		when(mockFolderConfigs.updateFolderConfigs()).thenReturn(mockFolderConfigsParam);
+		List<FolderConfig> mockFolderConfigsParam = new ArrayList<>();
+		when(mockFolderConfigs.getAll()).thenReturn(mockFolderConfigsParam);
 
 	}
 }
