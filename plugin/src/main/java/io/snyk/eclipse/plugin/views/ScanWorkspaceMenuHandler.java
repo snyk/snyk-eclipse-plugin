@@ -10,10 +10,11 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class ScanWorkspaceMenuHandler extends AbstractHandler {
 
-  public Object execute(ExecutionEvent event) throws ExecutionException {
-	  CompletableFuture.runAsync(() -> {
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		CompletableFuture.runAsync(() -> {
 			SnykExtendedLanguageClient.getInstance().triggerScan(null);
 		});
-    return null;
-  }
+		return null;
+	}
 }

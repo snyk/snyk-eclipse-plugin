@@ -2,42 +2,48 @@ package io.snyk.eclipse.plugin.domain;
 
 import java.util.Map;
 
-public interface ProductConstants {
-	String SCAN_STATE_IN_PROGRESS = "inProgress";
-	String SCAN_STATE_SUCCESS = "success";
-	String SCAN_STATE_ERROR = "error";
+public final class ProductConstants {
 
-	String SCAN_PARAMS_OSS = "oss";
-	String SCAN_PARAMS_CODE = "code";
-	String SCAN_PARAMS_IAC = "iac";
+    public static final String SCAN_STATE_IN_PROGRESS = "inProgress";
+    public static final String SCAN_STATE_SUCCESS = "success";
+    public static final String SCAN_STATE_ERROR = "error";
 
-	String DIAGNOSTIC_SOURCE_SNYK_OSS = "Snyk Open Source";
-	String DIAGNOSTIC_SOURCE_SNYK_CODE = "Snyk Code";
-	String DIAGNOSTIC_SOURCE_SNYK_IAC = "Snyk IaC";
+    public static final String SCAN_PARAMS_OSS = "oss";
+    public static final String SCAN_PARAMS_CODE = "code";
+    public static final String SCAN_PARAMS_IAC = "iac";
 
-	String DISPLAYED_OSS = "Snyk Open Source";
-	String DISPLAYED_CODE_SECURITY = "Code Security";
-	String DISPLAYED_CODE_QUALITY = "Code Quality";
-	String DISPLAYED_IAC = "Configuration";
+    public static final String DIAGNOSTIC_SOURCE_SNYK_OSS = "Snyk Open Source";
+    public static final String DIAGNOSTIC_SOURCE_SNYK_CODE = "Snyk Code";
+    public static final String DIAGNOSTIC_SOURCE_SNYK_IAC = "Snyk IaC";
 
-	String SEVERITY_CRITICAL = "critical";
-	String SEVERITY_HIGH = "high";
-	String SEVERITY_MEDIUM = "medium";
-	String SEVERITY_LOW = "low";
+    public static final String DISPLAYED_OSS = "Snyk Open Source";
+    public static final String DISPLAYED_CODE_SECURITY = "Code Security";
+    public static final String DISPLAYED_CODE_QUALITY = "Code Quality";
+    public static final String DISPLAYED_IAC = "Configuration";
 
-	String FILTERABLE_ISSUE_OPEN_SOURCE = "Open Source";
-	String FILTERABLE_ISSUE_CODE_SECURITY = "Code Security";
-	String FILTERABLE_ISSUE_CODE_QUALITY = "Code Quality";
-	String FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE = "Infrastructure As Code";
+    public static final String SEVERITY_CRITICAL = "critical";
+    public static final String SEVERITY_HIGH = "high";
+    public static final String SEVERITY_MEDIUM = "medium";
+    public static final String SEVERITY_LOW = "low";
 
-	Map<String, String> FILTERABLE_ISSUE_TYPE_TO_DISPLAY = Map.of(FILTERABLE_ISSUE_CODE_QUALITY, DISPLAYED_CODE_QUALITY,
-			FILTERABLE_ISSUE_CODE_SECURITY, DISPLAYED_CODE_SECURITY, FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE,
-			DISPLAYED_IAC, FILTERABLE_ISSUE_OPEN_SOURCE, DISPLAYED_OSS);
+    public static final String FILTERABLE_ISSUE_OPEN_SOURCE = "Open Source";
+    public static final String FILTERABLE_ISSUE_CODE_SECURITY = "Code Security";
+    public static final String FILTERABLE_ISSUE_CODE_QUALITY = "Code Quality";
+    public static final String FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE = "Infrastructure As Code";
 
-	Map<String, String> LSP_SOURCE_TO_SCAN_PARAMS = Map.of(DIAGNOSTIC_SOURCE_SNYK_CODE, SCAN_PARAMS_CODE,
-			DIAGNOSTIC_SOURCE_SNYK_IAC, SCAN_PARAMS_IAC, DIAGNOSTIC_SOURCE_SNYK_OSS, SCAN_PARAMS_OSS);
+    public static final Map<String, String> FILTERABLE_ISSUE_TYPE_TO_DISPLAY = Map.of(
+            FILTERABLE_ISSUE_CODE_QUALITY, DISPLAYED_CODE_QUALITY,
+            FILTERABLE_ISSUE_CODE_SECURITY, DISPLAYED_CODE_SECURITY,
+            FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE, DISPLAYED_IAC,
+            FILTERABLE_ISSUE_OPEN_SOURCE, DISPLAYED_OSS);
 
-	// code cannot be mapped easily
-	Map<String, String> SCAN_PARAMS_TO_DISPLAYED = Map.of(SCAN_PARAMS_OSS, DISPLAYED_OSS, SCAN_PARAMS_IAC,
-			DISPLAYED_IAC);
+    public static final Map<String, String> LSP_SOURCE_TO_SCAN_PARAMS = Map.of(
+            DIAGNOSTIC_SOURCE_SNYK_CODE, SCAN_PARAMS_CODE,
+            DIAGNOSTIC_SOURCE_SNYK_IAC, SCAN_PARAMS_IAC,
+            DIAGNOSTIC_SOURCE_SNYK_OSS, SCAN_PARAMS_OSS);
+
+    // code cannot be mapped easily
+    public static final Map<String, String> SCAN_PARAMS_TO_DISPLAYED = Map.of(
+            SCAN_PARAMS_OSS, DISPLAYED_OSS,
+            SCAN_PARAMS_IAC, DISPLAYED_IAC);
 }

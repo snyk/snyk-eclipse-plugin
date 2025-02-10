@@ -76,7 +76,8 @@ public class FolderConfigs {
 
 		for (var project : openProjects) {
 			Path path = ResourceUtils.getFullPath(project);
-			IScopeContext projectScope = new ProjectScope(project);
+			//Linter does not like when new objects are created in loops, but here we do want to create new ProjectScopes in the loop.
+			IScopeContext projectScope = new ProjectScope(project); //NOPMD, 
 			var projectSettings = projectScope.getNode(Activator.PLUGIN_ID);
 			String additionalParams = projectSettings.get(ProjectPropertyPage.SNYK_ADDITIONAL_PARAMETERS, "");
 			var additionalParamsList = Arrays.asList(additionalParams.split(" "));

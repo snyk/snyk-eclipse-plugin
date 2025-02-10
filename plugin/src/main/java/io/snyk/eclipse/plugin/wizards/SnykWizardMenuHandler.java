@@ -11,28 +11,29 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 
 public class SnykWizardMenuHandler extends AbstractHandler {
-  IWorkbenchPart part;
-  ISelection selection;
-  
-  public void setActivePart(IAction action, IWorkbenchPart part) {
-    this.part = part;
-  }
-  
-  public Object execute(ExecutionEvent event) throws ExecutionException {
-    Shell activeShell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-    activeShell.getDisplay().asyncExec(() -> {      
-      SnykWizard wizard = new SnykWizard();
-      
-      WizardDialog dialog = new WizardDialog(activeShell, wizard);
-      
-      dialog.setBlockOnOpen(true);
-      dialog.open();
-    });
+	IWorkbenchPart part;
+	ISelection selection;
 
-    return null;
-  }
-  
-  public void selectionChanged(IAction action, ISelection selection) {
-    this.selection = selection;
-  }
+	public void setActivePart(IAction action, IWorkbenchPart part) {
+		this.part = part;
+	}
+
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		Shell activeShell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+		activeShell.getDisplay().asyncExec(() -> {
+			SnykWizard wizard = new SnykWizard();
+
+			WizardDialog dialog = new WizardDialog(activeShell, wizard);
+
+			dialog.setBlockOnOpen(true);
+			dialog.open();
+		});
+
+		return null;
+	}
+
+	public void selectionChanged(IAction action, ISelection selection) {
+		this.selection = selection;
+	}
 }

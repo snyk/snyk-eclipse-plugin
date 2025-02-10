@@ -54,14 +54,14 @@ public class CommandHandler {
 			return CompletableFuture.completedFuture(null);
 
 		Path workingDir = getWorkingDirectory(issue);
-		String pathArg = null;
+		String pathArg;
 		String idArg = "--id=" + issue.additionalData().ruleId();
 		
 		List<Object> args = new ArrayList<>();
 		args.add(workingDir.toString());
 		args.add("ignore");
 
-		if (issue.filterableIssueType().equals(ProductConstants.FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE)) {
+		if (ProductConstants.FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE.equals(issue.filterableIssueType())) {
 			Path relativePath = workingDir.relativize(Paths.get(issue.filePath()));
 			var separator = " > ";
 			pathArg = "--path=" + relativePath.toString() + separator

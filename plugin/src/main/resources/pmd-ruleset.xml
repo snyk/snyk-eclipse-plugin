@@ -12,6 +12,7 @@
     <!-- Best Practices - Important coding standards -->
     <rule ref="category/java/bestpractices.xml">
         <exclude name="GuardLogStatement"/>
+        <exclude name="AbstractClassWithoutAbstractMethod"/>
     </rule>
 
     <!-- Performance - Critical performance issues -->

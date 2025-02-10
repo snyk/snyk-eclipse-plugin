@@ -19,6 +19,7 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 public class ScanWorkspaceFolderHandler extends AbstractHandler {
 
 	@SuppressWarnings("restriction")
+	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 

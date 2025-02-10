@@ -44,7 +44,7 @@ public class IssueTreeNode extends BaseTreeNode {
 		return issue;
 	}
 
-	public void setIssue(Issue issue) {
+	public final void setIssue(Issue issue) {
 		this.issue = issue;
 	}
 

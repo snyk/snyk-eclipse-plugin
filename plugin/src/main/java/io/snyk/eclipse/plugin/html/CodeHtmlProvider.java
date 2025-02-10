@@ -65,12 +65,12 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 
     @Override
     public String replaceCssVariables(String html) {
-        html = super.replaceCssVariables(html);
+        String htmlStyled = super.replaceCssVariables(html);
         
         // Replace CSS variables with actual color values
-        html = html.replace("var(--example-line-removed-color)", super.getColorAsHex("DELETION_COLOR", "#ff0000"));
-        html = html.replace("var(--example-line-added-color)", super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
+        htmlStyled = htmlStyled.replace("var(--example-line-removed-color)", super.getColorAsHex("DELETION_COLOR", "#ff0000"));
+        htmlStyled = htmlStyled.replace("var(--example-line-added-color)", super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
 
-        return html;
+        return htmlStyled;
     }
 }

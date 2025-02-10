@@ -4,10 +4,10 @@ public class SnykTrustedFoldersParams {
   private String[] trustedFolders;
 
   public String[] getTrustedFolders() {
-    return trustedFolders;
+    return trustedFolders.clone();
   }
 
-  public void setTrustedFolders(String[] trustedFolders) {
-    this.trustedFolders = trustedFolders;
+  public void setTrustedFolders(String... trustedFolders) {
+    this.trustedFolders = trustedFolders.clone();
   }
 }

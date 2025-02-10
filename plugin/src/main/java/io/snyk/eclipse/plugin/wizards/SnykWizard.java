@@ -44,25 +44,29 @@ public class SnykWizard extends Wizard implements INewWizard {
 		setNeedsProgressMonitor(true);
 	}
 
+	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		this.workbench = workbench;
 		this.selection = selection;
 	}
 
+	@Override
 	public boolean canFinish() {
-		if (this.getContainer().getCurrentPage() == authenticatePage) {
+		if (this.getContainer().getCurrentPage().equals(authenticatePage)) {
 			return true;
 		}
 		return false;
 	}
 
+	@Override
 	public boolean performCancel() {
 		model.resetPreferences();
 		return true;
 	}
 
+	@Override
 	public boolean performFinish() {
-		new Job("Applying configuration from wizard...") {	
+		new Job("Applying configuration from wizard...") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				monitor.beginTask("starting", 60);
@@ -84,7 +88,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 				monitor.worked(20);
 				monitor.subTask("trusting workspace folders...");
 				var projects = ResourceUtils.getAccessibleTopLevelProjects();
-				if (projects != null && projects.size()>0) {
+				if (projects != null && !projects.isEmpty()) {
 					lc.trustWorkspaceFolders();
 				}
 				monitor.worked(20);
