@@ -140,7 +140,7 @@ public class BaseHtmlProvider {
 		// Language server HTML assumes a base font size of 10px. The default Eclipse font size is 17px (13pt), so we
 		// apply a scaling factor here. This ensures that HTML fonts scale correctly if the user changes the text size.
 		int scaledHeight = (int) (defaultHeight / 1.7);
-		return String.valueOf(scaledHeight) + "pt";
+		return scaledHeight + "pt";
 	}
 
 	public String getColorAsHex(String colorKey, String defaultColor) {
@@ -172,7 +172,7 @@ public class BaseHtmlProvider {
 		}
 		ITheme currentTheme = getCurrentTheme();
 		colorRegistry = currentTheme.getColorRegistry();
-				return colorRegistry;
+		return colorRegistry;
 	}
 
 	private ITheme currentTheme;
