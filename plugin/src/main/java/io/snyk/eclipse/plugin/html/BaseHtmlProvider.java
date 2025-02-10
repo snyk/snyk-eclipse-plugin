@@ -8,7 +8,6 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ColorRegistry;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.themes.ITheme;
