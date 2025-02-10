@@ -1,8 +1,9 @@
 # Snyk Security Changelog
 
-## [3.0.1]
+## [3.1.0]
 ### Changes
-- New Summary Panel for scan information and net new issues filter.
+- add option for using a folder as reference instead of a branch in net-new scanning
+- add scan summary to custom UI, updating scan statuses live
 
 ## [3.0.0]
 ### Changes
