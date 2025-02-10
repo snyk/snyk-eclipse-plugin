@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ColorRegistry;
+import org.eclipse.jface.resource.FontRegistry;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
@@ -135,7 +136,15 @@ public class BaseHtmlProvider {
 	}
 
 	private String getScaledFontSize() {
-		int defaultHeight = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
+		FontRegistry registry;
+		// Use the theme registry, if available. This may not be the case for unit tests.
+		try {
+			registry = getCurrentTheme().getFontRegistry();
+		} catch (IllegalStateException e) {
+			registry = JFaceResources.getFontRegistry();
+		}
+		
+		int defaultHeight = registry.getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
 		// Language server HTML assumes a base font size of 10px. The default Eclipse font size is 17px (13pt), so we
 		// apply a scaling factor here. This ensures that HTML fonts scale correctly if the user changes the text size.
 		int scaledHeight = (int) (defaultHeight / 1.7);
