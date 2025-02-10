@@ -6,6 +6,8 @@ import java.util.Random;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ColorRegistry;
+import org.eclipse.jface.resource.FontRegistry;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.ui.PlatformUI;
@@ -102,6 +104,7 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("<style nonce=\"ideNonce\" data-ide-style></style>", css);
 		htmlStyled = htmlStyled.replace("var(--default-font)",
 				" ui-sans-serif, \"SF Pro Text\", \"Segoe UI\", \"Ubuntu\", Tahoma, Geneva, Verdana, sans-serif;");
+		htmlStyled = htmlStyled.replace("var(--main-font-size)", getScaledFontSize());
 
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace("var(--text-color)",
@@ -130,6 +133,19 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("${ideScript}", "");
 
 		return htmlStyled;
+	}
+
+	private String getScaledFontSize() {
+		int defaultHeight;
+		try {
+			defaultHeight = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
+		} catch (IllegalStateException e) {
+			defaultHeight = 13;
+		}
+		// Language server HTML assumes a base font size of 10px. The default Eclipse font size is 17px (13pt), so we
+		// apply a scaling factor here. This ensures that HTML fonts scale correctly if the user changes the text size.
+		int scaledHeight = (int) (defaultHeight / 1.7);
+		return scaledHeight + "pt";
 	}
 
 	public String getColorAsHex(String colorKey, String defaultColor) {
