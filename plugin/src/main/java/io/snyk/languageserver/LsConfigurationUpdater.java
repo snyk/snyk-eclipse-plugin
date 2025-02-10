@@ -1,7 +1,7 @@
 package io.snyk.languageserver;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
@@ -11,7 +11,7 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
+import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
 public class LsConfigurationUpdater {
 
@@ -63,12 +63,12 @@ public class LsConfigurationUpdater {
 			authMethod = "token";
 		}
 		String enableDeltaFindings = preferences.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString());
-		FolderConfigsParam folderConfigsParam = FolderConfigs.getInstance().updateFolderConfigs();
+		var folderConfigs = FolderConfigs.getInstance().getAll();
 		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac,
 				insecure, endpoint, additionalParams, additionalEnv, path, sendErrorReports, enableTelemetry,
 				organization, manageBinariesAutomatically, cliPath, token, integrationName, integrationVersion,
 				automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode, enableDeltaFindings,
-				authMethod, folderConfigsParam);
+				authMethod, folderConfigs);
 	}
 
 	static class Settings {
@@ -101,15 +101,14 @@ public class LsConfigurationUpdater {
 		private final String enableDeltaFindings;
 		private final String requiredProtocolVersion = LsBinaries.REQUIRED_LS_PROTOCOL_VERSION;
 		private final String authenticationMethod;
-		private final FolderConfigsParam folderConfigsParam;
+		private final List<FolderConfig> folderConfigs;
 
 		public Settings(String activateSnykOpenSource, String activateSnykCodeSecurity, String activateSnykCodeQuality,
 				String activateSnykIac, String insecure, String endpoint, String additionalParams, String additionalEnv,
 				String path, String sendErrorReports, String enableTelemetry, String organization,
 				String manageBinariesAutomatically, String cliPath, String token, String integrationName,
 				String integrationVersion, String automaticAuthentication, String[] trustedFolders,
-				String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings, String authMethod,
-				FolderConfigsParam folderConfigsParam) {
+				String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings, String authMethod,List<FolderConfig>folderConfigs) {
 			this.activateSnykOpenSource = activateSnykOpenSource;
 			this.activateSnykCodeSecurity = activateSnykCodeSecurity;
 			this.activateSnykCodeQuality = activateSnykCodeQuality;
@@ -133,7 +132,7 @@ public class LsConfigurationUpdater {
 			this.scanningMode = scanningMode;
 			this.enableDeltaFindings = enableDeltaFindings;
 			this.authenticationMethod = authMethod;
-			this.folderConfigsParam = folderConfigsParam;
+			this.folderConfigs = folderConfigs;
 		}
 
 		public String getPath() {
@@ -244,8 +243,8 @@ public class LsConfigurationUpdater {
 			return requiredProtocolVersion;
 		}
 
-		public FolderConfigsParam getFolderConfigsParam() {
-			return folderConfigsParam;
+		public List<FolderConfig> getFolderConfigs() {
+			return folderConfigs;
 		}
 
 		public String getEnableDeltaFindings() {

@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -18,7 +19,6 @@ import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 
 public class FolderConfigs {
 	protected static FolderConfigs instance;
@@ -43,16 +43,10 @@ public class FolderConfigs {
 	public List<String> getLocalBranches(Path projectPath) {
 		return getFolderConfig(projectPath).getLocalBranches();
 	}
-	
-	public void setBaseBranch(Path projectPath, String newBaseBranch) {
-		var folderConfig = getFolderConfig(projectPath);
-		folderConfig.setBaseBranch(newBaseBranch);
-		persist(projectPath.normalize(), folderConfig);
-	}
 
 	private void persist(Path path, FolderConfig folderConfig) {
 		String updatedJson = gson.toJson(folderConfig);
-		instancePreferences.put(path.toString(), updatedJson);
+		instancePreferences.put(path.normalize().toString(), updatedJson);
 		try {
 			instancePreferences.flush();
 		} catch (Exception e) {
@@ -70,7 +64,7 @@ public class FolderConfigs {
 		}
 	}
 
-	public FolderConfigsParam updateFolderConfigs() {
+	public List<FolderConfig> getAll() {
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
 		List<FolderConfig> folderConfigs = new ArrayList<>(openProjects.size());
 
@@ -87,9 +81,7 @@ public class FolderConfigs {
 			folderConfigs.add(folderConfig);
 		}
 		
-		FolderConfigsParam param = new FolderConfigsParam(folderConfigs);
-		param.setFolderConfigs(folderConfigs);
-		return param;
+		return Collections.unmodifiableList(folderConfigs);
 	}
 
 	/**
@@ -102,8 +94,7 @@ public class FolderConfigs {
 		String json = instancePreferences.get(path.toString(), null);
 		if (json == null) {
 			SnykLogger.logInfo("No valid configuration for path: " + folderPath.toString());
-			FolderConfig folderConfig = new FolderConfig(path.toString(), null, new ArrayList<>(),
-					new ArrayList<>());
+			FolderConfig folderConfig = new FolderConfig(path.toString());
 			persist(path, folderConfig);
 			return folderConfig;
 		}

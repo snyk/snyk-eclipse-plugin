@@ -12,13 +12,13 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 
-public class ContentRootNode extends BaseTreeNode {
+public final class ContentRootNode extends BaseTreeNode {
 	private Path path;
 	private String name;
 
 	public ContentRootNode(String name, Path value) {
 		super(value);
-		reset();
+		this.reset();
 		this.setName(name);
 		this.setPath(value);
 	}
@@ -45,7 +45,7 @@ public class ContentRootNode extends BaseTreeNode {
 		}
 		return null;
 	}
-
+	
 	@Override
 	public void reset() {
 		var ossRootNode = new ProductTreeNode(DISPLAYED_OSS);
@@ -74,7 +74,7 @@ public class ContentRootNode extends BaseTreeNode {
 		return path;
 	}
 
-	public void setPath(Path path) {
+	public final void setPath(Path path) {
 		if (path != null) {
 			this.path = path.normalize();
 		}
@@ -84,7 +84,7 @@ public class ContentRootNode extends BaseTreeNode {
 		return name;
 	}
 
-	public void setName(String name) {
+	public final void setName(String name) {
 		this.name = name;
 	}
 }

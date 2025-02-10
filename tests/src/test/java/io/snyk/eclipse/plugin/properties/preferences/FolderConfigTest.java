@@ -20,27 +20,10 @@ class FolderConfigTest {
         List<String> localBranches = Arrays.asList("feature1", "feature2");
         List<String> additionalParameters = Arrays.asList("-param1", "-param2");
 
-        FolderConfig config = new FolderConfig(folderPath, baseBranch, localBranches, additionalParameters);
-
-        assertEquals(folderPath, config.getFolderPath());
-        assertEquals(baseBranch, config.getBaseBranch());
-        assertEquals(localBranches, config.getLocalBranches());
-        assertEquals(additionalParameters, config.getAdditionalParameters());
-    }
-
-    @Test
-    void testSetters() {
-        FolderConfig config = new FolderConfig("", "", null, null);
-
-        String folderPath = "/new/path";
-        String baseBranch = "develop";
-        List<String> localBranches = Arrays.asList("branch1", "branch2");
-        List<String> additionalParameters = Arrays.asList("-param3", "-param4");
-
-        config.setFolderPath(folderPath);
+        FolderConfig config = new FolderConfig(folderPath);
         config.setBaseBranch(baseBranch);
-        config.setLocalBranches(localBranches);
         config.setAdditionalParameters(additionalParameters);
+        config.setLocalBranches(localBranches);
 
         assertEquals(folderPath, config.getFolderPath());
         assertEquals(baseBranch, config.getBaseBranch());
@@ -50,7 +33,7 @@ class FolderConfigTest {
 
     @Test
     void testNullListsInConstructor() {
-        FolderConfig config = new FolderConfig("path", "branch", null, null);
+        FolderConfig config = new FolderConfig("path");
 
         assertNotNull(config.getLocalBranches());
         assertTrue(config.getLocalBranches().isEmpty());
@@ -60,7 +43,7 @@ class FolderConfigTest {
 
     @Test
     void testNullListsInSetters() {
-        FolderConfig config = new FolderConfig("path", "branch", Arrays.asList("branch1"), Arrays.asList("-param1"));
+        FolderConfig config = new FolderConfig("path");
 
         config.setLocalBranches(null);
         config.setAdditionalParameters(null);

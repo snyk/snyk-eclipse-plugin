@@ -127,7 +127,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					if (selection.isEmpty())
 						return;
 					selectedNode = (TreeNode) selection.getFirstElement();
-					browserHandler.updateBrowserContent(selectedNode);
 					if (selectedNode instanceof IssueTreeNode) {
 						IssueTreeNode issueTreeNode = (IssueTreeNode) selectedNode;
 						FileTreeNode fileNode = (FileTreeNode) issueTreeNode.getParent();
@@ -137,11 +136,12 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					boolean deltaEnabled = Preferences.isDeltaEnabled();
 					if (selectedNode instanceof ContentRootNode && deltaEnabled) {
 						ContentRootNode contentNode = (ContentRootNode) selectedNode;
-						String[] localBranches = folderConfigs.getLocalBranches(contentNode.getPath())
-								.toArray(new String[0]);
-
-						new BaseBranchDialog().open(Display.getDefault(), contentNode.getPath(), localBranches);
+						new ReferenceChooserDialog(Display.getDefault().getActiveShell(), contentNode.getPath()).open();
+					} else {
+						// update the browser content for everything but content roots
+						browserHandler.updateBrowserContent(selectedNode);
 					}
+
 				});
 			}
 		});
@@ -420,10 +420,16 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			for (BaseTreeNode node : children) {
 				if (node instanceof ContentRootNode) {
 					ContentRootNode contentNode = (ContentRootNode) node;
-					String baseBranch = folderConfigs.getBaseBranch(contentNode.getPath());
+					var folderConfig = FolderConfigs.getInstance().getFolderConfig(contentNode.getPath());
+					String referenceFolder = folderConfig.getReferenceFolderPath();
+					String baseBranch = folderConfig.getBaseBranch();
+					var reference = referenceFolder;
+					if (reference.isBlank()) {
+						reference = baseBranch;
+					}
 
-					contentNode.setName(String.format("%s - Click here choose base branch [ current: %s ]",
-							contentNode.getName(), baseBranch));
+					contentNode.setName(String.format("%s - Click here choose reference [ current: %s ]",
+							contentNode.getName(), reference));
 				}
 			}
 		}
