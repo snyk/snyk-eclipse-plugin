@@ -21,6 +21,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.lsp4e.LSPEclipseUtils;
@@ -42,6 +43,7 @@ import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 
+import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
@@ -477,4 +479,31 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		}
 	}
 
+	@Override
+	public void selectTreeNode(Issue issue, String product) {
+		ProductTreeNode productNode = getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY, issue.filePath());
+		drillDown((TreeNode) productNode, issue);
+	}
+
+	private void drillDown(TreeNode currentParent, Issue issue) {
+		for (Object child : currentParent.getChildren()) {
+			TreeNode childNode = (TreeNode) child;
+
+			if (childNode instanceof IssueTreeNode && ((IssueTreeNode) childNode).getIssue().id().equals(issue.id())) {
+				updateSelection((IssueTreeNode) childNode);
+				return; // Exit the function as we've found a match
+			}
+
+			if (childNode.getChildren() != null && childNode.getChildren().length != 0) {
+				drillDown(childNode, issue);
+			}
+		}
+	}
+
+	private void updateSelection(IssueTreeNode issueTreeNode) {
+		Display.getDefault().asyncExec(() -> {
+			IStructuredSelection selection = new StructuredSelection(issueTreeNode);
+			treeViewer.setSelection(selection, true);
+		});
+	}
 }

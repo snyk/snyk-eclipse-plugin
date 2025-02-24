@@ -26,4 +26,5 @@ public final class LsConstants {
 	public static final String SNYK_PUBLISH_DIAGNOSTICS_316 = "$/snyk.publishDiagnostics316";
 	public static final String SNYK_FOLDER_CONFIG = "$/snyk.folderConfigs";
 	public static final String SNYK_SCAN_SUMMARY = "$/snyk.scanSummary";
+	public static final String SNYK_SHOW_DOCUMENT = "$/snyk.showDocument";
 }

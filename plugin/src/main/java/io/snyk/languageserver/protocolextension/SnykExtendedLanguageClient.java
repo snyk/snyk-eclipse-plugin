@@ -1,5 +1,6 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_QUALITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS;
@@ -22,15 +23,20 @@ import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_FIXABLE
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -47,6 +53,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4j.ProgressParams;
+import org.eclipse.lsp4j.ShowDocumentParams;
+import org.eclipse.lsp4j.ShowDocumentResult;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressKind;
 import org.eclipse.lsp4j.WorkDoneProgressNotification;
@@ -116,8 +124,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public SnykExtendedLanguageClient() {
 		super();
-		//TODO, fix this; Identifies a possible unsafe usage of a static field. 
-		instance = this; //NOPMD
+		// TODO, fix this; Identifies a possible unsafe usage of a static field.
+		instance = this; // NOPMD
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		registerPluginInstalledEventTask();
 		registerRefreshFeatureFlagsTask();
@@ -384,16 +392,96 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		this.toolView.refreshBrowser(param.getStatus());
 	}
 
+	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
+	public void folderConfig(FolderConfigsParam folderConfigParam) {
+		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
+		CompletableFuture.runAsync(() -> FolderConfigs.getInstance().addAll(folderConfigs));
+	}
+
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
 	public void updateSummaryPanel(SummaryPanelParams summary) {
 		openToolView();
 		this.toolView.updateSummary(summary.getSummary());
 	}
 
-	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
-	public void folderConfig(FolderConfigsParam folderConfigParam) {
-		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
-		CompletableFuture.runAsync(() -> FolderConfigs.getInstance().addAll(folderConfigs));
+	@Override
+	public CompletableFuture<ShowDocumentResult> showDocument(ShowDocumentParams params) {
+		URI uri;
+		try {
+			uri = new URI(params.getUri());
+		} catch (URISyntaxException e) {
+			SnykLogger.logError(e);
+			return null;
+		}
+
+		String scheme = uri.getScheme();
+		String product = getDecodedParam(uri, "product");
+		String action = getDecodedParam(uri, "action");
+		String issueId = getDecodedParam(uri, "issueId");
+
+		if (!"snyk".equals(scheme)) {
+			SnykLogger.logInfo(String.format("Invalid URI: expected 'snyk' scheme but got %s", scheme));
+		} else if (!DIAGNOSTIC_SOURCE_SNYK_CODE.equals(product)) {
+			SnykLogger.logInfo(String.format("Invalid URI: expected '{}' product but got %s",
+					DIAGNOSTIC_SOURCE_SNYK_CODE, product));
+		} else if (!"showInDetailPanel".equals(action)) {
+			SnykLogger.logInfo(String.format("Invalid URI: expected 'showInDetailPanel' action but got %s", action));
+		} else if (issueId.isEmpty()) {
+			SnykLogger.logInfo(String.format("Invalid URI: 'issueId' empty"));
+		}
+
+		if (scheme.equals("snyk") && product.equals(DIAGNOSTIC_SOURCE_SNYK_CODE)
+				&& action.equals("showInDetailPanel")) {
+			return CompletableFuture.supplyAsync(() -> {
+
+				Issue issue = getIssueFromCache(uri);
+				this.toolView.selectTreeNode(issue, product);
+				return new ShowDocumentResult(true);
+			});
+		} else {
+			SnykLogger.logInfo(String.format("Invalid URI: scheme=%s, product=%s, action=%s", scheme, product, action));
+			return super.showDocument(params);
+		}
+	}
+
+	public Issue getIssueFromCache(URI uri) {
+		String filePath = uri.getPath();
+		String issueId = getDecodedParam(uri, "issueId");
+
+		SnykIssueCache issueCache = getIssueCache(filePath);
+		return issueCache.getCodeSecurityIssuesForPath(filePath).stream().filter(i -> i.id().equals(issueId))
+				.findFirst().orElse(null);
+	}
+
+	public String getDecodedParam(URI uri, String paramName) {
+		Map<String, String> paramMap = parseQueryString(uri.getQuery());
+
+		try {
+			return URLDecoder.decode(paramMap.get(paramName), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			SnykLogger.logError(e);
+		}
+		return null;
+	}
+
+	private static Map<String, String> parseQueryString(String queryString) {
+		Map<String, String> paramMap = new HashMap<>();
+
+		for (String param : queryString.split("&")) {
+			if (!param.isEmpty()) {
+				String[] keyValue = param.split("=");
+
+				if (keyValue.length == 2) {
+					try {
+						paramMap.put(keyValue[0], URLDecoder.decode(keyValue[1], "UTF-8"));
+					} catch (UnsupportedEncodingException e) {
+						SnykLogger.logError(e);
+					}
+				}
+			}
+		}
+
+		return paramMap;
 	}
 
 	private void openToolView() {
@@ -473,7 +561,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				high, medium, low);
 	}
 
-	private SnykIssueCache getIssueCache(String filePath) {
+	public SnykIssueCache getIssueCache(String filePath) {
 		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(Paths.get(filePath));
 		if (issueCache == null) {
 			throw new IllegalArgumentException("No issue cache for param possible");
@@ -548,11 +636,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 			if (issuesList.isEmpty())
 				continue;
-			
-			FileTreeNode fileNode = new FileTreeNode(fileName); //NOPMD
+
+			FileTreeNode fileNode = new FileTreeNode(fileName); // NOPMD
 			toolView.addFileNode(productTreeNode, fileNode);
 			for (Issue issue : issuesList) {
-				toolView.addIssueNode(fileNode, new IssueTreeNode(issue)); //NOPMD
+				toolView.addIssueNode(fileNode, new IssueTreeNode(issue)); // NOPMD
 			}
 		}
 	}
