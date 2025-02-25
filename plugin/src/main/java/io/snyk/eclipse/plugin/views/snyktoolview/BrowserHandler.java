@@ -3,6 +3,7 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.core.commands.common.CommandException;
@@ -31,6 +32,8 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import io.snyk.languageserver.protocolextension.messageObjects.Fix;
 
 @SuppressWarnings("restriction")
 public class BrowserHandler {
@@ -84,13 +87,45 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "stopScan") {
 			@Override
 			public Object function(Object[] arguments) {
-				IHandlerService handlerService = 
-						(IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
+				IHandlerService handlerService = (IHandlerService) PlatformUI.getWorkbench()
+						.getService(IHandlerService.class);
+
 				try {
 					handlerService.executeCommand(IHandlerCommands.STOP_SCAN, null);
 				} catch (CommandException e) {
 					SnykLogger.logError(e);
-				} 
+				}
+				return null;
+			}
+		};
+
+		new BrowserFunction(browser, "generateAIFix") {
+			@Override
+			public Object function(Object[] arguments) {
+				browser.execute("debugger;"); // Triggers a breakpoint for debugging
+				System.out.println("generateAIFix");
+				SnykLogger.logInfo("generateAIFix");
+
+				String folderURI = (String) arguments[0];
+				String fileURI = (String) arguments[1];
+				String issueID = (String) arguments[2];
+
+				// Do we want to capture and do something with the responseDiffs here?
+				List<Fix> responseDiffs = SnykExtendedLanguageClient.getInstance().sendCodeFixDiffsCommand(folderURI,
+						fileURI, issueID);
+
+				return null;
+			}
+		};
+
+		new BrowserFunction(browser, "applyAIFix") {
+			@Override
+			public Object function(Object[] arguments) {
+				System.out.println("applyAIFix");
+				SnykLogger.logInfo("applyAIFix");
+				
+				String fixId = (String) arguments[0];
+				SnykExtendedLanguageClient.getInstance().sendCodeApplyAiFixEditCommand(fixId);
 				return null;
 			}
 		};
@@ -158,7 +193,20 @@ public class BrowserHandler {
 			}
 
 			final var browserContent = htmlProvider.replaceCssVariables(htmlContent);
-			
+
+//			String[] lines = browserContent.split("\n");
+//			for (String line : lines) {
+//				if (line.contains("window.generateAIFix")) {
+//					System.out.println(line);
+//				} else if (line.contains("applyAIFix")) {
+//					System.out.println(line);
+//				} else if (line.contains("issue-id")) {
+//					System.out.println(line);
+//				} else if (line.contains("folder-path")) {
+//					System.out.println(line);
+//				}
+//			}
+
 			Display.getDefault().syncExec(() -> {
 				browser.setText(browserContent);
 			});
@@ -191,7 +239,8 @@ public class BrowserHandler {
 	}
 
 	public void setDefaultBrowserText() {
-		// If we are not authenticated, show the welcome page, else show the issue placeholder.
+		// If we are not authenticated, show the welcome page, else show the issue
+		// placeholder.
 		if (Preferences.getInstance().getAuthToken().isBlank()) {
 			browser.setText(StaticPageHtmlProvider.getInstance().getInitHtml());
 		} else {

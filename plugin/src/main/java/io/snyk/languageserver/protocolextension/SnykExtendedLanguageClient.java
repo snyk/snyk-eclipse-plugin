@@ -96,6 +96,7 @@ import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
+import io.snyk.languageserver.protocolextension.messageObjects.Fix;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
@@ -869,4 +870,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		this.ls = ls;
 	}
 
+	public List<Fix> sendCodeFixDiffsCommand(String folderURI, String fileURI, String issueID) {
+		// TODO: capture and return results
+		executeCommand(LsConstants.COMMAND_CODE_FIX_DIFFS, List.of(folderURI, fileURI, issueID));
+		return null;
+	}
+
+	public void sendCodeApplyAiFixEditCommand(String fixId) {
+		executeCommand(LsConstants.COMMAND_CODE_FIX_APPLY_AI_EDIT, List.of(fixId));
+	}
 }
