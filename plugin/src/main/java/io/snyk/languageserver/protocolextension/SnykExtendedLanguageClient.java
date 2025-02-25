@@ -454,18 +454,32 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public String getDecodedParam(URI uri, String paramName) {
-		Map<String, String> paramMap = parseQueryString(uri.getQuery());
+		String query = uri.getQuery();
+		if (query == null || query.isEmpty()) {
+			return null;
+		}
+
+		Map<String, String> paramMap = parseQueryString(query);
+		String value = paramMap.get(paramName);
+
+		if (value == null) {
+			return null;
+		}
 
 		try {
-			return URLDecoder.decode(paramMap.get(paramName), "UTF-8");
+			return URLDecoder.decode(value, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			SnykLogger.logError(e);
+			return null;
 		}
-		return null;
 	}
 
-	private static Map<String, String> parseQueryString(String queryString) {
+	public static Map<String, String> parseQueryString(String queryString) {
 		Map<String, String> paramMap = new HashMap<>();
+
+		if (queryString == null || queryString.isEmpty()) {
+			return paramMap;
+		}
 
 		for (String param : queryString.split("&")) {
 			if (!param.isEmpty()) {
