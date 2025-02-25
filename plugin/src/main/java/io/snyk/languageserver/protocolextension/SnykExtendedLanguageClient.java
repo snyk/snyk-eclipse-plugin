@@ -430,8 +430,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			SnykLogger.logInfo(String.format("Invalid URI: 'issueId' empty"));
 		}
 
-		if (scheme.equals("snyk") && product.equals(DIAGNOSTIC_SOURCE_SNYK_CODE)
-				&& action.equals("showInDetailPanel")) {
+		if ("snyk".equals(scheme) && product.equals(DIAGNOSTIC_SOURCE_SNYK_CODE)
+				&& "showInDetailPanel".equals(action)) {
 			return CompletableFuture.supplyAsync(() -> {
 
 				Issue issue = getIssueFromCache(uri);
@@ -481,11 +481,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return paramMap;
 		}
 
+		int keyValueSize = 2;
 		for (String param : queryString.split("&")) {
 			if (!param.isEmpty()) {
 				String[] keyValue = param.split("=");
 
-				if (keyValue.length == 2) {
+				if (keyValue.length == keyValueSize) {
 					try {
 						paramMap.put(keyValue[0], URLDecoder.decode(keyValue[1], "UTF-8"));
 					} catch (UnsupportedEncodingException e) {
