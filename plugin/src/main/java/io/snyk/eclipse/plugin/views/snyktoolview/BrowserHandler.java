@@ -194,19 +194,6 @@ public class BrowserHandler {
 
 			final var browserContent = htmlProvider.replaceCssVariables(htmlContent);
 
-//			String[] lines = browserContent.split("\n");
-//			for (String line : lines) {
-//				if (line.contains("window.generateAIFix")) {
-//					System.out.println(line);
-//				} else if (line.contains("applyAIFix")) {
-//					System.out.println(line);
-//				} else if (line.contains("issue-id")) {
-//					System.out.println(line);
-//				} else if (line.contains("folder-path")) {
-//					System.out.println(line);
-//				}
-//			}
-
 			Display.getDefault().syncExec(() -> {
 				browser.setText(browserContent);
 			});
