@@ -86,15 +86,11 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 	}
 
 	private String getGenerateAiFixScript() {
-		// TODO this script is broken, does not trigger a generate
-		return "const issueId = generateAIFixButton.getAttribute('issue-id');\n"
-				+ "const folderPath = generateAIFixButton.getAttribute('folder-path');\n"
-				+ "const filePath = generateAIFixButton.getAttribute('file-path');\n" + "console.log(filePath);\n"
-				+ "window.generateAIFix(folderPath + \"@|@\" + filePath + \"@|@\" + issueId);";
+		return "window.ideGenerateAIFix(generateFixQueryString)\n;";
 	}
 
 	private String getApplyAiFixScript() {
-		return "window.applyAIFix(fixId + '|@' + filePath + '|@' + patch);\n";
+		return "window.ideApplyFix(fixId + '|@' + filePath + '|@' + patch);\n";
 	}
 
 }

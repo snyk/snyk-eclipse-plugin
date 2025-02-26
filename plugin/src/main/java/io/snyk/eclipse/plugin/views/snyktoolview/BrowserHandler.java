@@ -99,7 +99,7 @@ public class BrowserHandler {
 			}
 		};
 
-		new BrowserFunction(browser, "generateAIFix") {
+		new BrowserFunction(browser, "ideGenerateAIFix") {
 			@Override
 			public Object function(Object[] arguments) {
 				browser.execute("debugger;"); // Triggers a breakpoint for debugging
@@ -118,7 +118,7 @@ public class BrowserHandler {
 			}
 		};
 
-		new BrowserFunction(browser, "applyAIFix") {
+		new BrowserFunction(browser, "ideApplyFix") {
 			@Override
 			public Object function(Object[] arguments) {
 				System.out.println("applyAIFix");
