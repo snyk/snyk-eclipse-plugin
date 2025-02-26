@@ -68,10 +68,9 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("var(--example-line-added-color)",
 				super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
 		htmlStyled = htmlStyled.replace("var(--generated-ai-fix-button-background-color)",
-//				super.getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
-				super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
+				super.getColorAsHex("BUTTON_COLOR", "#375578"));
 		htmlStyled = htmlStyled.replace("var(--disabled-background-color)",
-				super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
+				super.getColorAsHex("ADDITION_COLOR", "#6e6e6e"));
 
 		String htmlWithScripts = replaceAIFixScripts(htmlStyled);
 
