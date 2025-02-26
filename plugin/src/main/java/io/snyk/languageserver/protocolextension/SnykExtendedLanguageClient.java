@@ -311,6 +311,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return String.valueOf(result);
 	}
 
+	public List<Fix> sendCodeFixDiffsCommand(String folderURI, String fileURI, String issueID) {
+		// TODO: capture and return results
+		executeCommand(LsConstants.COMMAND_CODE_FIX_DIFFS, List.of(folderURI, fileURI, issueID));
+		return null;
+	}
+
+	public void sendCodeApplyAiFixEditCommand(String fixId) {
+		executeCommand(LsConstants.COMMAND_CODE_FIX_APPLY_AI_EDIT, List.of(fixId));
+	}
+
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();
@@ -434,7 +444,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if ("snyk".equals(scheme) && product.equals(DIAGNOSTIC_SOURCE_SNYK_CODE)
 				&& "showInDetailPanel".equals(action)) {
 			return CompletableFuture.supplyAsync(() -> {
-
 				Issue issue = getIssueFromCache(uri);
 				this.toolView.selectTreeNode(issue, product);
 				return new ShowDocumentResult(true);
@@ -445,6 +454,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
+	// TODO move the snyk uri handling to a new helper class; getIssueFromCache,
+	// getDecodedParam and parseQueryString
 	public Issue getIssueFromCache(URI uri) {
 		String filePath = uri.getPath();
 		String issueId = getDecodedParam(uri, "issueId");
@@ -717,6 +728,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return super.createProgress(params);
 	}
 
+	@Override
+	public void notifyProgress(final ProgressParams params) {
+		if (params.getValue() == null) {
+			return;
+		}
+		WorkDoneProgressNotification progressNotification = params.getValue().getLeft();
+		if (progressNotification != null && progressNotification.getKind() == WorkDoneProgressKind.end) {
+			this.progressManager.removeProgress(params.getToken().getLeft());
+		}
+		super.notifyProgress(params);
+	}
+
 	/**
 	 * Refresh the token using language server. Waits up to 2s for the token change.
 	 *
@@ -783,10 +806,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	public void setToolWindow(ISnykToolView toolView) {
-		this.toolView = toolView;
-	}
-
 	public void clearCache() {
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
 		for (IProject iProject : openProjects) {
@@ -800,22 +819,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	}
 
-	public void setProgressMgr(ProgressManager progressMgr) {
-		this.progressManager = progressMgr;
-	}
-
-	@Override
-	public void notifyProgress(final ProgressParams params) {
-		if (params.getValue() == null) {
-			return;
-		}
-		WorkDoneProgressNotification progressNotification = params.getValue().getLeft();
-		if (progressNotification != null && progressNotification.getKind() == WorkDoneProgressKind.end) {
-			this.progressManager.removeProgress(params.getToken().getLeft());
-		}
-		super.notifyProgress(params);
-	}
-
 	@JsonRequest(value = "workspace/snyk.sdks")
 	public CompletableFuture<List<LsSdk>> getSdks(WorkspaceFolder workspaceFolder) {
 		return CompletableFuture.supplyAsync(() -> {
@@ -827,21 +830,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		});
 	}
 
-	public ProgressManager getProgressManager() {
-		return this.progressManager;
+	public void setToolWindow(ISnykToolView toolView) {
+		this.toolView = toolView;
 	}
 
 	public void setLs(LanguageServer ls) {
 		this.ls = ls;
 	}
 
-	public List<Fix> sendCodeFixDiffsCommand(String folderURI, String fileURI, String issueID) {
-		// TODO: capture and return results
-		executeCommand(LsConstants.COMMAND_CODE_FIX_DIFFS, List.of(folderURI, fileURI, issueID));
-		return null;
+	public void setProgressMgr(ProgressManager progressMgr) {
+		this.progressManager = progressMgr;
 	}
 
-	public void sendCodeApplyAiFixEditCommand(String fixId) {
-		executeCommand(LsConstants.COMMAND_CODE_FIX_APPLY_AI_EDIT, List.of(fixId));
+	public ProgressManager getProgressManager() {
+		return this.progressManager;
 	}
 }
