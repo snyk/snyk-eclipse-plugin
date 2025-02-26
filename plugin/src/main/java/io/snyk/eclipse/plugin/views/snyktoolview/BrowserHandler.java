@@ -102,7 +102,7 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "ideGenerateAIFix") {
 			@Override
 			public Object function(Object[] arguments) {
-				browser.execute("debugger;"); // Triggers a breakpoint for debugging
+				//browser.execute("debugger;"); // Triggers a breakpoint for debugging
 				System.out.println("generateAIFix");
 				SnykLogger.logInfo("generateAIFix");
 

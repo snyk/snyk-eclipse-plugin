@@ -73,12 +73,12 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("var(--disabled-background-color)",
 				super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
 
-		String htmlWithScripts = getReplaceAIFixScripts(htmlStyled);
+		String htmlWithScripts = replaceAIFixScripts(htmlStyled);
 
 		return htmlWithScripts;
 	}
 
-	private String getReplaceAIFixScripts(String html) {
+	private String replaceAIFixScripts(String html) {
 		String htmlWithGenerateFunc = html.replace("${ideGenerateAIFix}", getGenerateAiFixScript());
 		String htmlWithApplyFunc = htmlWithGenerateFunc.replace("${ideApplyAIFix}", getApplyAiFixScript());
 
