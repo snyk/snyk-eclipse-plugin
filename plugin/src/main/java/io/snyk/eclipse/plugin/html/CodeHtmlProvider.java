@@ -85,11 +85,11 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 	}
 
 	private String getGenerateAiFixScript() {
-		return "window.ideGenerateAIFix(generateFixQueryString)\n;";
+		return "window.ideGenAIFix(generateFixQueryString)\n;";
 	}
 
 	private String getApplyAiFixScript() {
-		return "window.ideApplyFix(fixId + '|@' + filePath + '|@' + patch);\n";
+		return "window.ideApplyFix(fixId);\n";
 	}
 
 }

@@ -99,19 +99,21 @@ public class BrowserHandler {
 			}
 		};
 
-		new BrowserFunction(browser, "ideGenerateAIFix") {
+		new BrowserFunction(browser, "ideGenAIFix") {
 			@Override
 			public Object function(Object[] arguments) {
-				//browser.execute("debugger;"); // Triggers a breakpoint for debugging
+				// browser.execute("debugger;"); // Triggers a breakpoint for debugging
 				System.out.println("generateAIFix");
 				SnykLogger.logInfo("generateAIFix");
 
-				String folderURI = (String) arguments[0];
-				String fileURI = (String) arguments[1];
-				String issueID = (String) arguments[2];
+				String params = (String) arguments[0];
+				String[] parts = params.split("@|@");
 
-				// Do we want to capture and do something with the responseDiffs here?
-				List<Fix> responseDiffs = SnykExtendedLanguageClient.getInstance().sendCodeFixDiffsCommand(folderURI,
+				String folderURI = (String) parts[0];
+				String fileURI = (String) parts[2];
+				String issueID = (String) parts[4];
+
+				SnykExtendedLanguageClient.getInstance().sendCodeFixDiffsCommand(folderURI,
 						fileURI, issueID);
 
 				return null;
@@ -123,7 +125,7 @@ public class BrowserHandler {
 			public Object function(Object[] arguments) {
 				System.out.println("applyAIFix");
 				SnykLogger.logInfo("applyAIFix");
-				
+
 				String fixId = (String) arguments[0];
 				SnykExtendedLanguageClient.getInstance().sendCodeApplyAiFixEditCommand(fixId);
 				return null;
