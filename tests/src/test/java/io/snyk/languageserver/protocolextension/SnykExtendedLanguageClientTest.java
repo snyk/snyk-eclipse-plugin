@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -75,10 +74,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private Preferences pref;
 
 	private ISnykToolView toolWindowMock;
-
-	private URI uri;
-	private String paramName;
-//    private SnykLogger loggerMock;
 
 	@BeforeEach
 	protected void setUp() {
@@ -597,17 +592,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String query = "product=Snyk+Code&issueId=7642f506c568056a7090d3ceb7b3c2e0&action=showInDetailPanel";
 		URI uriWithQuery = new URI("snyk://path/to/resource?" + query);
 
-		Map<String, String> paramMapMock = java.util.Collections.singletonMap("issueId",
-				"7642f506c568056a7090d3ceb7b3c2e0");
-
 		var result = cut.getDecodedParam(uriWithQuery, "issueId");
 		assertEquals("7642f506c568056a7090d3ceb7b3c2e0", result);
 
-		// Test action parameter
 		result = cut.getDecodedParam(uriWithQuery, "action");
 		assertEquals("showInDetailPanel", result);
 
-		// Test product parameter
 		result = cut.getDecodedParam(uriWithQuery, "product");
 		assertEquals("Snyk Code", result);
 	}
