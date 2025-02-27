@@ -3,7 +3,7 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.core.commands.common.CommandException;
@@ -33,7 +33,6 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.Fix;
 
 @SuppressWarnings("restriction")
 public class BrowserHandler {
@@ -102,33 +101,26 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "ideGenAIFix") {
 			@Override
 			public Object function(Object[] arguments) {
-				// browser.execute("debugger;"); // Triggers a breakpoint for debugging
-				System.out.println("generateAIFix");
-				SnykLogger.logInfo("generateAIFix");
-
 				String params = (String) arguments[0];
 				String[] parts = params.split("@|@");
-
 				String folderURI = (String) parts[0];
 				String fileURI = (String) parts[2];
 				String issueID = (String) parts[4];
 
-				SnykExtendedLanguageClient.getInstance().sendCodeFixDiffsCommand(folderURI,
-						fileURI, issueID);
+				SnykExtendedLanguageClient.getInstance().sendCodeFixDiffsCommand(folderURI, fileURI, issueID);
 
-				return null;
+				return Collections.emptyList();
 			}
 		};
 
 		new BrowserFunction(browser, "ideApplyFix") {
 			@Override
 			public Object function(Object[] arguments) {
-				System.out.println("applyAIFix");
-				SnykLogger.logInfo("applyAIFix");
-
 				String fixId = (String) arguments[0];
+
 				SnykExtendedLanguageClient.getInstance().sendCodeApplyAiFixEditCommand(fixId);
-				return null;
+
+				return Collections.emptyList();
 			}
 		};
 

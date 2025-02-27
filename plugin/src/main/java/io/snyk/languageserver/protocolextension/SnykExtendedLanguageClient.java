@@ -334,10 +334,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return String.valueOf(result);
 	}
 
-	public List<Fix> sendCodeFixDiffsCommand(String folderURI, String fileURI, String issueID) {
-		// TODO: capture and return results
+	public void sendCodeFixDiffsCommand(String folderURI, String fileURI, String issueID) {
 		executeCommand(LsConstants.COMMAND_CODE_FIX_DIFFS, List.of(folderURI, fileURI, issueID));
-		return null;
 	}
 
 	public void sendCodeApplyAiFixEditCommand(String fixId) {
