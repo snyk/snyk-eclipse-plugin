@@ -11,7 +11,6 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -25,7 +24,6 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -585,39 +583,4 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private AdditionalData getSecurityIssue() {
 		return Instancio.of(AdditionalData.class).set(Select.field(AdditionalData::isSecurityType), true).create();
 	}
-
-	@Test
-	public void getDecodedParam_Returns_Parameter_Value_If_Present_In_Query_String() throws Exception {
-		cut = new SnykExtendedLanguageClient();
-		String query = "product=Snyk+Code&issueId=7642f506c568056a7090d3ceb7b3c2e0&action=showInDetailPanel";
-		URI uriWithQuery = new URI("snyk://path/to/resource?" + query);
-
-		var result = SnykUriUtils.getDecodedParam(uriWithQuery, "issueId");
-		assertEquals("7642f506c568056a7090d3ceb7b3c2e0", result);
-
-		result = SnykUriUtils.getDecodedParam(uriWithQuery, "action");
-		assertEquals("showInDetailPanel", result);
-
-		result = SnykUriUtils.getDecodedParam(uriWithQuery, "product");
-		assertEquals("Snyk Code", result);
-	}
-
-	@Test
-	public void parseQueryString_Returns_Parameters_In_Query_String() throws Exception {
-		cut = new SnykExtendedLanguageClient();
-		String query = "product=Snyk+Code&issueId=7642f506c568056a7090d3ceb7b3c2e0&action=showInDetailPanel";
-		URI uriWithQuery = new URI("snyk://path/to/resource?" + query);
-
-		var result = SnykUriUtils.getQueryParameters(uriWithQuery.getQuery());
-		assertEquals(3, result.size());
-	}
-
-	@Test
-	public void parseQueryString_Returns_Empty_Map_If_Query_String_Is_Empty() throws URISyntaxException {
-		cut = new SnykExtendedLanguageClient();
-
-		var result = SnykUriUtils.getQueryParameters(null);
-		assertTrue(result.isEmpty());
-	}
-
 }

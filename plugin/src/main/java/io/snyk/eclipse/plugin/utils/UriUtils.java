@@ -1,4 +1,4 @@
-package io.snyk.languageserver.protocolextension;
+package io.snyk.eclipse.plugin.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -7,10 +7,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.snyk.eclipse.plugin.utils.SnykLogger;
+public class UriUtils {
 
-public class SnykUriUtils {
-	
+	/**
+	 * Retrieves a parameter value from the given URI.
+	 *
+	 * If the query string does not contain the specified parameter or is
+	 * null/empty, this method returns null.
+	 *
+	 * @param uri
+	 *            The URI to retrieve parameters from
+	 * @param paramName
+	 *            The name of the parameter to retrieve
+	 * @return The parameter value if it exists in the query string, otherwise
+	 *         null
+	 */
 	public static String getDecodedParam(URI uri, String paramName) {
 		String query = uri.getQuery();
 		if (query == null || query.isEmpty()) {
@@ -23,11 +34,23 @@ public class SnykUriUtils {
 		if (value == null) {
 			return null;
 		}
-		
+
 		return value;
 	}
 
-	static Map<String, String> getQueryParameters(String queryString) {
+	/**
+	 * Parses a query string into a map of key-value pairs, decoding any
+	 * URL-encoded values.
+	 *
+	 * If the input is null or empty, an empty map is returned. If an encoding
+	 * error occurs while decoding a value, an error is logged and an empty map
+	 * is returned.
+	 *
+	 * @param queryString
+	 *            The query string to parse
+	 * @return A map containing the decoded parameters
+	 */
+	public static Map<String, String> getQueryParameters(String queryString) {
 		Map<String, String> paramMap = new HashMap<>();
 
 		if (queryString == null || queryString.isEmpty()) {

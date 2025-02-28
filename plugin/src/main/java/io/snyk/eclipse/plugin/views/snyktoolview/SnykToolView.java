@@ -480,8 +480,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void selectTreeNode(Issue issue) {
-		ProductTreeNode productNode = getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY, issue.filePath());
+	public void selectTreeNode(Issue issue, String product) {
+		ProductTreeNode productNode = getProductNode(product, issue.filePath());
 		selectTreenodeForIssue((TreeNode) productNode, issue);
 	}
 

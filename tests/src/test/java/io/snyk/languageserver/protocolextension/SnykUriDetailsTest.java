@@ -21,7 +21,7 @@ public class SnykUriDetailsTest {
 
 	@Test
 	void testFromURI() throws URISyntaxException {
-		SnykUriDetails details = SnykUriDetails.fromURI(createSnykUri());
+		SnykShowFixUriDetails details = SnykShowFixUriDetails.fromURI(createSnykUri());
 
 		assertTrue(details.scheme().equals("snyk"));
 		assertTrue(details.filePath().equals(
@@ -35,7 +35,7 @@ public class SnykUriDetailsTest {
 	@Test
 	void testFromURINullProduct() throws URISyntaxException {
 		URI uri = new URI("snyk:///test_repos/project-with-vulns/routes/vulnCodeSnippet.ts?issueId=id&action=showInDetailPanel");
-		SnykUriDetails details = SnykUriDetails.fromURI(uri);
+		SnykShowFixUriDetails details = SnykShowFixUriDetails.fromURI(uri);
 
 		assertTrue(details.scheme().equals("snyk"));
 		assertTrue(details.filePath().equals("/test_repos/project-with-vulns/routes/vulnCodeSnippet.ts"));
@@ -46,7 +46,7 @@ public class SnykUriDetailsTest {
 
 	@Test
 	void testFromURIEmptyProduct() throws URISyntaxException {
-		SnykUriDetails details = SnykUriDetails.fromURI(createSnykUri());
+		SnykShowFixUriDetails details = SnykShowFixUriDetails.fromURI(createSnykUri());
 
 		assertTrue(details.scheme().equals("snyk"));
 		assertTrue(details.filePath().equals("/test_repos/project-with-vulns/routes/vulnCodeSnippet.ts"));
@@ -58,7 +58,7 @@ public class SnykUriDetailsTest {
 
 	@Test
 	void testIsValidTrue() throws URISyntaxException {
-		SnykUriDetails details = SnykUriDetails.fromURI(createSnykUri());
+		SnykShowFixUriDetails details = SnykShowFixUriDetails.fromURI(createSnykUri());
 
 		assertTrue(details.isValid());
 	}
@@ -66,7 +66,7 @@ public class SnykUriDetailsTest {
 	@Test
 	void testIsValidFalse() throws URISyntaxException {
 		URI uri = new URI("http://path/product/showInDetailPanel?issueId=id");
-		SnykUriDetails details = SnykUriDetails.fromURI(uri);
+		SnykShowFixUriDetails details = SnykShowFixUriDetails.fromURI(uri);
 
 		assertFalse(details.isValid());
 	}
@@ -74,7 +74,7 @@ public class SnykUriDetailsTest {
 	@Test
 	void testIsValidProductFalse() throws URISyntaxException {
 		URI uri = new URI("snyk://path/null/showInDetailPanel?issueId=id");
-		SnykUriDetails details = SnykUriDetails.fromURI(uri);
+		SnykShowFixUriDetails details = SnykShowFixUriDetails.fromURI(uri);
 
 		assertFalse(details.isValid());
 	}

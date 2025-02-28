@@ -451,7 +451,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return null;
 		}
 
-		SnykUriDetails uriDetails = SnykUriDetails.fromURI(uri);
+		SnykShowFixUriDetails uriDetails = SnykShowFixUriDetails.fromURI(uri);
 
 		Issue issue;
 		if (uriDetails.isValid()) {
@@ -471,7 +471,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		return CompletableFuture.supplyAsync(() -> {
 			openToolView();
-			this.toolView.selectTreeNode(issue);
+			this.toolView.selectTreeNode(issue, uriDetails.product());
 			return new ShowDocumentResult(true);
 		});
 	}
