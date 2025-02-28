@@ -78,10 +78,10 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 	}
 
 	private String replaceAIFixScripts(String html) {
-		String htmlWithGenerateFunc = html.replace("${ideGenerateAIFix}", getGenerateAiFixScript());
-		String htmlWithApplyFunc = htmlWithGenerateFunc.replace("${ideApplyAIFix}", getApplyAiFixScript());
+		String htmlWithAiFixScripts = html.replace("${ideGenerateAIFix}", getGenerateAiFixScript());
+		htmlWithAiFixScripts = htmlWithAiFixScripts.replace("${ideApplyAIFix}", getApplyAiFixScript());
 
-		return htmlWithApplyFunc;
+		return htmlWithAiFixScripts;
 	}
 
 	private String getGenerateAiFixScript() {
