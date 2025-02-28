@@ -1,6 +1,5 @@
 package io.snyk.languageserver.protocolextension;
 
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_QUALITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS;
@@ -23,20 +22,16 @@ import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_FIXABLE
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -96,7 +91,6 @@ import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
-import io.snyk.languageserver.protocolextension.messageObjects.Fix;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
@@ -457,26 +451,21 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return null;
 		}
 
-		String scheme = uri.getScheme();
-		String filePath = uri.getPath();
-		String product = SnykUriUtils.getDecodedParam(uri, "product");
-		String action = SnykUriUtils.getDecodedParam(uri, "action");
-		String issueId = SnykUriUtils.getDecodedParam(uri, "issueId");
+		SnykUriDetails uriDetails = SnykUriDetails.fromURI(uri);
 
 		Issue issue;
-		if ("snyk".equals(scheme) && product.equals(DIAGNOSTIC_SOURCE_SNYK_CODE)
-				&& "showInDetailPanel".equals(action)) {
-			issue = getIssueFromCache(filePath, issueId);
+		if (uriDetails.isValid()) {
+			issue = getIssueFromCache(uriDetails.filePath(), uriDetails.issueId());
 		} else {
 			SnykLogger.logInfo(String.format(
 					"Invalid URI: scheme=%s, product=%s, action=%s, issue=%s",
-					scheme, product, action, issueId));
+					uriDetails.scheme(), uriDetails.product(), uriDetails.action(), uriDetails.issueId()));
 			return super.showDocument(params);
 		}
 
 		if (issue == null) {
 			SnykLogger.logInfo(String.format(
-					"Issue not found in the issueCache; issueId: %s", issueId));
+					"Issue not found in the issueCache; issueId: %s", uriDetails.issueId()));
 			return null;
 		}
 
