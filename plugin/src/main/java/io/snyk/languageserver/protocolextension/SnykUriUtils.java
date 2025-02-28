@@ -38,7 +38,7 @@ public class SnykUriUtils {
 			if (!param.isEmpty()) {
 				String[] keyValue = param.split("=");
 
-				if (keyValue.length == 2) { // TODO add the no pmd here
+				if (keyValue.length == 2) { // NOPMD, AvoidLiteralsInIfCondition
 					try {
 						paramMap.put(keyValue[0],
 								URLDecoder.decode(keyValue[1], "UTF-8"));
