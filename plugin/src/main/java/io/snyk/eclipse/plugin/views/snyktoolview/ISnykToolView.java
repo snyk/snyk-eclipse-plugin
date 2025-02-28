@@ -2,6 +2,8 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import org.eclipse.jface.viewers.TreeViewer;
 
+import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
+
 /**
  * This interface captures the externally used methods with the tool window.
  * Having it, should allow for easier testing of the business logic apart from
@@ -125,4 +127,6 @@ public interface ISnykToolView {
 	 * @return
 	 */
 	abstract void disableDelta();
+
+	abstract void selectTreeNode(Issue issue, String product);
 }

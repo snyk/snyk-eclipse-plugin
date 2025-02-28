@@ -17,6 +17,7 @@ public final class LsConstants {
 	public static final String COMMAND_REPORT_ANALYTICS = "snyk.reportAnalytics";
 	public static final String COMMAND_GET_FEATURE_FLAG_STATUS = "snyk.getFeatureFlagStatus";
 	public static final String COMMAND_CODE_FIX_DIFFS = "snyk.code.fixDiffs";
+	public static final String COMMAND_CODE_FIX_APPLY_AI_EDIT = "snyk.code.fixApplyEdit";
 	public static final String COMMAND_CODE_SUBMIT_FIX_FEEDBACK = "snyk.code.submitFixFeedback";
 	public static final String COMMAND_SNYK_CLI = "snyk.executeCLI";
 	public static final String SNYK_HAS_AUTHENTICATED = "$/snyk.hasAuthenticated";
@@ -26,4 +27,5 @@ public final class LsConstants {
 	public static final String SNYK_PUBLISH_DIAGNOSTICS_316 = "$/snyk.publishDiagnostics316";
 	public static final String SNYK_FOLDER_CONFIG = "$/snyk.folderConfigs";
 	public static final String SNYK_SCAN_SUMMARY = "$/snyk.scanSummary";
+	public static final String SNYK_SHOW_DOCUMENT = "$/snyk.showDocument";
 }
