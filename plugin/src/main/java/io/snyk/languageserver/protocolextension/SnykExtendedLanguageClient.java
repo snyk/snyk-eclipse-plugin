@@ -96,6 +96,7 @@ import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
+import io.snyk.languageserver.protocolextension.messageObjects.Fix;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
@@ -333,6 +334,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return String.valueOf(result);
 	}
 
+	public void sendCodeFixDiffsCommand(String folderURI, String fileURI, String issueID) {
+		executeCommand(LsConstants.COMMAND_CODE_FIX_DIFFS, List.of(folderURI, fileURI, issueID));
+	}
+
+	public void sendCodeApplyAiFixEditCommand(String fixId) {
+		executeCommand(LsConstants.COMMAND_CODE_FIX_APPLY_AI_EDIT, List.of(fixId));
+	}
+
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();
@@ -477,7 +486,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return new ShowDocumentResult(true);
 		});
 	}
-
+	
 	private Issue getIssueFromCache(String filePath, String issueId) {
 		SnykIssueCache issueCache = getIssueCache(filePath);
 		return issueCache.getCodeSecurityIssuesForPath(filePath).stream()
@@ -740,6 +749,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return super.createProgress(params);
 	}
 
+	@Override
+	public void notifyProgress(final ProgressParams params) {
+		if (params.getValue() == null) {
+			return;
+		}
+		WorkDoneProgressNotification progressNotification = params.getValue().getLeft();
+		if (progressNotification != null && progressNotification.getKind() == WorkDoneProgressKind.end) {
+			this.progressManager.removeProgress(params.getToken().getLeft());
+		}
+		super.notifyProgress(params);
+	}
+
 	/**
 	 * Refresh the token using language server. Waits up to 2s for the token
 	 * change.
@@ -811,10 +832,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	public void setToolWindow(ISnykToolView toolView) {
-		this.toolView = toolView;
-	}
-
 	public void clearCache() {
 		List<IProject> openProjects = ResourceUtils
 				.getAccessibleTopLevelProjects();
@@ -831,24 +848,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	}
 
-	public void setProgressMgr(ProgressManager progressMgr) {
-		this.progressManager = progressMgr;
-	}
-
-	@Override
-	public void notifyProgress(final ProgressParams params) {
-		if (params.getValue() == null) {
-			return;
-		}
-		WorkDoneProgressNotification progressNotification = params.getValue()
-				.getLeft();
-		if (progressNotification != null
-				&& progressNotification.getKind() == WorkDoneProgressKind.end) {
-			this.progressManager.removeProgress(params.getToken().getLeft());
-		}
-		super.notifyProgress(params);
-	}
-
 	@JsonRequest(value = "workspace/snyk.sdks")
 	public CompletableFuture<List<LsSdk>> getSdks(
 			WorkspaceFolder workspaceFolder) {
@@ -861,12 +860,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		});
 	}
 
-	public ProgressManager getProgressManager() {
-		return this.progressManager;
+	public void setToolWindow(ISnykToolView toolView) {
+		this.toolView = toolView;
 	}
 
 	public void setLs(LanguageServer ls) {
 		this.ls = ls;
 	}
 
+	public void setProgressMgr(ProgressManager progressMgr) {
+		this.progressManager = progressMgr;
+	}
+
+	public ProgressManager getProgressManager() {
+		return this.progressManager;
+	}
 }

@@ -119,8 +119,9 @@ public class BaseHtmlProvider {
 				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
 		htmlStyled = htmlStyled.replace("var(--circle-color)",
 				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
-
 		htmlStyled = htmlStyled.replace("var(--border-color)",
+				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
+		htmlStyled = htmlStyled.replace("var(--input-border)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
 		htmlStyled = htmlStyled.replace("var(--link-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
 		htmlStyled = htmlStyled.replace("var(--horizontal-border-color)",
