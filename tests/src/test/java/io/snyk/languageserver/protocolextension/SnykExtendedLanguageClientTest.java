@@ -592,13 +592,13 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String query = "product=Snyk+Code&issueId=7642f506c568056a7090d3ceb7b3c2e0&action=showInDetailPanel";
 		URI uriWithQuery = new URI("snyk://path/to/resource?" + query);
 
-		var result = cut.getDecodedParam(uriWithQuery, "issueId");
+		var result = SnykUriUtils.getDecodedParam(uriWithQuery, "issueId");
 		assertEquals("7642f506c568056a7090d3ceb7b3c2e0", result);
 
-		result = cut.getDecodedParam(uriWithQuery, "action");
+		result = SnykUriUtils.getDecodedParam(uriWithQuery, "action");
 		assertEquals("showInDetailPanel", result);
 
-		result = cut.getDecodedParam(uriWithQuery, "product");
+		result = SnykUriUtils.getDecodedParam(uriWithQuery, "product");
 		assertEquals("Snyk Code", result);
 	}
 
@@ -608,16 +608,15 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String query = "product=Snyk+Code&issueId=7642f506c568056a7090d3ceb7b3c2e0&action=showInDetailPanel";
 		URI uriWithQuery = new URI("snyk://path/to/resource?" + query);
 
-		var result = cut.parseQueryString(uriWithQuery.getQuery());
+		var result = SnykUriUtils.getQueryParameters(uriWithQuery.getQuery());
 		assertEquals(3, result.size());
 	}
 
 	@Test
 	public void parseQueryString_Returns_Empty_Map_If_Query_String_Is_Empty() throws URISyntaxException {
 		cut = new SnykExtendedLanguageClient();
-		URI uriWithoutQuery = new URI("snyk://path/to/resource");
 
-		var result = cut.parseQueryString(null);
+		var result = SnykUriUtils.getQueryParameters(null);
 		assertTrue(result.isEmpty());
 	}
 

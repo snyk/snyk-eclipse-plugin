@@ -480,12 +480,12 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void selectTreeNode(Issue issue, String product) {
+	public void selectTreeNode(Issue issue) {
 		ProductTreeNode productNode = getProductNode(ProductConstants.DISPLAYED_CODE_SECURITY, issue.filePath());
-		drillDown((TreeNode) productNode, issue);
+		selectTreenodeForIssue((TreeNode) productNode, issue);
 	}
 
-	private void drillDown(TreeNode currentParent, Issue issue) {
+	private void selectTreenodeForIssue(TreeNode currentParent, Issue issue) {
 		for (Object child : currentParent.getChildren()) {
 			TreeNode childNode = (TreeNode) child;
 
@@ -495,7 +495,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			}
 
 			if (childNode.getChildren() != null && childNode.getChildren().length != 0) {
-				drillDown(childNode, issue);
+				selectTreenodeForIssue(childNode, issue);
 			}
 		}
 	}

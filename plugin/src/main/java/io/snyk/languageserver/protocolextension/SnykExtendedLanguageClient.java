@@ -132,7 +132,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public static SnykExtendedLanguageClient getInstance() {
-		return instance; // we leave instantiation to LSP4e, no lazy construction here
+		return instance; // we leave instantiation to LSP4e, no lazy
+							// construction here
 	}
 
 	public LanguageServer getConnectedLanguageServer() {
@@ -151,20 +152,23 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@Override
 	public CompletableFuture<List<WorkspaceFolder>> workspaceFolders() {
-		return CompletableFuture.completedFuture(ResourceUtils.getAccessibleTopLevelProjects().stream()
-				.map(LSPEclipseUtils::toWorkspaceFolder).toList());
+		return CompletableFuture.completedFuture(
+				ResourceUtils.getAccessibleTopLevelProjects().stream()
+						.map(LSPEclipseUtils::toWorkspaceFolder).toList());
 	}
 
 	private void registerRefreshFeatureFlagsTask() {
 		if (taskProcessor == null) {
 			taskProcessor = TaskProcessor.getInstance();
 		}
-		Consumer<SnykExtendedLanguageClient> refreshFeatureFlagsConsumer = lc -> lc.refreshFeatureFlags();
+		Consumer<SnykExtendedLanguageClient> refreshFeatureFlagsConsumer = lc -> lc
+				.refreshFeatureFlags();
 		taskProcessor.registerTask(refreshFeatureFlagsConsumer, null);
 	}
 
 	public void refreshFeatureFlags() {
-		boolean enableConsistentIgnores = getFeatureFlagStatus(FeatureFlagConstants.SNYK_CODE_CONSISTENT_IGNORES);
+		boolean enableConsistentIgnores = getFeatureFlagStatus(
+				FeatureFlagConstants.SNYK_CODE_CONSISTENT_IGNORES);
 		toggleIgnores(enableConsistentIgnores);
 	}
 
@@ -172,7 +176,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (Preferences.getInstance().isTest()) {
 			return;
 		}
-		Preferences.getInstance().store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
+		Preferences.getInstance().store(
+				Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED,
 				Boolean.valueOf(enableConsistentIgnores).toString());
 		PlatformUI.getWorkbench().getDisplay().asyncExec(() -> {
 			var snykToolView = SnykStartup.getView();
@@ -182,14 +187,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private void registerPluginInstalledEventTask() {
-		if (!Preferences.getInstance().getBooleanPref(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, false)) {
+		if (!Preferences.getInstance().getBooleanPref(
+				Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, false)) {
 			if (taskProcessor == null) {
 				taskProcessor = TaskProcessor.getInstance();
 			}
-			var pluginInstalledEvent = new AnalyticsEventTask("plugin installed", List.of("install"));
-			Consumer<SnykExtendedLanguageClient> analyticsTask = lc -> lc.reportAnalytics(pluginInstalledEvent);
+			var pluginInstalledEvent = new AnalyticsEventTask(
+					"plugin installed", List.of("install"));
+			Consumer<SnykExtendedLanguageClient> analyticsTask = lc -> lc
+					.reportAnalytics(pluginInstalledEvent);
 			Consumer<Void> analyticsCallback = v -> {
-				Preferences.getInstance().store(Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, "true");
+				Preferences.getInstance().store(
+						Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT, "true");
 			};
 
 			taskProcessor.registerTask(analyticsTask, analyticsCallback);
@@ -204,11 +213,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				openToolView();
 				try {
 					if (projectPath != null) {
-						executeCommand(LsConstants.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath));
+						executeCommand(
+								LsConstants.COMMAND_WORKSPACE_FOLDER_SCAN,
+								List.of(projectPath));
 						return;
 					}
 
-					executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
+					executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN,
+							new ArrayList<>());
 
 				} catch (Exception e) {
 					SnykLogger.logError(e);
@@ -217,7 +229,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		});
 	}
 
-	private CompletableFuture<Object> executeCommand(String cmd, List<Object> args) {
+	private CompletableFuture<Object> executeCommand(String cmd,
+			List<Object> args) {
 		synchronized (chSyncObject) {
 			if (commandHandler == null) {
 				commandHandler = CommandHandler.getInstance();
@@ -235,7 +248,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				SnykLogger.logInfo("waiting for language server startup was interrupted");
+				SnykLogger.logInfo(
+						"waiting for language server startup was interrupted");
 				Thread.currentThread().interrupt();
 				break;
 			}
@@ -249,21 +263,25 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void trustWorkspaceFolders() {
-		executeCommand(LsConstants.COMMAND_TRUST_WORKSPACE_FOLDERS, new ArrayList<>());
+		executeCommand(LsConstants.COMMAND_TRUST_WORKSPACE_FOLDERS,
+				new ArrayList<>());
 	}
 
 	public boolean getSastEnabled() {
 		try {
-			CompletableFuture<Object> lsSastSettings = executeCommand(LsConstants.COMMAND_GET_SETTINGS_SAST_ENABLED,
+			CompletableFuture<Object> lsSastSettings = executeCommand(
+					LsConstants.COMMAND_GET_SETTINGS_SAST_ENABLED,
 					new ArrayList<>());
 			Object result;
 			try {
 				result = lsSastSettings.get(5, TimeUnit.SECONDS);
 			} catch (TimeoutException e) {
-				SnykLogger.logInfo("did not get a response for sast settings, disabling Snyk Code");
+				SnykLogger.logInfo(
+						"did not get a response for sast settings, disabling Snyk Code");
 				return false;
 			}
-			SastSettings sastSettings = om.convertValue(result, SastSettings.class);
+			SastSettings sastSettings = om.convertValue(result,
+					SastSettings.class);
 			return sastSettings != null ? sastSettings.sastEnabled : false;
 		} catch (Exception e) {
 			SnykLogger.logError(e);
@@ -275,15 +293,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public boolean getFeatureFlagStatus(String featureFlag) {
 		try {
 			CompletableFuture<Object> lsGlobalIgnoresFeatureFlag = executeCommand(
-					LsConstants.COMMAND_GET_FEATURE_FLAG_STATUS, List.of(featureFlag));
+					LsConstants.COMMAND_GET_FEATURE_FLAG_STATUS,
+					List.of(featureFlag));
 			Object result;
 			try {
 				result = lsGlobalIgnoresFeatureFlag.get(5, TimeUnit.SECONDS);
 			} catch (TimeoutException e) {
 				return false;
 			}
-			FeatureFlagStatus featureFlagStatus = om.convertValue(result, FeatureFlagStatus.class);
-			return featureFlagStatus != null ? featureFlagStatus.getOk() : false;
+			FeatureFlagStatus featureFlagStatus = om.convertValue(result,
+					FeatureFlagStatus.class);
+			return featureFlagStatus != null
+					? featureFlagStatus.getOk()
+					: false;
 		} catch (Exception e) {
 			SnykLogger.logError(e);
 		}
@@ -296,14 +318,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			SnykLogger.logInfo("issueId is empty");
 			return "";
 		}
-		CompletableFuture<Object> issueDescription = executeCommand(LsConstants.COMMAND_GENERATE_ISSUE_DESCRIPTION,
+		CompletableFuture<Object> issueDescription = executeCommand(
+				LsConstants.COMMAND_GENERATE_ISSUE_DESCRIPTION,
 				List.of(issueId));
 		Object result;
 		try {
 			result = issueDescription.get(5, TimeUnit.SECONDS);
 		} catch (Exception ex) {
-			SnykLogger.logInfo(
-					"did not get issue description for issue " + issueId + "\n" + ExceptionUtils.getStackTrace(ex));
+			SnykLogger.logInfo("did not get issue description for issue "
+					+ issueId + "\n" + ExceptionUtils.getStackTrace(ex));
 			return "";
 		}
 
@@ -317,7 +340,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var oldToken = prefs.getAuthToken();
 		var oldApi = prefs.getEndpoint();
 
-		if (param.getApiUrl() != null && !param.getApiUrl().isBlank() && !param.getApiUrl().equals(oldApi)) {
+		if (param.getApiUrl() != null && !param.getApiUrl().isBlank()
+				&& !param.getApiUrl().equals(oldApi)) {
 			prefs.store(Preferences.ENDPOINT_KEY, param.getApiUrl());
 		}
 
@@ -340,7 +364,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@JsonNotification(value = LsConstants.SNYK_IS_AVAILABLE_CLI)
 	public void isAvailableCli(SnykIsAvailableCliParams param) {
-		Preferences.getInstance().store(Preferences.CLI_PATH, param.getCliPath());
+		Preferences.getInstance().store(Preferences.CLI_PATH,
+				param.getCliPath());
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_ADD_TRUSTED_FOLDERS)
@@ -350,43 +375,48 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var trustedPaths = storedTrustedPaths.split(File.pathSeparator);
 		var pathSet = new HashSet<>(Arrays.asList(trustedPaths));
 		pathSet.addAll(Arrays.asList(param.getTrustedFolders()));
-		Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS, pathSet.stream().filter(s -> !s.isBlank())
-				.map(s -> s.trim()).distinct().collect(Collectors.joining(File.pathSeparator)));
+		Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS,
+				pathSet.stream().filter(s -> !s.isBlank()).map(s -> s.trim())
+						.distinct()
+						.collect(Collectors.joining(File.pathSeparator)));
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN)
 	public void snykScan(SnykScanParam param) {
-		var inProgressKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
+		var inProgressKey = new ScanInProgressKey(param.getFolderPath(),
+				param.getProduct());
 		var scanState = ScanState.getInstance();
 		SnykIssueCache issueCache = null;
 		if (!param.getFolderPath().isBlank()) {
-			issueCache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
+			issueCache = IssueCacheHolder.getInstance()
+					.getCacheInstance(param.getFolderPath());
 		}
 		openToolView();
 
-		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(),
-				param.getFolderPath());
+		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(
+				param.getProduct(), param.getFolderPath());
 
 		switch (param.getStatus()) {
-		case SCAN_STATE_IN_PROGRESS:
-			scanState.setScanInProgress(inProgressKey, true);
-			break;
-		case SCAN_STATE_SUCCESS:
-			scanState.setScanInProgress(inProgressKey, false);
-			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
-				this.toolView.resetNode(productTreeNode);
-				addInfoNodes(productTreeNode, param.getFolderPath(), issueCache);
-				populateFileAndIssueNodes(productTreeNode, issueCache);
-			}
-			break;
-		case SCAN_STATE_ERROR:
-			scanState.setScanInProgress(inProgressKey, false);
-			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
-				productTreeNode.setErrorMessage(param.getErrorMessage());
-			}
-			break;
-		default:
-			break;
+			case SCAN_STATE_IN_PROGRESS :
+				scanState.setScanInProgress(inProgressKey, true);
+				break;
+			case SCAN_STATE_SUCCESS :
+				scanState.setScanInProgress(inProgressKey, false);
+				for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+					this.toolView.resetNode(productTreeNode);
+					addInfoNodes(productTreeNode, param.getFolderPath(),
+							issueCache);
+					populateFileAndIssueNodes(productTreeNode, issueCache);
+				}
+				break;
+			case SCAN_STATE_ERROR :
+				scanState.setScanInProgress(inProgressKey, false);
+				for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+					productTreeNode.setErrorMessage(param.getErrorMessage());
+				}
+				break;
+			default :
+				break;
 		}
 		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
 		this.toolView.refreshBrowser(param.getStatus());
@@ -394,8 +424,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
 	public void folderConfig(FolderConfigsParam folderConfigParam) {
-		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
-		CompletableFuture.runAsync(() -> FolderConfigs.getInstance().addAll(folderConfigs));
+		List<FolderConfig> folderConfigs = folderConfigParam != null
+				? folderConfigParam.getFolderConfigs()
+				: List.of();
+		CompletableFuture.runAsync(
+				() -> FolderConfigs.getInstance().addAll(folderConfigs));
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
@@ -405,7 +438,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	@Override
-	public CompletableFuture<ShowDocumentResult> showDocument(ShowDocumentParams params) {
+	public CompletableFuture<ShowDocumentResult> showDocument(
+			ShowDocumentParams params) {
 		URI uri;
 		try {
 			uri = new URI(params.getUri());
@@ -415,88 +449,39 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		String scheme = uri.getScheme();
-		String product = getDecodedParam(uri, "product");
-		String action = getDecodedParam(uri, "action");
-		String issueId = getDecodedParam(uri, "issueId");
+		String filePath = uri.getPath();
+		String product = SnykUriUtils.getDecodedParam(uri, "product");
+		String action = SnykUriUtils.getDecodedParam(uri, "action");
+		String issueId = SnykUriUtils.getDecodedParam(uri, "issueId");
 
-		if (!"snyk".equals(scheme)) {
-			SnykLogger.logInfo(String.format("Invalid URI: expected 'snyk' scheme but got %s", scheme));
-		} else if (!DIAGNOSTIC_SOURCE_SNYK_CODE.equals(product)) {
-			SnykLogger.logInfo(String.format("Invalid URI: expected '{}' product but got %s",
-					DIAGNOSTIC_SOURCE_SNYK_CODE, product));
-		} else if (!"showInDetailPanel".equals(action)) {
-			SnykLogger.logInfo(String.format("Invalid URI: expected 'showInDetailPanel' action but got %s", action));
-		} else if (issueId.isEmpty()) {
-			SnykLogger.logInfo(String.format("Invalid URI: 'issueId' empty"));
-		}
-
+		Issue issue;
 		if ("snyk".equals(scheme) && product.equals(DIAGNOSTIC_SOURCE_SNYK_CODE)
 				&& "showInDetailPanel".equals(action)) {
-			return CompletableFuture.supplyAsync(() -> {
-
-				Issue issue = getIssueFromCache(uri);
-				this.toolView.selectTreeNode(issue, product);
-				return new ShowDocumentResult(true);
-			});
+			issue = getIssueFromCache(filePath, issueId);
 		} else {
-			SnykLogger.logInfo(String.format("Invalid URI: scheme=%s, product=%s, action=%s", scheme, product, action));
+			SnykLogger.logInfo(String.format(
+					"Invalid URI: scheme=%s, product=%s, action=%s, issue=%s",
+					scheme, product, action, issueId));
 			return super.showDocument(params);
 		}
+
+		if (issue == null) {
+			SnykLogger.logInfo(String.format(
+					"Issue not found in the issueCache; issueId: %s", issueId));
+			return null;
+		}
+
+		return CompletableFuture.supplyAsync(() -> {
+			openToolView();
+			this.toolView.selectTreeNode(issue);
+			return new ShowDocumentResult(true);
+		});
 	}
 
-	public Issue getIssueFromCache(URI uri) {
-		String filePath = uri.getPath();
-		String issueId = getDecodedParam(uri, "issueId");
-
+	private Issue getIssueFromCache(String filePath, String issueId) {
 		SnykIssueCache issueCache = getIssueCache(filePath);
-		return issueCache.getCodeSecurityIssuesForPath(filePath).stream().filter(i -> i.id().equals(issueId))
-				.findFirst().orElse(null);
-	}
-
-	public String getDecodedParam(URI uri, String paramName) {
-		String query = uri.getQuery();
-		if (query == null || query.isEmpty()) {
-			return null;
-		}
-
-		Map<String, String> paramMap = parseQueryString(query);
-		String value = paramMap.get(paramName);
-
-		if (value == null) {
-			return null;
-		}
-
-		try {
-			return URLDecoder.decode(value, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			SnykLogger.logError(e);
-			return null;
-		}
-	}
-
-	public static Map<String, String> parseQueryString(String queryString) {
-		Map<String, String> paramMap = new HashMap<>();
-
-		if (queryString == null || queryString.isEmpty()) {
-			return paramMap;
-		}
-
-		int keyValueSize = 2;
-		for (String param : queryString.split("&")) {
-			if (!param.isEmpty()) {
-				String[] keyValue = param.split("=");
-
-				if (keyValue.length == keyValueSize) {
-					try {
-						paramMap.put(keyValue[0], URLDecoder.decode(keyValue[1], "UTF-8"));
-					} catch (UnsupportedEncodingException e) {
-						SnykLogger.logError(e);
-					}
-				}
-			}
-		}
-
-		return paramMap;
+		return issueCache.getCodeSecurityIssuesForPath(filePath).stream()
+				.filter(i -> issueId.equals(i.id())).findFirst().orElse(null);
 	}
 
 	private void openToolView() {
@@ -505,7 +490,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return;
 		}
 		Display.getDefault().syncExec(() -> {
-			IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+			IWorkbenchPage activePage = PlatformUI.getWorkbench()
+					.getActiveWorkbenchWindow().getActivePage();
 			try {
 				toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
 			} catch (PartInitException e) {
@@ -515,29 +501,37 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		});
 	}
 
-	private Set<ProductTreeNode> getAffectedProductNodes(String snykScanProduct, String folderPath) {
+	private Set<ProductTreeNode> getAffectedProductNodes(String snykScanProduct,
+			String folderPath) {
 		Preferences pref = Preferences.getInstance();
 		Set<ProductTreeNode> affectedProductTreeNodes = new HashSet<>();
 		var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(snykScanProduct);
 		if (displayProduct != null) {
-			ProductTreeNode productNode = toolView.getProductNode(displayProduct, folderPath);
+			ProductTreeNode productNode = toolView
+					.getProductNode(displayProduct, folderPath);
 			if (productNode != null) {
 				affectedProductTreeNodes.add(productNode);
 			}
 		} else {
-			ProductTreeNode productNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY, folderPath);
-			if (productNode != null && pref.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)) {
+			ProductTreeNode productNode = toolView
+					.getProductNode(DISPLAYED_CODE_SECURITY, folderPath);
+			if (productNode != null && pref
+					.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)) {
 				affectedProductTreeNodes.add(productNode);
 			}
-			productNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY, folderPath);
-			if (productNode != null && pref.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY)) {
+			productNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY,
+					folderPath);
+			if (productNode != null && pref
+					.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY)) {
 				affectedProductTreeNodes.add(productNode);
 			}
 		}
 		return Collections.unmodifiableSet(affectedProductTreeNodes);
 	}
 
-	private void setNodeState(String status, Set<ProductTreeNode> affectedProductTreeNodes, SnykIssueCache cache) {
+	private void setNodeState(String status,
+			Set<ProductTreeNode> affectedProductTreeNodes,
+			SnykIssueCache cache) {
 		if (affectedProductTreeNodes.isEmpty()) {
 			return;
 		}
@@ -559,69 +553,91 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private void setProductNodeText(Set<ProductTreeNode> nodes, String nodeText) {
+	private void setProductNodeText(Set<ProductTreeNode> nodes,
+			String nodeText) {
 		for (ProductTreeNode productTreeNode : nodes) {
 			toolView.setNodeText(productTreeNode, nodeText);
 		}
 	}
 
-	public String getCountsSuffix(ProductTreeNode productTreeNode, SnykIssueCache issueCache) {
+	public String getCountsSuffix(ProductTreeNode productTreeNode,
+			SnykIssueCache issueCache) {
 		String product = productTreeNode.getProduct();
-		var critical = issueCache.getIssueCountBySeverity(product, SEVERITY_CRITICAL);
+		var critical = issueCache.getIssueCountBySeverity(product,
+				SEVERITY_CRITICAL);
 		var high = issueCache.getIssueCountBySeverity(product, SEVERITY_HIGH);
-		var medium = issueCache.getIssueCountBySeverity(product, SEVERITY_MEDIUM);
+		var medium = issueCache.getIssueCountBySeverity(product,
+				SEVERITY_MEDIUM);
 		var low = issueCache.getIssueCountBySeverity(product, SEVERITY_LOW);
 		var total = issueCache.getTotalCount(product);
-		return String.format("%d unique vulnerabilities: %d critical, %d high, %d medium, %d low", total, critical,
-				high, medium, low);
+		return String.format(
+				"%d unique vulnerabilities: %d critical, %d high, %d medium, %d low",
+				total, critical, high, medium, low);
 	}
 
-	public SnykIssueCache getIssueCache(String filePath) {
-		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(Paths.get(filePath));
+	private SnykIssueCache getIssueCache(String filePath) {
+		var issueCache = IssueCacheHolder.getInstance()
+				.getCacheInstance(Paths.get(filePath));
 		if (issueCache == null) {
-			throw new IllegalArgumentException("No issue cache for param possible");
+			throw new IllegalArgumentException(
+					"No issue cache for param possible");
 		}
 		return issueCache;
 	}
 
-	private void addInfoNodes(ProductTreeNode productNode, String folderPath, SnykIssueCache issueCache) {
+	private void addInfoNodes(ProductTreeNode productNode, String folderPath,
+			SnykIssueCache issueCache) {
 		if (productNode == null) {
-			SnykLogger.logInfo("given product node is null, not adding info nodes. folderPath: " + folderPath);
+			SnykLogger.logInfo(
+					"given product node is null, not adding info nodes. folderPath: "
+							+ folderPath);
 			return;
 		}
 		toolView.removeInfoNodes(productNode);
 
 		long totalCount = issueCache.getTotalCount(productNode.getProduct());
-		long fixableCount = issueCache.getFixableCount(productNode.getProduct());
-		long ignoredCount = issueCache.getIgnoredCount(productNode.getProduct());
+		long fixableCount = issueCache
+				.getFixableCount(productNode.getProduct());
+		long ignoredCount = issueCache
+				.getIgnoredCount(productNode.getProduct());
 		var pref = Preferences.getInstance();
 		if (totalCount == 0) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(CONGRATS_NO_ISSUES_FOUND));
+			toolView.addInfoNode(productNode,
+					new InfoTreeNode(CONGRATS_NO_ISSUES_FOUND));
 		} else {
-			String text = "✋ " + totalCount + " issue" + getPlural(totalCount) + " found by Snyk";
+			String text = "✋ " + totalCount + " issue" + getPlural(totalCount)
+					+ " found by Snyk";
 			if (ignoredCount > 0) {
 				text += ", " + ignoredCount + " ignored";
 			}
 			toolView.addInfoNode(productNode, new InfoTreeNode(text));
 		}
 		if (totalCount > 0 && fixableCount == 0) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(NO_FIXABLE_ISSUES));
+			toolView.addInfoNode(productNode,
+					new InfoTreeNode(NO_FIXABLE_ISSUES));
 		}
 
 		if (totalCount > 0 && fixableCount > 0) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(
-					"⚡️ " + fixableCount + " issue" + getPlural(fixableCount) + " can be fixed automatically"));
+			toolView.addInfoNode(productNode,
+					new InfoTreeNode("⚡️ " + fixableCount + " issue"
+							+ getPlural(fixableCount)
+							+ " can be fixed automatically"));
 		}
 
 		if (totalCount > 0 && ignoredCount == totalCount
-				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
+				&& pref.getBooleanPref(
+						Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
 				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE));
+			toolView.addInfoNode(productNode, new InfoTreeNode(
+					ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
 
-		if (totalCount > 0 && ignoredCount == 0 && pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
+		if (totalCount > 0 && ignoredCount == 0
+				&& pref.getBooleanPref(
+						Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
 				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES)) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE));
+			toolView.addInfoNode(productNode, new InfoTreeNode(
+					ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE));
 		}
 	}
 
@@ -632,17 +648,21 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
 			return;
 		}
-		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
+		var filePath = LSPEclipseUtils.fromUri(URI.create(uri))
+				.getAbsolutePath();
 		if (filePath == null) {
-			SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
+			SnykLogger.logError(new InvalidPathException(uri,
+					"couldn't resolve uri " + uri + " to file"));
 			return;
 		}
 
 		populateIssueCache(param, filePath);
 	}
 
-	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, SnykIssueCache issueCache) {
-		var cacheHashMap = issueCache.getCacheByDisplayProduct(productTreeNode.getProduct());
+	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode,
+			SnykIssueCache issueCache) {
+		var cacheHashMap = issueCache
+				.getCacheByDisplayProduct(productTreeNode.getProduct());
 		List<Issue> issuesList = new ArrayList<>();
 		for (var kv : cacheHashMap.entrySet()) {
 			var fileName = kv.getKey();
@@ -660,7 +680,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
+	private void populateIssueCache(PublishDiagnostics316Param param,
+			String filePath) {
 		var issueCache = getIssueCache(filePath);
 		Diagnostic316[] diagnostics = param.getDiagnostics();
 		if (diagnostics == null || diagnostics.length == 0) {
@@ -673,7 +694,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		var snykProduct = LSP_SOURCE_TO_SCAN_PARAMS.get(source);
 		List<Issue> issueList = new ArrayList<>();
-		var isIgnoresEnabled = Preferences.getInstance().getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
+		var isIgnoresEnabled = Preferences.getInstance()
+				.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
 		for (var diagnostic : diagnostics) {
 			if (diagnostic.getData() == null) {
 				continue;
@@ -686,24 +708,25 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		switch (snykProduct) {
-		case SCAN_PARAMS_CODE:
-			issueCache.addCodeIssues(filePath, issueList);
-			break;
-		case SCAN_PARAMS_OSS:
-			issueCache.addOssIssues(filePath, issueList);
-			break;
-		case SCAN_PARAMS_IAC:
-			issueCache.addIacIssues(filePath, issueList);
-			break;
-		default:
-			break;
+			case SCAN_PARAMS_CODE :
+				issueCache.addCodeIssues(filePath, issueList);
+				break;
+			case SCAN_PARAMS_OSS :
+				issueCache.addOssIssues(filePath, issueList);
+				break;
+			case SCAN_PARAMS_IAC :
+				issueCache.addIacIssues(filePath, issueList);
+				break;
+			default :
+				break;
 		}
 	}
 
 	public void reportAnalytics(AbstractTask event) {
 		try {
 			var eventString = om.writeValueAsString(event);
-			executeCommand(LsConstants.COMMAND_REPORT_ANALYTICS, List.of(eventString));
+			executeCommand(LsConstants.COMMAND_REPORT_ANALYTICS,
+					List.of(eventString));
 		} catch (Exception e) {
 			SnykLogger.logError(e);
 		}
@@ -711,13 +734,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	@Override
-	public CompletableFuture<Void> createProgress(WorkDoneProgressCreateParams params) {
+	public CompletableFuture<Void> createProgress(
+			WorkDoneProgressCreateParams params) {
 		this.progressManager.addProgress(params.getToken().getLeft());
 		return super.createProgress(params);
 	}
 
 	/**
-	 * Refresh the token using language server. Waits up to 2s for the token change.
+	 * Refresh the token using language server. Waits up to 2s for the token
+	 * change.
 	 *
 	 * @return true if token has changed, false if not
 	 */
@@ -729,12 +754,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var token = p.getAuthToken();
 		final int timeout = 5;
 		CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-			var result = executeCommand(LsConstants.COMMAND_GET_ACTIVE_USER, new ArrayList<>());
-			// we don't wait forever, and if we can't get a user name (refresh token), we're
+			var result = executeCommand(LsConstants.COMMAND_GET_ACTIVE_USER,
+					new ArrayList<>());
+			// we don't wait forever, and if we can't get a user name (refresh
+			// token), we're
 			// done.
 			try {
 				result.get(timeout - 1, TimeUnit.SECONDS);
-			} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			} catch (InterruptedException | ExecutionException
+					| TimeoutException e) {
 				Thread.currentThread().interrupt();
 				return "";
 			}
@@ -749,7 +777,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		});
 
 		// wait until token has changed or 2s have passed
-		var newToken = future.completeOnTimeout(token, 5, TimeUnit.SECONDS).join();
+		var newToken = future.completeOnTimeout(token, 5, TimeUnit.SECONDS)
+				.join();
 		return !token.equals(newToken);
 	}
 
@@ -787,11 +816,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void clearCache() {
-		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
+		List<IProject> openProjects = ResourceUtils
+				.getAccessibleTopLevelProjects();
 		for (IProject iProject : openProjects) {
-			IssueCacheHolder.getInstance().getCacheInstance(iProject).clearAll();
+			IssueCacheHolder.getInstance().getCacheInstance(iProject)
+					.clearAll();
 			try {
-				iProject.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
+				iProject.deleteMarkers(MARKER_TYPE, true,
+						IResource.DEPTH_INFINITE);
 			} catch (CoreException e) {
 				SnykLogger.logError(e);
 			}
@@ -808,15 +840,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (params.getValue() == null) {
 			return;
 		}
-		WorkDoneProgressNotification progressNotification = params.getValue().getLeft();
-		if (progressNotification != null && progressNotification.getKind() == WorkDoneProgressKind.end) {
+		WorkDoneProgressNotification progressNotification = params.getValue()
+				.getLeft();
+		if (progressNotification != null
+				&& progressNotification.getKind() == WorkDoneProgressKind.end) {
 			this.progressManager.removeProgress(params.getToken().getLeft());
 		}
 		super.notifyProgress(params);
 	}
 
 	@JsonRequest(value = "workspace/snyk.sdks")
-	public CompletableFuture<List<LsSdk>> getSdks(WorkspaceFolder workspaceFolder) {
+	public CompletableFuture<List<LsSdk>> getSdks(
+			WorkspaceFolder workspaceFolder) {
 		return CompletableFuture.supplyAsync(() -> {
 			List<LsSdk> sdks = new SdkHelper().getSdk(workspaceFolder);
 			for (LsSdk lsSdk : sdks) {
