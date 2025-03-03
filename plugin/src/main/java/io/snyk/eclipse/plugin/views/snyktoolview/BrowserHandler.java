@@ -3,6 +3,7 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.core.commands.common.CommandException;
@@ -31,6 +32,7 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 @SuppressWarnings("restriction")
 public class BrowserHandler {
@@ -84,14 +86,41 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "stopScan") {
 			@Override
 			public Object function(Object[] arguments) {
-				IHandlerService handlerService = 
-						(IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
+				IHandlerService handlerService = (IHandlerService) PlatformUI.getWorkbench()
+						.getService(IHandlerService.class);
+
 				try {
 					handlerService.executeCommand(IHandlerCommands.STOP_SCAN, null);
 				} catch (CommandException e) {
 					SnykLogger.logError(e);
-				} 
+				}
 				return null;
+			}
+		};
+
+		new BrowserFunction(browser, "ideGenAIFix") {
+			@Override
+			public Object function(Object[] arguments) {
+				String params = (String) arguments[0];
+				String[] parts = params.split("@|@");
+				String folderURI = (String) parts[0];
+				String fileURI = (String) parts[2];
+				String issueID = (String) parts[4];
+
+				SnykExtendedLanguageClient.getInstance().sendCodeFixDiffsCommand(folderURI, fileURI, issueID);
+
+				return Collections.emptyList();
+			}
+		};
+
+		new BrowserFunction(browser, "ideApplyFix") {
+			@Override
+			public Object function(Object[] arguments) {
+				String fixId = (String) arguments[0];
+
+				SnykExtendedLanguageClient.getInstance().sendCodeApplyAiFixEditCommand(fixId);
+
+				return Collections.emptyList();
 			}
 		};
 
@@ -158,7 +187,7 @@ public class BrowserHandler {
 			}
 
 			final var browserContent = htmlProvider.replaceCssVariables(htmlContent);
-			
+
 			Display.getDefault().syncExec(() -> {
 				browser.setText(browserContent);
 			});
@@ -191,7 +220,8 @@ public class BrowserHandler {
 	}
 
 	public void setDefaultBrowserText() {
-		// If we are not authenticated, show the welcome page, else show the issue placeholder.
+		// If we are not authenticated, show the welcome page, else show the issue
+		// placeholder.
 		if (Preferences.getInstance().getAuthToken().isBlank()) {
 			browser.setText(StaticPageHtmlProvider.getInstance().getInitHtml());
 		} else {

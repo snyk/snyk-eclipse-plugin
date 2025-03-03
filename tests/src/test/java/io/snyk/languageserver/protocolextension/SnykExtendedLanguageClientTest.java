@@ -187,11 +187,10 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var folderPath = "/a/b";
 		var uri = "file://" + folderPath + "/c/";
 
-		if(SystemUtils.IS_OS_WINDOWS) {
+		if (SystemUtils.IS_OS_WINDOWS) {
 			folderPath = "C://a/b";
 			uri = "file:///" + folderPath + "/c/";
 		}
-
 
 		File pathFromUri = LSPEclipseUtils.fromUri(URI.create(uri));
 		var filePath = pathFromUri.getAbsolutePath();

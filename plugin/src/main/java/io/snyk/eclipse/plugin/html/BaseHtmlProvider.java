@@ -6,7 +6,6 @@ import java.util.Random;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ColorRegistry;
-import org.eclipse.jface.resource.FontRegistry;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
@@ -120,8 +119,9 @@ public class BaseHtmlProvider {
 				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
 		htmlStyled = htmlStyled.replace("var(--circle-color)",
 				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
-
 		htmlStyled = htmlStyled.replace("var(--border-color)",
+				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
+		htmlStyled = htmlStyled.replace("var(--input-border)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
 		htmlStyled = htmlStyled.replace("var(--link-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
 		htmlStyled = htmlStyled.replace("var(--horizontal-border-color)",
@@ -142,8 +142,10 @@ public class BaseHtmlProvider {
 		} catch (IllegalStateException e) {
 			defaultHeight = 13;
 		}
-		// Language server HTML assumes a base font size of 10px. The default Eclipse font size is 17px (13pt), so we
-		// apply a scaling factor here. This ensures that HTML fonts scale correctly if the user changes the text size.
+		// Language server HTML assumes a base font size of 10px. The default Eclipse
+		// font size is 17px (13pt), so we
+		// apply a scaling factor here. This ensures that HTML fonts scale correctly if
+		// the user changes the text size.
 		int scaledHeight = (int) (defaultHeight / 1.7);
 		return scaledHeight + "pt";
 	}
