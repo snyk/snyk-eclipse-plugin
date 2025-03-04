@@ -71,6 +71,7 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 				super.getColorAsHex("BUTTON_COLOR", "#375578"));
 		htmlStyled = htmlStyled.replace("var(--disabled-background-color)",
 				super.getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
+		htmlStyled = htmlStyled.replace("var(--vscode-input-border)", super.getColorAsHex("BUTTON_COLOR", "#375578"));
 
 		String htmlWithScripts = replaceAIFixScripts(htmlStyled);
 
