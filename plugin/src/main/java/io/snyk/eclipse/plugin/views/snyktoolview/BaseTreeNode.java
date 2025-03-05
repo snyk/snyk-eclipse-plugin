@@ -14,6 +14,8 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageDataProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
+import io.snyk.eclipse.plugin.utils.SnykLogger;
+
 public class BaseTreeNode extends TreeNode {
 	private ImageDescriptor imageDescriptor;
 	private String text = "";
@@ -58,16 +60,34 @@ public class BaseTreeNode extends TreeNode {
 	public void setImageDescriptor(ImageDescriptor imageDescriptor) {
 		this.imageDescriptor = imageDescriptor;
 	}
-	
+
 	protected ImageDescriptor getImageDescriptor(IResource object) {
-		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+		ILabelProvider labelProvider = null;
+		Image image = null;
+
 		try {
-			Image image = labelProvider.getImage(object);
-			if (image == null || image.isDisposed())
+			labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+			image = labelProvider.getImage(object);
+
+			if (image == null || image.isDisposed()) {
 				return null;
-			
+			}
+
 			return getImageDescriptorFromImage(image);
+
+		} catch (Exception e) {
+			SnykLogger.logError(e);
+			return null;
 		} finally {
+			disposeResources(labelProvider, image);
+		}
+	}
+
+	private void disposeResources(ILabelProvider labelProvider, Image image) {
+		if (image != null && !image.isDisposed()) {
+			image.dispose();
+		}
+		if (labelProvider != null) {
 			labelProvider.dispose();
 		}
 	}
@@ -107,7 +127,7 @@ public class BaseTreeNode extends TreeNode {
 
 	protected ImageDescriptor getImageDescriptorFromImage(Image image) {
 		final var data = image.getImageData();
-	
+
 		ImageDataProvider provider = new ImageDataProvider() {
 			@Override
 			public ImageData getImageData(int zoom) {
