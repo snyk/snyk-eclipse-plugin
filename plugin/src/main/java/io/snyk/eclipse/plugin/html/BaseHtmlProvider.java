@@ -21,6 +21,7 @@ public class BaseHtmlProvider {
 	private final Random random = new Random();
 	private final Map<String, String> colorCache = new HashMap<>();
 	private String nonce = "";
+	int defaultFontSize = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
 
 	public String getCss() {
 		return "";
@@ -103,7 +104,7 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("<style nonce=\"ideNonce\" data-ide-style></style>", css);
 		htmlStyled = htmlStyled.replace("var(--default-font)",
 				" ui-sans-serif, \"SF Pro Text\", \"Segoe UI\", \"Ubuntu\", Tahoma, Geneva, Verdana, sans-serif;");
-		htmlStyled = htmlStyled.replace("var(--main-font-size)", getScaledFontSize());
+		htmlStyled = htmlStyled.replace("var(--main-font-size)", getRelativeFontSize(defaultFontSize));
 
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace("var(--text-color)",
@@ -135,19 +136,18 @@ public class BaseHtmlProvider {
 		return htmlStyled;
 	}
 
-	private String getScaledFontSize() {
-		int defaultHeight;
-		try {
-			defaultHeight = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
-		} catch (IllegalStateException e) {
-			defaultHeight = 13;
-		}
-		// Language server HTML assumes a base font size of 10px. The default Eclipse
-		// font size is 17px (13pt), so we
-		// apply a scaling factor here. This ensures that HTML fonts scale correctly if
-		// the user changes the text size.
-		int scaledHeight = (int) (defaultHeight / 1.7);
-		return scaledHeight + "pt";
+	private String getRelativeFontSize(int inputFontSizePt) {
+		// Target size is the base size for which the HTML element was designed.
+		int targetSizePx = 10;
+		int startingFontSizePt = inputFontSizePt > 0 ? inputFontSizePt : defaultFontSize;
+
+		// FontRegistry uses pt sizes, not px, so we convert here, using standard web values from
+		// https://www.w3.org/TR/css3-values/#absolute-lengths
+		double pxToPtMultiplier = 72.0 / 96.0;
+		double targetSizePt = targetSizePx * pxToPtMultiplier;
+
+		// CSS allows 3 decimal places of precision for calculations.
+		return String.format("%.3frem", targetSizePt / startingFontSizePt);
 	}
 
 	public String getColorAsHex(String colorKey, String defaultColor) {
