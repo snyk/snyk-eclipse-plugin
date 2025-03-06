@@ -19,15 +19,12 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 public class BaseTreeNode extends TreeNode {
 	private ImageDescriptor imageDescriptor;
 	private String text = "";
+	private Object value;
 
 	public BaseTreeNode(Object value) {
 		super(value);
 		if (value instanceof String)
 			this.text = value.toString();
-	}
-
-	public void setValue(Object value) {
-		this.value = value;
 	}
 
 	public void addChild(BaseTreeNode child) {
@@ -41,7 +38,12 @@ public class BaseTreeNode extends TreeNode {
 		}
 		child.setParent(this);
 		list.add(child);
-		this.setChildren(list.toArray(new BaseTreeNode[list.size()]));
+
+		// Calls to a collection's `toArray(E[])` method should specify a target array
+		// of zero size. This allows the JVM
+		// to optimize the memory allocation and copying as much as possible.
+		// https://shipilev.net/blog/2016/arrays-wisdom-ancients/
+		this.setChildren(list.toArray(new BaseTreeNode[0]));
 	}
 
 	public void removeChildren() {
@@ -104,6 +106,10 @@ public class BaseTreeNode extends TreeNode {
 		this.text = text;
 	}
 
+	public void setValue(Object value) {
+		this.value = value;
+	}
+
 	@Override
 	public String toString() {
 		return this.value.toString();
@@ -112,8 +118,6 @@ public class BaseTreeNode extends TreeNode {
 	public void reset() {
 		this.removeChildren();
 		this.text = "";
-		this.value = null;
-		this.imageDescriptor = null;
 	}
 
 	/**
