@@ -3,6 +3,7 @@ package io.snyk.eclipse.plugin;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -17,6 +18,8 @@ public class Activator extends AbstractUIPlugin {
 
 	// The shared instance
 	private static Activator plugin;
+
+	private static ImageRegistry imageRegistry = null; // NOPMD
 
 	@Override
 	public void start(BundleContext context) throws Exception {
@@ -46,7 +49,22 @@ public class Activator extends AbstractUIPlugin {
 	 * @return the image descriptor
 	 */
 	public static ImageDescriptor getImageDescriptor(String key) {
-		return getDefault().getImageRegistry().getDescriptor(key);
+		Display display = Display.getDefault();
+
+		// Use syncExec to invoke code on the SWT thread and wait for it to finish
+		display.syncExec(new Runnable() {
+			@Override
+			public void run() {
+				imageRegistry = getDefault().getImageRegistry();
+
+			}
+
+		});
+		if (imageRegistry == null) {
+			return ImageDescriptor.getMissingImageDescriptor();
+
+		}
+		return imageRegistry.getDescriptor(key);
 	}
 
 	@Override
