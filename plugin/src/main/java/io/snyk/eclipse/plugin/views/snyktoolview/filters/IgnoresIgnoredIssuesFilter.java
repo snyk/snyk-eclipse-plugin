@@ -8,7 +8,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 public class IgnoresIgnoredIssuesFilter extends BaseFilter {
-	private static final Predicate<Issue> predicate = issue -> issue.isIgnored();
+	private static final Predicate<Issue> predicate = issue -> !issue.isIgnored();
 
 	public IgnoresIgnoredIssuesFilter(TreeFilterManager tfm) {
 		super(FILTER_IGNORES_SHOW_IGNORED_ISSUES, predicate, tfm);
