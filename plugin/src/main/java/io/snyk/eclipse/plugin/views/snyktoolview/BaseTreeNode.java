@@ -65,7 +65,7 @@ public class BaseTreeNode extends TreeNode {
 
 	protected ImageDescriptor getImageDescriptor(IResource object) {
 		ILabelProvider labelProvider = null;
-		Image image = null;
+		Image image;
 
 		try {
 			labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
@@ -81,15 +81,6 @@ public class BaseTreeNode extends TreeNode {
 			SnykLogger.logError(e);
 			return null;
 		} finally {
-			disposeResources(labelProvider, image);
-		}
-	}
-
-	private void disposeResources(ILabelProvider labelProvider, Image image) {
-		if (image != null && !image.isDisposed()) {
-			image.dispose();
-		}
-		if (labelProvider != null) {
 			labelProvider.dispose();
 		}
 	}
