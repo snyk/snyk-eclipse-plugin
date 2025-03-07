@@ -14,17 +14,18 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageDataProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-import io.snyk.eclipse.plugin.utils.SnykLogger;
-
 public class BaseTreeNode extends TreeNode {
 	private ImageDescriptor imageDescriptor;
 	private String text = "";
-	private Object value;
 
 	public BaseTreeNode(Object value) {
 		super(value);
 		if (value instanceof String)
 			this.text = value.toString();
+	}
+
+	public void setValue(Object value) {
+		this.value = value;
 	}
 
 	public void addChild(BaseTreeNode child) {
@@ -38,12 +39,7 @@ public class BaseTreeNode extends TreeNode {
 		}
 		child.setParent(this);
 		list.add(child);
-
-		// Calls to a collection's `toArray(E[])` method should specify a target array
-		// of zero size. This allows the JVM
-		// to optimize the memory allocation and copying as much as possible.
-		// https://shipilev.net/blog/2016/arrays-wisdom-ancients/
-		this.setChildren(list.toArray(new BaseTreeNode[0]));
+		this.setChildren(list.toArray(new BaseTreeNode[list.size()]));
 	}
 
 	public void removeChildren() {
@@ -62,24 +58,15 @@ public class BaseTreeNode extends TreeNode {
 	public void setImageDescriptor(ImageDescriptor imageDescriptor) {
 		this.imageDescriptor = imageDescriptor;
 	}
-
+	
 	protected ImageDescriptor getImageDescriptor(IResource object) {
-		ILabelProvider labelProvider = null;
-		Image image;
-
+		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		try {
-			labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
-			image = labelProvider.getImage(object);
-
-			if (image == null || image.isDisposed()) {
+			Image image = labelProvider.getImage(object);
+			if (image == null || image.isDisposed())
 				return null;
-			}
-
+			
 			return getImageDescriptorFromImage(image);
-
-		} catch (Exception e) {
-			SnykLogger.logError(e);
-			return null;
 		} finally {
 			labelProvider.dispose();
 		}
@@ -97,10 +84,6 @@ public class BaseTreeNode extends TreeNode {
 		this.text = text;
 	}
 
-	public void setValue(Object value) {
-		this.value = value;
-	}
-
 	@Override
 	public String toString() {
 		return this.value.toString();
@@ -109,6 +92,8 @@ public class BaseTreeNode extends TreeNode {
 	public void reset() {
 		this.removeChildren();
 		this.text = "";
+		this.value = null;
+		this.imageDescriptor = null;
 	}
 
 	/**
@@ -122,7 +107,7 @@ public class BaseTreeNode extends TreeNode {
 
 	protected ImageDescriptor getImageDescriptorFromImage(Image image) {
 		final var data = image.getImageData();
-
+	
 		ImageDataProvider provider = new ImageDataProvider() {
 			@Override
 			public ImageData getImageData(int zoom) {
