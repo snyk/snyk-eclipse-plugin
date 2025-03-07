@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.TreeNode;
 
 import io.snyk.eclipse.plugin.domain.ProductConstants;
@@ -16,34 +17,43 @@ public class ProductTreeNode extends BaseTreeNode {
 	private String errorMessage;
 	private String prefEnablementKey;
 
-	public ProductTreeNode(String value) {
-		super(value);
-		this.setProduct(value);
+	private ProductTreeNode(String value, ImageDescriptor ossDescriptor, ImageDescriptor iacDescriptor,
+			ImageDescriptor codeQualityDesciptor, ImageDescriptor codeSecurityDescriptor) {
+		super(value); //NOPMD, TODO IMPORTANT TO FIX THIS PMD!!
+		this.setProduct(value); //NOPMD, TODO IMPORTANT TO FIX THIS PMD!!
 
 		switch (value) {
 		case ProductConstants.DISPLAYED_OSS:
-			setImageDescriptor(SnykIcons.OSS);
+			setImageDescriptor(ossDescriptor);
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
 			break;
 		case ProductConstants.DISPLAYED_IAC:
-			setImageDescriptor(SnykIcons.IAC);
+			setImageDescriptor(iacDescriptor);
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_IAC;
 			break;
 		case ProductConstants.DISPLAYED_CODE_QUALITY:
-			setImageDescriptor(SnykIcons.CODE);
+			setImageDescriptor(codeQualityDesciptor);
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_CODE_QUALITY;
 			break;
 		case ProductConstants.DISPLAYED_CODE_SECURITY:
-			setImageDescriptor(SnykIcons.CODE);
+			setImageDescriptor(codeSecurityDescriptor);
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_CODE_SECURITY;
 			break;
+		default:
+			//TODO handle this properly.
 		}
-		
-		
+
 	}
-	
-	
-	
+
+	public ProductTreeNode(String value) {
+		this(value, SnykIcons.OSS, SnykIcons.IAC, SnykIcons.CODE, SnykIcons.CODE);
+	}
+
+	// For testing
+	public ProductTreeNode(String value, ImageDescriptor imageDescriptor) {
+		this(value, imageDescriptor, imageDescriptor, imageDescriptor, imageDescriptor);
+	}
+
 	@Override
 	public String getText() {
 		if (!isEnabled()) {
@@ -51,8 +61,6 @@ public class ProductTreeNode extends BaseTreeNode {
 		}
 		return super.getText();
 	}
-
-
 
 	private boolean isEnabled() {
 		Preferences pref = Preferences.getInstance();
@@ -81,13 +89,13 @@ public class ProductTreeNode extends BaseTreeNode {
 
 		setChildren(newList.toArray(new BaseTreeNode[0]));
 	}
-	
+
 	@Override
 	public void setValue(Object value) {
 		if (!(value instanceof String))
 			throw new IllegalArgumentException("value of product node must be a string");
 		if (!isEnabled()) {
-			value = "(disabled)";
+			value = "(disabled)";//NOPMD, TODO FIX THIS PROPERLLY
 		}
 		var cleanedValue = removePrefix(value.toString());
 
@@ -103,7 +111,8 @@ public class ProductTreeNode extends BaseTreeNode {
 
 	@Override
 	public void addChild(BaseTreeNode child) {
-		if (!isEnabled()) return;
+		if (!isEnabled())
+			return;
 		if (child instanceof FileTreeNode) {
 			var ftNode = (FileTreeNode) child;
 			var crNode = (ContentRootNode) this.getParent();
@@ -112,13 +121,12 @@ public class ProductTreeNode extends BaseTreeNode {
 						ftNode.getPath().toString() + " is not a sub path of " + crNode.getPath().toString());
 			}
 		}
-		
+
 		super.addChild(child);
 	}
 
 	private String removePrefix(String value) {
-		var cleanedValue = value.toString();
-		cleanedValue = cleanedValue.replace(product, "");
+		var cleanedValue = value.replace(product, "");
 		return cleanedValue.replace(" - ", "");
 	}
 

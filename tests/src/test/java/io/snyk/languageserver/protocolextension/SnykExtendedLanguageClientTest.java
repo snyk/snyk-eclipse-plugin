@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WorkDoneProgressBegin;
@@ -234,7 +235,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus(SCAN_STATE_IN_PROGRESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-		ProductTreeNode productNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
+		ProductTreeNode productNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY, mock(ImageDescriptor.class));
 		when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath())).thenReturn(productNode);
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
@@ -453,12 +454,15 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var productNodes = new HashSet<ProductTreeNode>();
 		boolean notSnykCode = displayProduct != null;
 		if (notSnykCode) {
-			ProductTreeNode node = new ProductTreeNode(displayProduct);
+			ProductTreeNode node = new ProductTreeNode(displayProduct, mock(ImageDescriptor.class));
 			productNodes.add(node);
 			when(toolWindowMock.getProductNode(displayProduct, param.getFolderPath())).thenReturn(node);
 		} else {
-			ProductTreeNode codeSecurityProductNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
-			ProductTreeNode codeQualityProductNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
+
+			ProductTreeNode codeSecurityProductNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY,
+					mock(ImageDescriptor.class));
+			ProductTreeNode codeQualityProductNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY,
+					mock(ImageDescriptor.class));
 			productNodes.add(codeSecurityProductNode);
 			productNodes.add(codeQualityProductNode);
 			when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath()))
@@ -562,7 +566,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	@Test
 	void testGetTotal() throws IOException {
 		cut = new SnykExtendedLanguageClient();
-		ProductTreeNode productTreeNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
+		ProductTreeNode productTreeNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY, mock(ImageDescriptor.class));
 		SnykIssueCache issueCache = new SnykIssueCache(Path.of("a/b"));
 		var issues = new HashSet<Issue>();
 		var highIssue = Instancio.of(Issue.class).set(Select.field(Issue::additionalData), getSecurityIssue())
