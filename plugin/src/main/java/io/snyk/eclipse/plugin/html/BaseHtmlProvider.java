@@ -136,6 +136,8 @@ public class BaseHtmlProvider {
 		return htmlStyled;
 	}
 
+    // Utility function to scale Eclipse fonts appropriately for use in HTML elements that have been designed with
+    // px values in mind.
 	private String getRelativeFontSize(int inputFontSizePt) {
 		// Target size is the base size for which the HTML element was designed.
 		int targetSizePx = 10;
