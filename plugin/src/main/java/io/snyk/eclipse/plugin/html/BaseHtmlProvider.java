@@ -107,7 +107,9 @@ public class BaseHtmlProvider {
 
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace("var(--text-color)",
-				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR", "#000000"));
+				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_SELECTED_TEXT_COLOR", "#000000"));
+		htmlStyled = htmlStyled.replace("var(--dimmed-text-color)",
+				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR", "#4F5456"));
 
 		htmlStyled = htmlStyled.replace("var(--ide-background-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_NOFOCUS_TAB_BG_START", "#FFFFFF"));

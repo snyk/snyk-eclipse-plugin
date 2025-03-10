@@ -69,6 +69,7 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
+import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
@@ -473,7 +474,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		return CompletableFuture.supplyAsync(() -> {
 			openToolView();
-			this.toolView.selectTreeNode(issue, uriDetails.product());
+			String display_product = ProductConstants.LSP_SOURCE_TO_DISPLAYED.get(uriDetails.product());
+			this.toolView.selectTreeNode(issue, display_product);
 			return new ShowDocumentResult(true);
 		});
 	}

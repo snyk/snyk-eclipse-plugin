@@ -72,6 +72,8 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("var(--disabled-background-color)",
 				super.getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
 		htmlStyled = htmlStyled.replace("var(--vscode-input-border)", super.getColorAsHex("BUTTON_COLOR", "#375578"));
+		htmlStyled = htmlStyled.replace("var(--warning-text)", super.getColorAsHex("WARNING_TEXT_COLOR", "#000000"));
+		htmlStyled = htmlStyled.replace("var(--warning-background)", super.getColorAsHex("WARNING_BACKGROUND_COLOR", "#c8a000"));
 
 		String htmlWithScripts = replaceAIFixScripts(htmlStyled);
 
