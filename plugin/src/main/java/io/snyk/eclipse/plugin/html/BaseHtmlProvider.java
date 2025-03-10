@@ -135,12 +135,13 @@ public class BaseHtmlProvider {
 		return htmlStyled;
 	}
 
+	@SuppressWarnings("PMD.EmptyCatchBlock")
 	private int getDefaultFontSize() {
 		int fontSize =  13;
 		try {
 			fontSize = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
 		} catch (IllegalStateException e) {
-			// NOPMD Expected only in unit tests. // TODO improve the logic here.
+			// TODO improve the logic here. Expected only in unit tests.
 		}
 		return fontSize;
 	}
