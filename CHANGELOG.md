@@ -1,14 +1,13 @@
 # Snyk Security Changelog
 
-## [3.1.1]
-### Fixes
-- fixes open & ignored issue filtering
-
 ## [3.1.0]
 ### Changes
 - add option for using a folder as reference instead of a branch in net-new scanning
 - add scan summary to custom UI, updating scan statuses live
 - added support for DeepCode AI Fixes
+
+### Fixes
+- fixes open & ignored issue filtering toggles
 
 ## [3.0.0]
 ### Changes
