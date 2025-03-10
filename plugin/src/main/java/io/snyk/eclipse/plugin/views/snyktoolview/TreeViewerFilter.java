@@ -48,7 +48,7 @@ public class TreeViewerFilter extends ViewerFilter {
 	    }
 
 	    for (var filter : this.filters.values()) {
-	        if (!filter.test(issue)) {
+	        if (filter.test(issue)) {
 	            return false;
 	        }
 	    }

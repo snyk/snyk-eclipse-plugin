@@ -6,6 +6,9 @@
 - add scan summary to custom UI, updating scan statuses live
 - added support for DeepCode AI Fixes
 
+### Fixes
+- fixes open & ignored issue filtering toggles
+
 ## [3.0.0]
 ### Changes
 - process api URL from hasAuthenticated message
