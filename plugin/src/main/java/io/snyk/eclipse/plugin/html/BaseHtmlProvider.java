@@ -21,7 +21,6 @@ public class BaseHtmlProvider {
 	private final Random random = new Random();
 	private final Map<String, String> colorCache = new HashMap<>();
 	private String nonce = "";
-	int defaultFontSize = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
 
 	public String getCss() {
 		return "";
@@ -104,7 +103,7 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("<style nonce=\"ideNonce\" data-ide-style></style>", css);
 		htmlStyled = htmlStyled.replace("var(--default-font)",
 				" ui-sans-serif, \"SF Pro Text\", \"Segoe UI\", \"Ubuntu\", Tahoma, Geneva, Verdana, sans-serif;");
-		htmlStyled = htmlStyled.replace("var(--main-font-size)", getRelativeFontSize(defaultFontSize));
+		htmlStyled = htmlStyled.replace("var(--main-font-size)", getRelativeFontSize(getDefaultFontSize()));
 
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace("var(--text-color)",
@@ -136,12 +135,22 @@ public class BaseHtmlProvider {
 		return htmlStyled;
 	}
 
+	private int getDefaultFontSize() {
+		int fontSize =  13;
+		try {
+			fontSize = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
+		} catch (IllegalStateException e) {
+			// Expected only in unit tests. // TODO improve the logic here.
+		}
+		return fontSize;
+	}
+
     // Utility function to scale Eclipse fonts appropriately for use in HTML elements that have been designed with
     // px values in mind.
 	private String getRelativeFontSize(int inputFontSizePt) {
 		// Target size is the base size for which the HTML element was designed.
 		int targetSizePx = 10;
-		int startingFontSizePt = inputFontSizePt > 0 ? inputFontSizePt : defaultFontSize;
+		int startingFontSizePt = inputFontSizePt > 0 ? inputFontSizePt : getDefaultFontSize();
 
 		// FontRegistry uses pt sizes, not px, so we convert here, using standard web values from
 		// https://www.w3.org/TR/css3-values/#absolute-lengths
