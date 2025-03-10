@@ -22,7 +22,7 @@ public class ProductFilter extends BaseFilter {
 	@SuppressWarnings("rawtypes")
 	private static Predicate getPredicate(String filterName) {
 		String filterableIssueType = preferenceToProductConstants.get(filterName);
-		Predicate<Issue> predicate = issue -> !issue.filterableIssueType().equals(filterableIssueType);
+		Predicate<Issue> predicate = issue -> issue.filterableIssueType().equals(filterableIssueType);
 		return predicate;
 	}
 }

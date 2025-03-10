@@ -8,7 +8,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 public class FixableFilter extends BaseFilter {	
-	private static final Predicate<Issue> predicate = issue -> issue.hasFix();
+	private static final Predicate<Issue> predicate = issue -> !issue.hasFix(); // Inverse predicate, see below.
 	
 	public FixableFilter(TreeFilterManager tfm) {
 		super(FILTER_SHOW_ONLY_FIXABLE, predicate, tfm);
@@ -16,7 +16,9 @@ public class FixableFilter extends BaseFilter {
 
 	@Override
 	public void applyFilter() {
-		// this is inverse to the other filters, so we need to overwrite the BaseFilter logic
+		// This is inverse to the other filters, so we need to overwrite the BaseFilter logic.
+		// Deselecting show fixable issues should not hide fixable issues and show all issues.
+		// Therefore when deactivated we cannot have a filter added, so the logic is flipped.
 		boolean booleanPref = preferences.getBooleanPref(this.filterName);
 
 		if (booleanPref) {
