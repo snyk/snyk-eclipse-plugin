@@ -140,7 +140,7 @@ public class BaseHtmlProvider {
 		try {
 			fontSize = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
 		} catch (IllegalStateException e) {
-			// Expected only in unit tests. // TODO improve the logic here.
+			// NOPMD Expected only in unit tests. // TODO improve the logic here.
 		}
 		return fontSize;
 	}
