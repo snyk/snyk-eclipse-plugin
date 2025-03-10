@@ -436,8 +436,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
 	public void updateSummaryPanel(SummaryPanelParams summary) {
-		openToolView();
-		this.toolView.updateSummary(summary.getSummary());
+		CompletableFuture.runAsync(() -> {
+			openToolView();
+			this.toolView.updateSummary(summary.getSummary());
+		});
 	}
 
 	@Override
