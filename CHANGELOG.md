@@ -5,6 +5,7 @@
 - add option for using a folder as reference instead of a branch in net-new scanning
 - add scan summary to custom UI, updating scan statuses live
 - added support for DeepCode AI Fixes
+- new severity icons
 
 ### Fixes
 - fixes open & ignored issue filtering toggles
