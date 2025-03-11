@@ -305,6 +305,7 @@ public class Preferences {
 	}
 
 	public final void store(String key, String value) {
+		if (key == null || value == null) return;
 		if (encryptedPreferenceKeys.contains(key)) {
 			if (isSecureStorageReady()) {
 				try {
