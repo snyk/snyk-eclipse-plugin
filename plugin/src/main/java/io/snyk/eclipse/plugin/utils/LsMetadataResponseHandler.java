@@ -14,14 +14,12 @@ public class LsMetadataResponseHandler implements ResponseHandler<String> {
 
   @Override
   public String handleResponse(HttpResponse httpResponse) {
-    String latestCliSupportingLSProtocolVersion = "11";
-    InputStream inputStream;
-    try {
-      inputStream = httpResponse.getEntity().getContent();
+    String latestCliSupportingLSProtocolVersion;
+    try (InputStream inputStream = httpResponse.getEntity().getContent()){
       latestCliSupportingLSProtocolVersion = new String(inputStream.readAllBytes(), Charset.defaultCharset());
     } catch (UnsupportedOperationException | IOException e) {
       throw new RuntimeException(e);
-    }
+    } 
     return latestCliSupportingLSProtocolVersion;
   }
 }

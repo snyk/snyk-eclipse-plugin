@@ -18,7 +18,7 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
  */
 public class TaskProcessor {
 	// left = taskToExecute, right = callback function
-	private final Queue<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> taskQueue = new ConcurrentLinkedQueue<>();
+	private static final Queue<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> taskQueue = new ConcurrentLinkedQueue<>();
 
 	private TaskProcessor() {
 		CompletableFuture.runAsync(() -> {
@@ -29,11 +29,9 @@ public class TaskProcessor {
 	private static TaskProcessor instance;
 
 	public static TaskProcessor getInstance() {
-		synchronized (TaskProcessor.class) {
+		synchronized (taskQueue) {
 			if (instance == null) {
-				if (instance == null) {
-					instance = new TaskProcessor();
-				}
+				instance = new TaskProcessor();
 			}
 		}
 		return instance;

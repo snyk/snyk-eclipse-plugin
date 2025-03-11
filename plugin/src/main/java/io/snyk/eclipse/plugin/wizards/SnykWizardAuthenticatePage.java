@@ -14,8 +14,6 @@ import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
-import io.snyk.eclipse.plugin.preferences.Preferences;
-
 public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
 	private Text endpoint;
 	private Button unknownCerts;
@@ -26,8 +24,8 @@ public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
 
 	public SnykWizardAuthenticatePage() {
 		super("Snyk Wizard");
-		setTitle("Authenticate");
-		setDescription(
+		setTitle("Authenticate"); // NOPMD by bdoetsch on 3/11/25, 2:33 PM
+		setDescription( // NOPMD by bdoetsch on 3/11/25, 2:33 PM
 				"Review the endpoint configuration, clicking 'Finish' will authenticate with Snyk; this will open a new browser window.");
 	}
 
@@ -46,13 +44,13 @@ public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
 		Label endpointLabel = new Label(endpointGroup, SWT.NONE);
 		endpointLabel.setText("Endpoint:");
 		endpoint = new Text(endpointGroup, SWT.BORDER | SWT.READ_ONLY);
-		endpoint.setLayoutData(gd);
+		getEndpoint().setLayoutData(gd);
 
 		Label unknownCertsLabel = new Label(endpointGroup, SWT.NONE);
 		unknownCertsLabel.setText("Allow unknown certificate authorities:");
 
 		unknownCerts = new Button(endpointGroup, SWT.CHECK);
-		unknownCerts.setLayoutData(gd);
+		getUnknownCerts().setLayoutData(gd);
 
 		Group trustGroup = SWTWidgetHelper.createGroup(composite, "");
 
@@ -72,20 +70,33 @@ public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
 	@Override
 	public void dispose() {
 		this.blackColor.dispose();
-		this.blackColor = null;
+		this.blackColor = null; // NOPMD by bdoetsch on 3/11/25, 2:33 PM
 		super.dispose();
 	}
 
+	@Override
 	public void handleEvent(Event e) {
 		getWizard().getContainer().updateButtons();
 	}
 
+	@Override
 	public boolean isPageComplete() {
 		return true;
 	}
 
-	void onEnterPage() {
-		endpoint.setText(Preferences.getInstance().getEndpoint());
-		unknownCerts.setSelection(Preferences.getInstance().getBooleanPref(Preferences.INSECURE_KEY));
+	public void setEndpoint(String text) {
+		this.getEndpoint().setText(text);
+	}
+
+	public void setUnknownCerts(boolean selection) {
+		this.getUnknownCerts().setSelection(selection);
+	}
+
+	public Text getEndpoint() {
+		return endpoint;
+	}
+
+	public Button getUnknownCerts() {
+		return unknownCerts;
 	}
 }

@@ -2,6 +2,7 @@ package io.snyk.languageserver;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -252,6 +253,35 @@ public class SnykIssueCache {
 	public Map<String, Collection<Issue>> getCacheByDisplayProduct(String displayProduct) {
 		return Collections.unmodifiableMap(getCacheByDisplayProductInternal(displayProduct));
 	}
+	
+	public Issue getIssueByDiagnosticProductAndKey(String product, String key) {
+	    Collection<Collection<Issue>> collectionsToSearch = null;
+		switch (product) {
+		case ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS:
+			collectionsToSearch = ossIssues.values();
+			break;
+		case ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC:
+			collectionsToSearch = iacIssues.values();
+			break;
+		case ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE:
+            collectionsToSearch = new ArrayList<>();
+			collectionsToSearch.addAll(codeSecurityIssues.values());
+			collectionsToSearch.addAll(codeQualityIssues.values());
+			break;
+		default:
+			return null;
+		}
+		
+		if (collectionsToSearch == null) {
+			return null;
+		}
+		
+		var foundIssue = collectionsToSearch.stream().flatMap(Collection::stream)
+				.filter(it -> it.id().equals(key)).findFirst()
+				.orElse(null);
+		return foundIssue;
+	}
+	
 	
 	private Map<String, Collection<Issue>> getCacheByDisplayProductInternal(String displayProduct) {
 		switch (displayProduct) {

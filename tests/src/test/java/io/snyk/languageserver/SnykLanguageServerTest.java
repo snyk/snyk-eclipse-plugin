@@ -1,19 +1,19 @@
 package io.snyk.languageserver;
 
-import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
-import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.File;
 
-class SnykLanguageServerTest {
+import org.junit.jupiter.api.Test;
+
+import io.snyk.eclipse.plugin.preferences.Preferences;
+
+class SnykLanguageServerTest extends LsBaseTest {
 
   @Test
   void getInitializationOptions() {
-    PreferencesUtils.setPreferences(Preferences.getInstance(new InMemoryPreferenceStore()));
     SnykLanguageServer snykStreamConnectionProvider = new SnykLanguageServer();
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);
@@ -23,10 +23,8 @@ class SnykLanguageServerTest {
 
   @Test
   void getInitializationOptionsContainsTrustedPaths() {
-    InMemoryPreferenceStore store = new InMemoryPreferenceStore();
     String trustedPaths = "a" + File.pathSeparatorChar + "b/c";
-    store.put(Preferences.TRUSTED_FOLDERS, trustedPaths);
-    PreferencesUtils.setPreferences(Preferences.getInstance(store));
+    this.prefs.store(Preferences.TRUSTED_FOLDERS, trustedPaths);
     SnykLanguageServer snykStreamConnectionProvider = new SnykLanguageServer();
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);
@@ -36,11 +34,9 @@ class SnykLanguageServerTest {
     assertEquals("a", settings.getTrustedFolders()[0]);
     assertEquals("b/c", settings.getTrustedFolders()[1]);
   }
-  
+
   @Test
   void getInitializationOptionsDoesNotContainsTrustedPathsIfNoneKnown() {
-    InMemoryPreferenceStore store = new InMemoryPreferenceStore();
-    PreferencesUtils.setPreferences(Preferences.getInstance(store));
     SnykLanguageServer snykStreamConnectionProvider = new SnykLanguageServer();
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);

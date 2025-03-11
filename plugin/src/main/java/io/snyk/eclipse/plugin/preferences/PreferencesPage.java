@@ -9,7 +9,6 @@ import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -18,7 +17,8 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
-	private BooleanFieldEditor snykCodeSecurityCheckbox, snykCodeQualityCheckbox;
+	private BooleanFieldEditor snykCodeSecurityCheckbox;
+	private BooleanFieldEditor snykCodeQualityCheckbox;
 
 	public PreferencesPage() {
 		super(GRID);
@@ -26,20 +26,25 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	@Override
 	public void init(IWorkbench workbench) {
-		setPreferenceStore(Preferences.getInstance().getStore());
 		setMessage("Snyk Preferences");
 	}
 
 	@Override
 	protected void createFieldEditors() {
-		TokenFieldEditor tokenField = new TokenFieldEditor(Preferences.getInstance(), Preferences.AUTH_TOKEN_KEY,
+		final var prefs = Preferences.getInstance();
+		// set default store
+		setPreferenceStore(prefs.getInsecureStore());
+
+		// token field editor is configured to use a secure store
+		TokenFieldEditor tokenField = new TokenFieldEditor(prefs, Preferences.AUTH_TOKEN_KEY,
 				"Token:", getFieldEditorParent());
 
-		addField(new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH,
+		final var useTokenAuth = new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH,
 				"Use token authentication. It is recommended to keep this turned off, as the default OAuth2 authentication is more secure.",
-				getFieldEditorParent()));
-
+				getFieldEditorParent());
+		addField(useTokenAuth);
 		addField(tokenField);
+
 		addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", 80, getFieldEditorParent()));
 		addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", 80, getFieldEditorParent()));
 		addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
@@ -78,9 +83,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		addField(space());
 		BooleanFieldEditor manageBinaries = new BooleanFieldEditor(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
 				"Update and install Snyk binaries automatically", getFieldEditorParent());
-		manageBinaries.setPropertyChangeListener((PropertyChangeEvent propertyChangeEvent) -> {
-			System.out.println("managed bionaries changed");
-		});
 		addField(manageBinaries);
 		addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", 80,
 				getFieldEditorParent()));
@@ -123,7 +125,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		disableSnykCodeIfOrgDisabled();
         CompletableFuture.runAsync(() -> {
             SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-            
+
 			lc.updateConfiguration();
             lc.refreshFeatureFlags();
         });
@@ -132,7 +134,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	private void disableSnykCodeIfOrgDisabled() {
 		CompletableFuture.runAsync(() -> {
-			boolean isSastEnabled = false;
+			boolean isSastEnabled;
 			try {
 				isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
 			} catch (Exception e) {
@@ -143,18 +145,12 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 			String message = "Snyk Code disabled, because it is not enabled for your organization. After you close this preference page, it will stay disabled.";
 			final var enabled = isSastEnabled;
 			Display.getCurrent().asyncExec(new Runnable() {
-				boolean showMessage = false;
+				boolean showMessage;
 				boolean checkBoxValue;
 
 				@Override
 				public void run() {
-
-					try {
 						checkBoxValue = snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue();
-					} catch (NullPointerException e) {
-						// this can happen, if the UI checkbox is not initialized fully, we return then
-						return;
-					}
 					if (checkBoxValue && !enabled) {
 						snykCodeSecurityCheckbox
 								.setLabelText(snykCodeSecurityCheckbox.getLabelText() + " (" + message + ")");

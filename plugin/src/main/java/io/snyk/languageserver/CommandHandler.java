@@ -39,6 +39,7 @@ public class CommandHandler {
 	}
 
 	public CompletableFuture<Object> executeCommand(@NonNull String command, List<Object> args) {
+		SnykLanguageServer.waitForInit();
 		ExecuteCommandParams params = new ExecuteCommandParams(command, args);
 		try {
 			return ls.getWorkspaceService().executeCommand(params);

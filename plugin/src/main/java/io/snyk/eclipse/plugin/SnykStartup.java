@@ -38,20 +38,42 @@ public class SnykStartup implements IStartup {
 	private static SnykToolView snykToolView;
 	private static boolean downloading = true;
 	private static ILog logger;
-
+	
 	@Override
 	public void earlyStartup() {
 		if (logger == null) {
 			logger = Platform.getLog(getClass());
 		}
 		runtimeEnvironment = new LsRuntimeEnvironment();
-		Job initJob = new Job("Downloading latest CLI release...") {
+		Job initJob = new Job("Initializing Snyk...") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				monitor.beginTask("Initializing...", 100);
+				downloadIfNeeded(monitor);
+				monitor.subTask("Starting Language Server...");
+
+				try {
+					SnykLanguageServer.startSnykLanguageServer();
+
+					PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
+						Preferences prefs = Preferences.getInstance();
+						if (prefs.getAuthToken().isBlank() && !prefs.isTest()) {
+							monitor.subTask("Starting Snyk Wizard to configure initial settings...");
+							SnykWizard.createAndLaunch();
+						}
+					});
+				} catch (RuntimeException e) {
+					SnykLogger.logError(e);
+				}
+				monitor.done();
+				return Status.OK_STATUS;
+			}
+
+			private void downloadIfNeeded(IProgressMonitor monitor) {
 				try {
 					logger.info("LS: Checking for needed download");
 					if (downloadLS()) {
-						monitor.beginTask("Downloading CLI", 100);
+						monitor.subTask("Downloading CLI");
 						logger.info("LS: Need to download");
 						downloading = true;
 						download(monitor);
@@ -60,27 +82,6 @@ public class SnykStartup implements IStartup {
 					logError(exception);
 				}
 				downloading = false;
-				monitor.subTask("Starting Snyk CLI in Language Server mode...");
-				startLanguageServer();
-
-				PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-					Preferences prefs = Preferences.getInstance();
-					if (prefs.getAuthToken().isBlank() && !prefs.isTest()) {
-						monitor.subTask("Starting Snyk Wizard to configure initial settings...");
-						SnykWizard.createAndLaunch();
-					}
-				});
-				monitor.done();
-
-				return Status.OK_STATUS;
-			}
-
-			private void startLanguageServer() {
-				try {
-					SnykLanguageServer.startSnykLanguageServer();
-				} catch (RuntimeException e) {
-					logError(e);
-				}
 			}
 		};
 		initJob.setPriority(Job.LONG);
