@@ -23,9 +23,9 @@ public abstract class BaseFilter {
 		boolean booleanPref = this.preferences.getBooleanPref(this.filterName);
 
 		if (booleanPref) {
-			this.filterManager.removeTreeFilter(this.filterName);
+			this.filterManager.removeTreeFilter(this.filterName); // Showing "a thing" removes it from being filtered out.
 		} else {
-			this.filterManager.addTreeFilter(this.filterName, predicate);
+			this.filterManager.addTreeFilter(this.filterName, predicate); // Hiding (unchecking) "a thing" adds a filter to filter it out.
 		}
 	}
 }

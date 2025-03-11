@@ -7,6 +7,9 @@
 - added support for DeepCode AI Fixes
 - new severity icons
 
+### Fixes
+- fixes open & ignored issue filtering toggles
+
 ## [3.0.0]
 ### Changes
 - process api URL from hasAuthenticated message

@@ -21,7 +21,7 @@ public class SeverityFilter extends BaseFilter {
 	@SuppressWarnings("rawtypes")
 	private static Predicate getPredicate(String preferenceKey) {
 		String severityCondition = preferenceToProductConstants.get(preferenceKey);
-		Predicate<Issue> predicate = issue -> !issue.severity().equals(severityCondition);
+		Predicate<Issue> predicate = issue -> issue.severity().equals(severityCondition);
 		return predicate;
-	}	
+	}
 }

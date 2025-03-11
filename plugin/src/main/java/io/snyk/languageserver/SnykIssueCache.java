@@ -56,8 +56,8 @@ public class SnykIssueCache {
 	 * @param path The file path for which issues should be removed
 	 */
 	public void removeAllIssuesForPath(String path) {
-		codeSecurityIssues.clear();
-		codeQualityIssues.clear();
+		codeSecurityIssues.remove(path);
+		codeQualityIssues.remove(path);
 		ossIssues.remove(path);
 		iacIssues.remove(path);
 	}
