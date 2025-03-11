@@ -24,8 +24,8 @@ public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
 
 	public SnykWizardAuthenticatePage() {
 		super("Snyk Wizard");
-		setTitle("Authenticate");
-		setDescription(
+		setTitle("Authenticate"); // NOPMD by bdoetsch on 3/11/25, 2:33 PM
+		setDescription( // NOPMD by bdoetsch on 3/11/25, 2:33 PM
 				"Review the endpoint configuration, clicking 'Finish' will authenticate with Snyk; this will open a new browser window.");
 	}
 
@@ -70,14 +70,16 @@ public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
 	@Override
 	public void dispose() {
 		this.blackColor.dispose();
-		this.blackColor = null;
+		this.blackColor = null; // NOPMD by bdoetsch on 3/11/25, 2:33 PM
 		super.dispose();
 	}
 
+	@Override
 	public void handleEvent(Event e) {
 		getWizard().getContainer().updateButtons();
 	}
 
+	@Override
 	public boolean isPageComplete() {
 		return true;
 	}
