@@ -375,6 +375,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(),
 				param.getFolderPath());
 
+		if (affectedProductTreeNodes.size() == 0) {
+			if (toolView != null && toolView.getRoot() != null) {
+				toolView.getRoot().reset();
+				affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(), param.getFolderPath());
+			}
+		}
+
 		switch (param.getStatus()) {
 		case SCAN_STATE_IN_PROGRESS:
 			scanState.setScanInProgress(inProgressKey, true);

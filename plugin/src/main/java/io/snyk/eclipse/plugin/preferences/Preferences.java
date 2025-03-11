@@ -216,7 +216,7 @@ public class Preferences {
 		while (true) {
 			try {
 				this.securePreferences.put("canEncrypt", "true", true);
-				for (var entry: this.prefSaveMap.entrySet()) {
+				for (var entry : this.prefSaveMap.entrySet()) {
 					this.securePreferences.put(entry.getKey(), entry.getValue(), true);
 				}
 				this.prefSaveMap.clear();
@@ -356,5 +356,9 @@ public class Preferences {
 
 	public boolean isSecureStorageReady() {
 		return secureStorageReady;
+	}
+
+	public void setSecureStorageReady(boolean b) {
+		this.secureStorageReady = b;
 	}
 }
