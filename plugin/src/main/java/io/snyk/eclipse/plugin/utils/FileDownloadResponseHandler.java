@@ -1,9 +1,9 @@
 package io.snyk.eclipse.plugin.utils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
@@ -26,15 +26,13 @@ public class FileDownloadResponseHandler implements ResponseHandler<File> {
     SubMonitor subMonitor = SubMonitor.convert(progressMonitor, 100);
     InputStream inputStream = httpResponse.getEntity().getContent();
 
-    try (FileOutputStream outputStream = new FileOutputStream(destinationFile)) {
+    try (var outputStream = Files.newOutputStream(destinationFile.toPath())) {
       int readCount;
       byte[] buffer = new byte[1024];
 
       while ((readCount = inputStream.read(buffer)) != -1) {
         outputStream.write(buffer, 0, readCount);
-
-        //noinspection IntegerDivisionInFloatingPointContext
-        subMonitor.split(Math.round(readCount / contentLengthStr));
+        subMonitor.split(Math.round((float)readCount / (float)contentLengthStr));
       }
     }
 

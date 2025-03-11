@@ -30,7 +30,7 @@ import io.snyk.languageserver.LsRuntimeEnvironment;
 public class LsDownloader {
 	private final CloseableHttpClient httpClient;
 	private final LsRuntimeEnvironment runtimeEnvironment;
-	private HttpClientContext context = HttpClientContext.create();
+	private HttpClientContext context;
 	private final ILog logger;
 
 	public LsDownloader(HttpClientFactory factory, LsRuntimeEnvironment environment, ILog logger) {
@@ -133,7 +133,7 @@ public class LsDownloader {
 	}
 
 	String getVersion(String releaseChannel) {
-		var response = "";
+		String response;
 		try {
 			var req = new LsVersionRequest(releaseChannel);
 			response = httpClient.execute(req, new LsMetadataResponseHandler(), context);
@@ -146,7 +146,7 @@ public class LsDownloader {
 	String getSha(String version) {
 		LsShaRequest shaRequest = new LsShaRequest(version);
 		try (CloseableHttpResponse response = httpClient.execute(shaRequest, context)) {
-			if (response.getStatusLine().getStatusCode() >= 400) {
+			if (response.getStatusLine().getStatusCode() >= 400) { // NOPMD, AvoidLiteralsInIfCondition
 				throw new RuntimeException("Download of Language Server failed. " + response.getStatusLine());
 			}
 
@@ -154,7 +154,7 @@ public class LsDownloader {
 			try (var buf = new BufferedReader(new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8))) {
 				String fileName = runtimeEnvironment.getDownloadBinaryName();
 				List<String> lines = buf.lines().filter(s -> s.endsWith(fileName)).collect(Collectors.toList());
-				if (lines.size() != 1)
+				if (lines.size() != 1) // NOPMD, AvoidLiteralsInIfCondition
 					throw new ChecksumVerificationException("Could not find sha for verification of file: " + fileName);
 				return lines.get(0).split(" ")[0];
 			}
