@@ -41,6 +41,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 	}
 
 	public static void waitForInit() {
+		if (Preferences.getInstance().isTest()) return;
 		waitForDownload();		
 		waitForSecurePreferencesToBeReady();
 	}
