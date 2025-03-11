@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -48,19 +49,19 @@ public class LsRuntimeEnvironment {
     String base = "snyk-%s%s";
     String os = getOs();
     String executable = String.format(base, os, getArch());
-    if (executable.toLowerCase().contains("win"))
+    if (executable.toLowerCase(Locale.getDefault()).contains("win"))
       executable += ".exe";
     return executable;
   }
 
   String getArch() {
     String arch = SystemUtils.OS_ARCH;
-    return map.get(arch.toLowerCase());
+    return map.get(arch.toLowerCase(Locale.getDefault()));
   }
 
   String getOs() {
     String os = SystemUtils.OS_NAME;
-    return map.get(os.toLowerCase().substring(0, 3));
+    return map.get(os.toLowerCase(Locale.getDefault()).substring(0, 3));
   }
 
   public void updateEnvironment(Map<String, String> env) {
@@ -95,7 +96,7 @@ public class LsRuntimeEnvironment {
         var split = variable.split("=");
         if (split.length > 1) {
           String name = split[0];
-          List<String> value = new ArrayList<>(Arrays.asList(split));
+          List<String> value = new ArrayList<>(Arrays.asList(split)); // NOPMD by bdoetsch on 3/11/25, 1:40 PM
           value.remove(0);
           env.put(name, String.join("=", value)); // allow equal signs in variable values
         }
@@ -125,7 +126,7 @@ public class LsRuntimeEnvironment {
       if (!(entry.getKey() instanceof String && entry.getValue() instanceof String)) continue;
 
       String property = (String) entry.getKey();
-      if (property.toLowerCase().contains("proxy") || property.toLowerCase().contains("proxies")) {
+      if (property.toLowerCase(Locale.getDefault()).contains("proxy") || property.toLowerCase(Locale.getDefault()).contains("proxies")) {
         env.put(property, (String) entry.getValue());
       }
     }
@@ -144,14 +145,14 @@ public class LsRuntimeEnvironment {
         }
         creds += "@";
       }
-      String protocol = data.getType().toLowerCase();
+      String protocol = data.getType().toLowerCase(Locale.getDefault());
       if (data.getType().equals(HTTPS_PROXY_TYPE)) {
         // TODO verify correctness of this!
-        protocol = HTTP_PROXY_TYPE.toLowerCase();
+        protocol = HTTP_PROXY_TYPE.toLowerCase(Locale.getDefault());
       }
       // TODO urlencode creds
       String value = protocol + "://" + creds + data.getHost() + ":" + data.getPort();
-      env.put(data.getType().toLowerCase() + "_proxy", value);
+      env.put(data.getType().toLowerCase(Locale.getDefault()) + "_proxy", value);
     }
     String[] nonProxiedHostsArray = service.getNonProxiedHosts();
     if (nonProxiedHostsArray != null && nonProxiedHostsArray.length > 0) {

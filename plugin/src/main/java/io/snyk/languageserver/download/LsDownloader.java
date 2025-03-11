@@ -12,6 +12,7 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -104,7 +105,7 @@ public class LsDownloader {
 				logger.warn("LS: Fallback using rename to " + destinationFile.toPath());
 				if (!tempFile.renameTo(destinationFile)) {
 					logger.error("LS: Rename failed: " + destinationFile.toPath());
-					throw new IOException("Rename not successful");
+					throw new IOException("Rename not successful", e);
 				}
 			}
 			monitor.subTask("Setting executable bit");
@@ -166,7 +167,7 @@ public class LsDownloader {
 	private void verifyChecksum(String expectedSha, byte[] checksumDownloadedFile) {
 		try {
 			byte[] sha = MessageDigest.getInstance("SHA-256").digest(checksumDownloadedFile);
-			String actualSha = bytesToHex(sha).toLowerCase();
+			String actualSha = bytesToHex(sha).toLowerCase(Locale.getDefault());
 			if (!actualSha.equalsIgnoreCase(expectedSha)) {
 				throw new ChecksumVerificationException(
 						"Expected " + expectedSha + ", but downloaded file has " + actualSha);
@@ -180,7 +181,7 @@ public class LsDownloader {
 		StringBuilder hexString = new StringBuilder(2 * hash.length);
 		for (byte b : hash) {
 			String hex = Integer.toHexString(0xff & b);
-			if (hex.length() == 1) {
+			if (hex.length() == 1) { // NOPMD by bdoetsch on 3/11/25, 10:58 AM
 				hexString.append('0');
 			}
 			hexString.append(hex);
