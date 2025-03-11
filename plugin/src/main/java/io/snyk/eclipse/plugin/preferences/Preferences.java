@@ -170,7 +170,7 @@ public class Preferences {
 
 		String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
 		if (getPref(ENDPOINT_KEY) == null) {
-			if (endpoint.isBlank()) {
+			if (endpoint == null || endpoint.isBlank()) {
 				endpoint = DEFAULT_ENDPOINT;
 			}
 			store(ENDPOINT_KEY, endpoint);
