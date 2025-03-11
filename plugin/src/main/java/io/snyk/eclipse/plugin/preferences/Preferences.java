@@ -25,6 +25,8 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 
 public class Preferences {
+	private static final String FALSE = "false";
+	private static final String TRUE = "true";
 	private static Preferences instance;
 	private static LsRuntimeEnvironment LS_RUNTIME_ENV = new LsRuntimeEnvironment();
 	public static final String AUTH_TOKEN_KEY = "authtoken";
@@ -75,7 +77,7 @@ public class Preferences {
 	private final IPreferenceStore insecureStore;
 	private ISecurePreferences securePreferences;
 	private IPreferenceStore secureStore;
-	private boolean secureStorageReady = false;
+	private boolean secureStorageReady;
 	private Map<String, String> prefSaveMap = new ConcurrentHashMap<>();
 
 	public static synchronized Preferences getInstance() {
@@ -87,7 +89,7 @@ public class Preferences {
 		return instance;
 	}
 
-	public static synchronized Preferences getInstance(IEclipsePreferences insecure, ISecurePreferences secure) {
+	public static synchronized Preferences getTestInstance(IEclipsePreferences insecure, ISecurePreferences secure) { //NOPMD
 		Preferences preferences = new Preferences(insecure, secure);
 		setCurrentPreferences(preferences);
 		return preferences;
@@ -106,59 +108,59 @@ public class Preferences {
 		});
 
 		if (getPref(ACTIVATE_SNYK_CODE_SECURITY) == null) {
-			store(ACTIVATE_SNYK_CODE_SECURITY, "false");
+			store(ACTIVATE_SNYK_CODE_SECURITY, FALSE);
 		}
 		if (getPref(ACTIVATE_SNYK_CODE_QUALITY) == null) {
-			store(ACTIVATE_SNYK_CODE_QUALITY, "false");
+			store(ACTIVATE_SNYK_CODE_QUALITY, FALSE);
 		}
 		if (getPref(ACTIVATE_SNYK_OPEN_SOURCE) == null) {
-			store(ACTIVATE_SNYK_OPEN_SOURCE, "true");
+			store(ACTIVATE_SNYK_OPEN_SOURCE, TRUE);
 		}
 		if (getPref(ACTIVATE_SNYK_IAC) == null) {
-			store(ACTIVATE_SNYK_IAC, "true");
+			store(ACTIVATE_SNYK_IAC, TRUE);
 		}
 		if (getPref(FILTER_SHOW_CRITICAL) == null) {
-			store(FILTER_SHOW_CRITICAL, "true");
+			store(FILTER_SHOW_CRITICAL, TRUE);
 		}
 		if (getPref(FILTER_SHOW_HIGH) == null) {
-			store(FILTER_SHOW_HIGH, "true");
+			store(FILTER_SHOW_HIGH, TRUE);
 		}
 		if (getPref(FILTER_SHOW_MEDIUM) == null) {
-			store(FILTER_SHOW_MEDIUM, "true");
+			store(FILTER_SHOW_MEDIUM, TRUE);
 		}
 		if (getPref(FILTER_SHOW_LOW) == null) {
-			store(FILTER_SHOW_LOW, "true");
+			store(FILTER_SHOW_LOW, TRUE);
 		}
 		if (getPref(ENABLE_DELTA) == null) {
-			store(ENABLE_DELTA, "false");
+			store(ENABLE_DELTA, FALSE);
 		}
 		if (getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES) == null) {
-			store(FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+			store(FILTER_IGNORES_SHOW_OPEN_ISSUES, TRUE);
 		}
 		if (getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES) == null) {
-			store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
+			store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, FALSE);
 		}
 		if (getPref(FILTER_SHOW_ONLY_FIXABLE) == null) {
-			store(FILTER_SHOW_ONLY_FIXABLE, "false");
+			store(FILTER_SHOW_ONLY_FIXABLE, FALSE);
 		}
 
 		if (getPref(SEND_ERROR_REPORTS) == null) {
-			store(SEND_ERROR_REPORTS, "true");
+			store(SEND_ERROR_REPORTS, TRUE);
 		}
 		if (getPref(ENABLE_TELEMETRY) == null) {
-			store(ENABLE_TELEMETRY, "true");
+			store(ENABLE_TELEMETRY, TRUE);
 		}
 		if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
-			store(MANAGE_BINARIES_AUTOMATICALLY, "true");
+			store(MANAGE_BINARIES_AUTOMATICALLY, TRUE);
 		}
 		if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
-			store(MANAGE_BINARIES_AUTOMATICALLY, "true");
+			store(MANAGE_BINARIES_AUTOMATICALLY, TRUE);
 		}
 		if (getPref(LSP_VERSION) == null) {
 			store(LSP_VERSION, "1");
 		}
 		if (getPref(IS_GLOBAL_IGNORES_FEATURE_ENABLED) == null) {
-			store(IS_GLOBAL_IGNORES_FEATURE_ENABLED, "false");
+			store(IS_GLOBAL_IGNORES_FEATURE_ENABLED, FALSE);
 		}
 
 		String token = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
@@ -168,7 +170,7 @@ public class Preferences {
 
 		String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
 		if (getPref(ENDPOINT_KEY) == null) {
-			if ("".equals(endpoint)) {
+			if (endpoint.isBlank()) {
 				endpoint = DEFAULT_ENDPOINT;
 			}
 			store(ENDPOINT_KEY, endpoint);
@@ -190,15 +192,15 @@ public class Preferences {
 		}
 
 		if (getPref(SCANNING_MODE_AUTOMATIC) == null) {
-			insecure.put(SCANNING_MODE_AUTOMATIC, "true");
+			insecure.put(SCANNING_MODE_AUTOMATIC, TRUE);
 		}
 
 		if (getPref(USE_TOKEN_AUTH) == null) {
-			insecure.put(USE_TOKEN_AUTH, "false");
+			insecure.put(USE_TOKEN_AUTH, FALSE);
 		}
 
 		if (getPref(ANALYTICS_PLUGIN_INSTALLED_SENT) == null) {
-			insecure.put(ANALYTICS_PLUGIN_INSTALLED_SENT, "false");
+			insecure.put(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
 		}
 
 		String deviceId = getPref(DEVICE_ID);
@@ -212,10 +214,10 @@ public class Preferences {
 		}
 	}
 
-	public void waitForSecureStorage() {
+	public final void waitForSecureStorage() {
 		while (true) {
 			try {
-				this.securePreferences.put("canEncrypt", "true", true);
+				this.securePreferences.put("canEncrypt", TRUE, true);
 				for (var entry : this.prefSaveMap.entrySet()) {
 					this.securePreferences.put(entry.getKey(), entry.getValue(), true);
 				}
@@ -232,7 +234,7 @@ public class Preferences {
 		}
 	}
 
-	private String getDefaultCliPath() {
+	private final String getDefaultCliPath() {
 		File binary = new File(getBinaryDirectory(), LS_RUNTIME_ENV.getDownloadBinaryName());
 		final var dir = binary.getParentFile();
 		if (!dir.exists()) {
@@ -241,11 +243,11 @@ public class Preferences {
 		return binary.getAbsolutePath();
 	}
 
-	public String getPref(String key) {
+	public final String getPref(String key) {
 		return getPref(key, null);
 	}
 
-	public String getPref(String key, String defaultValue) {
+	public final String getPref(String key, String defaultValue) {
 		if (encryptedPreferenceKeys.contains(key)) {
 			if (this.isSecureStorageReady()) {
 				try {
@@ -266,19 +268,19 @@ public class Preferences {
 		}
 	}
 
-	public String getAuthToken() {
+	public final String getAuthToken() {
 		return getPref(AUTH_TOKEN_KEY, "");
 	}
 
-	public String getEndpoint() {
+	public final String getEndpoint() {
 		return getPref(ENDPOINT_KEY, DEFAULT_ENDPOINT);
 	}
 
-	public String getLspVersion() {
+	public final String getLspVersion() {
 		return getPref(LSP_VERSION);
 	}
 
-	public Optional<String> getPath() {
+	public final Optional<String> getPath() {
 		String path = getPref(PATH_KEY);
 		if (path == null || path.isEmpty()) {
 			return Optional.empty();
@@ -286,23 +288,23 @@ public class Preferences {
 		return Optional.of(path);
 	}
 
-	public String getCliPath() {
+	public final String getCliPath() {
 		return getPref(CLI_PATH, getDefaultCliPath());
 	}
 
-	public boolean isInsecure() {
+	public final boolean isInsecure() {
 		return insecurePreferences.getBoolean(INSECURE_KEY, false);
 	}
 
-	public void setIsInsecure(boolean isInsecure) {
+	public final void setIsInsecure(boolean isInsecure) {
 		insecurePreferences.put(INSECURE_KEY, Boolean.toString(isInsecure));
 	}
 
-	public boolean isManagedBinaries() {
+	public final  boolean isManagedBinaries() {
 		return insecurePreferences.getBoolean(MANAGE_BINARIES_AUTOMATICALLY, true);
 	}
 
-	public void store(String key, String value) {
+	public final void store(String key, String value) {
 		if (encryptedPreferenceKeys.contains(key)) {
 			if (isSecureStorageReady()) {
 				try {
@@ -318,15 +320,15 @@ public class Preferences {
 		}
 	}
 
-	public boolean getBooleanPref(String key) {
+	public final boolean getBooleanPref(String key) {
 		return insecurePreferences.getBoolean(key, false);
 	}
 
-	public boolean getBooleanPref(String key, boolean defaultValue) {
+	public final boolean getBooleanPref(String key, boolean defaultValue) {
 		return insecurePreferences.getBoolean(key, defaultValue);
 	}
 
-	public String getReleaseChannel() {
+	public final String getReleaseChannel() {
 		return getPref(RELEASE_CHANNEL, "stable");
 	}
 
@@ -346,15 +348,15 @@ public class Preferences {
 		instance = prefs;
 	}
 
-	public IPreferenceStore getInsecureStore() {
+	public final IPreferenceStore getInsecureStore() {
 		return this.insecureStore;
 	}
 
-	public IPreferenceStore getSecureStore() {
+	public final IPreferenceStore getSecureStore() {
 		return this.secureStore;
 	}
 
-	public boolean isSecureStorageReady() {
+	public final boolean isSecureStorageReady() {
 		return secureStorageReady;
 	}
 

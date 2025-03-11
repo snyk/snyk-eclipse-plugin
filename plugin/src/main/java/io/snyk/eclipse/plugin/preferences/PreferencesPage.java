@@ -9,7 +9,6 @@ import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -83,9 +82,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		addField(space());
 		BooleanFieldEditor manageBinaries = new BooleanFieldEditor(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
 				"Update and install Snyk binaries automatically", getFieldEditorParent());
-		manageBinaries.setPropertyChangeListener((PropertyChangeEvent propertyChangeEvent) -> {
-			System.out.println("managed bionaries changed");
-		});
 		addField(manageBinaries);
 		addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", 80,
 				getFieldEditorParent()));
@@ -137,7 +133,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	private void disableSnykCodeIfOrgDisabled() {
 		CompletableFuture.runAsync(() -> {
-			boolean isSastEnabled = false;
+			boolean isSastEnabled;
 			try {
 				isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
 			} catch (Exception e) {
@@ -148,18 +144,12 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 			String message = "Snyk Code disabled, because it is not enabled for your organization. After you close this preference page, it will stay disabled.";
 			final var enabled = isSastEnabled;
 			Display.getCurrent().asyncExec(new Runnable() {
-				boolean showMessage = false;
+				boolean showMessage;
 				boolean checkBoxValue;
 
 				@Override
 				public void run() {
-
-					try {
 						checkBoxValue = snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue();
-					} catch (NullPointerException e) {
-						// this can happen, if the UI checkbox is not initialized fully, we return then
-						return;
-					}
 					if (checkBoxValue && !enabled) {
 						snykCodeSecurityCheckbox
 								.setLabelText(snykCodeSecurityCheckbox.getLabelText() + " (" + message + ")");

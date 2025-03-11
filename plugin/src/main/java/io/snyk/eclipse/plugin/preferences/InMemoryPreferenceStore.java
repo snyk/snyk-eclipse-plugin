@@ -18,6 +18,7 @@ public class InMemoryPreferenceStore implements IPreferenceStore, IEclipsePrefer
 	public InMemoryPreferenceStore() {
 	}
 
+	@Override
 	public boolean getBoolean(String key, boolean defaultValue) {
 		if (store.containsKey(key)) {
 			return Boolean.parseBoolean(store.get(key));
@@ -25,6 +26,7 @@ public class InMemoryPreferenceStore implements IPreferenceStore, IEclipsePrefer
 		return defaultValue;
 	}
 
+	@Override
 	public void put(String key, String value) {
 		store.put(key, value);
 	}
@@ -315,19 +317,19 @@ public class InMemoryPreferenceStore implements IPreferenceStore, IEclipsePrefer
 	@Override
 	public byte[] getByteArray(String key, byte[] def) {
 		// TODO Auto-generated method stub
-		return null;
+		return new byte[0];
 	}
 
 	@Override
 	public String[] keys() throws BackingStoreException {
 		// TODO Auto-generated method stub
-		return null;
+		return new String[0];
 	}
 
 	@Override
 	public String[] childrenNames() throws BackingStoreException {
 		// TODO Auto-generated method stub
-		return null;
+		return new String[0];
 	}
 
 	@Override

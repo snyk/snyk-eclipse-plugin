@@ -8,8 +8,8 @@ public class TokenFieldEditor extends StringFieldEditor {
   protected TokenFieldEditor(Preferences preferences, String name, String labelText,
                              Composite parent) {
     super(name, labelText, 80, parent);
-    setPreferenceStore(preferences.getSecureStore());
-    getTextControl().setEchoChar('*');
+    setPreferenceStore(preferences.getSecureStore()); //NOPMD
+    getTextControl().setEchoChar('*'); //NOPMD
   }
 
   public void emptyTextfield() {

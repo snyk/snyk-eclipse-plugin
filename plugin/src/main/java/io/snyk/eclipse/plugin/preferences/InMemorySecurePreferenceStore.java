@@ -17,6 +17,7 @@ public class InMemorySecurePreferenceStore implements IPreferenceStore, ISecureP
 	public InMemorySecurePreferenceStore() {
 	}
 
+	@Override
 	public boolean getBoolean(String key, boolean defaultValue) {
 		if (store.containsKey(key)) {
 			return Boolean.parseBoolean(store.get(key));
@@ -67,13 +68,13 @@ public class InMemorySecurePreferenceStore implements IPreferenceStore, ISecureP
 	@Override
 	public String[] keys() {
 		// TODO Auto-generated method stub
-		return null;
+		return new String[0];
 	}
 
 	@Override
 	public String[] childrenNames() {
 		// TODO Auto-generated method stub
-		return null;
+		return new String[0];
 	}
 
 	@Override
@@ -181,7 +182,7 @@ public class InMemorySecurePreferenceStore implements IPreferenceStore, ISecureP
 	@Override
 	public byte[] getByteArray(String key, byte[] def) throws StorageException {
 		// TODO Auto-generated method stub
-		return null;
+		return new byte[0];
 	}
 
 	@Override

@@ -32,7 +32,7 @@ public class LsBaseTest {
     environment = mock(LsRuntimeEnvironment.class);
     InMemoryPreferenceStore store = new InMemoryPreferenceStore();
     InMemorySecurePreferenceStore secureStore = new InMemorySecurePreferenceStore();
-    this.prefs = Preferences.getInstance(store, secureStore);
+    this.prefs = Preferences.getTestInstance(store, secureStore);
     this.prefs.setSecureStorageReady(true);
 	PreferencesUtils.setPreferences(prefs);
     this.prefs.setTest(true);
