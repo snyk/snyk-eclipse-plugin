@@ -15,10 +15,10 @@ public class SnykIcons {
 	public static final ImageDescriptor IAC_DISABLED = Activator.getImageDescriptor("/icons/iac_disabled.png");
 
 	public static final ImageDescriptor SEVERITY_CRITICAL = Activator
-			.getImageDescriptor("/icons/dark-critical-severity.png");
-	public static final ImageDescriptor SEVERITY_HIGH = Activator.getImageDescriptor("/icons/dark-high-severity.png");
-	public static final ImageDescriptor SEVERITY_MEDIUM = Activator.getImageDescriptor("/icons/dark-medium-severity.png");
-	public static final ImageDescriptor SEVERITY_LOW = Activator.getImageDescriptor("/icons/dark-low-severity.png");
+			.getImageDescriptor("/icons/severity_critical.png");
+	public static final ImageDescriptor SEVERITY_HIGH = Activator.getImageDescriptor("/icons/severity_high.png");
+	public static final ImageDescriptor SEVERITY_MEDIUM = Activator.getImageDescriptor("/icons/severity_medium.png");
+	public static final ImageDescriptor SEVERITY_LOW = Activator.getImageDescriptor("/icons/severity_low.png");
 
 	public static final ImageDescriptor ENABLED = Activator.getImageDescriptor("/icons/enabled.png");
 	public static final ImageDescriptor DISABLED = Activator.getImageDescriptor("/icons/transparent.png");
