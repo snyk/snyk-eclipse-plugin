@@ -1,7 +1,6 @@
 package io.snyk.eclipse.plugin.utils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -45,19 +44,11 @@ public class ResourceUtils {
 	private static byte[] getImageDataFromUrl(URL imageUrl) {
 		try {
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
-
-			try (InputStream inputStream = imageUrl.openStream()) {
-				int n = 0;
-				byte[] buffer = new byte[1024];
-				while (-1 != (n = inputStream.read(buffer))) {
-					output.write(buffer, 0, n);
-				}
-			}
-
+			imageUrl.openStream().transferTo(output);
 			return output.toByteArray();
 		} catch (Exception e) {
 			SnykLogger.logError(e);
-			return null;
+			return new byte[0];
 		}
 	}
 

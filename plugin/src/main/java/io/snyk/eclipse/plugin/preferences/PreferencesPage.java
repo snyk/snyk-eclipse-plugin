@@ -17,7 +17,8 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
-	private BooleanFieldEditor snykCodeSecurityCheckbox, snykCodeQualityCheckbox;
+	private BooleanFieldEditor snykCodeSecurityCheckbox;
+	private BooleanFieldEditor snykCodeQualityCheckbox;
 
 	public PreferencesPage() {
 		super(GRID);

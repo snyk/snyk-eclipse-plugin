@@ -375,7 +375,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(),
 				param.getFolderPath());
 
-		if (affectedProductTreeNodes.size() == 0) {
+		if (affectedProductTreeNodes.isEmpty()) {
 			if (toolView != null && toolView.getRoot() != null) {
 				toolView.getRoot().reset();
 				affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(), param.getFolderPath());
