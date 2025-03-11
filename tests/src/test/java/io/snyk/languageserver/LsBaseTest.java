@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
+import io.snyk.eclipse.plugin.preferences.InMemorySecurePreferenceStore;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 
@@ -20,6 +21,7 @@ public class LsBaseTest {
   protected IProxyService proxyServiceMock;
 
   private File lsFile = getTempFile();
+  protected Preferences prefs;
 
   @BeforeEach
   protected void setUp() {
@@ -29,9 +31,10 @@ public class LsBaseTest {
     lsFile = getTempFile();
     environment = mock(LsRuntimeEnvironment.class);
     InMemoryPreferenceStore store = new InMemoryPreferenceStore();
-    Preferences prefs = Preferences.getInstance(store);
+    InMemorySecurePreferenceStore secureStore = new InMemorySecurePreferenceStore();
+    this.prefs = Preferences.getInstance(store, secureStore);
 	PreferencesUtils.setPreferences(prefs);
-    prefs.setTest(true);
+    this.prefs.setTest(true);
 
     when(environment.getArch()).thenReturn("amd64");
     when(environment.getOs()).thenReturn("linux");

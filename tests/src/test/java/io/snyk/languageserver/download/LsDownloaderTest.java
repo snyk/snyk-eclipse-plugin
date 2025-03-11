@@ -66,11 +66,11 @@ public class LsDownloaderTest extends LsBaseTest {
       String testCliPath = File.createTempFile("eclipse-test", "").toPath().toString();
       Preferences.getInstance().store(Preferences.CLI_PATH, testCliPath);
       Files.write(new File(testCliPath).toPath(), expectedLsContent);
-      
+
       LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
       File testFile = File.createTempFile("download-test", "tmp");
       testFile.deleteOnExit();
-      
+
       // sha corresponds to file content (`echo "test 123" | sha256sum`)
       Files.write(testFile.toPath(), "test 123".getBytes(StandardCharsets.UTF_8));
       InputStream shaStream = new ByteArrayInputStream("wrong sha".getBytes());
@@ -169,7 +169,7 @@ public class LsDownloaderTest extends LsBaseTest {
   void getVersionShouldDownloadAndExtractTheLatestVersion() {
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     var expected = "1.1234.0";
-    var actual = cut.getVersion();
+    var actual = cut.getVersion("stable");
     assertEquals(expected, actual);
   }
 

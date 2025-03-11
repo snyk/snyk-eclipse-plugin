@@ -37,6 +37,7 @@ import org.mockito.Mockito;
 
 import io.snyk.eclipse.plugin.EnvironmentConstants;
 import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
+import io.snyk.eclipse.plugin.preferences.InMemorySecurePreferenceStore;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 
@@ -49,7 +50,7 @@ class PreferencesTest {
 
 	@Test
 	void test_DefaultPreferences() {
-		Preferences preferences = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences preferences = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 		LsRuntimeEnvironment lsRuntimeEnv = new LsRuntimeEnvironment();
 
 		assertEquals("false", preferences.getPref(ACTIVATE_SNYK_CODE_SECURITY));
@@ -84,7 +85,7 @@ class PreferencesTest {
 			mockedSystemUtils.when(() -> SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, ""))
 					.thenReturn("token");
 
-			Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+			Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 
 			assertEquals(prefs.getAuthToken(), "token");
 		}
@@ -96,7 +97,7 @@ class PreferencesTest {
 			mockedSystemUtils.when(() -> SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, ""))
 					.thenReturn("https://custom.endpoint.io");
 
-			Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+			Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 
 			assertEquals(prefs.getEndpoint(), "https://custom.endpoint.io");
 		}
@@ -108,7 +109,7 @@ class PreferencesTest {
 			mockedSystemUtils.when(() -> SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, ""))
 					.thenReturn("myOrg");
 
-			Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+			Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 
 			assertEquals(prefs.getPref(Preferences.ORGANIZATION_KEY), "myOrg");
 		}
@@ -116,7 +117,7 @@ class PreferencesTest {
 
 	@Test
 	void test_GetBoolean_returnsBooleanProperty() {
-		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 
 		assertFalse(prefs.getBooleanPref(ACTIVATE_SNYK_CODE_SECURITY));
 		assertTrue(prefs.getBooleanPref(ACTIVATE_SNYK_OPEN_SOURCE));
@@ -124,34 +125,34 @@ class PreferencesTest {
 
 	@Test
 	void test_GetBoolean_returnsFalseForNonBooleanProperty() {
-		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 
 		assertFalse(prefs.getBooleanPref(Preferences.CLI_PATH));
 	}
 
 	@Test
 	public void testGetPath() {
-		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 		prefs.store(Preferences.PATH_KEY, "/test/path");
 		assertEquals(Optional.of("/test/path"), prefs.getPath());
 	}
 
 	@Test
 	public void testGetPathEmpty() {
-		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 		assertEquals(Optional.empty(), prefs.getPath());
 	}
 
 	@Test
 	public void testIsInsecure() {
-		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 		prefs.setIsInsecure(true);
 		assertTrue(prefs.isInsecure());
 	}
 
 	@Test
 	public void testIsManagedBinaries() {
-		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 		assertTrue(prefs.isManagedBinaries());
 		prefs.store(MANAGE_BINARIES_AUTOMATICALLY, "false");
 		assertFalse(prefs.isManagedBinaries());
@@ -159,7 +160,7 @@ class PreferencesTest {
 
 	@Test
 	public void testGetReleaseChannel() {
-		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 		assertEquals("stable", prefs.getReleaseChannel());
 		prefs.store(RELEASE_CHANNEL, "beta");
 		assertEquals("beta", prefs.getReleaseChannel());
@@ -167,7 +168,7 @@ class PreferencesTest {
 
 	@Test
 	public void testSetAndIsTest() {
-		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 		assertFalse(prefs.isTest());
 		prefs.setTest(true);
 		assertTrue(prefs.isTest());
@@ -175,7 +176,7 @@ class PreferencesTest {
 
 	@Test
 	public void testGetLspVersion() {
-		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore());
+		Preferences prefs = Preferences.getInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 		assertEquals("1", prefs.getLspVersion());
 		prefs.store(LSP_VERSION, "2");
 		assertEquals("2", prefs.getLspVersion());

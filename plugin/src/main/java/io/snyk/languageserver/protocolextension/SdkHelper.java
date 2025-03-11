@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -45,7 +46,11 @@ public class SdkHelper {
 		try {
 			IJavaProject javaProject = JavaCore.create(project);
 			IClasspathEntry[] classpathEntries;
-			classpathEntries = javaProject.getResolvedClasspath(true);
+			try {
+				classpathEntries = javaProject.getResolvedClasspath(true);
+			} catch (JavaModelException e) {
+				return null;
+			}
 			for (IClasspathEntry entry : classpathEntries) {
 				if (entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
 					IPath classPath = entry.getPath();

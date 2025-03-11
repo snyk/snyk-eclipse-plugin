@@ -300,10 +300,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			if (child instanceof ContentRootNode) {
 				ContentRootNode contentRoot = (ContentRootNode) child;
 				var givenPath = Paths.get(folderPath);
-				if (contentRoot.getPath().toString().isBlank()) {
-					throw new RuntimeException("unexpected blank content root node " + child);
-				}
-				if (givenPath.startsWith(contentRoot.getPath())) {
+				if (contentRoot.getPath() != null && givenPath.startsWith(contentRoot.getPath())) {
 					return contentRoot.getProductNode(product);
 				}
 			}

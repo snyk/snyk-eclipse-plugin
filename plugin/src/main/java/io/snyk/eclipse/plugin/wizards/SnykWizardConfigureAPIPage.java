@@ -23,7 +23,6 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
     super("Snyk Wizard");
     setTitle("Configure Snyk API");
     setDescription("Before scanning your code for vulnerabilities, we must first authenticate with Snyk.");
-
   }
 
   @Override
@@ -39,12 +38,14 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
     Label endpointLabel = new Label(composite, SWT.NONE);
     endpointLabel.setText("Specify the Snyk API endpoint. Useful for custom Multi Tenant or Single Tenant setup (default: "+Preferences.DEFAULT_ENDPOINT+":");
 
-    String endpointValue = initialEndpoint == null || initialEndpoint.isBlank() ? Preferences.DEFAULT_ENDPOINT : initialEndpoint;
     endpoint = new Text(composite, SWT.BORDER);
-    endpoint.setText(endpointValue);
+
     gd = new GridData(GridData.FILL_HORIZONTAL);
     gd.horizontalSpan = ncol;
     endpoint.setLayoutData(gd);
+
+    String endpointValue = initialEndpoint == null || initialEndpoint.isBlank() ? Preferences.DEFAULT_ENDPOINT : initialEndpoint;
+    endpoint.setText(endpointValue);
 
     createLine(composite, ncol);
 
@@ -52,8 +53,9 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
     unknownCertsLabel.setText("Disable certificate checks for SSL connections:");
 
     unknownCerts = new Button(composite, SWT.CHECK);
-    unknownCerts.setSelection(Preferences.getInstance().isInsecure());
     unknownCerts.setLayoutData(gd);
+
+    unknownCerts.setSelection(Preferences.getInstance().isInsecure());
 
     // required to avoid an error in the system
     setControl(composite);
@@ -69,16 +71,11 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
   }
 
   public IWizardPage getNextPage() {
-    updatePreferences();
     SnykWizardAuthenticatePage page = ((SnykWizard) getWizard()).authenticatePage;
-    page.onEnterPage();
+    page.setEndpoint(endpoint.getText());
+    page.setUnknownCerts(unknownCerts.getSelection());
 
     return page;
-  }
-
-  private void updatePreferences() {
-    Preferences.getInstance().store(Preferences.ENDPOINT_KEY, endpoint.getText());
-    Preferences.getInstance().store(Preferences.INSECURE_KEY, Boolean.toString(unknownCerts.getSelection()));
   }
 
   private void createLine(Composite parent, int ncol) {

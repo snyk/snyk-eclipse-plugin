@@ -2,7 +2,6 @@ package io.snyk.languageserver;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.commons.lang3.SystemUtils;
@@ -19,53 +18,77 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 @SuppressWarnings("restriction")
 public class SnykLanguageServer extends ProcessStreamConnectionProvider implements StreamConnectionProvider {
-  public static final String LANGUAGE_SERVER_ID = "io.snyk.languageserver";
-  private final LsRuntimeEnvironment runtimeEnvironment;
+	public static final String LANGUAGE_SERVER_ID = "io.snyk.languageserver";
+	private final LsRuntimeEnvironment runtimeEnvironment;
 
-  public SnykLanguageServer() {
-    runtimeEnvironment = new LsRuntimeEnvironment();
-  }
+	public SnykLanguageServer() {
+		runtimeEnvironment = new LsRuntimeEnvironment();
+	}
 
-  @Override
-  public void start() throws IOException {
-	Preferences prefs = Preferences.getInstance();
-    while (SnykStartup.isDownloading() || !Paths.get(prefs.getCliPath()).toFile().exists()) {
-      try {
-        Thread.sleep(100);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-    }
+	@Override
+	public void start() throws IOException {
+		var prefs = Preferences.getInstance();
+		waitForInit();
+		List<String> commands = Lists.of(prefs.getCliPath(), "language-server", "-l", "info");
+		String workingDir = SystemUtils.USER_DIR;
+		setCommands(commands);
+		setWorkingDirectory(workingDir);
+		try {
+			super.start();
+		} catch (IOException e) {
+			SnykLogger.logAndShow("Cannot start the Snyk CLI. Please check the CLI path.");
+		}
+	}
 
-	List<String> commands = Lists.of(prefs.getCliPath(), "language-server", "-l", "info");
-    String workingDir = SystemUtils.USER_DIR;
-    setCommands(commands);
-    setWorkingDirectory(workingDir);
-    super.start();
-  }
-  
-  public static void startSnykLanguageServer() {
-	  LanguageServerDefinition definition = LanguageServersRegistry.getInstance().getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
-	  LanguageServiceAccessor.startLanguageServer(definition);
-  }
+	public static void waitForInit() {
+		waitForDownload();		
+		waitForSecurePreferencesToBeReady();
+	}
 
-  @Override
-  protected ProcessBuilder createProcessBuilder() {
-    var pb = super.createProcessBuilder();
-    runtimeEnvironment.updateEnvironment(pb.environment());
-    return pb;
-  }
-  
-  
+	private static void waitForSecurePreferencesToBeReady() {
+		while (!Preferences.getInstance().isSecureStorageReady()) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
 
-  @Override
-  public Object getInitializationOptions(URI rootUri) {
-    LsConfigurationUpdater.Settings currentSettings = null;
-    try {
-      currentSettings = new LsConfigurationUpdater().getCurrentSettings();
-    } catch (RuntimeException e) {
-      SnykLogger.logError(e);
-    }
-    return currentSettings;
-  }
+	private static void waitForDownload() {
+		while (SnykStartup.isDownloading()) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
+
+	public static void startSnykLanguageServer() {
+		LanguageServerDefinition definition = LanguageServersRegistry.getInstance()
+				.getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
+		LanguageServiceAccessor.startLanguageServer(definition);
+	}
+
+	@Override
+	protected ProcessBuilder createProcessBuilder() {
+		var pb = super.createProcessBuilder();
+		runtimeEnvironment.updateEnvironment(pb.environment());
+		return pb;
+	}
+
+	@Override
+	public Object getInitializationOptions(URI rootUri) {
+		if (!Preferences.getInstance().isTest()) {			
+			waitForInit();
+		}
+		LsConfigurationUpdater.Settings currentSettings = null;
+		try {
+			currentSettings = new LsConfigurationUpdater().getCurrentSettings();
+		} catch (RuntimeException e) {
+			SnykLogger.logError(e);
+		}
+		return currentSettings;
+	}
 }

@@ -26,20 +26,25 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	@Override
 	public void init(IWorkbench workbench) {
-		setPreferenceStore(Preferences.getInstance().getStore());
 		setMessage("Snyk Preferences");
 	}
 
 	@Override
 	protected void createFieldEditors() {
-		TokenFieldEditor tokenField = new TokenFieldEditor(Preferences.getInstance(), Preferences.AUTH_TOKEN_KEY,
+		final var prefs = Preferences.getInstance();
+		// set default store
+		setPreferenceStore(prefs.getInsecureStore());
+
+		// token field editor is configured to use a secure store
+		TokenFieldEditor tokenField = new TokenFieldEditor(prefs, Preferences.AUTH_TOKEN_KEY,
 				"Token:", getFieldEditorParent());
 
-		addField(new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH,
+		final var useTokenAuth = new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH,
 				"Use token authentication. It is recommended to keep this turned off, as the default OAuth2 authentication is more secure.",
-				getFieldEditorParent()));
-
+				getFieldEditorParent());
+		addField(useTokenAuth);
 		addField(tokenField);
+
 		addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", 80, getFieldEditorParent()));
 		addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", 80, getFieldEditorParent()));
 		addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
@@ -123,7 +128,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		disableSnykCodeIfOrgDisabled();
         CompletableFuture.runAsync(() -> {
             SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-            
+
 			lc.updateConfiguration();
             lc.refreshFeatureFlags();
         });

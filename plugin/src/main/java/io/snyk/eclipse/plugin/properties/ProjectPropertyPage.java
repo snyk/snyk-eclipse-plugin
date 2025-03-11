@@ -10,6 +10,7 @@ import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbenchPropertyPage;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
@@ -37,7 +38,7 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		if (project != null) {
 			IScopeContext projectScope = new ProjectScope(project);
 			projectNode = projectScope.getNode(Activator.PLUGIN_ID);
-			setPreferenceStore(new PreferencesToPreferenceStoreWrapper(projectNode));
+			setPreferenceStore(new ScopedPreferenceStore(projectScope, Activator.PLUGIN_ID));
 		}
 	}
 
