@@ -480,13 +480,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public void selectTreeNode(Issue issue, String product) {
-		// If snykUri did not return a usable product, we search the whole tree, if not,
-		// we only search for the issue in specified product treenodes.
-		if (product.isEmpty()) {
-			selectTreenodeForIssue(getRoot(), issue);
-			return;
-		}
-
 		ProductTreeNode productNode = getProductNode(product, issue.filePath());
 		selectTreenodeForIssue((TreeNode) productNode, issue);
 	}

@@ -42,12 +42,6 @@ public final class ProductConstants {
 			DIAGNOSTIC_SOURCE_SNYK_IAC, SCAN_PARAMS_IAC, 
 			DIAGNOSTIC_SOURCE_SNYK_OSS, SCAN_PARAMS_OSS);
 
-	public static final Map<String, String> LSP_SOURCE_TO_DISPLAYED = Map.of(
-			DIAGNOSTIC_SOURCE_SNYK_CODE, DISPLAYED_CODE_SECURITY, 
-			DIAGNOSTIC_SOURCE_SNYK_IAC, DISPLAYED_IAC, 
-			DIAGNOSTIC_SOURCE_SNYK_OSS,
-			DISPLAYED_OSS);
-
 	// code cannot be mapped easily
 	public static final Map<String, String> SCAN_PARAMS_TO_DISPLAYED = Map.of(
 			SCAN_PARAMS_OSS, DISPLAYED_OSS,
