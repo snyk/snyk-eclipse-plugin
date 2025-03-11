@@ -435,7 +435,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		Issue issue;
 		if (uriDetails.isValid()) {
-			issue = getIssueFromCache(uriDetails.filePath(), uriDetails.issueId());
+			issue = getIssueFromCache(uriDetails.product(), uriDetails.issueId());
 		} else {
 			SnykLogger.logInfo(String.format("Invalid URI: scheme=%s, product=%s, action=%s, issue=%s",
 					uriDetails.scheme(), uriDetails.product(), uriDetails.action(), uriDetails.issueId()));
@@ -449,15 +449,23 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		return CompletableFuture.supplyAsync(() -> {
 			openToolView();
-			this.toolView.selectTreeNode(issue, uriDetails.product());
+			this.toolView.selectTreeNode(issue, issue.filterableIssueType());
 			return new ShowDocumentResult(true);
 		});
 	}
 
-	private Issue getIssueFromCache(String filePath, String issueId) {
-		SnykIssueCache issueCache = getIssueCache(filePath);
-		return issueCache.getCodeSecurityIssuesForPath(filePath).stream().filter(i -> issueId.equals(i.id()))
-				.findFirst().orElse(null);
+	private Issue getIssueFromCache(String product, String issueId) {
+		Issue issue = null;
+		IssueCacheHolder issueCacheHolder = IssueCacheHolder.getInstance(); 
+		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
+		for (IProject iProject : openProjects) {
+			issue = issueCacheHolder.getCacheInstance(iProject)
+					.getIssueByDiagnosticProductAndKey(product, issueId);
+			if(issue != null) {
+				return issue;
+			}
+		}
+		return issue;
 	}
 
 	private ISnykToolView openToolView() {
