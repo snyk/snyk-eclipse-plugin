@@ -94,7 +94,7 @@ public class LsRuntimeEnvironment {
       var variables = additionalEnv.split(";");
       for (String variable : variables) {
         var split = variable.split("=");
-        if (split.length > 1) {
+        if (split.length > 1) { // NOPMD by bdoetsch on 3/11/25, 2:37 PM
           String name = split[0];
           List<String> value = new ArrayList<>(Arrays.asList(split)); // NOPMD by bdoetsch on 3/11/25, 1:40 PM
           value.remove(0);
@@ -141,12 +141,12 @@ public class LsRuntimeEnvironment {
         creds = userId;
         String password = data.getPassword();
         if (password != null && !password.isBlank()) {
-          creds += ":" + password;
+          creds += ":" + password; // NOPMD by bdoetsch on 3/11/25, 2:37 PM
         }
-        creds += "@";
+        creds += "@"; // NOPMD by bdoetsch on 3/11/25, 2:37 PM
       }
       String protocol = data.getType().toLowerCase(Locale.getDefault());
-      if (data.getType().equals(HTTPS_PROXY_TYPE)) {
+      if (HTTPS_PROXY_TYPE.equals(data.getType())) {
         // TODO verify correctness of this!
         protocol = HTTP_PROXY_TYPE.toLowerCase(Locale.getDefault());
       }
