@@ -264,7 +264,7 @@ public class Preferences {
 				}
 			}
 		} else {
-			return this.insecurePreferences.get(key, defaultValue);
+			return this.insecureStore.getString(key);
 		}
 	}
 
@@ -317,7 +317,7 @@ public class Preferences {
 				this.prefSaveMap.put(key, value);
 			}
 		} else {
-			insecurePreferences.put(key, value);
+			insecureStore.putValue(key, value);
 		}
 	}
 
