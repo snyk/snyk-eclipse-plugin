@@ -7,11 +7,12 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 
 import io.snyk.eclipse.plugin.views.snyktoolview.BaseTreeNode;
 
 public class TreeLabelProvider implements ILabelProvider {
-	private static Map<ImageDescriptor, Image> images = new ConcurrentHashMap<ImageDescriptor, Image>();
+	private Map<ImageDescriptor, Image> images = new ConcurrentHashMap<ImageDescriptor, Image>();
 
 	public TreeLabelProvider() {
 	}
@@ -41,7 +42,8 @@ public class TreeLabelProvider implements ILabelProvider {
 		synchronized (images) {
 			Image image = images.get(imageDescriptor);
 			if (image == null || image.isDisposed()) {
-				images.put(imageDescriptor, imageDescriptor.createImage());
+				final var resource = imageDescriptor.createResource(Display.getDefault());
+				images.put(imageDescriptor, (Image) resource);
 			}
 			return images.get(imageDescriptor);
 		}
@@ -55,8 +57,7 @@ public class TreeLabelProvider implements ILabelProvider {
 	@Override
 	public void dispose() {
 		for (var entry : images.entrySet()) {
-			var image = entry.getValue();
-			image.dispose();
+			entry.getKey().destroyResource(entry.getValue());
 		}
 		images.clear();
 	}

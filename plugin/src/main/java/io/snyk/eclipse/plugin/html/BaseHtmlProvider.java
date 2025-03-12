@@ -137,7 +137,6 @@ public class BaseHtmlProvider {
 		return htmlStyled;
 	}
 
-	@SuppressWarnings("PMD.EmptyCatchBlock")
 	private int getDefaultFontSize() {
 		int fontSize =  13;
 		try {

@@ -11,6 +11,7 @@ import java.io.IOException;
 import org.eclipse.core.net.proxy.IProxyService;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.swt.graphics.Image;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
@@ -26,8 +27,6 @@ public class LsBaseTest {
     protected IProxyService proxyServiceMock;
 
     private File lsFile = getTempFile();
-    @Mock
-    private ImageRegistry imageRegistry;
     protected Preferences prefs;
 
     @BeforeEach
@@ -43,10 +42,6 @@ public class LsBaseTest {
         this.prefs.setSecureStorageReady(true);
         PreferencesUtils.setPreferences(prefs);
         this.prefs.setTest(true);
-
-        MockitoAnnotations.openMocks(this);
-//		when(imageRegistry.get(anyString())).thenReturn(mock(Image.class));
-        when(imageRegistry.getDescriptor(anyString())).thenReturn(mock(ImageDescriptor.class));
 
         when(environment.getArch()).thenReturn("amd64");
         when(environment.getOs()).thenReturn("linux");

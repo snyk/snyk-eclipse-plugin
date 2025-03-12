@@ -5,20 +5,26 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import io.snyk.eclipse.plugin.Activator;
 
 public class SnykIcons {
-	public static final ImageDescriptor CODE = Activator.getImageDescriptor("CODE");
-	public static final ImageDescriptor CODE_DISABLED = Activator.getImageDescriptor("CODE_DISABLED");
-
-	public static final ImageDescriptor OSS = Activator.getImageDescriptor("OSS");
-	public static final ImageDescriptor OSS_DISABLED = Activator.getImageDescriptor("OSS_DISABLED");
-
-	public static final ImageDescriptor IAC = Activator.getImageDescriptor("IAC");
-	public static final ImageDescriptor IAC_DISABLED = Activator.getImageDescriptor("IAC_DISABLED");
-
-	public static final ImageDescriptor SEVERITY_CRITICAL = Activator.getImageDescriptor("SEVERITY_CRITICAL");
-	public static final ImageDescriptor SEVERITY_HIGH = Activator.getImageDescriptor("SEVERITY_HIGH");
-	public static final ImageDescriptor SEVERITY_MEDIUM = Activator.getImageDescriptor("SEVERITY_MEDIUM");
-	public static final ImageDescriptor SEVERITY_LOW = Activator.getImageDescriptor("SEVERITY_LOW");
-
-	public static final ImageDescriptor ENABLED = Activator.getImageDescriptor("ENABLED");
-	public static final ImageDescriptor DISABLED = Activator.getImageDescriptor("DISABLED");
+	public static final String CODE_ID = "CODE";
+	public static final String CODE_DISABLED_ID = "CODE_DISABLED";
+	public static final String OSS_ID = "OSS";
+	public static final String OSS_DISABLED_ID = "OSS_DISABLED";
+	public static final String IAC_ID = "IAC";
+	public static final String IAC_DISABLED_ID = "IAC_DISABLED";
+	public static final String SEVERITY_CRITICAL_ID = "SEVERITY_CRITICAL";
+	public static final String SEVERITY_HIGH_ID = "SEVERITY_HIGH";
+	public static final String SEVERITY_MEDIUM_ID = "SEVERITY_MEDIUM";
+	public static final String SEVERITY_LOW_ID = "SEVERITY_LOW";
+	public static final String ENABLED_ID = "ENABLED";
+	public static final String DISABLED_ID = "DISABLED";
+		
+	public static final ImageDescriptor getImageDescriptor(String descriptorId) {
+		return Activator.getDefault().getImageDescriptor(descriptorId);
+	}
+	
+	public static final void addImageDescriptorToRegistry(String id, ImageDescriptor imageDescriptor) {
+		final var imageRegistry = Activator.getDefault().getImageRegistry();
+		imageRegistry.put(id, imageDescriptor);
+		imageRegistry.put(id, imageDescriptor.createImage(true));
+	}
 }

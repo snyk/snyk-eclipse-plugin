@@ -17,26 +17,23 @@ public class ProductTreeNode extends BaseTreeNode {
 	private String errorMessage;
 	private String prefEnablementKey;
 
-	private ProductTreeNode(String value, ImageDescriptor ossDescriptor, ImageDescriptor iacDescriptor,
-			ImageDescriptor codeQualityDesciptor, ImageDescriptor codeSecurityDescriptor) {
-		super(value);
+	private final void initialize(String value) {
 		this.product = value;
-
 		switch (value) {
 		case ProductConstants.DISPLAYED_OSS:
-			setImageDescriptor(ossDescriptor);
+			setImageDescriptor(SnykIcons.getImageDescriptor(SnykIcons.OSS_ID));
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
 			break;
 		case ProductConstants.DISPLAYED_IAC:
-			setImageDescriptor(iacDescriptor);
+			setImageDescriptor(SnykIcons.getImageDescriptor(SnykIcons.IAC_ID));
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_IAC;
 			break;
 		case ProductConstants.DISPLAYED_CODE_QUALITY:
-			setImageDescriptor(codeQualityDesciptor);
+			setImageDescriptor(SnykIcons.getImageDescriptor(SnykIcons.CODE_ID));
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_CODE_QUALITY;
 			break;
 		case ProductConstants.DISPLAYED_CODE_SECURITY:
-			setImageDescriptor(codeSecurityDescriptor);
+			setImageDescriptor(SnykIcons.getImageDescriptor(SnykIcons.CODE_ID));
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_CODE_SECURITY;
 			break;
 		default:
@@ -45,12 +42,8 @@ public class ProductTreeNode extends BaseTreeNode {
 	}
 
 	public ProductTreeNode(String value) {
-		this(value, SnykIcons.OSS, SnykIcons.IAC, SnykIcons.CODE, SnykIcons.CODE);
-	}
-
-	// For testing
-	public ProductTreeNode(String value, ImageDescriptor imageDescriptor) {
-		this(value, imageDescriptor, imageDescriptor, imageDescriptor, imageDescriptor);
+		super(value);
+		initialize(value);
 	}
 
 	@Override
@@ -96,12 +89,12 @@ public class ProductTreeNode extends BaseTreeNode {
 			throw new IllegalArgumentException("value of product node must be a string");
 
 		// Avoid reassigning 'value' to '(disabled)'
-		String tempValue = value.toString();
+		cleanedValue = value.toString();
 		if (!isEnabled()) {
-			tempValue = "(disabled)";
+			cleanedValue = "(disabled)";
 		}
 
-		cleanedValue = removePrefix(tempValue);
+		cleanedValue = removePrefix(cleanedValue);
 
 		// we don't want to override the product text
 		if (!cleanedValue.isBlank()) {

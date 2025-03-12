@@ -16,8 +16,8 @@ import io.snyk.eclipse.plugin.utils.SnykIcons;
 public class EnableAllProductHandler extends BaseHandler implements IElementUpdater {
 	public EnableAllProductHandler() {
 		super();
-		iconEnabled = SnykIcons.ENABLED;
-		iconDisabled = SnykIcons.DISABLED;
+		iconEnabled = SnykIcons.getImageDescriptor(SnykIcons.ENABLED_ID);
+		iconDisabled = SnykIcons.getImageDescriptor(SnykIcons.DISABLED_ID);
 	}
 
 	@Override

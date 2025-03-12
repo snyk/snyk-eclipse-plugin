@@ -10,9 +10,10 @@ import io.snyk.eclipse.plugin.utils.ResourceUtils;
 public class RootNode extends BaseTreeNode {
 	public RootNode() {
 		super("");
-		reset();
+		reset(); // NOPMD by bdoetsch on 3/12/25, 11:48 AM
 	}
 
+	@Override
 	public void reset() {
 		super.reset();
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
@@ -25,7 +26,7 @@ public class RootNode extends BaseTreeNode {
 
 		for (IProject project : openProjects) {
 			Path path = ResourceUtils.getFullPath(project);
-			BaseTreeNode contentRoot = new ContentRootNode(project.getName(), path);
+			BaseTreeNode contentRoot = new ContentRootNode(project.getName(), path); // NOPMD by bdoetsch on 3/12/25, 11:48 AM
 			this.addChild(contentRoot);
 		}
 	}
