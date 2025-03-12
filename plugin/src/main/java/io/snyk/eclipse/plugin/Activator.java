@@ -7,6 +7,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
 
 /**
@@ -61,6 +62,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @return the image descriptor
 	 */
 	public ImageDescriptor getImageDescriptor(String key) {
+		if (Preferences.getInstance().isTest()) return null;
 		// Use syncExec to invoke code on the SWT thread and wait for it to finish
 		return Display.getDefault().syncCall(() -> {
 			var imageDescriptor = getImageRegistry().getDescriptor(key);
