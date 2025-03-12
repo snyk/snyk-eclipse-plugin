@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.utils;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.widgets.Display;
 
 import io.snyk.eclipse.plugin.Activator;
 
@@ -17,14 +18,17 @@ public class SnykIcons {
 	public static final String SEVERITY_LOW_ID = "SEVERITY_LOW";
 	public static final String ENABLED_ID = "ENABLED";
 	public static final String DISABLED_ID = "DISABLED";
-		
+
 	public static final ImageDescriptor getImageDescriptor(String descriptorId) {
 		return Activator.getDefault().getImageDescriptor(descriptorId);
 	}
-	
+
 	public static final void addImageDescriptorToRegistry(String id, ImageDescriptor imageDescriptor) {
-		final var imageRegistry = Activator.getDefault().getImageRegistry();
-		imageRegistry.put(id, imageDescriptor);
-		imageRegistry.put(id, imageDescriptor.createImage(true));
+		Display.getDefault().syncExec(() -> {
+			final var imageRegistry = Activator.getDefault().getImageRegistry();
+			imageRegistry.put(id, imageDescriptor);
+			imageRegistry.put(id, imageDescriptor.createImage(true));
+		});
+
 	}
 }
