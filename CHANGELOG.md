@@ -6,8 +6,11 @@
 - add scan summary to custom UI, updating scan statuses live
 - added support for DeepCode AI Fixes
 - new severity icons
+- moved non-secret preferences to standard preference store, only use secure store for tokens
 
 ### Fixes
+- leak of image handles on big projects
+- startup and initialization errors - now waiting for init of secure store, download and config
 - fixes open & ignored issue filtering toggles
 
 ## [3.0.0]
