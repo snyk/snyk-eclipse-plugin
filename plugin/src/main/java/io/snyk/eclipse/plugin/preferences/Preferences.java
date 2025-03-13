@@ -1,6 +1,9 @@
 package io.snyk.eclipse.plugin.preferences;
 
+import static io.snyk.eclipse.plugin.EnvironmentConstants.ENV_SNYK_API;
+import static io.snyk.eclipse.plugin.EnvironmentConstants.ENV_SNYK_ORG;
 import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getBinaryDirectory;
+import static org.apache.commons.lang3.SystemUtils.getEnvironmentVariable;
 
 import java.io.File;
 import java.util.Arrays;
@@ -12,7 +15,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
@@ -131,17 +133,21 @@ public class Preferences {
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
 		insecureStore.setDefault(RELEASE_CHANNEL, "stable");
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
+		insecureStore.setDefault(ENDPOINT_KEY, DEFAULT_ENDPOINT);
+		insecureStore.setDefault(ORGANIZATION_KEY, "");
 
-		String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
-		if (endpoint == null || endpoint.isBlank()) {
-			endpoint = DEFAULT_ENDPOINT;
+		var endpoint = getEnvironmentVariable(ENV_SNYK_API, "");
+		if (endpoint != null && !endpoint.isBlank()) {
+			store(ENDPOINT_KEY, endpoint);
 		}
-		insecureStore.setDefault(ENDPOINT_KEY, endpoint);
-		insecureStore.setDefault(ORGANIZATION_KEY,
-				SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, ""));
-
-		String token = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
-		if (getPref(AUTH_TOKEN_KEY) == null && !"".equals(token)) {
+		
+		var org = getEnvironmentVariable(ENV_SNYK_ORG, "");
+		if (org != null && !org.isBlank()) {
+			store(ORGANIZATION_KEY, org);
+		}
+		
+		String token = getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
+		if (getPref(AUTH_TOKEN_KEY) != null && !"".equals(token)) {
 			store(AUTH_TOKEN_KEY, token);
 		}
 
@@ -162,8 +168,8 @@ public class Preferences {
 			try {
 				final var defaultString = insecureStore.getDefaultString(constant);
 				final var value = securePreferences.get(constant, defaultString);
-				if (insecureStore.isDefault(constant)) {
-					this.insecurePreferences.put(constant, value);	
+				if (insecureStore.isDefault(constant) && !defaultString.equals(value)) {
+					this.insecurePreferences.put(constant, value);
 				}
 				securePreferences.remove(constant);
 			} catch (IllegalStateException | StorageException e) { // NOPMD // no handling needed in this case
@@ -201,7 +207,7 @@ public class Preferences {
 	}
 
 	public final String getPref(String key) {
-		return getPref(key, null);
+		return getPref(key, insecureStore.getDefaultString(key));
 	}
 
 	public final String getPref(String key, String defaultValue) {
@@ -230,11 +236,11 @@ public class Preferences {
 	}
 
 	public final String getEndpoint() {
-		return getPref(ENDPOINT_KEY, DEFAULT_ENDPOINT);
+		return getPref(ENDPOINT_KEY);
 	}
 
 	public final String getLspVersion() {
-		return getPref(LSP_VERSION);
+		return insecurePreferences.get(LSP_VERSION, insecureStore.getDefaultString(LSP_VERSION));
 	}
 
 	public final Optional<String> getPath() {
@@ -250,7 +256,7 @@ public class Preferences {
 	}
 
 	public final boolean isInsecure() {
-		return insecurePreferences.getBoolean(INSECURE_KEY, false);
+		return insecurePreferences.getBoolean(INSECURE_KEY, insecureStore.getDefaultBoolean(INSECURE_KEY));
 	}
 
 	public final void setIsInsecure(boolean isInsecure) {
@@ -258,7 +264,7 @@ public class Preferences {
 	}
 
 	public final boolean isManagedBinaries() {
-		return insecurePreferences.getBoolean(MANAGE_BINARIES_AUTOMATICALLY, true);
+		return insecurePreferences.getBoolean(MANAGE_BINARIES_AUTOMATICALLY, insecureStore.getDefaultBoolean(MANAGE_BINARIES_AUTOMATICALLY));
 	}
 
 	public final void store(String key, String value) {
@@ -280,7 +286,7 @@ public class Preferences {
 	}
 
 	public final boolean getBooleanPref(String key) {
-		return insecurePreferences.getBoolean(key, false);
+		return insecurePreferences.getBoolean(key, insecureStore.getDefaultBoolean(key));
 	}
 
 	public final boolean getBooleanPref(String key, boolean defaultValue) {

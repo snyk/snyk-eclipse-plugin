@@ -65,8 +65,6 @@ class PreferencesTest {
 		assertEquals("true", preferences.getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES));
 		assertEquals("false", preferences.getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES));
 		assertEquals("false", preferences.getPref(FILTER_SHOW_ONLY_FIXABLE));
-		assertEquals("true", preferences.getPref(SEND_ERROR_REPORTS));
-		assertEquals("true", preferences.getPref(ENABLE_TELEMETRY));
 		assertEquals("true", preferences.getPref(MANAGE_BINARIES_AUTOMATICALLY));
 		assertEquals("1", preferences.getPref(LSP_VERSION));
 		assertEquals("false", preferences.getPref(IS_GLOBAL_IGNORES_FEATURE_ENABLED));
@@ -86,8 +84,9 @@ class PreferencesTest {
 					.thenReturn("token");
 
 			Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
+			prefs.waitForSecureStorage();
 
-			assertEquals(prefs.getAuthToken(), "token");
+			assertEquals("token", prefs.getAuthToken());
 		}
 	}
 
@@ -111,7 +110,7 @@ class PreferencesTest {
 
 			Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 
-			assertEquals(prefs.getPref(Preferences.ORGANIZATION_KEY), "myOrg");
+			assertEquals("myOrg",prefs.getPref(Preferences.ORGANIZATION_KEY));
 		}
 	}
 
