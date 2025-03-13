@@ -14,6 +14,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
@@ -134,6 +135,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	private void disableSnykCodeIfOrgDisabled() {
 		CompletableFuture.runAsync(() -> {
+			SnykLanguageServer.waitForInit();
 			boolean isSastEnabled;
 			try {
 				isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
