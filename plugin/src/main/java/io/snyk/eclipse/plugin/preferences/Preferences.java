@@ -3,6 +3,8 @@ package io.snyk.eclipse.plugin.preferences;
 import static io.snyk.eclipse.plugin.utils.FileSystemUtil.getBinaryDirectory;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -89,7 +91,7 @@ public class Preferences {
 		return instance;
 	}
 
-	public static synchronized Preferences getTestInstance(IEclipsePreferences insecure, ISecurePreferences secure) { //NOPMD
+	public static synchronized Preferences getTestInstance(IEclipsePreferences insecure, ISecurePreferences secure) { // NOPMD
 		Preferences preferences = new Preferences(insecure, secure);
 		setCurrentPreferences(preferences);
 		return preferences;
@@ -107,110 +109,65 @@ public class Preferences {
 			waitForSecureStorage();
 		});
 
-		if (getPref(ACTIVATE_SNYK_CODE_SECURITY) == null) {
-			store(ACTIVATE_SNYK_CODE_SECURITY, FALSE);
-		}
-		if (getPref(ACTIVATE_SNYK_CODE_QUALITY) == null) {
-			store(ACTIVATE_SNYK_CODE_QUALITY, FALSE);
-		}
-		if (getPref(ACTIVATE_SNYK_OPEN_SOURCE) == null) {
-			store(ACTIVATE_SNYK_OPEN_SOURCE, TRUE);
-		}
-		if (getPref(ACTIVATE_SNYK_IAC) == null) {
-			store(ACTIVATE_SNYK_IAC, TRUE);
-		}
-		if (getPref(FILTER_SHOW_CRITICAL) == null) {
-			store(FILTER_SHOW_CRITICAL, TRUE);
-		}
-		if (getPref(FILTER_SHOW_HIGH) == null) {
-			store(FILTER_SHOW_HIGH, TRUE);
-		}
-		if (getPref(FILTER_SHOW_MEDIUM) == null) {
-			store(FILTER_SHOW_MEDIUM, TRUE);
-		}
-		if (getPref(FILTER_SHOW_LOW) == null) {
-			store(FILTER_SHOW_LOW, TRUE);
-		}
-		if (getPref(ENABLE_DELTA) == null) {
-			store(ENABLE_DELTA, FALSE);
-		}
-		if (getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES) == null) {
-			store(FILTER_IGNORES_SHOW_OPEN_ISSUES, TRUE);
-		}
-		if (getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES) == null) {
-			store(FILTER_IGNORES_SHOW_IGNORED_ISSUES, FALSE);
-		}
-		if (getPref(FILTER_SHOW_ONLY_FIXABLE) == null) {
-			store(FILTER_SHOW_ONLY_FIXABLE, FALSE);
-		}
+		insecureStore.setDefault(ACTIVATE_SNYK_CODE_SECURITY, FALSE);
+		insecureStore.setDefault(ACTIVATE_SNYK_CODE_QUALITY, FALSE);
+		insecureStore.setDefault(ACTIVATE_SNYK_OPEN_SOURCE, TRUE);
+		insecureStore.setDefault(ACTIVATE_SNYK_IAC, TRUE);
+		insecureStore.setDefault(FILTER_SHOW_CRITICAL, TRUE);
+		insecureStore.setDefault(FILTER_SHOW_HIGH, TRUE);
+		insecureStore.setDefault(FILTER_SHOW_MEDIUM, TRUE);
+		insecureStore.setDefault(FILTER_SHOW_LOW, TRUE);
+		insecureStore.setDefault(ENABLE_DELTA, FALSE);
+		insecureStore.setDefault(FILTER_IGNORES_SHOW_OPEN_ISSUES, TRUE);
+		insecureStore.setDefault(FILTER_IGNORES_SHOW_IGNORED_ISSUES, FALSE);
+		insecureStore.setDefault(FILTER_SHOW_ONLY_FIXABLE, FALSE);
+		insecureStore.setDefault(MANAGE_BINARIES_AUTOMATICALLY, TRUE);
+		insecureStore.setDefault(LSP_VERSION, "1");
+		insecureStore.setDefault(IS_GLOBAL_IGNORES_FEATURE_ENABLED, FALSE);
+		insecureStore.setDefault(CLI_BASE_URL, "https://downloads.snyk.io");
+		insecureStore.setDefault(SCANNING_MODE_AUTOMATIC, TRUE);
+		insecureStore.setDefault(USE_TOKEN_AUTH, FALSE);
+		insecureStore.setDefault(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
+		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
+		insecureStore.setDefault(RELEASE_CHANNEL, "stable");
+		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 
-		if (getPref(SEND_ERROR_REPORTS) == null) {
-			store(SEND_ERROR_REPORTS, TRUE);
+		String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
+		if (endpoint == null || endpoint.isBlank()) {
+			endpoint = DEFAULT_ENDPOINT;
 		}
-		if (getPref(ENABLE_TELEMETRY) == null) {
-			store(ENABLE_TELEMETRY, TRUE);
-		}
-		if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
-			store(MANAGE_BINARIES_AUTOMATICALLY, TRUE);
-		}
-		if (getPref(MANAGE_BINARIES_AUTOMATICALLY) == null) {
-			store(MANAGE_BINARIES_AUTOMATICALLY, TRUE);
-		}
-		if (getPref(LSP_VERSION) == null) {
-			store(LSP_VERSION, "1");
-		}
-		if (getPref(IS_GLOBAL_IGNORES_FEATURE_ENABLED) == null) {
-			store(IS_GLOBAL_IGNORES_FEATURE_ENABLED, FALSE);
-		}
+		insecureStore.setDefault(ENDPOINT_KEY, endpoint);
+		insecureStore.setDefault(ORGANIZATION_KEY,
+				SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, ""));
 
 		String token = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
 		if (getPref(AUTH_TOKEN_KEY) == null && !"".equals(token)) {
 			store(AUTH_TOKEN_KEY, token);
 		}
 
-		String endpoint = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_API, "");
-		if (getPref(ENDPOINT_KEY) == null) {
-			if (endpoint == null || endpoint.isBlank()) {
-				endpoint = DEFAULT_ENDPOINT;
+		migratePreferences();
+	}
+
+	private void migratePreferences() {
+		Set<String> constants = new HashSet<>(Arrays.asList(TRUSTED_FOLDERS, PATH_KEY, ENDPOINT_KEY, INSECURE_KEY,
+				CLI_PATH, CLI_BASE_URL, ACTIVATE_SNYK_CODE_SECURITY, ACTIVATE_SNYK_CODE_QUALITY,
+				ACTIVATE_SNYK_OPEN_SOURCE, ACTIVATE_SNYK_IAC, ADDITIONAL_PARAMETERS, ADDITIONAL_ENVIRONMENT,
+				SEND_ERROR_REPORTS, LSP_VERSION, USE_TOKEN_AUTH, ANALYTICS_PLUGIN_INSTALLED_SENT, ENABLE_DELTA,
+				FILTER_SHOW_CRITICAL, FILTER_SHOW_HIGH, FILTER_SHOW_MEDIUM, FILTER_SHOW_LOW,
+				FILTER_IGNORES_SHOW_OPEN_ISSUES, FILTER_IGNORES_SHOW_IGNORED_ISSUES, FILTER_SHOW_ONLY_FIXABLE,
+				IS_GLOBAL_IGNORES_FEATURE_ENABLED, ENABLE_TELEMETRY, MANAGE_BINARIES_AUTOMATICALLY, ORGANIZATION_KEY,
+				SCANNING_MODE_AUTOMATIC, DEFAULT_ENDPOINT, DEVICE_ID, RELEASE_CHANNEL));
+
+		for (String constant : constants) {
+			try {
+				final var defaultString = insecureStore.getDefaultString(constant);
+				final var value = securePreferences.get(constant, defaultString);
+				if (insecureStore.isDefault(constant)) {
+					this.insecurePreferences.put(constant, value);	
+				}
+				securePreferences.remove(constant);
+			} catch (IllegalStateException | StorageException e) { // NOPMD // no handling needed in this case
 			}
-			store(ENDPOINT_KEY, endpoint);
-		}
-
-		String org = SystemUtils.getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_ORG, "");
-		if (getPref(ORGANIZATION_KEY) == null && !"".equals(org)) {
-			store(ORGANIZATION_KEY, org);
-		}
-
-		String defaultCLIPath = getDefaultCliPath();
-		final var cliPath = getPref(CLI_PATH);
-		if ((cliPath == null || CLI_PATH.equals(cliPath)) && !"".equals(defaultCLIPath)) {
-			store(CLI_PATH, defaultCLIPath);
-		}
-
-		if (getPref(CLI_BASE_URL) == null || getPref(CLI_BASE_URL).isBlank()) {
-			store(CLI_BASE_URL, "https://downloads.snyk.io");
-		}
-
-		if (getPref(SCANNING_MODE_AUTOMATIC) == null) {
-			insecure.put(SCANNING_MODE_AUTOMATIC, TRUE);
-		}
-
-		if (getPref(USE_TOKEN_AUTH) == null) {
-			insecure.put(USE_TOKEN_AUTH, FALSE);
-		}
-
-		if (getPref(ANALYTICS_PLUGIN_INSTALLED_SENT) == null) {
-			insecure.put(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
-		}
-
-		String deviceId = getPref(DEVICE_ID);
-		if (deviceId == null || deviceId.isBlank()) {
-			insecure.put(DEVICE_ID, UUID.randomUUID().toString());
-		}
-
-		String releaseChannel = getPref(RELEASE_CHANNEL);
-		if (releaseChannel == null || releaseChannel.isBlank()) {
-			insecure.put(RELEASE_CHANNEL, "stable");
 		}
 	}
 
@@ -300,12 +257,13 @@ public class Preferences {
 		insecurePreferences.put(INSECURE_KEY, Boolean.toString(isInsecure));
 	}
 
-	public final  boolean isManagedBinaries() {
+	public final boolean isManagedBinaries() {
 		return insecurePreferences.getBoolean(MANAGE_BINARIES_AUTOMATICALLY, true);
 	}
 
 	public final void store(String key, String value) {
-		if (key == null || value == null) return;
+		if (key == null || value == null)
+			return;
 		if (encryptedPreferenceKeys.contains(key)) {
 			if (isSecureStorageReady()) {
 				try {
