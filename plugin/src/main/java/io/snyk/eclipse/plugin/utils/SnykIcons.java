@@ -27,7 +27,6 @@ public class SnykIcons {
 		Display.getDefault().syncExec(() -> {
 			final var imageRegistry = Activator.getDefault().getImageRegistry();
 			imageRegistry.put(id, imageDescriptor);
-			imageRegistry.put(id, imageDescriptor.createImage(true));
 		});
 
 	}
