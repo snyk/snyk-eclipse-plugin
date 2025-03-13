@@ -43,7 +43,7 @@ public class ResourceUtils {
 
 	private static byte[] getImageDataFromUrl(URL imageUrl) {
 		try (final var openStream = imageUrl.openStream()) {
-			ByteArrayOutputStream output = new ByteArrayOutputStream();			
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			openStream.transferTo(output);
 			return output.toByteArray();
 		} catch (Exception e) {
