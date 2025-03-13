@@ -16,6 +16,7 @@ import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class BaseHtmlProvider {
 	private final Random random = new Random();
@@ -142,7 +143,7 @@ public class BaseHtmlProvider {
 		try {
 			fontSize = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
 		} catch (IllegalStateException e) {
-			// TODO improve the logic here. Expected only in unit tests.
+			SnykLogger.logInfo("cannot get default font-size from Eclipse, using default (13)");
 		}
 		return fontSize;
 	}
