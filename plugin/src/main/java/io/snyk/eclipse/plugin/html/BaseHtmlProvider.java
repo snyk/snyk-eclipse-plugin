@@ -22,7 +22,7 @@ public class BaseHtmlProvider {
 	private final Random random = new Random();
 	private final Map<String, String> colorCache = new HashMap<>();
 	private String nonce = "";
-
+    private byte ASCII_RANGE = 0x7F;
 	public String getCss() {
 		return "";
 	}
@@ -236,8 +236,9 @@ public class BaseHtmlProvider {
                     escaped.append("&#13;");
                     break;
                 default:
-                    if (c > 0x7F) {
-                        escaped.append("&#").append((int) c).append(";");
+                    if (c > ASCII_RANGE) {
+                        String encodedString = "&#" + (int) c + ";";
+                        escaped.append(encodedString);
                     } else {
                         escaped.append(c);
                     }
@@ -295,7 +296,6 @@ public class BaseHtmlProvider {
                     </script>
 				</html>
 				""".formatted(escapedErrorMessage, escapedPath);
-		System.out.print(html);
 		return replaceCssVariables(html);
 	}
 }
