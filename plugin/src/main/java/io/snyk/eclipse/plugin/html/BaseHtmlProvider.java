@@ -132,7 +132,7 @@ public class BaseHtmlProvider {
 
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
 		htmlStyled = htmlStyled.replace("${nonce}", nonce);
-		htmlStyled = htmlStyled.replace("ideNonce", nonce);
+		htmlStyled = htmlStyled.replaceAll("ideNonce", nonce);
 		htmlStyled = htmlStyled.replace("${ideScript}", "");
 
 		return htmlStyled;
@@ -207,15 +207,58 @@ public class BaseHtmlProvider {
 		return currentTheme;
 	}
 
+	private String escapeHtml(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        StringBuilder escaped = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            switch (c) {
+                case '&':
+                    escaped.append("&amp;");
+                    break;
+                case '<':
+                    escaped.append("&lt;");
+                    break;
+                case '>':
+                    escaped.append("&gt;");
+                    break;
+                case '"':
+                    escaped.append("&quot;");
+                    break;
+                case '\'':
+                    escaped.append("&#039;");
+                    break;
+                case '\n':
+                    escaped.append("&#10;");
+                    break;
+                case '\r':
+                    escaped.append("&#13;");
+                    break;
+                default:
+                    if (c > 0x7F) {
+                        escaped.append("&#").append((int) c).append(";");
+                    } else {
+                        escaped.append(c);
+                    }
+                    break;
+            }
+        }
+        return escaped.toString();
+    }
 	public String getErrorHtml(String errorMessage, String path) {
+        String escapedErrorMessage = escapeHtml(errorMessage);
+        String escapedPath = escapeHtml(path);
 		var html = """
 				<!DOCTYPE html>
 				<html lang="en">
 				<head>
+					<meta http-equiv='Content-Type' content='text/html; charset=unicode' />
 				    <meta charset="UTF-8">
 				    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+				      <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-ideNonce'; style-src 'self' 'nonce-ideNonce';">
 				    <title>Snyk for Eclipse</title>
-				    <style>
+				    <style nonce=ideNonce>
 				        body {
 				        	font-family: var(--default-font);
 				            background-color: var(--background-color);
@@ -236,16 +279,23 @@ public class BaseHtmlProvider {
 				            <p><strong>An error occurred:</strong></p>
 				            <p>
 				            <table>
-				            	<tr><td width="150"	>Error message:</td><td>%s</td></tr>
+				            	<tr><td width="150"	>Error message:</td><td id="errorContainer"></td></tr>
 				            	<tr></tr>
-				            	<tr><td>Path:</td><td>%s</td></tr>
+				            	<tr><td width="150"	>Path:</td><td id="pathContainer"></td></tr>
 				            </table>
 				            </p>
 				        </div>
 				    </div>
 				</body>
+                <script nonce=ideNonce>
+                    const errMsgElement = document.getElementById("errorContainer");
+                    errMsgElement.innerText = "%s";
+				    const pathElem = document.getElementById("pathContainer");
+                    pathElem.innerText = "%s";
+                    </script>
 				</html>
-				""".formatted(errorMessage, path);
+				""".formatted(escapedErrorMessage, escapedPath);
+		System.out.print(html);
 		return replaceCssVariables(html);
 	}
 }
