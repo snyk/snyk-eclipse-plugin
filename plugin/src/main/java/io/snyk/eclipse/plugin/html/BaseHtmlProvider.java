@@ -23,7 +23,6 @@ public class BaseHtmlProvider {
 	private final Random random = new Random();
 	private final Map<String, String> colorCache = new HashMap<>();
 	private String nonce = "";
-    private byte ASCII_RANGE = 0x7F;
 	public String getCss() {
 		return "";
 	}
@@ -208,10 +207,8 @@ public class BaseHtmlProvider {
 		return currentTheme;
 	}
 	public String getErrorHtml(String errorMessage, String path) {
-        if (errorMessage == null) errorMessage = "Unknown error";
-        if (path == null) path = "Unknown path";
-        String escapedErrorMessage = StringEscapeUtils.escapeHtml3((errorMessage));
-        String escapedPath = StringEscapeUtils.escapeHtml3(path);
+        String escapedErrorMessage = errorMessage == null ? "Unknown error" : StringEscapeUtils.escapeHtml3((errorMessage));
+        String escapedPath = path == null ? "Unknown path" : StringEscapeUtils.escapeHtml3(path);
 		var html = String.format("""
 				<!DOCTYPE html>
 				<html lang="en">
