@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ColorRegistry;
 import org.eclipse.jface.resource.JFaceResources;
@@ -206,51 +207,12 @@ public class BaseHtmlProvider {
 		currentTheme = themeManager.getCurrentTheme();
 		return currentTheme;
 	}
-
-	private String escapeHtml(String text) {
-        if (text == null || text.isEmpty()) {
-            return "";
-        }
-        StringBuilder escaped = new StringBuilder();
-        for (char c : text.toCharArray()) {
-            switch (c) {
-                case '&':
-                    escaped.append("&amp;");
-                    break;
-                case '<':
-                    escaped.append("&lt;");
-                    break;
-                case '>':
-                    escaped.append("&gt;");
-                    break;
-                case '"':
-                    escaped.append("&quot;");
-                    break;
-                case '\'':
-                    escaped.append("&#039;");
-                    break;
-                case '\n':
-                    escaped.append("&#10;");
-                    break;
-                case '\r':
-                    escaped.append("&#13;");
-                    break;
-                default:
-                    if (c > ASCII_RANGE) {
-                        String encodedString = "&#" + (int) c + ";";
-                        escaped.append(encodedString);
-                    } else {
-                        escaped.append(c);
-                    }
-                    break;
-            }
-        }
-        return escaped.toString();
-    }
 	public String getErrorHtml(String errorMessage, String path) {
-        String escapedErrorMessage = escapeHtml(errorMessage);
-        String escapedPath = escapeHtml(path);
-		var html = """
+        if (errorMessage == null) errorMessage = "Unknown error";
+        if (path == null) path = "Unknown path";
+        String escapedErrorMessage = StringEscapeUtils.escapeHtml3((errorMessage));
+        String escapedPath = StringEscapeUtils.escapeHtml3(path);
+		var html = String.format("""
 				<!DOCTYPE html>
 				<html lang="en">
 				<head>
@@ -280,22 +242,16 @@ public class BaseHtmlProvider {
 				            <p><strong>An error occurred:</strong></p>
 				            <p>
 				            <table>
-				            	<tr><td width="150"	>Error message:</td><td id="errorContainer"></td></tr>
+				            	<tr><td width="150"	>Error message:</td><td id="errorContainer">%s</td></tr>
 				            	<tr></tr>
-				            	<tr><td width="150"	>Path:</td><td id="pathContainer"></td></tr>
+				            	<tr><td width="150"	>Path:</td><td id="pathContainer">%s</td></tr>
 				            </table>
 				            </p>
 				        </div>
 				    </div>
 				</body>
-                <script nonce=ideNonce>
-                    const errMsgElement = document.getElementById("errorContainer");
-                    errMsgElement.innerText = "%s";
-				    const pathElem = document.getElementById("pathContainer");
-                    pathElem.innerText = "%s";
-                    </script>
 				</html>
-				""".formatted(escapedErrorMessage, escapedPath);
+				""",escapedErrorMessage, escapedPath);
 		return replaceCssVariables(html);
 	}
 }
