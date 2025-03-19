@@ -50,7 +50,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		addField(tokenField);
 
 		addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", 80, getFieldEditorParent()));
-		addField(new LabelFieldEditor("If you're using SSO(OAuth2), Custom Endpoint configuration is automatic.\n"
+		addField(new LabelFieldEditor("If you're using SSO with Snyk and OAuth2 the custom endpoint configuration is automatically populated.\n"
 				+ "Otherwise, for public regional instances, " + "see the docs: ", getFieldEditorParent()));
 		Link link = new Link(this.getFieldEditorParent(), SWT.NONE);
 
