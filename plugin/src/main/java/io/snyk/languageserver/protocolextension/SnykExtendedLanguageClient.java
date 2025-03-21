@@ -456,7 +456,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private Issue getIssueFromCache(String product, String issueId) {
 		Issue issue = null;
-		IssueCacheHolder issueCacheHolder = IssueCacheHolder.getInstance(); 
+		IssueCacheHolder issueCacheHolder = IssueCacheHolder.getInstance();
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
 		for (IProject iProject : openProjects) {
 			issue = issueCacheHolder.getCacheInstance(iProject)
@@ -568,7 +568,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (totalCount == 0) {
 			toolView.addInfoNode(productNode, new InfoTreeNode(CONGRATS_NO_ISSUES_FOUND));
 		} else {
-			String text = "✋ " + totalCount + " issue" + getPlural(totalCount) + " found by Snyk";
+			String text = "✋ " + totalCount + " issue" + getPlural(totalCount) + " found";
 			if (ignoredCount > 0) {
 				text += ", " + ignoredCount + " ignored";
 			}
