@@ -10,10 +10,8 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
  * UI.
  */
 public interface ISnykToolView {
-	String CONGRATS_NO_ISSUES_FOUND = "✅ Congrats! No issues found!";
-	String NO_FIXABLE_ISSUES = "There are no issues automatically fixable.";
-	String IGNORED_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to see ignored issues.";
-	String OPEN_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your Issue View Options to see open issues.";
+	String IGNORED_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your settings to view Ignored issues.";
+	String OPEN_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your settings to view Open issues.";
 
 	String NODE_TEXT_SCANNING = "Scanning...";
 	String NODE_TEXT_NO_ISSUES_FOUND = "No issues found";
@@ -100,10 +98,6 @@ public interface ISnykToolView {
 	 * @return
 	 */
 	abstract void clearTree();
-
-	static String getPlural(long count) {
-		return count > 1 ? "s" : "";
-	}
 
 	abstract TreeViewer getTreeViewer();
 

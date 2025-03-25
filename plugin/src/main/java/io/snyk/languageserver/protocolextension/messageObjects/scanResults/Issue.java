@@ -50,20 +50,4 @@ public record Issue(String id, String title, String severity, String filePath, R
 		}
 		return additionalData.hasAIFix() || additionalData.isUpgradable();
 	}
-	
-	public Boolean isVisible(Boolean includeIgnoredIssues, Boolean includeOpenedIssues) {
-        if (includeIgnoredIssues && includeOpenedIssues)
-        {
-            return true;
-        }
-        if (includeIgnoredIssues)
-        {
-            return this.isIgnored();
-        }
-        if (includeOpenedIssues)
-        {
-            return !this.isIgnored();
-        }
-        return false;
-	}	
 }
