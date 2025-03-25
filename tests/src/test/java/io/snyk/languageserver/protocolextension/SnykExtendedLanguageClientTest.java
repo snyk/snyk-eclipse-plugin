@@ -81,7 +81,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
 		pref.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "false");
 		toolWindowMock = mock(ISnykToolView.class);
-		
+
 	}
 
 	@AfterEach
@@ -156,7 +156,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			mockedAnalyticsSender.when(() -> TaskProcessor.getInstance()).thenReturn(asMock);
 
 			cut = new SnykExtendedLanguageClient();
-						
+
 			verify(asMock, timeout(5000).times(2)).registerTask(any(), any());
 			verifyNoMoreInteractions(asMock);
 		}
@@ -280,7 +280,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setFolderPath("a/b/c");
 
 		int issueCount = 3;
-		String expectedFirstInfoNode = "✋ " + issueCount + " issue" + getPlural(issueCount) + " found by Snyk";
+		String expectedFirstInfoNode = "✋ " + issueCount + " issue" + getPlural(issueCount) + " found";
 		String expectedSecondInfoNode = ISnykToolView.NO_FIXABLE_ISSUES;
 		String expectedThirdInfoNode = CONGRATS_NO_ISSUES_FOUND;
 
@@ -299,7 +299,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus(SCAN_STATE_SUCCESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-		String expectedFirstInfoNode = "✋ 1 issue found by Snyk";
+		String expectedFirstInfoNode = "✋ 1 issue found";
 		String expectedSecondInfoNode = "⚡️ 1 issue can be fixed automatically";
 		String expectedThirdInfoNode = CONGRATS_NO_ISSUES_FOUND;
 
@@ -317,7 +317,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus(SCAN_STATE_SUCCESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-		String expectedFirstInfoNode = "✋ 4 issues found by Snyk";
+		String expectedFirstInfoNode = "✋ 4 issues found";
 		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
 		String expectedThirdInfoNode = CONGRATS_NO_ISSUES_FOUND;
 
@@ -337,7 +337,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		param.setStatus(SCAN_STATE_SUCCESS);
 		param.setProduct(SCAN_PARAMS_CODE);
 		param.setFolderPath("a/b/c");
-		String expectedFirstInfoNode = "✋ 4 issues found by Snyk, 1 ignored";
+		String expectedFirstInfoNode = "✋ 4 issues found, 1 ignored";
 		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
 		String expectedThirdInfoNode = CONGRATS_NO_ISSUES_FOUND;
 
@@ -357,7 +357,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
-		String expectedFirstInfoNode = "✋ 4 issues found by Snyk, 4 ignored";
+		String expectedFirstInfoNode = "✋ 4 issues found, 4 ignored";
 		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
 		String expectedThirdInfoNode = "Adjust your Issue View Options to see ignored issues.";
 
@@ -376,7 +376,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
-		String expectedFirstInfoNode = "✋ 4 issues found by Snyk";
+		String expectedFirstInfoNode = "✋ 4 issues found";
 		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
 		String expectedThirdInfoNode = "Adjust your Issue View Options to see open issues.";
 
