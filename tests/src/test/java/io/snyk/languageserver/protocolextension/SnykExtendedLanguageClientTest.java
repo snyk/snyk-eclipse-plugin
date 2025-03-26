@@ -245,8 +245,26 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		verify(toolWindowMock).setNodeText(productNode, "Scanning...");
 	}
 
+	void disableCCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "false");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+	}
+
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_IAC() {
+	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_IAC_NoCCI() {
+		disableCCI();
+		var scanProduct = SCAN_PARAMS_IAC;
+		int totalIssueCount = 0;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✅ Congrats! No issues found!");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_IAC_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		var scanProduct = SCAN_PARAMS_IAC;
@@ -258,7 +276,19 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_Code() {
+	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_Code_NoCCI() {
+		disableCCI();
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 0;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✅ Congrats! No issues found!", "✅ Congrats! No issues found!");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		var scanProduct = SCAN_PARAMS_CODE;
@@ -270,7 +300,19 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixable_IAC() {
+	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixable_IAC_NoCCI() {
+		disableCCI();
+		var scanProduct = SCAN_PARAMS_IAC;
+		int totalIssueCount = 3;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✋ 3 issues", "There are no issues automatically fixable.");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixable_IAC_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		var scanProduct = SCAN_PARAMS_IAC;
@@ -282,7 +324,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixableAndHiddingIgnored_Code() {
+	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixableAndHiddingIgnored_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 		var scanProduct = SCAN_PARAMS_CODE;
@@ -294,7 +337,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_OneFixableIssueFound_IAC() {
+	void testSnykScanSuccessAddsInfoNodes_OneFixableIssueFound_IAC_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		var scanProduct = SCAN_PARAMS_IAC;
@@ -306,7 +350,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_OneFixableIssueFound_Code() {
+	void testSnykScanSuccessAddsInfoNodes_OneFixableIssueFound_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		var scanProduct = SCAN_PARAMS_CODE;
@@ -318,7 +363,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_MultipleFixableIssuesFoundAndHiddingIgnored_Code() {
+	void testSnykScanSuccessAddsInfoNodes_MultipleFixableIssuesFoundAndHiddingIgnored_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
 		var scanProduct = SCAN_PARAMS_CODE;
@@ -330,7 +376,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFoundAndOneIgnored_Code() {
+	void testSnykScanSuccessAddsInfoNodes_IssuesFoundAndOneIgnored_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		var scanProduct = SCAN_PARAMS_CODE;
@@ -342,7 +389,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_HiddingOpen_IAC() {
+	void testSnykScanSuccessAddsInfoNodes_HiddingOpen_IAC_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		var scanProduct = SCAN_PARAMS_IAC;
@@ -354,7 +402,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_MultipleIgnoredIssuesFoundAndHiddingOpen_Code() {
+	void testSnykScanSuccessAddsInfoNodes_MultipleIgnoredIssuesFoundAndHiddingOpen_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 		var scanProduct = SCAN_PARAMS_CODE;
@@ -374,7 +423,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		var productNodes = setupProductNodes(param);
 
-		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, scanProduct == SCAN_PARAMS_OSS ? "true" : "false");
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, scanProduct == SCAN_PARAMS_CODE ? "true" : "false");
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, scanProduct == SCAN_PARAMS_CODE ? "true" : "false");

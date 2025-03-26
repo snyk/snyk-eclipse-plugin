@@ -579,8 +579,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private String getIssueFoundText(long issueCount) {
 		var pref = Preferences.getInstance();
+		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
 		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
-		if (!showingOpen) {
+		if (isIgnoresEnabled && !showingOpen) {
 			return "Open issues are disabled!";
 		}
 		if (issueCount == 0) {
@@ -628,6 +629,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private InfoTreeNode getNoIssueViewOptionsSelectedTreeNode() {
 		var pref = Preferences.getInstance();
+		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
+		if (!isIgnoresEnabled) {
+			return null;
+		}
+
 		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
 		if (!showingOpen) {
 			return new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE);
@@ -640,7 +646,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var pref = Preferences.getInstance();
 		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
 		if (!isIgnoresEnabled) {
-			return getNoIssueViewOptionsSelectedTreeNode();
+			return null;
 		}
 
 		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
@@ -662,8 +668,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private InfoTreeNode getFixableIssuesNodeForCodeSecurity(long fixableIssueCount) {
 		var pref = Preferences.getInstance();
+		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
 		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
-		if (!showingOpen) {
+		if (isIgnoresEnabled && !showingOpen) {
 			return null;
 		}
 		return getFixableIssuesNode(fixableIssueCount);
