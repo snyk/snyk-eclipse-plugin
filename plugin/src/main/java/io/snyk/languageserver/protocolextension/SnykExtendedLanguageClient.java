@@ -452,7 +452,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private Issue getIssueFromCache(String product, String issueId) {
 		Issue issue = null;
-		IssueCacheHolder issueCacheHolder = IssueCacheHolder.getInstance(); 
+		IssueCacheHolder issueCacheHolder = IssueCacheHolder.getInstance();
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
 		for (IProject iProject : openProjects) {
 			issue = issueCacheHolder.getCacheInstance(iProject)

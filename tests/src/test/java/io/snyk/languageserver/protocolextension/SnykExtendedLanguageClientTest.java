@@ -83,7 +83,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		pref.store(Preferences.AUTH_TOKEN_KEY, "dummy");
 		pref.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "false");
 		toolWindowMock = mock(ISnykToolView.class);
-		
+
 	}
 
 	@AfterEach
@@ -158,7 +158,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			mockedAnalyticsSender.when(() -> TaskProcessor.getInstance()).thenReturn(asMock);
 
 			cut = new SnykExtendedLanguageClient();
-						
+
 			verify(asMock, timeout(5000).times(2)).registerTask(any(), any());
 			verifyNoMoreInteractions(asMock);
 		}
