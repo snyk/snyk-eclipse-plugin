@@ -425,7 +425,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						reference = baseBranch;
 					}
 
-					contentNode.setName(String.format("%s - Click here choose reference [ current: %s ]",
+					contentNode.setName(String.format("%s - Click here to choose reference [ current: %s ]",
 							contentNode.getName(), reference));
 				}
 			}
