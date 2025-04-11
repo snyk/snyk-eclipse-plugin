@@ -5,16 +5,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-
-import com.google.gson.Gson;
-
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
@@ -22,8 +19,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
 public class FolderConfigs {
 	protected static FolderConfigs instance;
-	private static final IEclipsePreferences instancePreferences = InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID);
-	private static final Gson gson = new Gson();
+	private static Map<String, FolderConfig> folderConfigs = new HashMap<>();
 
 	private FolderConfigs() {
 	}
@@ -36,8 +32,7 @@ public class FolderConfigs {
 	}
 
 	public void addFolderConfig(FolderConfig folderConfig) {
-		var folderPath = Paths.get(folderConfig.getFolderPath());
-		persist(folderPath, folderConfig);
+		persist(Paths.get(folderConfig.getFolderPath()), folderConfig);
 	}
 
 	public List<String> getLocalBranches(Path projectPath) {
@@ -45,13 +40,8 @@ public class FolderConfigs {
 	}
 
 	private void persist(Path path, FolderConfig folderConfig) {
-		String updatedJson = gson.toJson(folderConfig);
-		instancePreferences.put(path.normalize().toString(), updatedJson);
-		try {
-			instancePreferences.flush();
-		} catch (Exception e) {
-			SnykLogger.logError(e);
-		}
+		String folderPath = path.normalize().toString();
+		folderConfigs.put(folderPath, folderConfig);
 	}
 
 	public String getBaseBranch(Path projectPath) {
@@ -90,15 +80,15 @@ public class FolderConfigs {
 	 * @return a folder config (always)
 	 */
 	public FolderConfig getFolderConfig(Path folderPath) {
-		Path path = folderPath.normalize();
-		String json = instancePreferences.get(path.toString(), null);
-		if (json == null) {
-			SnykLogger.logInfo("No valid configuration for path: " + folderPath.toString());
-			FolderConfig folderConfig = new FolderConfig(path.toString());
-			persist(path, folderConfig);
-			return folderConfig;
+		String path = folderPath.normalize().toString();
+
+		FolderConfig folderConfig = folderConfigs.get(path);
+		if (folderConfig == null) {
+			SnykLogger.logInfo("Did not find FolderConfig for path" + path + ", creating new one.");
+			folderConfig = new FolderConfig(path.toString());
+			persist(folderPath, folderConfig);
 		}
-		return gson.fromJson(json, FolderConfig.class);
+		return folderConfig;
 	}
 
 	public static void setInstance(FolderConfigs folderConfigs) {
