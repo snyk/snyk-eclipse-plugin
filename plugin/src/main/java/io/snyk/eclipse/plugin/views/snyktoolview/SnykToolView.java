@@ -74,10 +74,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private SummaryBrowserHandler summaryBrowserHandler;
 	private TreeNode selectedNode;
 
-	// Label for the reference chooser on the content root node. Note that this string is used to determine the node 
-	// name - anything before this string is used as the original name of the root node.
-	private String chooseReferenceText = " - Click here to choose reference";
-
 	@Override
 	public void createPartControl(Composite parent) {
 		SashForm horizontalSashForm = new SashForm(parent, SWT.HORIZONTAL);
@@ -418,11 +414,12 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		for (BaseTreeNode node : children) {
 			if (node instanceof ContentRootNode) {
 				ContentRootNode contentNode = (ContentRootNode) node;
-				if (contentNode.getName().contains(chooseReferenceText)) {
+				if (!contentNode.getLabel().isBlank()) {
 					setReferenceText(contentNode);
 				}
 			}
 		}
+		refreshTree();
 	}
 
 	/*
@@ -449,12 +446,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		if (reference.isBlank()) {
 			reference = baseBranch;
 		}
-
-		String nodeName = contentNode.getName().split(chooseReferenceText)[0];
-		contentNode.setName(String.format("%s%s [ current: %s ]",
-				nodeName, chooseReferenceText, reference));
-
-		refreshTree();
+		contentNode.setLabel(String.format(" - Click here to choose reference [ current: %s ]", reference));
 	}
 
 	/*
@@ -467,8 +459,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			for (BaseTreeNode node : children) {
 				if (node instanceof ContentRootNode) {
 					ContentRootNode contentNode = (ContentRootNode) node;
-					String projectName = ResourceUtils.getProjectByPath(contentNode.getPath()).getName();
-					contentNode.setName(projectName);
+					contentNode.setLabel("");
 				}
 			}
 		}
