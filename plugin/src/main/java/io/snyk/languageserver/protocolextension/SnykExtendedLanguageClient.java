@@ -412,7 +412,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void folderConfig(FolderConfigsParam folderConfigParam) {
 		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
 		FolderConfigs.getInstance().addAll(folderConfigs);
-		toolView.refreshDeltaReference();;
+		toolView.refreshDeltaReference();
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
