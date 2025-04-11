@@ -19,7 +19,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
 public class FolderConfigs {
 	protected static FolderConfigs instance;
-	private static Map<String, FolderConfig> folderConfigs = new HashMap<>();
+	private static Map<String, FolderConfig> inMemoryConfigs = new HashMap<>();
 
 	private FolderConfigs() {
 	}
@@ -32,16 +32,16 @@ public class FolderConfigs {
 	}
 
 	public void addFolderConfig(FolderConfig folderConfig) {
-		persist(Paths.get(folderConfig.getFolderPath()), folderConfig);
+		storeInMemory(Paths.get(folderConfig.getFolderPath()), folderConfig);
 	}
 
 	public List<String> getLocalBranches(Path projectPath) {
 		return getFolderConfig(projectPath).getLocalBranches();
 	}
 
-	private void persist(Path path, FolderConfig folderConfig) {
+	private void storeInMemory(Path path, FolderConfig folderConfig) {
 		String folderPath = path.normalize().toString();
-		folderConfigs.put(folderPath, folderConfig);
+		inMemoryConfigs.put(folderPath, folderConfig);
 	}
 
 	public String getBaseBranch(Path projectPath) {
@@ -67,7 +67,7 @@ public class FolderConfigs {
 			var additionalParamsList = Arrays.asList(additionalParams.split(" "));
 			var folderConfig = getFolderConfig(path);
 			folderConfig.setAdditionalParameters(additionalParamsList);
-			persist(path, folderConfig);
+			storeInMemory(path, folderConfig);
 			folderConfigs.add(folderConfig);
 		}
 		
@@ -82,11 +82,11 @@ public class FolderConfigs {
 	public FolderConfig getFolderConfig(Path folderPath) {
 		String path = folderPath.normalize().toString();
 
-		FolderConfig folderConfig = folderConfigs.get(path);
+		FolderConfig folderConfig = inMemoryConfigs.get(path);
 		if (folderConfig == null) {
 			SnykLogger.logInfo("Did not find FolderConfig for path" + path + ", creating new one.");
-			folderConfig = new FolderConfig(path.toString());
-			persist(folderPath, folderConfig);
+			folderConfig = new FolderConfig(path);
+			storeInMemory(folderPath, folderConfig);
 		}
 		return folderConfig;
 	}
