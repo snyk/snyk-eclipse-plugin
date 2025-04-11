@@ -74,6 +74,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private SummaryBrowserHandler summaryBrowserHandler;
 	private TreeNode selectedNode;
 
+	// Label for the reference chooser on the content root node. Note that this string is used to determine the node 
+	// name - anything before this string is used as the original name of the root node.
+	private String chooseReferenceText = " - Click here to choose reference";
+
 	@Override
 	public void createPartControl(Composite parent) {
 		SashForm horizontalSashForm = new SashForm(parent, SWT.HORIZONTAL);
@@ -407,6 +411,20 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		});
 	}
 
+	@Override
+	public void refreshDeltaReference() {
+		BaseTreeNode[] children = (BaseTreeNode[]) getRoot().getChildren();
+
+		for (BaseTreeNode node : children) {
+			if (node instanceof ContentRootNode) {
+				ContentRootNode contentNode = (ContentRootNode) node;
+				if (contentNode.getName().contains(chooseReferenceText)) {
+					setReferenceText(contentNode);
+				}
+			}
+		}
+	}
+
 	/*
 	 * Sets up for doing a Net New Issues scan.
 	 */
@@ -417,19 +435,26 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			for (BaseTreeNode node : children) {
 				if (node instanceof ContentRootNode) {
 					ContentRootNode contentNode = (ContentRootNode) node;
-					var folderConfig = FolderConfigs.getInstance().getFolderConfig(contentNode.getPath());
-					String referenceFolder = folderConfig.getReferenceFolderPath();
-					String baseBranch = folderConfig.getBaseBranch();
-					var reference = referenceFolder;
-					if (reference.isBlank()) {
-						reference = baseBranch;
-					}
-
-					contentNode.setName(String.format("%s - Click here to choose reference [ current: %s ]",
-							contentNode.getName(), reference));
+					setReferenceText(contentNode);
 				}
 			}
 		}
+	}
+
+	private void setReferenceText(ContentRootNode contentNode) {
+		var folderConfig = FolderConfigs.getInstance().getFolderConfig(contentNode.getPath());
+		String referenceFolder = folderConfig.getReferenceFolderPath();
+		String baseBranch = folderConfig.getBaseBranch();
+		var reference = referenceFolder;
+		if (reference.isBlank()) {
+			reference = baseBranch;
+		}
+
+		String nodeName = contentNode.getName().split(chooseReferenceText)[0];
+		contentNode.setName(String.format("%s%s [ current: %s ]",
+				nodeName, chooseReferenceText, reference));
+
+		refreshTree();
 	}
 
 	/*

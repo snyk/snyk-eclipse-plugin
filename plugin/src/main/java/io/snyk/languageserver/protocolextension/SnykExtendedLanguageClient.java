@@ -144,6 +144,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		this.configurationUpdater.configurationChanged();
 		if (this.toolView != null) {
 			this.toolView.refreshBrowser(null);
+			this.toolView.refreshDeltaReference();
 		}
 	}
 
@@ -410,7 +411,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
 	public void folderConfig(FolderConfigsParam folderConfigParam) {
 		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
-		CompletableFuture.runAsync(() -> FolderConfigs.getInstance().addAll(folderConfigs));
+		FolderConfigs.getInstance().addAll(folderConfigs);
+		toolView.refreshDeltaReference();;
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
