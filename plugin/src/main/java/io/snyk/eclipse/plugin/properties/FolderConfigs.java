@@ -20,6 +20,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 public class FolderConfigs {
 	protected static FolderConfigs instance;
 	private static Map<String, FolderConfig> inMemoryConfigs = new HashMap<>();
+	public static Boolean LanguageServerConfigReceived = false;
 
 	private FolderConfigs() {
 	}
@@ -70,7 +71,7 @@ public class FolderConfigs {
 			storeInMemory(path, folderConfig);
 			folderConfigs.add(folderConfig);
 		}
-		
+
 		return Collections.unmodifiableList(folderConfigs);
 	}
 
@@ -86,12 +87,15 @@ public class FolderConfigs {
 		if (folderConfig == null) {
 			SnykLogger.logInfo("Did not find FolderConfig for path" + path + ", creating new one.");
 			folderConfig = new FolderConfig(path);
-			storeInMemory(folderPath, folderConfig);
 		}
 		return folderConfig;
 	}
 
 	public static void setInstance(FolderConfigs folderConfigs) {
 		instance = folderConfigs;
+	}
+
+	public void setLanguageServerConfigReceived() {
+		LanguageServerConfigReceived = true;
 	}
 }
