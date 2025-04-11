@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ColorRegistry;
 import org.eclipse.jface.resource.JFaceResources;
@@ -16,12 +17,12 @@ import org.osgi.framework.Bundle;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class BaseHtmlProvider {
 	private final Random random = new Random();
 	private final Map<String, String> colorCache = new HashMap<>();
 	private String nonce = "";
-
 	public String getCss() {
 		return "";
 	}
@@ -131,19 +132,18 @@ public class BaseHtmlProvider {
 
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
 		htmlStyled = htmlStyled.replace("${nonce}", nonce);
-		htmlStyled = htmlStyled.replace("ideNonce", nonce);
+		htmlStyled = htmlStyled.replaceAll("ideNonce", nonce);
 		htmlStyled = htmlStyled.replace("${ideScript}", "");
 
 		return htmlStyled;
 	}
 
-	@SuppressWarnings("PMD.EmptyCatchBlock")
 	private int getDefaultFontSize() {
 		int fontSize =  13;
 		try {
 			fontSize = getCurrentTheme().getFontRegistry().getFontData(JFaceResources.TEXT_FONT)[0].getHeight();
 		} catch (IllegalStateException e) {
-			// TODO improve the logic here. Expected only in unit tests.
+			SnykLogger.logInfo("cannot get default font-size from Eclipse, using default (13)");
 		}
 		return fontSize;
 	}
@@ -206,16 +206,19 @@ public class BaseHtmlProvider {
 		currentTheme = themeManager.getCurrentTheme();
 		return currentTheme;
 	}
-
 	public String getErrorHtml(String errorMessage, String path) {
-		var html = """
+        String escapedErrorMessage = errorMessage == null ? "Unknown error" : StringEscapeUtils.escapeHtml3((errorMessage));
+        String escapedPath = path == null ? "Unknown path" : StringEscapeUtils.escapeHtml3(path);
+		var html = String.format("""
 				<!DOCTYPE html>
 				<html lang="en">
 				<head>
+					<meta http-equiv='Content-Type' content='text/html; charset=unicode' />
 				    <meta charset="UTF-8">
 				    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+				      <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-ideNonce'; style-src 'self' 'nonce-ideNonce';">
 				    <title>Snyk for Eclipse</title>
-				    <style>
+				    <style nonce=ideNonce>
 				        body {
 				        	font-family: var(--default-font);
 				            background-color: var(--background-color);
@@ -236,16 +239,16 @@ public class BaseHtmlProvider {
 				            <p><strong>An error occurred:</strong></p>
 				            <p>
 				            <table>
-				            	<tr><td width="150"	>Error message:</td><td>%s</td></tr>
+				            	<tr><td width="150"	>Error message:</td><td id="errorContainer">%s</td></tr>
 				            	<tr></tr>
-				            	<tr><td>Path:</td><td>%s</td></tr>
+				            	<tr><td width="150"	>Path:</td><td id="pathContainer">%s</td></tr>
 				            </table>
 				            </p>
 				        </div>
 				    </div>
 				</body>
 				</html>
-				""".formatted(errorMessage, path);
+				""",escapedErrorMessage, escapedPath);
 		return replaceCssVariables(html);
 	}
 }

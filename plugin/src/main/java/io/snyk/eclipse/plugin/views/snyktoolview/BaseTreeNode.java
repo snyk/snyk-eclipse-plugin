@@ -14,6 +14,8 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageDataProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
+import io.snyk.eclipse.plugin.utils.SnykIcons;
+
 public class BaseTreeNode extends TreeNode {
 	private ImageDescriptor imageDescriptor;
 	private String text = "";
@@ -39,7 +41,7 @@ public class BaseTreeNode extends TreeNode {
 		}
 		child.setParent(this);
 		list.add(child);
-		this.setChildren(list.toArray(new BaseTreeNode[list.size()]));
+		this.setChildren(list.toArray(new BaseTreeNode[0]));
 	}
 
 	public void removeChildren() {
@@ -55,20 +57,22 @@ public class BaseTreeNode extends TreeNode {
 		setChildren(new BaseTreeNode[0]);
 	}
 
-	public void setImageDescriptor(ImageDescriptor imageDescriptor) {
+	public final void setImageDescriptor(ImageDescriptor imageDescriptor) {
 		this.imageDescriptor = imageDescriptor;
 	}
 	
-	protected ImageDescriptor getImageDescriptor(IResource object) {
-		ILabelProvider labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+	protected ImageDescriptor getImageDescriptor(IResource object) {	
+		ILabelProvider labelProvider = null;
 		try {
+			labelProvider =  WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 			Image image = labelProvider.getImage(object);
 			if (image == null || image.isDisposed())
 				return null;
 			
-			return getImageDescriptorFromImage(image);
+			imageDescriptor = getImageDescriptorFromImage(image);
+			return imageDescriptor;
 		} finally {
-			labelProvider.dispose();
+			if (labelProvider != null) labelProvider.dispose();
 		}
 	}
 
@@ -92,8 +96,8 @@ public class BaseTreeNode extends TreeNode {
 	public void reset() {
 		this.removeChildren();
 		this.text = "";
-		this.value = null;
-		this.imageDescriptor = null;
+		this.value = null; // NOPMD by bdoetsch on 3/12/25, 10:27 AM
+		this.imageDescriptor = null; // NOPMD by bdoetsch on 3/12/25, 10:27 AM
 	}
 
 	/**
@@ -104,7 +108,7 @@ public class BaseTreeNode extends TreeNode {
 	public String getDetails() {
 		return "";
 	}
-
+	
 	protected ImageDescriptor getImageDescriptorFromImage(Image image) {
 		final var data = image.getImageData();
 	
@@ -114,6 +118,7 @@ public class BaseTreeNode extends TreeNode {
 				return data;
 			}
 		};
-		return ImageDescriptor.createFromImageDataProvider(provider);
+		final var fromImageDataProvider = ImageDescriptor.createFromImageDataProvider(provider);
+		return fromImageDataProvider;
 	}
 }

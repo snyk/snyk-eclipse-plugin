@@ -32,8 +32,8 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater, IHa
 	protected String preferenceKey;
 	
 	public BaseHandler() {
-		iconEnabled = SnykIcons.ENABLED;
-		iconDisabled = SnykIcons.DISABLED;
+		iconEnabled = SnykIcons.getImageDescriptor(SnykIcons.ENABLED_ID);
+		iconDisabled = SnykIcons.getImageDescriptor(SnykIcons.DISABLED_ID);
 	}
 
 	@Override

@@ -42,9 +42,9 @@ public class ResourceUtils {
 	}
 
 	private static byte[] getImageDataFromUrl(URL imageUrl) {
-		try {
+		try (final var openStream = imageUrl.openStream()) {
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
-			imageUrl.openStream().transferTo(output);
+			openStream.transferTo(output);
 			return output.toByteArray();
 		} catch (Exception e) {
 			SnykLogger.logError(e);

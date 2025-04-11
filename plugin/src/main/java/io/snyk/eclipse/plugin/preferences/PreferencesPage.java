@@ -9,11 +9,15 @@ import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
@@ -36,8 +40,8 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		setPreferenceStore(prefs.getInsecureStore());
 
 		// token field editor is configured to use a secure store
-		TokenFieldEditor tokenField = new TokenFieldEditor(prefs, Preferences.AUTH_TOKEN_KEY,
-				"Token:", getFieldEditorParent());
+		TokenFieldEditor tokenField = new TokenFieldEditor(prefs, Preferences.AUTH_TOKEN_KEY, "Token:",
+				getFieldEditorParent());
 
 		final var useTokenAuth = new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH,
 				"Use token authentication. It is recommended to keep this turned off, as the default OAuth2 authentication is more secure.",
@@ -46,6 +50,16 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		addField(tokenField);
 
 		addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", 80, getFieldEditorParent()));
+		addField(new LabelFieldEditor("If you're using SSO with Snyk and OAuth2, the custom endpoint configuration is automatically populated.\n"
+				+ "Otherwise, for public regional instances, " + "see the docs: ", getFieldEditorParent()));
+		Link link = new Link(this.getFieldEditorParent(), SWT.NONE);
+
+		link.setText("<a>https://docs.snyk.io/working-with-snyk</a>");
+		link.addListener(SWT.Selection, event -> Program.launch(
+				"https://docs.snyk.io/working-with-snyk/regional-hosting-and-data-residency#available-snyk-regions"));
+
+		addField(new LabelFieldEditor("For private instances, contact your team or account manager.\n",
+				getFieldEditorParent()));
 		addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", 80, getFieldEditorParent()));
 		addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
 				getFieldEditorParent()));
@@ -123,17 +137,18 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	public boolean performOk() {
 		boolean superOK = super.performOk();
 		disableSnykCodeIfOrgDisabled();
-        CompletableFuture.runAsync(() -> {
-            SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+		CompletableFuture.runAsync(() -> {
+			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 
 			lc.updateConfiguration();
-            lc.refreshFeatureFlags();
-        });
+			lc.refreshFeatureFlags();
+		});
 		return superOK;
 	}
 
 	private void disableSnykCodeIfOrgDisabled() {
 		CompletableFuture.runAsync(() -> {
+			SnykLanguageServer.waitForInit();
 			boolean isSastEnabled;
 			try {
 				isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
@@ -150,7 +165,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 				@Override
 				public void run() {
-						checkBoxValue = snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue();
+					checkBoxValue = snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue();
 					if (checkBoxValue && !enabled) {
 						snykCodeSecurityCheckbox
 								.setLabelText(snykCodeSecurityCheckbox.getLabelText() + " (" + message + ")");

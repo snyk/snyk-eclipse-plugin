@@ -28,13 +28,13 @@ public class IssueTreeNode extends BaseTreeNode {
 	public ImageDescriptor getImageDescriptor() {
 		switch (getIssue().severity()) {
 		case ProductConstants.SEVERITY_CRITICAL:
-			return SnykIcons.SEVERITY_CRITICAL;
+			return SnykIcons.getImageDescriptor(SnykIcons.SEVERITY_CRITICAL_ID);
 		case ProductConstants.SEVERITY_HIGH:
-			return SnykIcons.SEVERITY_HIGH;
+			return SnykIcons.getImageDescriptor(SnykIcons.SEVERITY_HIGH_ID);
 		case ProductConstants.SEVERITY_MEDIUM:
-			return SnykIcons.SEVERITY_MEDIUM;
+			return SnykIcons.getImageDescriptor(SnykIcons.SEVERITY_MEDIUM_ID);
 		case ProductConstants.SEVERITY_LOW:
-			return SnykIcons.SEVERITY_LOW;
+			return SnykIcons.getImageDescriptor(SnykIcons.SEVERITY_LOW_ID);
 		default:
 			return super.getImageDescriptor();
 		}
