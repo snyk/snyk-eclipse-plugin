@@ -411,8 +411,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
 	public void folderConfig(FolderConfigsParam folderConfigParam) {
 		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
-		FolderConfigs.getInstance().addAll(folderConfigs);
-		FolderConfigs.getInstance().setLanguageServerConfigReceived();
+		var fcs = FolderConfigs.getInstance();
+		for (FolderConfig folderConfig : folderConfigs) {
+			fcs.addFolderConfig(folderConfig);
+			FolderConfigs.LanguageServerConfigReceived.add(Paths.get(folderConfig.getFolderPath()));
+		}
 		toolView.refreshDeltaReference();
 	}
 

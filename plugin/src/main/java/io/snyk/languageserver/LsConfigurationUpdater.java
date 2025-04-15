@@ -2,6 +2,7 @@ package io.snyk.languageserver;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.SystemUtils;
@@ -64,7 +65,13 @@ public class LsConfigurationUpdater {
 			authMethod = "token";
 		}
 		String enableDeltaFindings = preferences.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString());
-		var folderConfigs = FolderConfigs.LanguageServerConfigReceived ? FolderConfigs.getInstance().getAll() : new ArrayList<FolderConfig>();
+
+		// only add folder configs that are initialized
+		var folderConfigs = new ArrayList<FolderConfig>();
+		for (var p : Collections.unmodifiableSet(FolderConfigs.LanguageServerConfigReceived)) {
+			folderConfigs.add(FolderConfigs.getInstance().getFolderConfig(p));
+		}
+		
 		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac,
 				insecure, endpoint, additionalParams, additionalEnv, path, sendErrorReports, enableTelemetry,
 				organization, manageBinariesAutomatically, cliPath, token, integrationName, integrationVersion,

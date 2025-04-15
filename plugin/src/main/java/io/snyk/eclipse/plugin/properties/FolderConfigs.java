@@ -5,22 +5,27 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.preferences.IScopeContext;
+
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
 public class FolderConfigs {
+	public static Set<Path> LanguageServerConfigReceived = new ConcurrentSkipListSet<>();
+
 	protected static FolderConfigs instance;
-	private static Map<String, FolderConfig> inMemoryConfigs = new HashMap<>();
-	public static Boolean LanguageServerConfigReceived = false;
+	
+	private static Map<Path, FolderConfig> inMemoryConfigs = new ConcurrentHashMap<>();
 
 	private FolderConfigs() {
 	}
@@ -41,8 +46,7 @@ public class FolderConfigs {
 	}
 
 	private void storeInMemory(Path path, FolderConfig folderConfig) {
-		String folderPath = path.normalize().toString();
-		inMemoryConfigs.put(folderPath, folderConfig);
+		inMemoryConfigs.put(path.normalize(), folderConfig);
 	}
 
 	public String getBaseBranch(Path projectPath) {
@@ -81,12 +85,12 @@ public class FolderConfigs {
 	 * @return a folder config (always)
 	 */
 	public FolderConfig getFolderConfig(Path folderPath) {
-		String path = folderPath.normalize().toString();
+		var path = folderPath.normalize();
 
 		FolderConfig folderConfig = inMemoryConfigs.get(path);
 		if (folderConfig == null) {
 			SnykLogger.logInfo("Did not find FolderConfig for path" + path + ", creating new one.");
-			folderConfig = new FolderConfig(path);
+			folderConfig = new FolderConfig(path.toString());
 		}
 		return folderConfig;
 	}
@@ -95,7 +99,7 @@ public class FolderConfigs {
 		instance = folderConfigs;
 	}
 
-	public void setLanguageServerConfigReceived() {
-		LanguageServerConfigReceived = true;
+	public void setLanguageServerConfigReceived(Path path) {
+		LanguageServerConfigReceived.add(path);
 	}
 }
