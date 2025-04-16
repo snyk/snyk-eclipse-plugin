@@ -2,22 +2,18 @@ package io.snyk.eclipse.plugin.properties;
 
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
