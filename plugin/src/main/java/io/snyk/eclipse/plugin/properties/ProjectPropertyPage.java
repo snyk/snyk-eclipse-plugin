@@ -27,8 +27,8 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 public class ProjectPropertyPage extends FieldEditorPreferencePage implements IWorkbenchPropertyPage {
 	public static final String SNYK_ADDITIONAL_PARAMETERS = "snyk.additionalParameters";
 	private IAdaptable element;
-	private IProject project = null;
-	private StringFieldEditor additionalParamsEditor = null;
+	private IProject project;
+	private StringFieldEditor additionalParamsEditor;
 	private Path projectPath;
 
 	public ProjectPropertyPage() {
