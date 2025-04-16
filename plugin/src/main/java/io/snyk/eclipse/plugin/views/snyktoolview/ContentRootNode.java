@@ -27,6 +27,7 @@ public final class ContentRootNode extends BaseTreeNode {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
+		if (path == null) return null;
 		var iResource = ResourceUtils.getProjectByPath(path);
 		return getImageDescriptor(iResource);
 	}

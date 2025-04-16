@@ -50,8 +50,7 @@ public class InMemoryPreferenceStore implements IPreferenceStore, IEclipsePrefer
 
 	@Override
 	public boolean contains(String name) {
-		// TODO Auto-generated method stub
-		return false;
+		return store.containsKey(name);
 	}
 
 	@Override
@@ -128,8 +127,7 @@ public class InMemoryPreferenceStore implements IPreferenceStore, IEclipsePrefer
 
 	@Override
 	public String getString(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		return store.get(name);
 	}
 
 	@Override
@@ -224,8 +222,7 @@ public class InMemoryPreferenceStore implements IPreferenceStore, IEclipsePrefer
 
 	@Override
 	public void setValue(String name, String value) {
-		// TODO Auto-generated method stub
-
+		this.store.put(name, value);
 	}
 
 	@Override
