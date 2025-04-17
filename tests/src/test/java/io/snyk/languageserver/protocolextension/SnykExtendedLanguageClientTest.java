@@ -324,7 +324,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixableAndHiddingIgnored_Code_CCI() {
+	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixableAndHidingIgnored_Code_CCI() {
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
@@ -345,7 +345,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 1;
 		int fixableIssueCount = 1;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 1 issue", "⚡️ 1 issue can be fixed automatically");
+		var expectedNodes = List.of("✋ 1 issue", "⚡️ 1 issue can be fixed automatically.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -358,12 +358,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 1;
 		int fixableIssueCount = 1;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 1 open issue, 0 ignored issues", "⚡️ 1 issue can be fixed automatically", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✋ 1 open issue, 0 ignored issues", "⚡️ 1 issue can be fixed automatically.", "✅ Congrats! No issues found!");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_MultipleFixableIssuesFoundAndHiddingIgnored_Code_CCI() {
+	void testSnykScanSuccessAddsInfoNodes_MultipleFixableIssuesFoundAndHidingIgnored_Code_CCI() {
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
@@ -371,7 +371,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 2;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 issues can be fixed automatically", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 issues can be fixed automatically.", "✅ Congrats! No issues found!");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -384,12 +384,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 2;
 		int ignoredIssueCount = 1;
-		var expectedNodes = List.of("✋ 3 open issues, 1 ignored issue", "⚡️ 2 issues can be fixed automatically", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✋ 3 open issues, 1 ignored issue", "⚡️ 2 issues can be fixed automatically.", "✅ Congrats! No issues found!");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_HiddingOpen_IAC_CCI() {
+	void testSnykScanSuccessAddsInfoNodes_HidingOpen_IAC_CCI() {
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
@@ -402,7 +402,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_MultipleIgnoredIssuesFoundAndHiddingOpen_Code_CCI() {
+	void testSnykScanSuccessAddsInfoNodes_MultipleIgnoredIssuesFoundAndHidingOpen_Code_CCI() {
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
@@ -411,6 +411,24 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 4;
 		var expectedNodes = List.of("✋ 4 ignored issues, open issues are disabled", "Open issues are disabled!", "Adjust your settings to view Open issues.");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_HidingOpenAndIgnored_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 0;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of(
+			"Open and Ignored issues are disabled!",
+			"Adjust your settings to view Open or Ignored issues.",
+			"Open issues are disabled!",
+			"Adjust your settings to view Open issues."
+		);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 

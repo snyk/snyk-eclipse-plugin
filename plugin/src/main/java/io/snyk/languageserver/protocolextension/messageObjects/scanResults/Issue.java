@@ -8,16 +8,16 @@ public record Issue(String id, String title, String severity, String filePath, R
 		if (title == null || title.isEmpty()) {
 			return additionalData != null ? additionalData.message() : null;
 		}
-		String displayTitle = title;
+		StringBuilder displayTitleBuilder = new StringBuilder(title);
 		if (isIgnored()) {
-			displayTitle = " [ Ignored ] " + displayTitle;
+			displayTitleBuilder.insert(0, " [ Ignored ] ");
 		}
 
 		if (hasFix()) {
-			displayTitle = " ⚡" + displayTitle;
+			displayTitleBuilder.insert(0, " ⚡");
 		}
-		
-		return displayTitle;
+
+		return displayTitleBuilder.toString();
 	}
 
 	public String getDisplayTitleWithLineNumber() {
