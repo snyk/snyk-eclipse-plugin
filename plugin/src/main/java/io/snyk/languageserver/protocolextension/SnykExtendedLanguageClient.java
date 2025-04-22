@@ -144,6 +144,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		this.configurationUpdater.configurationChanged();
 		if (this.toolView != null) {
 			this.toolView.refreshBrowser(null);
+			this.toolView.refreshDeltaReference();
 		}
 	}
 
@@ -199,15 +200,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (Preferences.getInstance().getAuthToken().isBlank()) {
 				SnykWizard.createAndLaunch();
 			} else {
+				final var languageServerConfigReceived = FolderConfigs.LanguageServerConfigReceived;
 				updateConfiguration();
 				openToolView();
 				try {
 					if (projectPath != null) {
-						executeCommand(LsConstants.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath));
+						if (languageServerConfigReceived.contains(projectPath)) {
+							executeCommand(LsConstants.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath));
+						}
 						return;
 					}
-
-					executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
+					if (languageServerConfigReceived.size()>0) {
+						executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
+					}
 				} catch (Exception e) {
 					SnykLogger.logError(e);
 				}
@@ -342,7 +347,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		if (differentToken && !newToken.isBlank()) {
-			triggerScan(null);
+			if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
+				triggerScan(null);
+			}
 		}
 	}
 
@@ -410,7 +417,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
 	public void folderConfig(FolderConfigsParam folderConfigParam) {
 		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
-		CompletableFuture.runAsync(() -> FolderConfigs.getInstance().addAll(folderConfigs));
+		var fcs = FolderConfigs.getInstance();
+		for (FolderConfig folderConfig : folderConfigs) {
+			fcs.addFolderConfig(folderConfig);
+			final var folderPath = folderConfig.getFolderPath();
+			final var path = Paths.get(folderPath);
+			FolderConfigs.LanguageServerConfigReceived.add(path);
+			if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
+				this.triggerScan(path);
+			}
+		}
+		toolView.refreshDeltaReference();
+		
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)

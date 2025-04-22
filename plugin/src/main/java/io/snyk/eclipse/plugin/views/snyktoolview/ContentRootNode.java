@@ -15,16 +15,19 @@ import io.snyk.eclipse.plugin.utils.ResourceUtils;
 public final class ContentRootNode extends BaseTreeNode {
 	private Path path;
 	private String name;
+	private String label;
 
-	public ContentRootNode(String name, Path value) {
+	public ContentRootNode(String name, String label, Path value) {
 		super(value);
 		this.reset();
 		this.setName(name);
+		this.setLabel(label);
 		this.setPath(value);
 	}
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
+		if (path == null) return null;
 		var iResource = ResourceUtils.getProjectByPath(path);
 		return getImageDescriptor(iResource);
 	}
@@ -68,7 +71,7 @@ public final class ContentRootNode extends BaseTreeNode {
 
 	@Override
 	public String getText() {
-		return getName();
+		return getName() + getLabel();
 	}
 
 	public Path getPath() {
@@ -85,7 +88,16 @@ public final class ContentRootNode extends BaseTreeNode {
 		return name;
 	}
 
+	public String getLabel() {
+		return label;
+	}
+
+
 	public final void setName(String name) {
 		this.name = name;
+	}
+
+	public final void setLabel(String label) {
+		this.label = label;
 	}
 }
