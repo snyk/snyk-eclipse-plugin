@@ -67,17 +67,31 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 				super.getColorAsHex("DELETION_COLOR", "#ff0000"));
 		htmlStyled = htmlStyled.replace("var(--example-line-added-color)",
 				super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
-		htmlStyled = htmlStyled.replace("var(--generated-ai-fix-button-background-color)",
+		htmlStyled = htmlStyled.replace("var(--button-background-color)",
 				super.getColorAsHex("BUTTON_COLOR", "#375578"));
+		htmlStyled = htmlStyled.replace("var(--button-text-color)",
+				super.getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_SELECTED_TEXT_COLOR", "#F5F5F5"));
 		htmlStyled = htmlStyled.replace("var(--disabled-background-color)",
 				super.getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
 		htmlStyled = htmlStyled.replace("var(--vscode-input-border)", super.getColorAsHex("BUTTON_COLOR", "#375578"));
 		htmlStyled = htmlStyled.replace("var(--warning-text)", super.getColorAsHex("WARNING_TEXT_COLOR", "#000000"));
-		htmlStyled = htmlStyled.replace("var(--warning-background)", super.getColorAsHex("WARNING_BACKGROUND_COLOR", "#c8a000"));
+		htmlStyled = htmlStyled.replace("var(--warning-background)",
+				super.getColorAsHex("WARNING_BACKGROUND_COLOR", "#c8a000"));
 
 		String htmlWithScripts = replaceAIFixScripts(htmlStyled);
+		String htmlWithIgnoreRequest = replaceIgnoreRequestScript(htmlWithScripts);
 
-		return htmlWithScripts;
+		return htmlWithIgnoreRequest;
+	}
+
+	private String replaceIgnoreRequestScript(String htmlWithScripts) {
+		String htmlWithIgnoreRequest = htmlWithScripts.replace("${ideSubmitIgnoreRequest}",
+				ideSubmitIgnoreRequestScript());
+		return htmlWithIgnoreRequest;
+	}
+
+	private CharSequence ideSubmitIgnoreRequestScript() {
+		return "window.ideSubmitIgnoreRequest(issueId + '@|@' + ignoreType + '@|@' + ignoreExpirationDate + '@|@' + ignoreReason);\n";
 	}
 
 	private String replaceAIFixScripts(String html) {
