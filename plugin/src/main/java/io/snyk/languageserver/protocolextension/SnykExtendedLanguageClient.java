@@ -323,6 +323,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		executeCommand(LsConstants.COMMAND_CODE_FIX_APPLY_AI_EDIT, List.of(fixId));
 	}
 
+	public void submitIgnoreRequestCommands(String workflow, String issueId, String ignoreType, String ignoreReason, String ignoreExpirationDate) {
+		executeCommand(LsConstants.COMMAND_SUBMIT_IGNORE_REQUEST, List.of(workflow, issueId, ignoreType, ignoreReason, ignoreExpirationDate));
+	}
+
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();

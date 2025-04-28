@@ -20,6 +20,7 @@ public final class LsConstants {
 	public static final String COMMAND_CODE_FIX_APPLY_AI_EDIT = "snyk.code.fixApplyEdit";
 	public static final String COMMAND_CODE_SUBMIT_FIX_FEEDBACK = "snyk.code.submitFixFeedback";
 	public static final String COMMAND_SNYK_CLI = "snyk.executeCLI";
+	public static final String COMMAND_SUBMIT_IGNORE_REQUEST = "snyk.submitIgnoreRequest";
 	public static final String SNYK_HAS_AUTHENTICATED = "$/snyk.hasAuthenticated";
 	public static final String SNYK_IS_AVAILABLE_CLI = "$/snyk.isAvailableCli";
 	public static final String SNYK_ADD_TRUSTED_FOLDERS = "$/snyk.addTrustedFolders";

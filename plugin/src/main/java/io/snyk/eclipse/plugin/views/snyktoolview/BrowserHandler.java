@@ -98,6 +98,22 @@ public class BrowserHandler {
 			}
 		};
 
+		new BrowserFunction(browser, "ideSubmitIgnoreRequest") {
+			@Override
+			public Object function(Object[] arguments) {
+				String params = (String) arguments[0];
+				String[] parts = params.split("@\\|@", 4);
+				String issueId = (String) parts[0];
+				String ignoreType = (String) parts[1];
+				String ignoreExpirationDate = (String) parts[2];
+				String ignoreReason = (String) parts[3];
+
+				SnykExtendedLanguageClient.getInstance().submitIgnoreRequestCommands("create", issueId, ignoreType, ignoreReason, ignoreExpirationDate);
+
+				return Collections.emptyList();
+			}
+		};
+
 		new BrowserFunction(browser, "ideGenAIFix") {
 			@Override
 			public Object function(Object[] arguments) {
