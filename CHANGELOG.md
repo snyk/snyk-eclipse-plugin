@@ -1,5 +1,9 @@
 # Snyk Security Changelog
 
+## [3.2.0]
+### Changes
+- Added support for submitting Ignore Requests.
+
 ## [3.1.0]
 ### Changes
 - add option for using a folder as reference instead of a branch in net-new scanning

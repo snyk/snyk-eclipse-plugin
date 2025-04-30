@@ -82,6 +82,11 @@ public interface ISnykToolView {
 	abstract void refreshTree();
 
 	/**
+	 * Refreshes the delta reference labels
+	 */
+	abstract void refreshDeltaReference();
+
+	/**
 	 * Refreshes the browser
 	 */
 	abstract void refreshBrowser(String status);

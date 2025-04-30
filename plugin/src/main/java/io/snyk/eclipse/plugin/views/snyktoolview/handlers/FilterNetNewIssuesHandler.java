@@ -34,7 +34,9 @@ public class FilterNetNewIssuesHandler extends BaseHandler implements IElementUp
 			// Update the Snyk Language Server configuration.
 			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 			lc.updateConfiguration();
-			lc.triggerScan(null);
+			if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
+				lc.triggerScan(null);
+			}
 		});
 
 		return null;

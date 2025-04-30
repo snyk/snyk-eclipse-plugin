@@ -14,8 +14,6 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageDataProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-import io.snyk.eclipse.plugin.utils.SnykIcons;
-
 public class BaseTreeNode extends TreeNode {
 	private ImageDescriptor imageDescriptor;
 	private String text = "";

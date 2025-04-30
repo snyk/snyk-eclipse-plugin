@@ -407,6 +407,21 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		});
 	}
 
+	@Override
+	public void refreshDeltaReference() {
+		BaseTreeNode[] children = (BaseTreeNode[]) getRoot().getChildren();
+
+		for (BaseTreeNode node : children) {
+			if (node instanceof ContentRootNode) {
+				ContentRootNode contentNode = (ContentRootNode) node;
+				if (!contentNode.getLabel().isBlank()) {
+					setReferenceText(contentNode);
+				}
+			}
+		}
+		refreshTree();
+	}
+
 	/*
 	 * Sets up for doing a Net New Issues scan.
 	 */
@@ -417,19 +432,21 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			for (BaseTreeNode node : children) {
 				if (node instanceof ContentRootNode) {
 					ContentRootNode contentNode = (ContentRootNode) node;
-					var folderConfig = FolderConfigs.getInstance().getFolderConfig(contentNode.getPath());
-					String referenceFolder = folderConfig.getReferenceFolderPath();
-					String baseBranch = folderConfig.getBaseBranch();
-					var reference = referenceFolder;
-					if (reference.isBlank()) {
-						reference = baseBranch;
-					}
-
-					contentNode.setName(String.format("%s - Click here choose reference [ current: %s ]",
-							contentNode.getName(), reference));
+					setReferenceText(contentNode);
 				}
 			}
 		}
+	}
+
+	private void setReferenceText(ContentRootNode contentNode) {
+		var folderConfig = FolderConfigs.getInstance().getFolderConfig(contentNode.getPath());
+		String referenceFolder = folderConfig.getReferenceFolderPath();
+		String baseBranch = folderConfig.getBaseBranch();
+		var reference = referenceFolder;
+		if (reference.isBlank()) {
+			reference = baseBranch;
+		}
+		contentNode.setLabel(String.format(" - Click here to choose reference [ current: %s ]", reference));
 	}
 
 	/*
@@ -442,8 +459,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			for (BaseTreeNode node : children) {
 				if (node instanceof ContentRootNode) {
 					ContentRootNode contentNode = (ContentRootNode) node;
-					String projectName = ResourceUtils.getProjectByPath(contentNode.getPath()).getName();
-					contentNode.setName(projectName);
+					contentNode.setLabel("");
 				}
 			}
 		}

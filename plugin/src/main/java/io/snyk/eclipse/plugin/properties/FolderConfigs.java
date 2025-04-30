@@ -6,14 +6,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-
-import com.google.gson.Gson;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
@@ -21,9 +21,11 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
 public class FolderConfigs {
+	public static Set<Path> LanguageServerConfigReceived = new ConcurrentSkipListSet<>();
+
 	protected static FolderConfigs instance;
-	private static final IEclipsePreferences instancePreferences = InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID);
-	private static final Gson gson = new Gson();
+	
+	private static Map<Path, FolderConfig> inMemoryConfigs = new ConcurrentHashMap<>();
 
 	private FolderConfigs() {
 	}
@@ -36,22 +38,15 @@ public class FolderConfigs {
 	}
 
 	public void addFolderConfig(FolderConfig folderConfig) {
-		var folderPath = Paths.get(folderConfig.getFolderPath());
-		persist(folderPath, folderConfig);
+		storeInMemory(Paths.get(folderConfig.getFolderPath()), folderConfig);
 	}
 
 	public List<String> getLocalBranches(Path projectPath) {
 		return getFolderConfig(projectPath).getLocalBranches();
 	}
 
-	private void persist(Path path, FolderConfig folderConfig) {
-		String updatedJson = gson.toJson(folderConfig);
-		instancePreferences.put(path.normalize().toString(), updatedJson);
-		try {
-			instancePreferences.flush();
-		} catch (Exception e) {
-			SnykLogger.logError(e);
-		}
+	private void storeInMemory(Path path, FolderConfig folderConfig) {
+		inMemoryConfigs.put(path.normalize(), folderConfig);
 	}
 
 	public String getBaseBranch(Path projectPath) {
@@ -77,10 +72,10 @@ public class FolderConfigs {
 			var additionalParamsList = Arrays.asList(additionalParams.split(" "));
 			var folderConfig = getFolderConfig(path);
 			folderConfig.setAdditionalParameters(additionalParamsList);
-			persist(path, folderConfig);
+			storeInMemory(path, folderConfig);
 			folderConfigs.add(folderConfig);
 		}
-		
+
 		return Collections.unmodifiableList(folderConfigs);
 	}
 
@@ -90,18 +85,21 @@ public class FolderConfigs {
 	 * @return a folder config (always)
 	 */
 	public FolderConfig getFolderConfig(Path folderPath) {
-		Path path = folderPath.normalize();
-		String json = instancePreferences.get(path.toString(), null);
-		if (json == null) {
-			SnykLogger.logInfo("No valid configuration for path: " + folderPath.toString());
-			FolderConfig folderConfig = new FolderConfig(path.toString());
-			persist(path, folderConfig);
-			return folderConfig;
+		var path = folderPath.normalize();
+
+		FolderConfig folderConfig = inMemoryConfigs.get(path);
+		if (folderConfig == null) {
+			SnykLogger.logInfo("Did not find FolderConfig for path" + path + ", creating new one.");
+			folderConfig = new FolderConfig(path.toString());
 		}
-		return gson.fromJson(json, FolderConfig.class);
+		return folderConfig;
 	}
 
 	public static void setInstance(FolderConfigs folderConfigs) {
 		instance = folderConfigs;
+	}
+
+	public void setLanguageServerConfigReceived(Path path) {
+		LanguageServerConfigReceived.add(path);
 	}
 }

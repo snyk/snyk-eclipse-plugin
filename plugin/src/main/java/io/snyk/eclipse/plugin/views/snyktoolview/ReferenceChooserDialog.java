@@ -17,6 +17,7 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.wizards.SWTWidgetHelper;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
@@ -103,7 +104,9 @@ public class ReferenceChooserDialog extends TitleAreaDialog {
 		CompletableFuture.runAsync(() -> {
 			final var lc = SnykExtendedLanguageClient.getInstance();
 			lc.updateConfiguration();
-			lc.triggerScan(projectPath);
+			if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
+				lc.triggerScan(projectPath);
+			}
 		});
 
 		return super.close();
