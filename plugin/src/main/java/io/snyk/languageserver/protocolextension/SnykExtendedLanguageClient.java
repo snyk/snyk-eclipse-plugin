@@ -566,18 +566,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		long totalIssueCount = issueCache.getTotalCount(productNode.getProduct());
 		long ignoredIssueCount = issueCache.getIgnoredCount(productNode.getProduct());
 		long openIssueCount = totalIssueCount - ignoredIssueCount;
-		boolean isCodeSecurity = productNode.getProduct().equals(ProductConstants.DISPLAYED_CODE_SECURITY);
+		boolean isCodeNode = productNode.getProduct().equals(DISPLAYED_CODE_SECURITY)
+			|| productNode.getProduct().equals(DISPLAYED_CODE_QUALITY);
 
-		var text = !isCodeSecurity ? getIssueFoundText(totalIssueCount) : getIssueFoundTextForCodeSecurity(totalIssueCount, openIssueCount, ignoredIssueCount);
+		var text = !isCodeNode ? getIssueFoundText(totalIssueCount) : getIssueFoundTextForCode(totalIssueCount, openIssueCount, ignoredIssueCount);
 		toolView.addInfoNode(productNode, new InfoTreeNode(text));
 		if (totalIssueCount == 0) {
-			var ivoNode = !isCodeSecurity ? getNoIssueViewOptionsSelectedTreeNode() : getNoIssueViewOptionsSelectedTreeNodeForCodeSecurity();
+			var ivoNode = !isCodeNode ? getNoIssueViewOptionsSelectedTreeNode() : getNoIssueViewOptionsSelectedTreeNodeForCode();
 			if (ivoNode != null) {
 				toolView.addInfoNode(productNode, ivoNode);
 			}
 		} else {
 			long fixableIssueCount = issueCache.getFixableCount(productNode.getProduct());
-			var fixableText = !isCodeSecurity ? getFixableIssuesText(fixableIssueCount) : getFixableIssuesTextForCodeSecurity(fixableIssueCount);
+			var fixableText = !isCodeNode ? getFixableIssuesText(fixableIssueCount) : getFixableIssuesTextForCode(fixableIssueCount);
 			if (fixableText != null) {
 				toolView.addInfoNode(productNode, new InfoTreeNode(fixableText));
 			}
@@ -599,7 +600,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private String getIssueFoundTextForCodeSecurity(long totalIssueCount, long openIssueCount, long ignoredIssueCount) {
+	private String getIssueFoundTextForCode(long totalIssueCount, long openIssueCount, long ignoredIssueCount) {
 		var pref = Preferences.getInstance();
 		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
 		if (!isIgnoresEnabled) {
@@ -651,7 +652,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return null;
 	}
 
-	private InfoTreeNode getNoIssueViewOptionsSelectedTreeNodeForCodeSecurity() {
+	private InfoTreeNode getNoIssueViewOptionsSelectedTreeNodeForCode() {
 		var pref = Preferences.getInstance();
 		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
 		if (!isIgnoresEnabled) {
@@ -684,7 +685,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private String getFixableIssuesTextForCodeSecurity(long fixableIssueCount) {
+	private String getFixableIssuesTextForCode(long fixableIssueCount) {
 		var pref = Preferences.getInstance();
 		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
 		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
