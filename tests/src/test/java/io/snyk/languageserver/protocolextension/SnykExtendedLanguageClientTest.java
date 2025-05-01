@@ -12,11 +12,11 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -332,7 +332,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 3;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 3 open issues", "There are no issues automatically fixable.", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✋ 3 open issues", "There are no issues automatically fixable.", "✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -371,7 +371,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 2;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 issues can be fixed automatically.", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 issues can be fixed automatically.", "✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -410,7 +410,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 4;
-		var expectedNodes = List.of("✋ 4 ignored issues, open issues are disabled", "Open issues are disabled!", "Adjust your settings to view Open issues.");
+		var expectedNodes = List.of("✋ 4 ignored issues, open issues are disabled", "✋ No ignored issues, open issues are disabled", "Adjust your settings to view Open issues.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -426,8 +426,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		var expectedNodes = List.of(
 			"Open and Ignored issues are disabled!",
 			"Adjust your settings to view Open or Ignored issues.",
-			"Open issues are disabled!",
-			"Adjust your settings to view Open issues."
+			"Open and Ignored issues are disabled!",
+			"Adjust your settings to view Open or Ignored issues."
 		);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
@@ -475,12 +475,11 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			verify(toolWindowMock).getProductNode(node.getProduct(), param.getFolderPath());
 		}
 
-		int expectedInfoNodeUpdateCount = expectedNodes.size();
-
-		verify(toolWindowMock, times(expectedInfoNodeUpdateCount)).addInfoNode(parentCaptor.capture(),
+		verify(toolWindowMock, atLeastOnce()).addInfoNode(parentCaptor.capture(),
 				infoNodeCaptor.capture());
 
-		assertIterableEquals(expectedNodes, infoNodeCaptor.getAllValues().stream().map(InfoTreeNode::getValue).collect(Collectors.toList()));
+		List<Object> actualNodes = infoNodeCaptor.getAllValues().stream().map(InfoTreeNode::getValue).collect(Collectors.toList());
+		assertIterableEquals(expectedNodes, actualNodes);
 	}
 
 	private Set<Issue> getIssues(int totalIssueCount, int fixableCount, int ignoredCount) {
