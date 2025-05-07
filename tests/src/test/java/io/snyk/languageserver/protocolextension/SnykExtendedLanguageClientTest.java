@@ -345,7 +345,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 1;
 		int fixableIssueCount = 1;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 1 issue", "⚡️ 1 issue can be fixed automatically.");
+		var expectedNodes = List.of("✋ 1 issue", "⚡️ 1 issue is fixable automatically.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -358,7 +358,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 1;
 		int fixableIssueCount = 1;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 1 open issue, 0 ignored issues", "⚡️ 1 issue can be fixed automatically.", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✋ 1 open issue & 0 ignored issues", "⚡️ 1 open issue is fixable automatically.", "✅ Congrats! No issues found!");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -371,7 +371,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 2;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 issues can be fixed automatically.", "✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
+		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 open issues are fixable automatically.", "✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -384,7 +384,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 2;
 		int ignoredIssueCount = 1;
-		var expectedNodes = List.of("✋ 3 open issues, 1 ignored issue", "⚡️ 2 issues can be fixed automatically.", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✋ 3 open issues & 1 ignored issue", "⚡️ 2 open issues are fixable automatically.", "✅ Congrats! No issues found!");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 

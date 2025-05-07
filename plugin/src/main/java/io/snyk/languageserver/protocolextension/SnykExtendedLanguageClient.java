@@ -603,7 +603,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 		} else {
 			long fixableIssueCount = issueCache.getFixableCount(productNode.getProduct());
-			var fixableText = !isCodeNode ? getFixableIssuesText(fixableIssueCount) : getFixableIssuesTextForCode(fixableIssueCount);
+			var fixableText = !isCodeNode ? getFixableIssuesText(fixableIssueCount, false) : getFixableIssuesTextForCode(fixableIssueCount);
 			if (fixableText != null) {
 				toolView.addInfoNode(productNode, new InfoTreeNode(fixableText));
 			}
@@ -642,7 +642,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (totalIssueCount == 0) {
 				return CONGRATS_NO_ISSUES_FOUND;
 			} else {
-				return "✋ " + openIssuesText + ", " + ignoredIssuesText;
+				return "✋ " + openIssuesText + " & " + ignoredIssuesText;
 			}
 		}
 		if (showingOpen) {
@@ -702,12 +702,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return null;
 	}
 
-	private String getFixableIssuesText(long fixableIssueCount) {
-		if (fixableIssueCount > 0) {
-			return "⚡️ " + fixableIssueCount + " issue" + (fixableIssueCount == 1 ? "" : "s") + " can be fixed automatically.";
-		} else {
-			return NO_FIXABLE_ISSUES;
-		}
+	private String getFixableIssuesText(long fixableIssueCount, boolean sayOpenIssues) {
+		return fixableIssueCount > 0
+			? "⚡️ " + fixableIssueCount + (sayOpenIssues ? " open" : "") + " issue" + (fixableIssueCount == 1 ? " is" : "s are") + " fixable automatically."
+			: NO_FIXABLE_ISSUES;
 	}
 
 	private String getFixableIssuesTextForCode(long fixableIssueCount) {
@@ -718,7 +716,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (isIgnoresEnabled && !showingOpen) {
 			return null;
 		}
-		return getFixableIssuesText(fixableIssueCount);
+		return getFixableIssuesText(fixableIssueCount, isIgnoresEnabled);
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_PUBLISH_DIAGNOSTICS_316)
