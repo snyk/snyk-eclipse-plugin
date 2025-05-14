@@ -2,7 +2,8 @@
 
 ## [3.2.0]
 ### Changes
-- Added support for submitting Ignore Requests.
+- Fixed Issue Status view filters for ignored issues not hiding non-shown issues in editor (early access).
+- Added support for submitting Ignore Requests (early access).
 
 ## [3.1.0]
 ### Changes
