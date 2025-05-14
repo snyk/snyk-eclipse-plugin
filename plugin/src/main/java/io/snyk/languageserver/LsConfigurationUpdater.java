@@ -11,6 +11,7 @@ import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
+import io.snyk.eclipse.plugin.properties.IssueViewOptions;
 import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
@@ -42,6 +43,10 @@ public class LsConfigurationUpdater {
 		String additionalParams = preferences.getPref(Preferences.ADDITIONAL_PARAMETERS, "");
 		String additionalEnv = preferences.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "");
 		String path = preferences.getPref(Preferences.PATH_KEY, "");
+		IssueViewOptions issueViewOptions = new IssueViewOptions(
+				preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true),
+				preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false)
+				);
 		String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
 		String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, Boolean.FALSE.toString());
 		String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
@@ -73,7 +78,7 @@ public class LsConfigurationUpdater {
 		}
 		
 		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac,
-				insecure, endpoint, additionalParams, additionalEnv, path, sendErrorReports, enableTelemetry,
+				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports, enableTelemetry,
 				organization, manageBinariesAutomatically, cliPath, token, integrationName, integrationVersion,
 				automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode, enableDeltaFindings,
 				authMethod, folderConfigs);
@@ -90,6 +95,7 @@ public class LsConfigurationUpdater {
 		private final String additionalParams;
 		private final String additionalEnv;
 		private final String path;
+		private final IssueViewOptions issueViewOptions;
 		private final String sendErrorReports;
 		private final String enableTelemetry;
 		private final String organization;
@@ -113,7 +119,7 @@ public class LsConfigurationUpdater {
 
 		public Settings(String activateSnykOpenSource, String activateSnykCodeSecurity, String activateSnykCodeQuality,
 				String activateSnykIac, String insecure, String endpoint, String additionalParams, String additionalEnv,
-				String path, String sendErrorReports, String enableTelemetry, String organization,
+				String path, IssueViewOptions issueViewOptions, String sendErrorReports, String enableTelemetry, String organization,
 				String manageBinariesAutomatically, String cliPath, String token, String integrationName,
 				String integrationVersion, String automaticAuthentication, String[] trustedFolders,
 				String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings, String authMethod,List<FolderConfig>folderConfigs) {
@@ -126,6 +132,7 @@ public class LsConfigurationUpdater {
 			this.additionalParams = additionalParams;
 			this.additionalEnv = additionalEnv;
 			this.path = path;
+			this.issueViewOptions = issueViewOptions;
 			this.sendErrorReports = sendErrorReports;
 			this.enableTelemetry = enableTelemetry;
 			this.organization = organization;
@@ -177,6 +184,10 @@ public class LsConfigurationUpdater {
 
 		public String getAdditionalEnv() {
 			return additionalEnv;
+		}
+
+		public IssueViewOptions getIssueViewOptions() {
+			return this.issueViewOptions;
 		}
 
 		public String getSendErrorReports() {

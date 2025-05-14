@@ -5,18 +5,18 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_QUAL
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_IAC;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_OSS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_TO_DISPLAYED;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -29,7 +29,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4e.LSPEclipseUtils;
@@ -243,151 +245,206 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		verify(toolWindowMock).setNodeText(productNode, "Scanning...");
 	}
 
-	@Test
-	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound() {
-		var param = new SnykScanParam();
-		param.setStatus(SCAN_STATE_SUCCESS);
-		param.setProduct(SCAN_PARAMS_CODE);
-		param.setFolderPath("a/b/c");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
-
-		int issueCount = 0;
-		String expectedFirstInfoNode = CONGRATS_NO_ISSUES_FOUND;
-		String expectedSecondInfoNode = CONGRATS_NO_ISSUES_FOUND;
-
-		runInfoNodeTest(param, issueCount, 0, 0, 2, expectedFirstInfoNode, expectedSecondInfoNode, null);
-	}
-
-	@Test
-	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_IAC() {
-		var param = new SnykScanParam();
-		param.setStatus(SCAN_STATE_SUCCESS);
-		param.setProduct(SCAN_PARAMS_IAC);
-		param.setFolderPath("a/b/c");
-
-		int issueCount = 0;
-		String expectedFirstInfoNode = CONGRATS_NO_ISSUES_FOUND;
-
-		runInfoNodeTest(param, issueCount, 0, 0, 1, expectedFirstInfoNode, null, null);
-	}
-
-	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFound_nothingFixable() {
-		var param = new SnykScanParam();
-		param.setStatus(SCAN_STATE_SUCCESS);
-		param.setProduct(SCAN_PARAMS_CODE);
-		param.setFolderPath("a/b/c");
-
-		int issueCount = 3;
-		String expectedFirstInfoNode = "✋ " + issueCount + " issue" + getPlural(issueCount) + " found";
-		String expectedSecondInfoNode = ISnykToolView.NO_FIXABLE_ISSUES;
-		String expectedThirdInfoNode = CONGRATS_NO_ISSUES_FOUND;
-
-		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
+	void disableCCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
-
-		runInfoNodeTest(param, issueCount, 0, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode,
-				expectedThirdInfoNode);
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFound_singleFixable() {
-		var param = new SnykScanParam();
-		param.setStatus(SCAN_STATE_SUCCESS);
-		param.setProduct(SCAN_PARAMS_CODE);
-		param.setFolderPath("a/b/c");
-		String expectedFirstInfoNode = "✋ 1 issue found";
-		String expectedSecondInfoNode = "⚡️ 1 issue can be fixed automatically";
-		String expectedThirdInfoNode = CONGRATS_NO_ISSUES_FOUND;
+	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_IAC_NoCCI() {
+		disableCCI();
+		var scanProduct = SCAN_PARAMS_IAC;
+		int totalIssueCount = 0;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✅ Congrats! No issues found!");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
 
-		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_IAC_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
-
-		runInfoNodeTest(param, 1, 1, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+		var scanProduct = SCAN_PARAMS_IAC;
+		int totalIssueCount = 0;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✅ Congrats! No issues found!");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFound_multipleFixable() {
-		var param = new SnykScanParam();
-		param.setStatus(SCAN_STATE_SUCCESS);
-		param.setProduct(SCAN_PARAMS_CODE);
-		param.setFolderPath("a/b/c");
-		String expectedFirstInfoNode = "✋ 4 issues found";
-		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
-		String expectedThirdInfoNode = CONGRATS_NO_ISSUES_FOUND;
+	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_Code_NoCCI() {
+		disableCCI();
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 0;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✅ Congrats! No issues found!", "✅ Congrats! No issues found!");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
 
-		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_NoIssuesFound_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
-
-		runInfoNodeTest(param, 4, 2, 0, 3, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 0;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✅ Congrats! No issues found!", "✅ Congrats! No issues found!");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFound_oneIgnored() {
-		var param = new SnykScanParam();
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
-		param.setStatus(SCAN_STATE_SUCCESS);
-		param.setProduct(SCAN_PARAMS_CODE);
-		param.setFolderPath("a/b/c");
-		String expectedFirstInfoNode = "✋ 4 issues found, 1 ignored";
-		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
-		String expectedThirdInfoNode = CONGRATS_NO_ISSUES_FOUND;
-
-		runInfoNodeTest(param, 4, 2, 1, 3, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixable_IAC_NoCCI() {
+		disableCCI();
+		var scanProduct = SCAN_PARAMS_IAC;
+		int totalIssueCount = 3;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✋ 3 issues", "There are no issues automatically fixable.");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFound_onlyIgnoredDisplayed() {
-		var param = new SnykScanParam();
-		param.setStatus(SCAN_STATE_SUCCESS);
-		param.setProduct(SCAN_PARAMS_CODE);
-		param.setFolderPath("a/b/c");
+	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixable_IAC_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+		var scanProduct = SCAN_PARAMS_IAC;
+		int totalIssueCount = 3;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✋ 3 issues", "There are no issues automatically fixable.");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
 
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_IssuesFoundButNothingFixableAndHidingIgnored_Code_CCI() {
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
-
-		String expectedFirstInfoNode = "✋ 4 issues found, 4 ignored";
-		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
-		String expectedThirdInfoNode = "Adjust your Issue View Options to see ignored issues.";
-
-		runInfoNodeTest(param, 4, 2, 4, 4, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 3;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✋ 3 open issues", "There are no issues automatically fixable.", "✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
 	@Test
-	void testSnykScanSuccessAddsInfoNodes_IssuesFound_onlyOpenDisplayed() {
-		var param = new SnykScanParam();
-		param.setStatus(SCAN_STATE_SUCCESS);
-		param.setProduct(SCAN_PARAMS_CODE);
-		param.setFolderPath("a/b/c");
+	void testSnykScanSuccessAddsInfoNodes_OneFixableIssueFound_IAC_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+		var scanProduct = SCAN_PARAMS_IAC;
+		int totalIssueCount = 1;
+		int fixableIssueCount = 1;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✋ 1 issue", "⚡️ 1 issue is fixable automatically.");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_OneFixableIssueFound_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 1;
+		int fixableIssueCount = 1;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✋ 1 open issue & 0 ignored issues", "⚡️ 1 open issue is fixable automatically.", "✅ Congrats! No issues found!");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_MultipleFixableIssuesFoundAndHidingIgnored_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 4;
+		int fixableIssueCount = 2;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 open issues are fixable automatically.", "✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_IssuesFoundAndOneIgnored_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 4;
+		int fixableIssueCount = 2;
+		int ignoredIssueCount = 1;
+		var expectedNodes = List.of("✋ 3 open issues & 1 ignored issue", "⚡️ 2 open issues are fixable automatically.", "✅ Congrats! No issues found!");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_HidingOpen_IAC_CCI() {
 		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
 		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
-
-		String expectedFirstInfoNode = "✋ 4 issues found";
-		String expectedSecondInfoNode = "⚡️ 2 issues can be fixed automatically";
-		String expectedThirdInfoNode = "Adjust your Issue View Options to see open issues.";
-
-		runInfoNodeTest(param, 4, 2, 0, 4, expectedFirstInfoNode, expectedSecondInfoNode, expectedThirdInfoNode);
+		var scanProduct = SCAN_PARAMS_IAC;
+		int totalIssueCount = 0;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of("Open issues are disabled!", "Adjust your settings to view Open issues.");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
-	private void runInfoNodeTest(SnykScanParam param, int issueCount, int fixableCount, int ignoredCount,
-			int expectedInfoNodeUpdateCount, String expectedFirstInfoNode, String expectedSecondInfoNode,
-			String expectedThirdInfoNode) {
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_MultipleIgnoredIssuesFoundAndHidingOpen_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "true");
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 4;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 4;
+		var expectedNodes = List.of("✋ 4 ignored issues, open issues are disabled", "✋ No ignored issues, open issues are disabled", "Adjust your settings to view Open issues.");
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	@Test
+	void testSnykScanSuccessAddsInfoNodes_HidingOpenAndIgnored_Code_CCI() {
+		pref.store(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, "true");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "false");
+		pref.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "false");
+		var scanProduct = SCAN_PARAMS_CODE;
+		int totalIssueCount = 0;
+		int fixableIssueCount = 0;
+		int ignoredIssueCount = 0;
+		var expectedNodes = List.of(
+			"Open and Ignored issues are disabled!",
+			"Adjust your settings to view Open or Ignored issues.",
+			"Open and Ignored issues are disabled!",
+			"Adjust your settings to view Open or Ignored issues."
+		);
+		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
+	}
+
+	private void runInfoNodeTest(String scanProduct, int totalIssueCount, int fixableCount, int ignoredCount,
+			List<String> expectedNodes) {
+		var param = new SnykScanParam();
+		param.setStatus(SCAN_STATE_SUCCESS);
+		param.setProduct(scanProduct);
+		param.setFolderPath("a/b/c");
 
 		var productNodes = setupProductNodes(param);
+
+		pref.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, scanProduct == SCAN_PARAMS_OSS ? "true" : "false");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, scanProduct == SCAN_PARAMS_CODE ? "true" : "false");
+		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, scanProduct == SCAN_PARAMS_CODE ? "true" : "false");
+		pref.store(Preferences.ACTIVATE_SNYK_IAC, scanProduct == SCAN_PARAMS_IAC ? "true" : "false");
 
 		var infoNodeCaptor = ArgumentCaptor.forClass(InfoTreeNode.class);
 		var parentCaptor = ArgumentCaptor.forClass(ProductTreeNode.class);
@@ -395,11 +452,21 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		Path folderPath = Paths.get(param.getFolderPath());
 		var dummyFilePath = Paths.get(param.getFolderPath(), "d").toString();
 
-		Set<Issue> issues = getIssues(issueCount, fixableCount, ignoredCount);
+		Set<Issue> issues = getIssues(totalIssueCount, fixableCount, ignoredCount);
 
 		var cache = new SnykIssueCache(folderPath);
 		IssueCacheHolder.getInstance().addCacheForTest(cache);
-		cache.addCodeIssues(dummyFilePath, issues);
+		switch (scanProduct) {
+		case SCAN_PARAMS_OSS:
+			cache.addOssIssues(dummyFilePath, issues);
+			break;
+		case SCAN_PARAMS_CODE:
+			cache.addCodeIssues(dummyFilePath, issues);
+			break;
+		case SCAN_PARAMS_IAC:
+			cache.addIacIssues(dummyFilePath, issues);
+			break;
+		}
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 		cut.snykScan(param);
@@ -408,27 +475,18 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			verify(toolWindowMock).getProductNode(node.getProduct(), param.getFolderPath());
 		}
 
-		verify(toolWindowMock, times(expectedInfoNodeUpdateCount)).addInfoNode(any(), any());
-
-		// if no issues found, we don't need to display the "no fixable issues" node
-		verify(toolWindowMock, times(expectedInfoNodeUpdateCount)).addInfoNode(parentCaptor.capture(),
+		verify(toolWindowMock, atLeastOnce()).addInfoNode(parentCaptor.capture(),
 				infoNodeCaptor.capture());
 
-		assertEquals(expectedInfoNodeUpdateCount, infoNodeCaptor.getAllValues().size());
-		assertEquals(expectedFirstInfoNode, infoNodeCaptor.getAllValues().get(0).getValue());
-		if (expectedInfoNodeUpdateCount > 1) {
-			assertEquals(expectedSecondInfoNode, infoNodeCaptor.getAllValues().get(1).getValue());
-			if (expectedInfoNodeUpdateCount > 2) {
-				assertEquals(expectedThirdInfoNode, infoNodeCaptor.getAllValues().get(2).getValue());
-			}
-		}
+		List<Object> actualNodes = infoNodeCaptor.getAllValues().stream().map(InfoTreeNode::getValue).collect(Collectors.toList());
+		assertIterableEquals(expectedNodes, actualNodes);
 	}
 
-	private Set<Issue> getIssues(int issueCount, int fixableCount, int ignoredCount) {
-		Set<Issue> issues = new HashSet<Issue>(issueCount);
+	private Set<Issue> getIssues(int totalIssueCount, int fixableCount, int ignoredCount) {
+		Set<Issue> issues = new HashSet<Issue>(totalIssueCount);
 		int setAsFixable = 0;
 		int setAsIgnored = 0;
-		for (int i = 0; i < issueCount; i++) {
+		for (int i = 0; i < totalIssueCount; i++) {
 			boolean fixable = fixableCount > setAsFixable++;
 			boolean ignored = ignoredCount > setAsIgnored++;
 			var additionalData = Instancio.of(AdditionalData.class)

@@ -14,12 +14,13 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_CRITICAL;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_HIGH;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_LOW;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_MEDIUM;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_OPEN_ISSUES_FOUND;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NODE_TEXT_SCANNING;
 import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_FIXABLE_ISSUES;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.getPlural;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_IGNORED_ISSUES;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.OPEN_AND_IGNORED_ISSUES_ARE_DISABLED;
+import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.OPEN_ISSUES_ARE_DISABLED;
 
 import java.io.File;
 import java.net.URI;
@@ -69,6 +70,7 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
+import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
@@ -432,7 +434,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 		}
 		toolView.refreshDeltaReference();
-		
+
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
@@ -583,38 +585,138 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		toolView.removeInfoNodes(productNode);
 
-		long totalCount = issueCache.getTotalCount(productNode.getProduct());
-		long fixableCount = issueCache.getFixableCount(productNode.getProduct());
-		long ignoredCount = issueCache.getIgnoredCount(productNode.getProduct());
-		var pref = Preferences.getInstance();
-		if (totalCount == 0) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(CONGRATS_NO_ISSUES_FOUND));
-		} else {
-			String text = "✋ " + totalCount + " issue" + getPlural(totalCount) + " found";
-			if (ignoredCount > 0) {
-				text += ", " + ignoredCount + " ignored";
+		// totalIssueCount is the number of issues returned by LS, which pre-filters on Issue View Options and Severity Filters (to be implemented at time of this comment - 6th May 2025).
+		long totalIssueCount = issueCache.getTotalCount(productNode.getProduct());
+		long ignoredIssueCount = issueCache.getIgnoredCount(productNode.getProduct());
+		// Depending on Issue View Options, ignored issues might be pre-filtered by the LS and so ignoredIssueCount may be 0.
+		// In this case, openIssueCount is the total issue count returned by the LS.
+		long openIssueCount = totalIssueCount - ignoredIssueCount;
+		boolean isCodeNode = productNode.getProduct().equals(DISPLAYED_CODE_SECURITY)
+			|| productNode.getProduct().equals(DISPLAYED_CODE_QUALITY);
+
+		var text = !isCodeNode ? getIssueFoundText(totalIssueCount) : getIssueFoundTextForCode(totalIssueCount, openIssueCount, ignoredIssueCount);
+		toolView.addInfoNode(productNode, new InfoTreeNode(text));
+		if (totalIssueCount == 0) {
+			var ivoNode = !isCodeNode ? getNoIssueViewOptionsSelectedTreeNode() : getNoIssueViewOptionsSelectedTreeNodeForCode();
+			if (ivoNode != null) {
+				toolView.addInfoNode(productNode, ivoNode);
 			}
-			toolView.addInfoNode(productNode, new InfoTreeNode(text));
+		} else {
+			long fixableIssueCount = issueCache.getFixableCount(productNode.getProduct());
+			var fixableText = !isCodeNode ? getFixableIssuesText(fixableIssueCount, false) : getFixableIssuesTextForCode(fixableIssueCount);
+			if (fixableText != null) {
+				toolView.addInfoNode(productNode, new InfoTreeNode(fixableText));
+			}
 		}
-		if (totalCount > 0 && fixableCount == 0) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(NO_FIXABLE_ISSUES));
+	}
+
+	private String getIssueFoundText(long issueCount) {
+		var pref = Preferences.getInstance();
+		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
+		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
+
+		if (isIgnoresEnabled && !showingOpen) {
+			return OPEN_ISSUES_ARE_DISABLED;
+		}
+		if (issueCount == 0) {
+			return CONGRATS_NO_ISSUES_FOUND;
+		} else {
+			return "✋ " + issueCount + " issue" + (issueCount == 1 ? "" : "s");
+		}
+	}
+
+	private String getIssueFoundTextForCode(long totalIssueCount, long openIssueCount, long ignoredIssueCount) {
+		var pref = Preferences.getInstance();
+		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
+		if (!isIgnoresEnabled) {
+			return getIssueFoundText(totalIssueCount);
 		}
 
-		if (totalCount > 0 && fixableCount > 0) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(
-					"⚡️ " + fixableCount + " issue" + getPlural(fixableCount) + " can be fixed automatically"));
+		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
+		boolean showingIgnored = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES);
+
+		String openIssuesText = openIssueCount + " open issue" + (openIssueCount == 1 ? "" : "s");
+		String ignoredIssuesText = ignoredIssueCount + " ignored issue" + (ignoredIssueCount == 1 ? "" : "s");
+
+		if (showingOpen && showingIgnored) {
+			if (totalIssueCount == 0) {
+				return CONGRATS_NO_ISSUES_FOUND;
+			} else {
+				return "✋ " + openIssuesText + " & " + ignoredIssuesText;
+			}
+		}
+		if (showingOpen) {
+			if (openIssueCount == 0) {
+				return CONGRATS_NO_OPEN_ISSUES_FOUND;
+			} else {
+				return "✋ " + openIssuesText;
+			}
+		}
+		if (showingIgnored) {
+			if (ignoredIssueCount == 0) {
+				return NO_IGNORED_ISSUES;
+			} else {
+				return "✋ " + ignoredIssuesText + ", open issues are disabled";
+			}
+		}
+		return OPEN_AND_IGNORED_ISSUES_ARE_DISABLED;
+	}
+
+	private InfoTreeNode getNoIssueViewOptionsSelectedTreeNode() {
+		var pref = Preferences.getInstance();
+		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
+		if (!isIgnoresEnabled) {
+			return null;
 		}
 
-		if (totalCount > 0 && ignoredCount == totalCount
-				&& pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
-				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_OPEN_ISSUES)) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE));
+		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
+		if (!showingOpen) {
+			return new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE);
 		}
 
-		if (totalCount > 0 && ignoredCount == 0 && pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED)
-				&& pref.getBooleanPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES)) {
-			toolView.addInfoNode(productNode, new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE));
+		return null;
+	}
+
+	private InfoTreeNode getNoIssueViewOptionsSelectedTreeNodeForCode() {
+		var pref = Preferences.getInstance();
+		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
+		if (!isIgnoresEnabled) {
+			return null;
 		}
+
+		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
+		boolean showingIgnored = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES);
+
+		if (!showingOpen && !showingIgnored) {
+			return new InfoTreeNode(ISnykToolView.ALL_ISSUES_FILTERED_BUT_AVAILABLE);
+		}
+
+		if (!showingOpen) {
+			return new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE);
+		}
+
+		if (!showingIgnored) {
+			return new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE);
+		}
+
+		return null;
+	}
+
+	private String getFixableIssuesText(long fixableIssueCount, boolean sayOpenIssues) {
+		return fixableIssueCount > 0
+			? "⚡️ " + fixableIssueCount + (sayOpenIssues ? " open" : "") + " issue" + (fixableIssueCount == 1 ? " is" : "s are") + " fixable automatically."
+			: NO_FIXABLE_ISSUES;
+	}
+
+	private String getFixableIssuesTextForCode(long fixableIssueCount) {
+		var pref = Preferences.getInstance();
+		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
+		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
+
+		if (isIgnoresEnabled && !showingOpen) {
+			return null;
+		}
+		return getFixableIssuesText(fixableIssueCount, isIgnoresEnabled);
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_PUBLISH_DIAGNOSTICS_316)

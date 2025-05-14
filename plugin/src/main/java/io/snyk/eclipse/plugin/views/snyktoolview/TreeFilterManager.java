@@ -15,8 +15,6 @@ import org.eclipse.jface.viewers.TreeViewer;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.FixableFilter;
-import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresIgnoredIssuesFilter;
-import io.snyk.eclipse.plugin.views.snyktoolview.filters.IgnoresOpenIssuesFilter;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.ProductFilter;
 import io.snyk.eclipse.plugin.views.snyktoolview.filters.SeverityFilter;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
@@ -48,10 +46,6 @@ public class TreeFilterManager {
 		new ProductFilter(tfm, ACTIVATE_SNYK_IAC).applyFilter();
 		new ProductFilter(tfm, ACTIVATE_SNYK_CODE_SECURITY).applyFilter();
 		new ProductFilter(tfm, ACTIVATE_SNYK_CODE_QUALITY).applyFilter();
-
-		// Ignores filters
-		new IgnoresIgnoredIssuesFilter(tfm).applyFilter();
-		new IgnoresOpenIssuesFilter(tfm).applyFilter();
 
 		// Fix
 		new FixableFilter(tfm).applyFilter();
