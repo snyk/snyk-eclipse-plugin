@@ -130,10 +130,12 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("var(--horizontal-border-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
 
-		htmlStyled = htmlStyled.replace("${headerEnd}", "");
+		// Must not have blank template replacements, as they could be used to skip the "${nonce}" injection check
+		// and still end up with the nonce injected, e.g. "${nonce${resolvesToEmpty}}" becomes "${nonce}" - See IDE-1050.
+		htmlStyled = htmlStyled.replace("${headerEnd}", " ");
 		htmlStyled = htmlStyled.replace("${nonce}", nonce);
 		htmlStyled = htmlStyled.replaceAll("ideNonce", nonce);
-		htmlStyled = htmlStyled.replace("${ideScript}", "");
+		htmlStyled = htmlStyled.replace("${ideScript}", " ");
 
 		return htmlStyled;
 	}
