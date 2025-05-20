@@ -17,13 +17,7 @@ The Snyk Eclipse extension allows you to analyze your code, open-source dependen
 
 ## How to install and set up the extension
 
-
-The latest Snyk Eclipse plugin supports use with Eclipse 2024-03 or newer.
-
-Older plugin versions may support use with Eclipse 2023-03 or newer.
-
-Snyk recommends always using the latest version of the Eclipse plugin.
-
+**Note:** For information about the versions of Eclipse supported by the Eclipse plugin, see [Snyk IDE plugins and extensions](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions). Snyk recommends always using the latest version of the Eclipse plugin.
 
 You can use the Eclipse plugin in the following environments:
 
@@ -37,7 +31,7 @@ When you are prompted, accept the license agreement and add the **Snyk Security*
 
 Continue by following the instructions in the other Eclipse extension docs:
 
-* [Download the CLI and language server with the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/download-the-cli-and-language-server-with-the-eclipse-plugin)
+* [Download the CLI with the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/download-the-cli-and-language-server-with-the-eclipse-plugin)
 * [Authentication for the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/authentication-for-the-eclipse-plugin)
 * [Eclipse plugin folder trust](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/folder-trust)
 * [Configuration of the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/configuration-of-the-eclipse-plugin)
