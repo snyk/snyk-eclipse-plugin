@@ -9,6 +9,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.preferences.AuthConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.IssueViewOptions;
@@ -64,11 +65,8 @@ public class LsConfigurationUpdater {
 		}
 		String enableTrustedFolderFeature = Boolean.TRUE.toString();
 		String scanningMode = preferences.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC) ? "automatic" : "manual";
-		boolean useTokenAuth = preferences.getBooleanPref(Preferences.USE_TOKEN_AUTH, false);
-		var authMethod = "oauth";
-		if (useTokenAuth) {
-			authMethod = "token";
-		}
+		String authMethod = preferences.getPref(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2);
+
 		String enableDeltaFindings = preferences.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString());
 
 		// only add folder configs that are initialized
@@ -122,7 +120,7 @@ public class LsConfigurationUpdater {
 				String path, IssueViewOptions issueViewOptions, String sendErrorReports, String enableTelemetry, String organization,
 				String manageBinariesAutomatically, String cliPath, String token, String integrationName,
 				String integrationVersion, String automaticAuthentication, String[] trustedFolders,
-				String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings, String authMethod,List<FolderConfig>folderConfigs) {
+				String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings, String authMethod, List<FolderConfig>folderConfigs) {
 			this.activateSnykOpenSource = activateSnykOpenSource;
 			this.activateSnykCodeSecurity = activateSnykCodeSecurity;
 			this.activateSnykCodeQuality = activateSnykCodeQuality;
