@@ -70,7 +70,7 @@
 
 **Publish on Marketplace**
 
-- Login with 1Password
+- Login with the shared Eclipse Marketplace password. 
 
 - Go to Edit: https://marketplace.eclipse.org/content/snyk-security/edit
 
