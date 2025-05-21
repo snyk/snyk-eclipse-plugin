@@ -29,7 +29,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	private BooleanFieldEditor snykCodeQualityCheckbox;
 
 	private static final String PAT_AUTHENTICATION_URL = "https://app.snyk.io/account/personal-access-tokens";
-	private static final String TOKEN_AUTHENTICATION_URL = "https://app.snyk.io/account";
 
 	public static final int WIDTH = 60;
 
@@ -72,13 +71,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 						+ "generate a Personal Access Token or a API Token and paste them below",
 				getFieldEditorParent()));
 
-		prefs.getInsecureStore().addPropertyChangeListener(storeEvent -> {
-			if (Preferences.AUTHENTICATION_METHOD.equals(storeEvent.getProperty())) {
-				System.out.println("DEBUG: IPreferenceStore detected change for: " + storeEvent.getProperty()
-						+ " New value in store: " + storeEvent.getNewValue());
-			}
-		});
-
 		// Create the ComboFieldEditor for authentication
 		ComboFieldEditor authenticationEditor = new ComboFieldEditor(Preferences.AUTHENTICATION_METHOD,
 				"Authentication Method:", AuthConstants.AUTHENTICATION_OPTIONS, getFieldEditorParent());
@@ -95,11 +87,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		TokenFieldEditor tokenField = new TokenFieldEditor(prefs, Preferences.AUTH_TOKEN_KEY,
 				"Paste API Token or Peronal Access Token here", getFieldEditorParent());
 		addField(space());
-
-//		final var useTokenAuth = new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH,
-//				"Use token authentication. It is recommended to keep this turned off, as the default OAuth2 authentication is more secure.",
-//				getFieldEditorParent());
-//		addField(useTokenAuth);
 		addField(tokenField);
 
 		addField(space());
@@ -172,7 +159,8 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		return new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				performApply();
+				performOk(); // This will perform an apply to the values in the PreferencePage and store
+								// these to the PreferenceStore.
 
 				String selectedAuth = getPreferenceStore().getString(Preferences.AUTHENTICATION_METHOD);
 				if (AuthConstants.AUTH_PERSONAL_ACCESS_TOKEN.equals(selectedAuth)) {
@@ -181,15 +169,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 						MessageDialog.openError(getShell(), "Open URL failed",
 								"Failed to launch PAT authentication URL.");
 					}
-				} else if (AuthConstants.AUTH_API_TOKEN.equals(selectedAuth)) {
-					boolean launched = Program.launch(TOKEN_AUTHENTICATION_URL);
-					if (!launched) {
-						MessageDialog.openError(getShell(), "Open URL failed",
-								"Failed to launch Token authentication URL.");
-					}
 				}
-//				else if (AuthConstants.AUTH_OAUTH2.equals(selectedAuth)) {
-//				}
 			}
 		};
 	}

@@ -22,7 +22,6 @@ import static io.snyk.eclipse.plugin.preferences.Preferences.MANAGE_BINARIES_AUT
 import static io.snyk.eclipse.plugin.preferences.Preferences.RELEASE_CHANNEL;
 import static io.snyk.eclipse.plugin.preferences.Preferences.SCANNING_MODE_AUTOMATIC;
 import static io.snyk.eclipse.plugin.preferences.Preferences.SEND_ERROR_REPORTS;
-import static io.snyk.eclipse.plugin.preferences.Preferences.USE_TOKEN_AUTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -71,7 +70,6 @@ class PreferencesTest {
 		assertEquals("https://api.snyk.io", preferences.getPref(ENDPOINT_KEY));
 		assertEquals("https://downloads.snyk.io", preferences.getPref(CLI_BASE_URL));
 		assertEquals("true", preferences.getPref(SCANNING_MODE_AUTOMATIC));
-		assertEquals("false", preferences.getPref(USE_TOKEN_AUTH));
 		assertEquals("false", preferences.getPref(ANALYTICS_PLUGIN_INSTALLED_SENT));
 		assertEquals("stable", preferences.getPref(RELEASE_CHANNEL));
 		assertTrue(preferences.getCliPath().endsWith(lsRuntimeEnv.getDownloadBinaryName()));

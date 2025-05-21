@@ -46,8 +46,7 @@ public class LsConfigurationUpdater {
 		String path = preferences.getPref(Preferences.PATH_KEY, "");
 		IssueViewOptions issueViewOptions = new IssueViewOptions(
 				preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true),
-				preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false)
-				);
+				preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false));
 		String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
 		String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, Boolean.FALSE.toString());
 		String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
@@ -74,12 +73,12 @@ public class LsConfigurationUpdater {
 		for (var p : Collections.unmodifiableSet(FolderConfigs.LanguageServerConfigReceived)) {
 			folderConfigs.add(FolderConfigs.getInstance().getFolderConfig(p));
 		}
-		
+
 		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac,
-				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports, enableTelemetry,
-				organization, manageBinariesAutomatically, cliPath, token, integrationName, integrationVersion,
-				automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode, enableDeltaFindings,
-				authMethod, folderConfigs);
+				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports,
+				enableTelemetry, organization, manageBinariesAutomatically, cliPath, token, integrationName,
+				integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode,
+				enableDeltaFindings, authMethod, folderConfigs);
 	}
 
 	static class Settings {
@@ -117,10 +116,11 @@ public class LsConfigurationUpdater {
 
 		public Settings(String activateSnykOpenSource, String activateSnykCodeSecurity, String activateSnykCodeQuality,
 				String activateSnykIac, String insecure, String endpoint, String additionalParams, String additionalEnv,
-				String path, IssueViewOptions issueViewOptions, String sendErrorReports, String enableTelemetry, String organization,
-				String manageBinariesAutomatically, String cliPath, String token, String integrationName,
-				String integrationVersion, String automaticAuthentication, String[] trustedFolders,
-				String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings, String authMethod, List<FolderConfig>folderConfigs) {
+				String path, IssueViewOptions issueViewOptions, String sendErrorReports, String enableTelemetry,
+				String organization, String manageBinariesAutomatically, String cliPath, String token,
+				String integrationName, String integrationVersion, String automaticAuthentication,
+				String[] trustedFolders, String enableTrustedFoldersFeature, String scanningMode,
+				String enableDeltaFindings, String authMethod, List<FolderConfig> folderConfigs) {
 			this.activateSnykOpenSource = activateSnykOpenSource;
 			this.activateSnykCodeSecurity = activateSnykCodeSecurity;
 			this.activateSnykCodeQuality = activateSnykCodeQuality;

@@ -2,7 +2,7 @@ package io.snyk.eclipse.plugin.preferences;
 
 public final class AuthConstants {
 
-    public static final String AUTH_OAUTH2 = "oauth2" ;
+    public static final String AUTH_OAUTH2 = "oauth" ;
     public static final String AUTH_PERSONAL_ACCESS_TOKEN = "pat" ;
     public static final String AUTH_API_TOKEN = "token";
     
