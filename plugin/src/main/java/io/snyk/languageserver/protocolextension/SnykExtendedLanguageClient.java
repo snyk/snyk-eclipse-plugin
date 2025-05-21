@@ -317,8 +317,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return String.valueOf(result);
 	}
 
-	public void sendCodeFixDiffsCommand(String folderURI, String fileURI, String issueID) {
-		executeCommand(LsConstants.COMMAND_CODE_FIX_DIFFS, List.of(folderURI, fileURI, issueID));
+	public void sendCodeFixDiffsCommand(String issueID) {
+		executeCommand(LsConstants.COMMAND_CODE_FIX_DIFFS, List.of(issueID));
 	}
 
 	public void sendCodeApplyAiFixEditCommand(String fixId) {

@@ -117,13 +117,8 @@ public class BrowserHandler {
 		new BrowserFunction(browser, "ideGenAIFix") {
 			@Override
 			public Object function(Object[] arguments) {
-				String params = (String) arguments[0];
-				String[] parts = params.split("@|@");
-				String folderURI = (String) parts[0];
-				String fileURI = (String) parts[2];
-				String issueID = (String) parts[4];
-
-				SnykExtendedLanguageClient.getInstance().sendCodeFixDiffsCommand(folderURI, fileURI, issueID);
+				String issueID = (String) arguments[0];
+				SnykExtendedLanguageClient.getInstance().sendCodeFixDiffsCommand(issueID);
 
 				return Collections.emptyList();
 			}
