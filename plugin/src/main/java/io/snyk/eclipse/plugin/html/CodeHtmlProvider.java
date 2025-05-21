@@ -102,7 +102,7 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 	}
 
 	private String getGenerateAiFixScript() {
-		return "window.ideGenAIFix(generateFixQueryString)\n;";
+		return "window.ideGenAIFix(issueId)\n;";
 	}
 
 	private String getApplyAiFixScript() {
