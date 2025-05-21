@@ -64,7 +64,7 @@ public class LsConfigurationUpdater {
 		}
 		String enableTrustedFolderFeature = Boolean.TRUE.toString();
 		String scanningMode = preferences.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC) ? "automatic" : "manual";
-		String authMethod = preferences.getPref(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2);
+		String authenticationMethod = preferences.getPref(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2);
 
 		String enableDeltaFindings = preferences.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString());
 
@@ -78,7 +78,7 @@ public class LsConfigurationUpdater {
 				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports,
 				enableTelemetry, organization, manageBinariesAutomatically, cliPath, token, integrationName,
 				integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode,
-				enableDeltaFindings, authMethod, folderConfigs);
+				enableDeltaFindings, authenticationMethod, folderConfigs);
 	}
 
 	static class Settings {
@@ -120,7 +120,7 @@ public class LsConfigurationUpdater {
 				String organization, String manageBinariesAutomatically, String cliPath, String token,
 				String integrationName, String integrationVersion, String automaticAuthentication,
 				String[] trustedFolders, String enableTrustedFoldersFeature, String scanningMode,
-				String enableDeltaFindings, String authMethod, List<FolderConfig> folderConfigs) {
+				String enableDeltaFindings, String authenticationMethod, List<FolderConfig> folderConfigs) {
 			this.activateSnykOpenSource = activateSnykOpenSource;
 			this.activateSnykCodeSecurity = activateSnykCodeSecurity;
 			this.activateSnykCodeQuality = activateSnykCodeQuality;
@@ -144,7 +144,7 @@ public class LsConfigurationUpdater {
 			this.enableTrustedFoldersFeature = enableTrustedFoldersFeature;
 			this.scanningMode = scanningMode;
 			this.enableDeltaFindings = enableDeltaFindings;
-			this.authenticationMethod = authMethod;
+			this.authenticationMethod = authenticationMethod;
 			this.folderConfigs = folderConfigs;
 		}
 

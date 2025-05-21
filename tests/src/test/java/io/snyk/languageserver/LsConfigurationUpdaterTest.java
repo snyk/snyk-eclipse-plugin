@@ -40,7 +40,6 @@ class LsConfigurationUpdaterTest {
 
 		mockFolderConfigs = mock(FolderConfigs.class);
 		FolderConfigs.setInstance(mockFolderConfigs);
-
 	}
 
 	@Test
@@ -79,7 +78,7 @@ class LsConfigurationUpdaterTest {
 			assertEquals("/usr/local/bin/snyk", settings.getCliPath());
 			assertEquals("my-token", settings.getToken());
 			assertEquals("automatic", settings.getScanningMode());
-			assertEquals("token", settings.getAuthenticationMethod());
+			assertEquals("oauth", settings.getAuthenticationMethod());
 			assertEquals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, settings.getRequiredProtocolVersion());
 		}
 	}
@@ -114,6 +113,7 @@ class LsConfigurationUpdaterTest {
 				.thenReturn("false");
 		when(preferenceMock.getPref(Preferences.CLI_PATH, "")).thenReturn("/usr/local/bin/snyk");
 		when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY, "")).thenReturn("my-token");
+		when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD, "oauth")).thenReturn("oauth");
 		when(preferenceMock.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString())).thenReturn("true");
 
