@@ -88,15 +88,14 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 				getFieldEditorParent()));
 
 		authenticationEditor = new ComboFieldEditor(Preferences.AUTHENTICATION_METHOD, "Authentication Method:",
-				AuthConstants.AUTHENTICATION_OPTIONS, getFieldEditorParent());
+				AuthConstants.getAuthOptions(), getFieldEditorParent());
 		addField(authenticationEditor);
 
 		Button authenticate = new Button(getFieldEditorParent(), SWT.PUSH);
 		authenticate.setText("Authenticate");
 		authenticate.addSelectionListener(authenticateSelectionAdapter());
 
-		authenticationStatusField = new LabelFieldEditor("Authentication status",
-				getFieldEditorParent());
+		authenticationStatusField = new LabelFieldEditor("Authentication status", getFieldEditorParent());
 		addField(authenticationStatusField);
 
 		tokenField = new TokenFieldEditor(prefs, Preferences.AUTH_TOKEN_KEY, "API Token or Personal Access Token",
@@ -198,7 +197,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 							monitor.worked(20);
 
 							updateAuthentcationStatus(monitor, START_AUTHENTICATION);
-							
+
 							Preferences prefs = Preferences.getInstance();
 							prefs.store(Preferences.AUTH_TOKEN_KEY, "");
 							lc.triggerAuthentication();
@@ -227,13 +226,11 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 							return Status.OK_STATUS;
 						}
 
-
 					}.schedule();
 				});
 			}
 		};
 	}
-
 
 	private void updateAuthentcationStatus(IProgressMonitor monitor, String status) {
 		monitor.subTask(status);
@@ -246,7 +243,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 			tokenField.setStringValue(value);
 		});
 	}
-	
+
 	private void updateAuthenticationStatusField(String value) {
 		// Update UI on the UI thread
 		Display.getDefault().asyncExec(() -> {
@@ -254,7 +251,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		});
 
 	}
-	
+
 	private FieldEditor space() {
 		return new LabelFieldEditor("", getFieldEditorParent());
 	}
