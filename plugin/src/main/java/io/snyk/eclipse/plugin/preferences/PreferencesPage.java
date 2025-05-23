@@ -3,7 +3,6 @@ package io.snyk.eclipse.plugin.preferences;
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
@@ -27,8 +26,6 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 	private BooleanFieldEditor snykCodeSecurityCheckbox;
 	private BooleanFieldEditor snykCodeQualityCheckbox;
-
-	private static final String PAT_AUTHENTICATION_URL = "https://app.snyk.io/account/personal-access-tokens";
 
 	public static final int WIDTH = 60;
 
@@ -162,14 +159,10 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 				performOk(); // This will perform an apply to the values in the PreferencePage and store
 								// these to the PreferenceStore.
 
-				String selectedAuth = getPreferenceStore().getString(Preferences.AUTHENTICATION_METHOD);
-				if (AuthConstants.AUTH_PERSONAL_ACCESS_TOKEN.equals(selectedAuth)) {
-					boolean launched = Program.launch(PAT_AUTHENTICATION_URL);
-					if (!launched) {
-						MessageDialog.openError(getShell(), "Open URL failed",
-								"Failed to launch PAT authentication URL.");
-					}
-				}
+				CompletableFuture.runAsync(() -> {
+					SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+					lc.triggerAuthentication();
+				});
 			}
 		};
 	}
@@ -184,7 +177,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		disableSnykCodeIfOrgDisabled();
 		CompletableFuture.runAsync(() -> {
 			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-
 			lc.updateConfiguration();
 			lc.refreshFeatureFlags();
 		});

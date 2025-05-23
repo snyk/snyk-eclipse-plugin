@@ -49,6 +49,7 @@ public class Preferences {
 	public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
 	public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
 	public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
+	public static final String USE_TOKEN_AUTH = "useTokenAuth";
 	public static final String SEND_ERROR_REPORTS = "SEND_ERROR_REPORTS";
 	public static final String LSP_VERSION = "LSP_VERSION";
 	public static final String ANALYTICS_PLUGIN_INSTALLED_SENT = "analyticsPluginInstalledSent";
@@ -129,6 +130,7 @@ public class Preferences {
 		insecureStore.setDefault(IS_GLOBAL_IGNORES_FEATURE_ENABLED, FALSE);
 		insecureStore.setDefault(CLI_BASE_URL, "https://downloads.snyk.io");
 		insecureStore.setDefault(SCANNING_MODE_AUTOMATIC, TRUE);
+		insecureStore.setDefault(USE_TOKEN_AUTH, FALSE);
 		insecureStore.setDefault(AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2);
 		insecureStore.setDefault(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
@@ -159,7 +161,7 @@ public class Preferences {
 		Set<String> constants = new HashSet<>(Arrays.asList(TRUSTED_FOLDERS, PATH_KEY, ENDPOINT_KEY, INSECURE_KEY,
 				CLI_PATH, CLI_BASE_URL, ACTIVATE_SNYK_CODE_SECURITY, ACTIVATE_SNYK_CODE_QUALITY,
 				ACTIVATE_SNYK_OPEN_SOURCE, ACTIVATE_SNYK_IAC, ADDITIONAL_PARAMETERS, ADDITIONAL_ENVIRONMENT,
-				SEND_ERROR_REPORTS, LSP_VERSION, ANALYTICS_PLUGIN_INSTALLED_SENT, ENABLE_DELTA, FILTER_SHOW_CRITICAL,
+				SEND_ERROR_REPORTS, LSP_VERSION, USE_TOKEN_AUTH, ANALYTICS_PLUGIN_INSTALLED_SENT, ENABLE_DELTA, FILTER_SHOW_CRITICAL,
 				FILTER_SHOW_HIGH, FILTER_SHOW_MEDIUM, FILTER_SHOW_LOW, FILTER_IGNORES_SHOW_OPEN_ISSUES,
 				FILTER_IGNORES_SHOW_IGNORED_ISSUES, FILTER_SHOW_ONLY_FIXABLE, IS_GLOBAL_IGNORES_FEATURE_ENABLED,
 				ENABLE_TELEMETRY, MANAGE_BINARIES_AUTOMATICALLY, ORGANIZATION_KEY, SCANNING_MODE_AUTOMATIC,
@@ -334,7 +336,7 @@ public class Preferences {
 	public boolean isAuthenticated() {
 		// TODO check AUTHENTICATION_METHOD, USE_TOKEN_AUTH and AUTH_TOKEN_KEY
 
-		if (getAuthToken().isBlank()) {
+		if (getAuthToken().isBlank() || getAuthToken() == null) {
 			return false;
 		}
 

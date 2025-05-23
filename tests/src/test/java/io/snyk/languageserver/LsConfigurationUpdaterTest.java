@@ -18,6 +18,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.preferences.AuthConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
@@ -78,7 +79,7 @@ class LsConfigurationUpdaterTest {
 			assertEquals("/usr/local/bin/snyk", settings.getCliPath());
 			assertEquals("my-token", settings.getToken());
 			assertEquals("automatic", settings.getScanningMode());
-			assertEquals("oauth", settings.getAuthenticationMethod());
+			assertEquals(AuthConstants.AUTH_OAUTH2, settings.getAuthenticationMethod());
 			assertEquals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, settings.getRequiredProtocolVersion());
 		}
 	}
@@ -113,7 +114,7 @@ class LsConfigurationUpdaterTest {
 				.thenReturn("false");
 		when(preferenceMock.getPref(Preferences.CLI_PATH, "")).thenReturn("/usr/local/bin/snyk");
 		when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY, "")).thenReturn("my-token");
-		when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD, "oauth")).thenReturn("oauth");
+		when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2)).thenReturn("oauth");
 		when(preferenceMock.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString())).thenReturn("true");
 
