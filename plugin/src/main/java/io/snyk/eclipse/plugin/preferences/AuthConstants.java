@@ -11,9 +11,9 @@ public final class AuthConstants {
     private record AuthOptionData(String displayName, String value) {}
 
     private static final List<AuthOptionData> OPTION_DEFINITIONS = List.of(
-        new AuthOptionData("OAuth2", AUTH_OAUTH2),
+        new AuthOptionData("OAuth2 (Recommended)", AUTH_OAUTH2),
         new AuthOptionData("Personal Access Token", AUTH_PERSONAL_ACCESS_TOKEN),
-        new AuthOptionData("API Token", AUTH_API_TOKEN)
+        new AuthOptionData("API Token (Legacy)", AUTH_API_TOKEN)
     );
 
     public static final String[][] AUTHENTICATION_OPTIONS = OPTION_DEFINITIONS.stream()

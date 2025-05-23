@@ -334,12 +334,9 @@ public class Preferences {
 	}
 
 	public boolean isAuthenticated() {
-		// TODO check AUTHENTICATION_METHOD, USE_TOKEN_AUTH and AUTH_TOKEN_KEY
-
 		if (getAuthToken().isBlank() || getAuthToken() == null) {
 			return false;
 		}
-
 		return true;
 	}
 }

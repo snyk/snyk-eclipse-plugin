@@ -433,8 +433,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				this.triggerScan(path);
 			}
 		}
-		toolView.refreshDeltaReference();
-
+		if (this.toolView != null) {
+			this.toolView.refreshDeltaReference();
+		}
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
