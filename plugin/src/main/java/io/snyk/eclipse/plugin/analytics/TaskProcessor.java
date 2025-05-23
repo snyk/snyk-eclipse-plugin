@@ -41,9 +41,8 @@ public class TaskProcessor {
 		final List<Pair<Consumer<SnykExtendedLanguageClient>, Consumer<Void>>> copyForSending = new ArrayList<>();
 
 		while (true) {
-			String authToken = Preferences.getInstance().getAuthToken();
 			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-			if (taskQueue.isEmpty() || authToken == null || authToken.isBlank() || lc == null) {
+			if (taskQueue.isEmpty() || !Preferences.getInstance().isAuthenticated() || lc == null) {
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {

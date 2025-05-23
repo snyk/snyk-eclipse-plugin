@@ -233,7 +233,7 @@ public class BrowserHandler {
 	public void setDefaultBrowserText() {
 		// If we are not authenticated, show the welcome page, else show the issue
 		// placeholder.
-		if (Preferences.getInstance().getAuthToken().isBlank()) {
+		if (!Preferences.getInstance().isAuthenticated()) {
 			browser.setText(StaticPageHtmlProvider.getInstance().getInitHtml());
 		} else {
 			browser.setText(StaticPageHtmlProvider.getInstance().getDefaultHtml());

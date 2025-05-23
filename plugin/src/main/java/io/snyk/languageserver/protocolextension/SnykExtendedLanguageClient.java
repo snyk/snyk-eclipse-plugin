@@ -199,7 +199,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public void triggerScan(Path projectPath) {
 		CompletableFuture.runAsync(() -> {
-			if (Preferences.getInstance().getAuthToken().isBlank()) {
+			if (!Preferences.getInstance().isAuthenticated()) {
 				SnykWizard.createAndLaunch();
 			} else {
 				final var languageServerConfigReceived = FolderConfigs.LanguageServerConfigReceived;
@@ -212,7 +212,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 						}
 						return;
 					}
-					if (languageServerConfigReceived.size()>0) {
+					if (languageServerConfigReceived.size() > 0) {
 						executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 					}
 				} catch (Exception e) {
@@ -433,8 +433,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				this.triggerScan(path);
 			}
 		}
-		toolView.refreshDeltaReference();
-
+		if (this.toolView != null) {
+			this.toolView.refreshDeltaReference();
+		}
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)

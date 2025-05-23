@@ -3,26 +3,48 @@ package io.snyk.eclipse.plugin.preferences;
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.program.Program;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+	private static final String TRUSTING_WORKSPACE_FOLDERS = "Trusting workspace folders...";
+	private static final String AUTHENTICATED = "Authenticated";
+	private static final String AUTHENTICATING2 = "Authenticating";
+	private static final String UPDATING_LANGUAGE_SERVER_CONFIGURATION = "Updating language server configuration";
+	private static final String START_AUTHENTICATION = "Start authentication...";
+	private static final String AUTHENTICATING = "Authenticating...";
 	private BooleanFieldEditor snykCodeSecurityCheckbox;
 	private BooleanFieldEditor snykCodeQualityCheckbox;
+	private ComboFieldEditor authenticationEditor;
+	private StringFieldEditor endpoint;
+	private TokenFieldEditor tokenField;
+	private LabelFieldEditor authenticationStatusField;
+	private BooleanFieldEditor allow_certificate;
+
+	public static final int WIDTH = 60;
 
 	public PreferencesPage() {
 		super(GRID);
@@ -39,19 +61,10 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		// set default store
 		setPreferenceStore(prefs.getInsecureStore());
 
-		// token field editor is configured to use a secure store
-		TokenFieldEditor tokenField = new TokenFieldEditor(prefs, Preferences.AUTH_TOKEN_KEY, "Token:",
-				getFieldEditorParent());
-
-		final var useTokenAuth = new BooleanFieldEditor(Preferences.USE_TOKEN_AUTH,
-				"Use token authentication. It is recommended to keep this turned off, as the default OAuth2 authentication is more secure.",
-				getFieldEditorParent());
-		addField(useTokenAuth);
-		addField(tokenField);
-
-		addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", 80, getFieldEditorParent()));
-		addField(new LabelFieldEditor("If you're using SSO with Snyk and OAuth2, the custom endpoint configuration is automatically populated.\n"
-				+ "Otherwise, for public regional instances, " + "see the docs: ", getFieldEditorParent()));
+		addField(new LabelFieldEditor(
+				"If you're using SSO with Snyk and OAuth2, the custom endpoint configuration is automatically populated.\n"
+						+ "Otherwise, for public regional instances, " + "see the docs: ",
+				getFieldEditorParent()));
 		Link link = new Link(this.getFieldEditorParent(), SWT.NONE);
 
 		link.setText("<a>https://docs.snyk.io/working-with-snyk</a>");
@@ -60,9 +73,34 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 		addField(new LabelFieldEditor("For private instances, contact your team or account manager.\n",
 				getFieldEditorParent()));
-		addField(new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", 80, getFieldEditorParent()));
-		addField(new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
+
+		endpoint = new StringFieldEditor(Preferences.ENDPOINT_KEY, "Custom Endpoint:", WIDTH, getFieldEditorParent());
+		addField(endpoint);
+		allow_certificate = new BooleanFieldEditor(Preferences.INSECURE_KEY, "Allow unknown certificate authorities",
+				getFieldEditorParent());
+		addField(allow_certificate);
+
+		addField(space());
+
+		addField(new LabelFieldEditor(
+				"The most secure way to authenticate is using OAuth2. For the alternative authentication methods\n"
+						+ "generate a Personal Access Token or a API Token and paste them below",
 				getFieldEditorParent()));
+
+		authenticationEditor = new ComboFieldEditor(Preferences.AUTHENTICATION_METHOD, "Authentication Method:",
+				AuthConstants.getAuthOptions(), getFieldEditorParent());
+		addField(authenticationEditor);
+
+		Button authenticate = new Button(getFieldEditorParent(), SWT.PUSH);
+		authenticate.setText("Authenticate");
+		authenticate.addSelectionListener(authenticateSelectionAdapter());
+
+		authenticationStatusField = new LabelFieldEditor("Authentication status", getFieldEditorParent());
+		addField(authenticationStatusField);
+
+		tokenField = new TokenFieldEditor(prefs, Preferences.AUTH_TOKEN_KEY, "API Token or Personal Access Token",
+				getFieldEditorParent());
+		addField(tokenField);
 
 		addField(space());
 		addField(new LabelFieldEditor("The following options involve the Snyk Language Server.",
@@ -88,17 +126,18 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 				getFieldEditorParent()));
 		addField(space());
 		addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
-		addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", 80, getFieldEditorParent()));
-		addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", 80,
+		addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", WIDTH, getFieldEditorParent()));
+		addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", WIDTH,
 				getFieldEditorParent()));
-		addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", 80,
+		addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", WIDTH,
 				getFieldEditorParent()));
+		addField(new StringFieldEditor(Preferences.PATH_KEY, "Path:", WIDTH, getFieldEditorParent()));
 
 		addField(space());
 		BooleanFieldEditor manageBinaries = new BooleanFieldEditor(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
 				"Update and install Snyk binaries automatically", getFieldEditorParent());
 		addField(manageBinaries);
-		addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", 80,
+		addField(new StringFieldEditor(Preferences.CLI_BASE_URL, "Base URL for CLI download:", WIDTH,
 				getFieldEditorParent()));
 		addField(
 				new FileFieldEditor(Preferences.CLI_PATH, "Snyk CLI (incl. Language Server):", getFieldEditorParent()));
@@ -124,9 +163,93 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 						+ "Please separate entries with \"" + File.pathSeparator + "\".",
 				getFieldEditorParent()));
 		StringFieldEditor trustedFoldersEditor = new StringFieldEditor(Preferences.TRUSTED_FOLDERS, "Trusted Folders:",
-				80, getFieldEditorParent());
+				WIDTH, getFieldEditorParent());
 		addField(trustedFoldersEditor);
 		disableSnykCodeIfOrgDisabled();
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		super.propertyChange(event);
+		if (event.getSource() == authenticationEditor) {
+			Preferences prefs = Preferences.getInstance();
+			prefs.store(Preferences.AUTHENTICATION_METHOD, event.getNewValue().toString());
+			prefs.store(Preferences.ENDPOINT_KEY, endpoint.getStringValue());
+			prefs.store(Preferences.INSECURE_KEY, Boolean.toString(allow_certificate.getBooleanValue()));
+
+		}
+	}
+
+	private SelectionAdapter authenticateSelectionAdapter() {
+		return new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				CompletableFuture.runAsync(() -> {
+
+					new Job(AUTHENTICATING2) {
+						@Override
+						protected IStatus run(IProgressMonitor monitor) {
+							monitor.beginTask("starting", 60);
+							SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+
+							updateAuthentcationStatus(monitor, UPDATING_LANGUAGE_SERVER_CONFIGURATION);
+							lc.updateConfiguration();
+							monitor.worked(20);
+
+							updateAuthentcationStatus(monitor, START_AUTHENTICATION);
+
+							Preferences prefs = Preferences.getInstance();
+							prefs.store(Preferences.AUTH_TOKEN_KEY, "");
+							lc.triggerAuthentication();
+
+							while (!prefs.isAuthenticated() || lc == null) {
+								updateAuthentcationStatus(monitor, AUTHENTICATING);
+								try {
+									Thread.sleep(1000);
+								} catch (InterruptedException e) {
+									Thread.currentThread().interrupt();
+									return Status.error(e.getMessage());
+								}
+								lc = SnykExtendedLanguageClient.getInstance();
+							}
+							monitor.worked(20);
+							updateTokenField(prefs.getAuthToken());
+							updateAuthentcationStatus(monitor, AUTHENTICATED);
+
+							monitor.subTask(TRUSTING_WORKSPACE_FOLDERS);
+							var projects = ResourceUtils.getAccessibleTopLevelProjects();
+							if (projects != null && !projects.isEmpty()) {
+								lc.trustWorkspaceFolders();
+							}
+							monitor.worked(20);
+							monitor.done();
+							return Status.OK_STATUS;
+						}
+
+					}.schedule();
+				});
+			}
+		};
+	}
+
+	private void updateAuthentcationStatus(IProgressMonitor monitor, String status) {
+		monitor.subTask(status);
+		updateAuthenticationStatusField(status);
+	}
+
+	private void updateTokenField(String value) {
+		// Update UI on the UI thread
+		Display.getDefault().asyncExec(() -> {
+			tokenField.setStringValue(value);
+		});
+	}
+
+	private void updateAuthenticationStatusField(String value) {
+		// Update UI on the UI thread
+		Display.getDefault().asyncExec(() -> {
+			authenticationStatusField.setLabelText(value);
+		});
+
 	}
 
 	private FieldEditor space() {
@@ -139,7 +262,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		disableSnykCodeIfOrgDisabled();
 		CompletableFuture.runAsync(() -> {
 			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-
 			lc.updateConfiguration();
 			lc.refreshFeatureFlags();
 		});
