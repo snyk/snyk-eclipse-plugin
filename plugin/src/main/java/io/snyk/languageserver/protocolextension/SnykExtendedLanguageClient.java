@@ -231,8 +231,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return commandHandler.executeCommand(cmd, args);
 	}
 
-	public void triggerAuthentication() {
-		executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
+	public CompletableFuture<Object> triggerAuthentication() {
+		return executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
 	}
 
 	public void ensureLanguageServerRunning() {

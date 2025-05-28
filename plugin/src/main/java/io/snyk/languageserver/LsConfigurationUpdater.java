@@ -52,7 +52,7 @@ public class LsConfigurationUpdater {
 		String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
 		String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
 				Boolean.TRUE.toString());
-		String cliPath = preferences.getPref(Preferences.CLI_PATH, "");
+		String cliPath = preferences.getCliPath();
 		String token = preferences.getPref(Preferences.AUTH_TOKEN_KEY, "");
 		String integrationName = Activator.INTEGRATION_NAME;
 		String integrationVersion = Activator.PLUGIN_VERSION;

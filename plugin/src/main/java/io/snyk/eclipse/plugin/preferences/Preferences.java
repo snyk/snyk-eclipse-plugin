@@ -36,7 +36,6 @@ public class Preferences {
 
 	public static final String AUTHENTICATION_METHOD = "authenticationMethod";
 	public static final String AUTH_TOKEN_KEY = "authtoken";
-	private static final Set<String> encryptedPreferenceKeys = Set.of(AUTH_TOKEN_KEY);
 	public static final String TRUSTED_FOLDERS = "trustedFolders";
 	public static final String PATH_KEY = "path";
 	public static final String ENDPOINT_KEY = "endpoint";
@@ -79,6 +78,7 @@ public class Preferences {
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
 
+	private static final Set<String> encryptedPreferenceKeys = Set.of(AUTH_TOKEN_KEY);
 	private final IEclipsePreferences insecurePreferences;
 	private final IPreferenceStore insecureStore;
 	private ISecurePreferences securePreferences;
@@ -161,11 +161,11 @@ public class Preferences {
 		Set<String> constants = new HashSet<>(Arrays.asList(TRUSTED_FOLDERS, PATH_KEY, ENDPOINT_KEY, INSECURE_KEY,
 				CLI_PATH, CLI_BASE_URL, ACTIVATE_SNYK_CODE_SECURITY, ACTIVATE_SNYK_CODE_QUALITY,
 				ACTIVATE_SNYK_OPEN_SOURCE, ACTIVATE_SNYK_IAC, ADDITIONAL_PARAMETERS, ADDITIONAL_ENVIRONMENT,
-				SEND_ERROR_REPORTS, LSP_VERSION, USE_TOKEN_AUTH, ANALYTICS_PLUGIN_INSTALLED_SENT, ENABLE_DELTA, FILTER_SHOW_CRITICAL,
-				FILTER_SHOW_HIGH, FILTER_SHOW_MEDIUM, FILTER_SHOW_LOW, FILTER_IGNORES_SHOW_OPEN_ISSUES,
-				FILTER_IGNORES_SHOW_IGNORED_ISSUES, FILTER_SHOW_ONLY_FIXABLE, IS_GLOBAL_IGNORES_FEATURE_ENABLED,
-				ENABLE_TELEMETRY, MANAGE_BINARIES_AUTOMATICALLY, ORGANIZATION_KEY, SCANNING_MODE_AUTOMATIC,
-				DEFAULT_ENDPOINT, DEVICE_ID, RELEASE_CHANNEL));
+				SEND_ERROR_REPORTS, LSP_VERSION, USE_TOKEN_AUTH, ANALYTICS_PLUGIN_INSTALLED_SENT, ENABLE_DELTA,
+				FILTER_SHOW_CRITICAL, FILTER_SHOW_HIGH, FILTER_SHOW_MEDIUM, FILTER_SHOW_LOW,
+				FILTER_IGNORES_SHOW_OPEN_ISSUES, FILTER_IGNORES_SHOW_IGNORED_ISSUES, FILTER_SHOW_ONLY_FIXABLE,
+				IS_GLOBAL_IGNORES_FEATURE_ENABLED, ENABLE_TELEMETRY, MANAGE_BINARIES_AUTOMATICALLY, ORGANIZATION_KEY,
+				SCANNING_MODE_AUTOMATIC, DEFAULT_ENDPOINT, DEVICE_ID, RELEASE_CHANNEL));
 
 		for (String constant : constants) {
 			try {
@@ -200,7 +200,7 @@ public class Preferences {
 		}
 	}
 
-	private final String getDefaultCliPath() {
+	public final String getDefaultCliPath() {
 		File binary = new File(getBinaryDirectory(), LS_RUNTIME_ENV.getDownloadBinaryName());
 		final var dir = binary.getParentFile();
 		if (!dir.exists()) {
@@ -334,7 +334,7 @@ public class Preferences {
 	}
 
 	public boolean isAuthenticated() {
-		if (getAuthToken().isBlank() || getAuthToken() == null) {
+		if (getAuthToken() == null || getAuthToken().isBlank()) {
 			return false;
 		}
 		return true;

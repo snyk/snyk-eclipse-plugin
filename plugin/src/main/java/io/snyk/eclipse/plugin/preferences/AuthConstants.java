@@ -16,6 +16,9 @@ public final class AuthConstants {
 			new AuthOptionData("Personal Access Token", AUTH_PERSONAL_ACCESS_TOKEN),
 			new AuthOptionData("API Token (Legacy)", AUTH_API_TOKEN));
 
+	/**
+	 * helper to provide them in a format that the preferences element can read
+	 */
 	public static String[][] getAuthOptions() {
 		return OPTION_DEFINITIONS.stream().map(option -> new String[] { option.displayName(), option.value() })
 				.toArray(String[][]::new);
