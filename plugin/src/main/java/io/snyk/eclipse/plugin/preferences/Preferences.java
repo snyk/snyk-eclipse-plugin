@@ -51,9 +51,8 @@ public class Preferences {
 	public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
 	public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
 	/**
-	 * @deprecated
-	 * Use AUTHENTICATION_METHOD
-	 * since 3.3.0
+	 * @deprecated since 3.3.0
+	 * Use {@link #AUTHENTICATION_METHOD} instead
 	 */
 	@Deprecated
 	public static final String USE_TOKEN_AUTH = "useTokenAuth";
