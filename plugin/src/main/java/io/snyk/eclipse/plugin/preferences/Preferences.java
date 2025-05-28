@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.http.auth.AuthOption;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
@@ -25,6 +26,7 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.EnvironmentConstants;
+import io.snyk.eclipse.plugin.preferences.AuthConstants.AuthOptionData;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 
@@ -33,6 +35,8 @@ public class Preferences {
 	private static final String TRUE = "true";
 	private static Preferences instance;
 	private static LsRuntimeEnvironment LS_RUNTIME_ENV = new LsRuntimeEnvironment();
+
+	public static final String AUTHENTICATION_METHOD = "authenticationMethod";
 	public static final String AUTH_TOKEN_KEY = "authtoken";
 	public static final String TRUSTED_FOLDERS = "trustedFolders";
 	public static final String PATH_KEY = "path";
@@ -46,9 +50,14 @@ public class Preferences {
 	public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
 	public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
 	public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
+	/**
+	 * @deprecated since 3.3.0
+	 * Use {@link #AUTHENTICATION_METHOD} instead
+	 */
+	@Deprecated
+	public static final String USE_TOKEN_AUTH = "useTokenAuth";
 	public static final String SEND_ERROR_REPORTS = "SEND_ERROR_REPORTS";
 	public static final String LSP_VERSION = "LSP_VERSION";
-	public static final String USE_TOKEN_AUTH = "useTokenAuth";
 	public static final String ANALYTICS_PLUGIN_INSTALLED_SENT = "analyticsPluginInstalledSent";
 	public static final String ENABLE_DELTA = "ENABLE_DELTA";
 
@@ -129,6 +138,7 @@ public class Preferences {
 		insecureStore.setDefault(CLI_BASE_URL, "https://downloads.snyk.io");
 		insecureStore.setDefault(SCANNING_MODE_AUTOMATIC, TRUE);
 		insecureStore.setDefault(USE_TOKEN_AUTH, FALSE);
+		insecureStore.setDefault(AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2);
 		insecureStore.setDefault(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
 		insecureStore.setDefault(RELEASE_CHANNEL, "stable");
@@ -140,12 +150,12 @@ public class Preferences {
 		if (endpoint != null && !endpoint.isBlank()) {
 			store(ENDPOINT_KEY, endpoint);
 		}
-		
+
 		var org = getEnvironmentVariable(ENV_SNYK_ORG, "");
 		if (org != null && !org.isBlank()) {
 			store(ORGANIZATION_KEY, org);
 		}
-		
+
 		String token = getEnvironmentVariable(EnvironmentConstants.ENV_SNYK_TOKEN, "");
 		if (getPref(AUTH_TOKEN_KEY) != null && !"".equals(token)) {
 			store(AUTH_TOKEN_KEY, token);
@@ -175,6 +185,11 @@ public class Preferences {
 			} catch (IllegalStateException | StorageException e) { // NOPMD // no handling needed in this case
 			}
 		}
+		
+		if (getBooleanPref(USE_TOKEN_AUTH)) {
+			store(AUTHENTICATION_METHOD, AuthConstants.AUTH_API_TOKEN);
+			store(USE_TOKEN_AUTH, FALSE);
+		}
 	}
 
 	public final void waitForSecureStorage() {
@@ -197,7 +212,7 @@ public class Preferences {
 		}
 	}
 
-	private final String getDefaultCliPath() {
+	public final String getDefaultCliPath() {
 		File binary = new File(getBinaryDirectory(), LS_RUNTIME_ENV.getDownloadBinaryName());
 		final var dir = binary.getParentFile();
 		if (!dir.exists()) {
@@ -264,7 +279,8 @@ public class Preferences {
 	}
 
 	public final boolean isManagedBinaries() {
-		return insecurePreferences.getBoolean(MANAGE_BINARIES_AUTOMATICALLY, insecureStore.getDefaultBoolean(MANAGE_BINARIES_AUTOMATICALLY));
+		return insecurePreferences.getBoolean(MANAGE_BINARIES_AUTOMATICALLY,
+				insecureStore.getDefaultBoolean(MANAGE_BINARIES_AUTOMATICALLY));
 	}
 
 	public final void store(String key, String value) {
@@ -327,5 +343,12 @@ public class Preferences {
 
 	public void setSecureStorageReady(boolean b) {
 		this.secureStorageReady = b;
+	}
+
+	public boolean isAuthenticated() {
+		if (getAuthToken() == null || getAuthToken().isBlank()) {
+			return false;
+		}
+		return true;
 	}
 }

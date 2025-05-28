@@ -18,6 +18,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.preferences.AuthConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
@@ -40,7 +41,6 @@ class LsConfigurationUpdaterTest {
 
 		mockFolderConfigs = mock(FolderConfigs.class);
 		FolderConfigs.setInstance(mockFolderConfigs);
-
 	}
 
 	@Test
@@ -79,7 +79,7 @@ class LsConfigurationUpdaterTest {
 			assertEquals("/usr/local/bin/snyk", settings.getCliPath());
 			assertEquals("my-token", settings.getToken());
 			assertEquals("automatic", settings.getScanningMode());
-			assertEquals("token", settings.getAuthenticationMethod());
+			assertEquals(AuthConstants.AUTH_OAUTH2, settings.getAuthenticationMethod());
 			assertEquals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, settings.getRequiredProtocolVersion());
 		}
 	}
@@ -109,13 +109,13 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "")).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true")).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("organization");
-		when(preferenceMock.getPref(Preferences.CLI_PATH, "")).thenReturn("/path");
 		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY, Boolean.FALSE.toString()))
 				.thenReturn("false");
-		when(preferenceMock.getPref(Preferences.CLI_PATH, "")).thenReturn("/usr/local/bin/snyk");
+		final var path = "/usr/local/bin/snyk";
+		when(preferenceMock.getCliPath()).thenReturn(path);
 		when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY, "")).thenReturn("my-token");
+		when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2)).thenReturn("oauth");
 		when(preferenceMock.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(true);
-		when(preferenceMock.getBooleanPref(Preferences.USE_TOKEN_AUTH, false)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString())).thenReturn("true");
 
 		List<FolderConfig> mockFolderConfigsParam = new ArrayList<>();
