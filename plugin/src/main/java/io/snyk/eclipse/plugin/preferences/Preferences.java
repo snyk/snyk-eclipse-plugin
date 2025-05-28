@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.http.auth.AuthOption;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
@@ -25,6 +26,7 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.EnvironmentConstants;
+import io.snyk.eclipse.plugin.preferences.AuthConstants.AuthOptionData;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 
@@ -48,6 +50,12 @@ public class Preferences {
 	public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
 	public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
 	public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
+	/**
+	 * @deprecated
+	 * Use AUTHENTICATION_METHOD
+	 * since 3.3.0
+	 */
+	@Deprecated
 	public static final String USE_TOKEN_AUTH = "useTokenAuth";
 	public static final String SEND_ERROR_REPORTS = "SEND_ERROR_REPORTS";
 	public static final String LSP_VERSION = "LSP_VERSION";
@@ -177,6 +185,11 @@ public class Preferences {
 				securePreferences.remove(constant);
 			} catch (IllegalStateException | StorageException e) { // NOPMD // no handling needed in this case
 			}
+		}
+		
+		if (getBooleanPref(USE_TOKEN_AUTH)) {
+			store(AUTHENTICATION_METHOD, AuthConstants.AUTH_API_TOKEN);
+			store(USE_TOKEN_AUTH, FALSE);
 		}
 	}
 
