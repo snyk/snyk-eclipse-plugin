@@ -9,6 +9,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.preferences.AuthConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.IssueViewOptions;
@@ -45,14 +46,13 @@ public class LsConfigurationUpdater {
 		String path = preferences.getPref(Preferences.PATH_KEY, "");
 		IssueViewOptions issueViewOptions = new IssueViewOptions(
 				preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true),
-				preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false)
-				);
+				preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false));
 		String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
 		String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, Boolean.FALSE.toString());
 		String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
 		String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
 				Boolean.TRUE.toString());
-		String cliPath = preferences.getPref(Preferences.CLI_PATH, "");
+		String cliPath = preferences.getCliPath();
 		String token = preferences.getPref(Preferences.AUTH_TOKEN_KEY, "");
 		String integrationName = Activator.INTEGRATION_NAME;
 		String integrationVersion = Activator.PLUGIN_VERSION;
@@ -64,11 +64,8 @@ public class LsConfigurationUpdater {
 		}
 		String enableTrustedFolderFeature = Boolean.TRUE.toString();
 		String scanningMode = preferences.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC) ? "automatic" : "manual";
-		boolean useTokenAuth = preferences.getBooleanPref(Preferences.USE_TOKEN_AUTH, false);
-		var authMethod = "oauth";
-		if (useTokenAuth) {
-			authMethod = "token";
-		}
+		String authenticationMethod = preferences.getPref(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2);
+
 		String enableDeltaFindings = preferences.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString());
 
 		// only add folder configs that are initialized
@@ -76,12 +73,12 @@ public class LsConfigurationUpdater {
 		for (var p : Collections.unmodifiableSet(FolderConfigs.LanguageServerConfigReceived)) {
 			folderConfigs.add(FolderConfigs.getInstance().getFolderConfig(p));
 		}
-		
+
 		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac,
-				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports, enableTelemetry,
-				organization, manageBinariesAutomatically, cliPath, token, integrationName, integrationVersion,
-				automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode, enableDeltaFindings,
-				authMethod, folderConfigs);
+				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports,
+				enableTelemetry, organization, manageBinariesAutomatically, cliPath, token, integrationName,
+				integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode,
+				enableDeltaFindings, authenticationMethod, folderConfigs);
 	}
 
 	static class Settings {
@@ -119,10 +116,11 @@ public class LsConfigurationUpdater {
 
 		public Settings(String activateSnykOpenSource, String activateSnykCodeSecurity, String activateSnykCodeQuality,
 				String activateSnykIac, String insecure, String endpoint, String additionalParams, String additionalEnv,
-				String path, IssueViewOptions issueViewOptions, String sendErrorReports, String enableTelemetry, String organization,
-				String manageBinariesAutomatically, String cliPath, String token, String integrationName,
-				String integrationVersion, String automaticAuthentication, String[] trustedFolders,
-				String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings, String authMethod,List<FolderConfig>folderConfigs) {
+				String path, IssueViewOptions issueViewOptions, String sendErrorReports, String enableTelemetry,
+				String organization, String manageBinariesAutomatically, String cliPath, String token,
+				String integrationName, String integrationVersion, String automaticAuthentication,
+				String[] trustedFolders, String enableTrustedFoldersFeature, String scanningMode,
+				String enableDeltaFindings, String authenticationMethod, List<FolderConfig> folderConfigs) {
 			this.activateSnykOpenSource = activateSnykOpenSource;
 			this.activateSnykCodeSecurity = activateSnykCodeSecurity;
 			this.activateSnykCodeQuality = activateSnykCodeQuality;
@@ -146,7 +144,7 @@ public class LsConfigurationUpdater {
 			this.enableTrustedFoldersFeature = enableTrustedFoldersFeature;
 			this.scanningMode = scanningMode;
 			this.enableDeltaFindings = enableDeltaFindings;
-			this.authenticationMethod = authMethod;
+			this.authenticationMethod = authenticationMethod;
 			this.folderConfigs = folderConfigs;
 		}
 

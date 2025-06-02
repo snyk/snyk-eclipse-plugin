@@ -38,7 +38,7 @@ public class SnykStartup implements IStartup {
 	private static SnykToolView snykToolView;
 	private static boolean downloading = true;
 	private static ILog logger;
-	
+
 	@Override
 	public void earlyStartup() {
 		if (logger == null) {
@@ -57,7 +57,7 @@ public class SnykStartup implements IStartup {
 
 					PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
 						Preferences prefs = Preferences.getInstance();
-						if (prefs.getAuthToken().isBlank() && !prefs.isTest()) {
+						if (!prefs.isAuthenticated() && !prefs.isTest()) {
 							monitor.subTask("Starting Snyk Wizard to configure initial settings...");
 							SnykWizard.createAndLaunch();
 						}
