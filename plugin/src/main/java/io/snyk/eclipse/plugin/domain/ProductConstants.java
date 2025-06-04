@@ -18,7 +18,6 @@ public final class ProductConstants {
 
 	public static final String DISPLAYED_OSS = "Snyk Open Source";
 	public static final String DISPLAYED_CODE_SECURITY = "Code Security";
-	public static final String DISPLAYED_CODE_QUALITY = "Code Quality";
 	public static final String DISPLAYED_IAC = "Configuration";
 
 	public static final String SEVERITY_CRITICAL = "critical";
@@ -28,11 +27,9 @@ public final class ProductConstants {
 
 	public static final String FILTERABLE_ISSUE_OPEN_SOURCE = "Open Source";
 	public static final String FILTERABLE_ISSUE_CODE_SECURITY = "Code Security";
-	public static final String FILTERABLE_ISSUE_CODE_QUALITY = "Code Quality";
 	public static final String FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE = "Infrastructure As Code";
 
-	public static final Map<String, String> FILTERABLE_ISSUE_TYPE_TO_DISPLAY = Map.of(
-			FILTERABLE_ISSUE_CODE_QUALITY, DISPLAYED_CODE_QUALITY, 
+	public static final Map<String, String> FILTERABLE_ISSUE_TYPE_TO_DISPLAY = Map.of( 
 			FILTERABLE_ISSUE_CODE_SECURITY, DISPLAYED_CODE_SECURITY,
 			FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE, DISPLAYED_IAC, 
 			FILTERABLE_ISSUE_OPEN_SOURCE, DISPLAYED_OSS);
@@ -45,5 +42,7 @@ public final class ProductConstants {
 	// code cannot be mapped easily
 	public static final Map<String, String> SCAN_PARAMS_TO_DISPLAYED = Map.of(
 			SCAN_PARAMS_OSS, DISPLAYED_OSS,
-			SCAN_PARAMS_IAC, DISPLAYED_IAC);
+			SCAN_PARAMS_IAC, DISPLAYED_IAC,
+			SCAN_PARAMS_CODE, DISPLAYED_CODE_SECURITY
+	);
 }

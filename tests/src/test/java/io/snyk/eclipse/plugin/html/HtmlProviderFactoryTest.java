@@ -15,8 +15,6 @@ public class HtmlProviderFactoryTest extends LsBaseTest {
   void htmlProviderFactoryReturnsCorrectType() throws Exception {
 	var cut = HtmlProviderFactory.GetHtmlProvider(ProductConstants.DISPLAYED_CODE_SECURITY);
 	assertTrue(cut instanceof CodeHtmlProvider);
-	cut = HtmlProviderFactory.GetHtmlProvider(ProductConstants.DISPLAYED_CODE_QUALITY);
-	assertTrue(cut instanceof CodeHtmlProvider);
 	cut = HtmlProviderFactory.GetHtmlProvider(ProductConstants.DISPLAYED_OSS);
 	assertTrue(cut instanceof OssHtmlProvider);
 	cut = HtmlProviderFactory.GetHtmlProvider(ProductConstants.DISPLAYED_IAC);

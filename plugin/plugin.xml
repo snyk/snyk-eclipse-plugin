@@ -96,11 +96,6 @@
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableCodeSecurityProductHandler">
         </command>
         <command
-            id="io.snyk.eclipse.plugin.commands.enableCodeQuality"
-            name="Code Quality"
-            defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableCodeQualityProductHandler">
-        </command>
-        <command
             id="io.snyk.eclipse.plugin.commands.enableIAC"
             name="Configuration"
             defaultHandler="io.snyk.eclipse.plugin.views.snyktoolview.handlers.EnableIacProductHandler">
@@ -291,12 +286,6 @@
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.enableCodeSecurity"
-                    icon="icons/enabled.png"
-                    style="push"
-                    tooltip="Enable/disable Code scans">
-                </command>
-                <command
-                    commandId="io.snyk.eclipse.plugin.commands.enableCodeQuality"
                     icon="icons/enabled.png"
                     style="push"
                     tooltip="Enable/disable Code scans">

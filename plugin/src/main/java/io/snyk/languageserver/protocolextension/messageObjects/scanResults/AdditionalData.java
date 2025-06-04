@@ -10,7 +10,6 @@ public record AdditionalData(
     String message,
     String[] cwe,
     String text,
-    boolean isSecurityType,
     boolean hasAIFix,
     // OSS + Code
     String ruleId,

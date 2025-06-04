@@ -17,7 +17,6 @@ public interface IHandlerCommands {
 
 	String ENABLE_OSS = "io.snyk.eclipse.plugin.commands.enableOSS";
 	String ENABLE_CODE_SECURITY = "io.snyk.eclipse.plugin.commands.enableCodeSecurity";
-	String ENABLE_CODE_QUALITY = "io.snyk.eclipse.plugin.commands.enableCodeQuality";
 	String ENABLE_IAC = "io.snyk.eclipse.plugin.commands.enableIAC";
 	String SHOW_ALL_PRODUCTS = "io.snyk.eclipse.plugin.command.snykShowAllProducts";
 

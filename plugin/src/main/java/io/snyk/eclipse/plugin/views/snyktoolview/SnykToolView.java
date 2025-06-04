@@ -106,7 +106,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		registerTreeContextMenu(treeViewer.getControl());
 
-		verticalSashForm.setWeights(new int[] { 1, 3 });
+		verticalSashForm.setWeights(1, 3);
 
 		// Create Browser
 		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
@@ -114,7 +114,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		browserHandler = new BrowserHandler(browser);
 		browserHandler.initialize();
 		// Set sash weights
-		horizontalSashForm.setWeights(new int[] { 1, 2 });
+		horizontalSashForm.setWeights(1, 2);
 
 		// Add selection listener to the tree
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -198,6 +198,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				});
 			}
 
+			@Override
 			public boolean isEnabled() {
 				return selectedNode instanceof IssueTreeNode && CommandHandler.getInstance().canBeIgnored(getProduct());
 			}
@@ -240,6 +241,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				});
 			}
 
+			@Override
 			public boolean isEnabled() {
 				return true;
 			}
@@ -322,7 +324,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void refreshBrowser(String status) {
 		Display.getDefault().asyncExec(() -> {
-			if (status != null && status.equals(SCAN_STATE_IN_PROGRESS)) {
+			if (null != status && status.equals(SCAN_STATE_IN_PROGRESS)) {
 				this.browserHandler.setScanningBrowserText();
 			} else {
 				this.browserHandler.setDefaultBrowserText();
@@ -355,6 +357,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		});
 	}
 
+	@Override
 	public void clearTree() {
 		clearRoot();
 		Display.getDefault().asyncExec(() -> {
@@ -422,9 +425,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		refreshTree();
 	}
 
-	/*
-	 * Sets up for doing a Net New Issues scan.
-	 */
+	@Override
 	public void enableDelta() {
 		if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
 			BaseTreeNode[] children = (BaseTreeNode[]) getRoot().getChildren();
@@ -449,9 +450,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		contentNode.setLabel(String.format(" - Click here to choose reference [ current: %s ]", reference));
 	}
 
-	/*
-	 * Disables Net New Issues scan, and starts a regular scan.
-	 */
+	@Override
 	public void disableDelta() {
 		if (this.treeViewer != null && !this.treeViewer.getTree().isDisposed()) {
 			BaseTreeNode[] children = (BaseTreeNode[]) getRoot().getChildren();

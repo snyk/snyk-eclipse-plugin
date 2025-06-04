@@ -1,7 +1,5 @@
 package io.snyk.languageserver.protocolextension;
 
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_QUALITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_IAC;
@@ -22,19 +20,14 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.ProgressParams;
 import org.eclipse.lsp4j.WorkDoneProgressBegin;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
@@ -60,15 +53,12 @@ import io.snyk.languageserver.LsBaseTest;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
-import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
-import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.AdditionalData;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
-@SuppressWarnings("restriction")
 class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private SnykExtendedLanguageClient cut;
 	private Preferences pref;
@@ -179,53 +169,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void testPublishDiagnosticsShouldChangeCache() {
-		// Test Add to cache
-		var folderPath = "/a/b";
-		var uri = "file://" + folderPath + "/c/";
-
-		if (SystemUtils.IS_OS_WINDOWS) {
-			folderPath = "C://a/b";
-			uri = "file:///" + folderPath + "/c/";
-		}
-
-		File pathFromUri = LSPEclipseUtils.fromUri(URI.create(uri));
-		var filePath = pathFromUri.getAbsolutePath();
-		var issueCache = new SnykIssueCache(Paths.get(folderPath));
-		IssueCacheHolder.getInstance().addCacheForTest(issueCache);
-
-		var param = new PublishDiagnostics316Param();
-		param.setUri(uri);
-		var diagnostic = new Diagnostic316();
-		diagnostic.setSource(DIAGNOSTIC_SOURCE_SNYK_CODE);
-
-		var issue = Instancio.of(Issue.class).create();
-		diagnostic.setData(issue);
-		param.setDiagnostics(new Diagnostic316[] { diagnostic });
-		cut = new SnykExtendedLanguageClient();
-		cut.publishDiagnostics316(param);
-
-		Collection<Issue> actualIssueList = null;
-		if (issue.additionalData().isSecurityType()) {
-			actualIssueList = issueCache.getCodeSecurityIssuesForPath(filePath);
-		} else {
-			actualIssueList = issueCache.getCodeQualityIssuesForPath(filePath);
-		}
-		assertEquals(1, actualIssueList.size());
-		assertEquals(issue.id(), actualIssueList.stream().findFirst().get().id());
-
-		// Test remove from cache
-		param = new PublishDiagnostics316Param();
-		param.setUri(uri);
-
-		cut = new SnykExtendedLanguageClient();
-		cut.publishDiagnostics316(param);
-
-		assertEquals(true, issueCache.getCodeSecurityIssuesForPath(filePath).isEmpty());
-
-	}
-
-	@Test
 	void testSnykScanUpdatesRootNodeStatus() {
 		var param = new SnykScanParam();
 		param.setStatus(SCAN_STATE_IN_PROGRESS);
@@ -234,7 +177,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		ProductTreeNode productNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
 		when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath())).thenReturn(productNode);
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, "true");
 
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
@@ -282,7 +224,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 0;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✅ Congrats! No issues found!", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✅ Congrats! No issues found!");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -295,7 +237,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 0;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✅ Congrats! No issues found!", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✅ Congrats! No issues found!");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -332,7 +274,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 3;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 3 open issues", "There are no issues automatically fixable.", "✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
+		var expectedNodes = List.of("✋ 3 open issues", "There are no issues automatically fixable.",
+				"✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -358,7 +301,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 1;
 		int fixableIssueCount = 1;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 1 open issue & 0 ignored issues", "⚡️ 1 open issue is fixable automatically.", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✋ 1 open issue & 0 ignored issues", "⚡️ 1 open issue is fixable automatically.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -371,7 +314,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 2;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 open issues are fixable automatically.", "✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
+		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 open issues are fixable automatically.",
+				"Adjust your settings to view Ignored issues.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -384,7 +328,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 2;
 		int ignoredIssueCount = 1;
-		var expectedNodes = List.of("✋ 3 open issues & 1 ignored issue", "⚡️ 2 open issues are fixable automatically.", "✅ Congrats! No issues found!");
+		var expectedNodes = List.of("✋ 3 open issues & 1 ignored issue", "⚡️ 2 open issues are fixable automatically.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -410,7 +354,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 4;
-		var expectedNodes = List.of("✋ 4 ignored issues, open issues are disabled", "✋ No ignored issues, open issues are disabled", "Adjust your settings to view Open issues.");
+		var expectedNodes = List.of("✋ 4 ignored issues, open issues are disabled",
+				"✋ No ignored issues, open issues are disabled", "Adjust your settings to view Open issues.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -423,12 +368,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 0;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of(
-			"Open and Ignored issues are disabled!",
-			"Adjust your settings to view Open or Ignored issues.",
-			"Open and Ignored issues are disabled!",
-			"Adjust your settings to view Open or Ignored issues."
-		);
+		var expectedNodes = List.of("Open and Ignored issues are disabled!",
+				"Adjust your settings to view Open or Ignored issues.", "Open and Ignored issues are disabled!");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -443,7 +384,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		pref.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, scanProduct == SCAN_PARAMS_OSS ? "true" : "false");
 		pref.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, scanProduct == SCAN_PARAMS_CODE ? "true" : "false");
-		pref.store(Preferences.ACTIVATE_SNYK_CODE_QUALITY, scanProduct == SCAN_PARAMS_CODE ? "true" : "false");
 		pref.store(Preferences.ACTIVATE_SNYK_IAC, scanProduct == SCAN_PARAMS_IAC ? "true" : "false");
 
 		var infoNodeCaptor = ArgumentCaptor.forClass(InfoTreeNode.class);
@@ -475,10 +415,11 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			verify(toolWindowMock).getProductNode(node.getProduct(), param.getFolderPath());
 		}
 
-		verify(toolWindowMock, atLeastOnce()).addInfoNode(parentCaptor.capture(),
-				infoNodeCaptor.capture());
+		verify(toolWindowMock, atLeastOnce()).addInfoNode(parentCaptor.capture(), infoNodeCaptor.capture());
 
-		List<Object> actualNodes = infoNodeCaptor.getAllValues().stream().map(InfoTreeNode::getValue).collect(Collectors.toList());
+		List<Object> actualNodes = infoNodeCaptor.getAllValues().stream().map(InfoTreeNode::getValue)
+				.collect(Collectors.toList());
+	
 		assertIterableEquals(expectedNodes, actualNodes);
 	}
 
@@ -490,7 +431,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			boolean fixable = fixableCount > setAsFixable++;
 			boolean ignored = ignoredCount > setAsIgnored++;
 			var additionalData = Instancio.of(AdditionalData.class)
-					.set(Select.field(AdditionalData::isSecurityType), true)
 					.set(Select.field(AdditionalData::isUpgradable), fixable)
 					.set(Select.field(AdditionalData::hasAIFix), fixable).create();
 
@@ -504,21 +444,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private HashSet<ProductTreeNode> setupProductNodes(SnykScanParam param) {
 		String displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(param.getProduct());
 		var productNodes = new HashSet<ProductTreeNode>();
-		boolean notSnykCode = displayProduct != null;
-		if (notSnykCode) {
-			ProductTreeNode node = new ProductTreeNode(displayProduct);
-			productNodes.add(node);
-			when(toolWindowMock.getProductNode(displayProduct, param.getFolderPath())).thenReturn(node);
-		} else {
-			ProductTreeNode codeSecurityProductNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
-			ProductTreeNode codeQualityProductNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
-			productNodes.add(codeSecurityProductNode);
-			productNodes.add(codeQualityProductNode);
-			when(toolWindowMock.getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath()))
-					.thenReturn(codeSecurityProductNode);
-			when(toolWindowMock.getProductNode(DISPLAYED_CODE_QUALITY, param.getFolderPath()))
-					.thenReturn(codeQualityProductNode);
-		}
+		ProductTreeNode node = new ProductTreeNode(displayProduct);
+		productNodes.add(node);
+		when(toolWindowMock.getProductNode(displayProduct, param.getFolderPath())).thenReturn(node);
 		return productNodes;
 	}
 
@@ -634,6 +562,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	private AdditionalData getSecurityIssue() {
-		return Instancio.of(AdditionalData.class).set(Select.field(AdditionalData::isSecurityType), true).create();
+		return Instancio.of(AdditionalData.class).create();
 	}
 }

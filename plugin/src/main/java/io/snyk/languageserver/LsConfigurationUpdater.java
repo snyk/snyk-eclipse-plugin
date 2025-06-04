@@ -36,8 +36,6 @@ public class LsConfigurationUpdater {
 				Boolean.TRUE.toString());
 		String activateSnykCodeSecurity = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY,
 				Boolean.FALSE.toString());
-		String activateSnykCodeQuality = preferences.getPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY,
-				Boolean.FALSE.toString());
 		String activateSnykIac = preferences.getPref(Preferences.ACTIVATE_SNYK_IAC, Boolean.TRUE.toString());
 		String insecure = preferences.getPref(Preferences.INSECURE_KEY, Boolean.FALSE.toString());
 		String endpoint = preferences.getPref(Preferences.ENDPOINT_KEY, "");
@@ -74,7 +72,7 @@ public class LsConfigurationUpdater {
 			folderConfigs.add(FolderConfigs.getInstance().getFolderConfig(p));
 		}
 
-		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykCodeQuality, activateSnykIac,
+		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykIac,
 				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports,
 				enableTelemetry, organization, manageBinariesAutomatically, cliPath, token, integrationName,
 				integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode,
@@ -84,7 +82,6 @@ public class LsConfigurationUpdater {
 	static class Settings {
 		private final String activateSnykOpenSource;
 		private final String activateSnykCodeSecurity;
-		private final String activateSnykCodeQuality;
 		private final String activateSnykIac;
 
 		private final String insecure;
@@ -114,7 +111,7 @@ public class LsConfigurationUpdater {
 		private final String authenticationMethod;
 		private final List<FolderConfig> folderConfigs;
 
-		public Settings(String activateSnykOpenSource, String activateSnykCodeSecurity, String activateSnykCodeQuality,
+		public Settings(String activateSnykOpenSource, String activateSnykCodeSecurity,
 				String activateSnykIac, String insecure, String endpoint, String additionalParams, String additionalEnv,
 				String path, IssueViewOptions issueViewOptions, String sendErrorReports, String enableTelemetry,
 				String organization, String manageBinariesAutomatically, String cliPath, String token,
@@ -123,7 +120,6 @@ public class LsConfigurationUpdater {
 				String enableDeltaFindings, String authenticationMethod, List<FolderConfig> folderConfigs) {
 			this.activateSnykOpenSource = activateSnykOpenSource;
 			this.activateSnykCodeSecurity = activateSnykCodeSecurity;
-			this.activateSnykCodeQuality = activateSnykCodeQuality;
 			this.activateSnykIac = activateSnykIac;
 			this.insecure = insecure;
 			this.endpoint = endpoint;
@@ -158,10 +154,6 @@ public class LsConfigurationUpdater {
 
 		public String getActivateSnykCodeSecurity() {
 			return activateSnykCodeSecurity;
-		}
-
-		public String getActivateSnykCodeQuality() {
-			return activateSnykCodeQuality;
 		}
 
 		public String getActivateSnykIac() {

@@ -1,6 +1,5 @@
 package io.snyk.languageserver.protocolextension;
 
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_QUALITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
@@ -70,7 +69,6 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
-import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
@@ -524,10 +522,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (productNode != null && pref.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)) {
 				affectedProductTreeNodes.add(productNode);
 			}
-			productNode = toolView.getProductNode(DISPLAYED_CODE_QUALITY, folderPath);
-			if (productNode != null && pref.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY)) {
-				affectedProductTreeNodes.add(productNode);
-			}
 		}
 		return Collections.unmodifiableSet(affectedProductTreeNodes);
 	}
@@ -592,8 +586,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		// Depending on Issue View Options, ignored issues might be pre-filtered by the LS and so ignoredIssueCount may be 0.
 		// In this case, openIssueCount is the total issue count returned by the LS.
 		long openIssueCount = totalIssueCount - ignoredIssueCount;
-		boolean isCodeNode = productNode.getProduct().equals(DISPLAYED_CODE_SECURITY)
-			|| productNode.getProduct().equals(DISPLAYED_CODE_QUALITY);
+		boolean isCodeNode = productNode.getProduct().equals(DISPLAYED_CODE_SECURITY);
 
 		var text = !isCodeNode ? getIssueFoundText(totalIssueCount) : getIssueFoundTextForCode(totalIssueCount, openIssueCount, ignoredIssueCount);
 		toolView.addInfoNode(productNode, new InfoTreeNode(text));

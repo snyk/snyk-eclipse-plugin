@@ -1,6 +1,5 @@
 package io.snyk.languageserver;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.clearAllCaches;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -9,13 +8,8 @@ import java.io.File;
 import java.io.IOException;
 
 import org.eclipse.core.net.proxy.IProxyService;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.resource.ImageRegistry;
-import org.eclipse.swt.graphics.Image;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.preferences.InMemorySecurePreferenceStore;

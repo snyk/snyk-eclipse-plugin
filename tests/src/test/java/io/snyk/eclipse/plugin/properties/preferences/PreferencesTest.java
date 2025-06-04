@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
-import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_QUALITY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
@@ -54,7 +53,6 @@ class PreferencesTest {
 		LsRuntimeEnvironment lsRuntimeEnv = new LsRuntimeEnvironment();
 
 		assertEquals("false", preferences.getPref(ACTIVATE_SNYK_CODE_SECURITY));
-		assertEquals("false", preferences.getPref(ACTIVATE_SNYK_CODE_QUALITY));
 		assertEquals("true", preferences.getPref(ACTIVATE_SNYK_OPEN_SOURCE));
 		assertEquals("true", preferences.getPref(ACTIVATE_SNYK_IAC));
 		assertEquals("true", preferences.getPref(FILTER_SHOW_CRITICAL));

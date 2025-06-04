@@ -47,7 +47,7 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			additionalParamsEditor.setEnabled(false, getFieldEditorParent());
 		} else {
 			var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
-			if (folderConfig.getAdditionalParameters() != null && folderConfig.getAdditionalParameters().size()>0) {				
+			if (folderConfig.getAdditionalParameters() != null && folderConfig.getAdditionalParameters().isEmpty()) {				
 				additionalParamsEditor.setEnabled(true, getFieldEditorParent());
 				final var addParams = String.join(" ",  folderConfig.getAdditionalParameters());
 				
