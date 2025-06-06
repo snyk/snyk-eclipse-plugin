@@ -8,7 +8,7 @@
    <description url="https://snyk.io">
       Secure development for developers and teams
 
-    Snyk Security finds and fixes security vulnerabilities, infrastructure misconfigurations, and code quality issues
+    Snyk Security finds and fixes security vulnerabilities and infrastructure misconfigurations
     in your projects early in the development lifecycle to help you ace your security reviews and avoid a costly fix
     later down the line. If you’re an individual developer, open-source contributor, or maintainer at a large organization,
     Snyk helps you ship secure code, faster.
