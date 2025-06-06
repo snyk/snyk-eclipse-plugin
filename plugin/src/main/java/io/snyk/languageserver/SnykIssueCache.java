@@ -83,7 +83,9 @@ public class SnykIssueCache {
 			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF + basePath);
 		}
 		if (!issues.isEmpty()) {
-			codeSecurityIssues.put(path, new TreeSet<>(issues));
+			final var issueTreeSet = new TreeSet<>(new IssueComparator());
+			issueTreeSet.addAll(issues);
+			codeSecurityIssues.put(path, issueTreeSet);
 		} else {
 			codeSecurityIssues.remove(path);
 		}
