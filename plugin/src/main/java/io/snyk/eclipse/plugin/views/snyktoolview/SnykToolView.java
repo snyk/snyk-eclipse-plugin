@@ -53,11 +53,6 @@ import io.snyk.languageserver.CommandHandler;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
-/**
- * TODO This view will replace the old SnykView. Move the snyktoolview classes
- * and packages to io.snyk.eclipse.plugin.views, when the original SnykView is
- * removed.
- */
 public class SnykToolView extends ViewPart implements ISnykToolView {
 	public SnykToolView() {
 	}
@@ -324,7 +319,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void refreshBrowser(String status) {
 		Display.getDefault().asyncExec(() -> {
-			if (null != status && status.equals(SCAN_STATE_IN_PROGRESS)) {
+			if (null != status && SCAN_STATE_IN_PROGRESS.equals(status)) {
 				this.browserHandler.setScanningBrowserText();
 			} else {
 				this.browserHandler.setDefaultBrowserText();

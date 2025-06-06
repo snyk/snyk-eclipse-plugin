@@ -184,7 +184,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		// expect "scanning..."
 		verify(toolWindowMock).getProductNode(DISPLAYED_CODE_SECURITY, param.getFolderPath());
-		verify(toolWindowMock).setNodeText(productNode, "Scanning...");
+		verify(toolWindowMock).setNodeText(productNode, ISnykToolView.NODE_TEXT_SCANNING);
 	}
 
 	void disableCCI() {
@@ -200,7 +200,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 0;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✅ Congrats! No issues found!");
+		var expectedNodes = List.of(ISnykToolView.CONGRATS_NO_ISSUES_FOUND);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -213,7 +213,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 0;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✅ Congrats! No issues found!");
+		var expectedNodes = List.of(ISnykToolView.CONGRATS_NO_ISSUES_FOUND);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -224,7 +224,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 0;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✅ Congrats! No issues found!");
+		var expectedNodes = List.of(ISnykToolView.CONGRATS_NO_ISSUES_FOUND);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -237,7 +237,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 0;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✅ Congrats! No issues found!");
+		var expectedNodes = List.of(ISnykToolView.CONGRATS_NO_ISSUES_FOUND);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -248,7 +248,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 3;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 3 issues", "There are no issues automatically fixable.");
+		var expectedNodes = List.of("✋ 3 issues", ISnykToolView.NO_FIXABLE_ISSUES);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -261,7 +261,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 3;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 3 issues", "There are no issues automatically fixable.");
+		var expectedNodes = List.of("✋ 3 issues", ISnykToolView.NO_FIXABLE_ISSUES);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -274,8 +274,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 3;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 3 open issues", "There are no issues automatically fixable.",
-				"✅ Congrats! No open issues found!", "Adjust your settings to view Ignored issues.");
+		var expectedNodes = List.of(
+				"✋ 3 open issues",
+				ISnykToolView.NO_FIXABLE_ISSUES);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -314,8 +315,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 2;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 open issues are fixable automatically.",
-				"Adjust your settings to view Ignored issues.");
+		var expectedNodes = List.of("✋ 4 open issues", "⚡️ 2 open issues are fixable automatically.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -341,7 +341,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 0;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("Open issues are disabled!", "Adjust your settings to view Open issues.");
+		var expectedNodes = List.of(ISnykToolView.OPEN_ISSUES_ARE_DISABLED, ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -354,8 +354,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 4;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 4;
-		var expectedNodes = List.of("✋ 4 ignored issues, open issues are disabled",
-				"✋ No ignored issues, open issues are disabled", "Adjust your settings to view Open issues.");
+		var expectedNodes = List.of("✋ 4 ignored issues, open issues are disabled");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -368,8 +367,8 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 0;
 		int fixableIssueCount = 0;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("Open and Ignored issues are disabled!",
-				"Adjust your settings to view Open or Ignored issues.", "Open and Ignored issues are disabled!");
+		var expectedNodes = List.of(ISnykToolView.OPEN_AND_IGNORED_ISSUES_ARE_DISABLED,
+				ISnykToolView.ALL_ISSUES_FILTERED_BUT_AVAILABLE);
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 
@@ -419,7 +418,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		List<Object> actualNodes = infoNodeCaptor.getAllValues().stream().map(InfoTreeNode::getValue)
 				.collect(Collectors.toList());
-	
+
 		assertIterableEquals(expectedNodes, actualNodes);
 	}
 

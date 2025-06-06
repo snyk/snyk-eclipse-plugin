@@ -29,10 +29,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -210,7 +208,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 						}
 						return;
 					}
-					if (languageServerConfigReceived.size() > 0) {
+					if (languageServerConfigReceived.isEmpty()) {
 						executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 					}
 				} catch (Exception e) {
@@ -323,8 +321,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		executeCommand(LsConstants.COMMAND_CODE_FIX_APPLY_AI_EDIT, List.of(fixId));
 	}
 
-	public void submitIgnoreRequestCommands(String workflow, String issueId, String ignoreType, String ignoreReason, String ignoreExpirationDate) {
-		executeCommand(LsConstants.COMMAND_SUBMIT_IGNORE_REQUEST, List.of(workflow, issueId, ignoreType, ignoreReason, ignoreExpirationDate));
+	public void submitIgnoreRequestCommands(String workflow, String issueId, String ignoreType, String ignoreReason,
+			String ignoreExpirationDate) {
+		executeCommand(LsConstants.COMMAND_SUBMIT_IGNORE_REQUEST,
+				List.of(workflow, issueId, ignoreType, ignoreReason, ignoreExpirationDate));
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
@@ -383,23 +383,25 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		openToolView();
 
-		Set<ProductTreeNode> affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(),
-				param.getFolderPath());
+		var productTreeNode = getAffectedProductNode(param.getProduct(), param.getFolderPath());
 
-		if (affectedProductTreeNodes.isEmpty()) {
+		if (productTreeNode == null) {
 			if (toolView != null && toolView.getRoot() != null) {
 				toolView.getRoot().reset();
-				affectedProductTreeNodes = getAffectedProductNodes(param.getProduct(), param.getFolderPath());
+				productTreeNode = getAffectedProductNode(param.getProduct(), param.getFolderPath());
 			}
 		}
 
 		switch (param.getStatus()) {
 		case SCAN_STATE_IN_PROGRESS:
 			scanState.setScanInProgress(inProgressKey, true);
+			if (productTreeNode != null) {
+				toolView.setNodeText(productTreeNode, ISnykToolView.NODE_TEXT_SCANNING);
+			}
 			break;
 		case SCAN_STATE_SUCCESS:
 			scanState.setScanInProgress(inProgressKey, false);
-			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+			if (productTreeNode != null) {
 				this.toolView.resetNode(productTreeNode);
 				addInfoNodes(productTreeNode, param.getFolderPath(), issueCache);
 				populateFileAndIssueNodes(productTreeNode, issueCache);
@@ -407,14 +409,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			break;
 		case SCAN_STATE_ERROR:
 			scanState.setScanInProgress(inProgressKey, false);
-			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
+			if (productTreeNode != null) {
 				productTreeNode.setErrorMessage(param.getErrorMessage());
 			}
 			break;
 		default:
 			break;
 		}
-		setNodeState(param.getStatus(), affectedProductTreeNodes, issueCache);
+		setNodeState(param.getStatus(), productTreeNode, issueCache);
 		this.toolView.refreshBrowser(param.getStatus());
 	}
 
@@ -482,9 +484,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		IssueCacheHolder issueCacheHolder = IssueCacheHolder.getInstance();
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
 		for (IProject iProject : openProjects) {
-			issue = issueCacheHolder.getCacheInstance(iProject)
-					.getIssueByDiagnosticProductAndKey(product, issueId);
-			if(issue != null) {
+			issue = issueCacheHolder.getCacheInstance(iProject).getIssueByDiagnosticProductAndKey(product, issueId);
+			if (issue != null) {
 				return issue;
 			}
 		}
@@ -508,49 +509,28 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return toolView;
 	}
 
-	private Set<ProductTreeNode> getAffectedProductNodes(String snykScanProduct, String folderPath) {
-		Preferences pref = Preferences.getInstance();
-		Set<ProductTreeNode> affectedProductTreeNodes = new HashSet<>();
+	private ProductTreeNode getAffectedProductNode(String snykScanProduct, String folderPath) {
 		var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(snykScanProduct);
-		if (displayProduct != null) {
-			ProductTreeNode productNode = toolView.getProductNode(displayProduct, folderPath);
-			if (productNode != null) {
-				affectedProductTreeNodes.add(productNode);
-			}
-		} else {
-			ProductTreeNode productNode = toolView.getProductNode(DISPLAYED_CODE_SECURITY, folderPath);
-			if (productNode != null && pref.getBooleanPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)) {
-				affectedProductTreeNodes.add(productNode);
-			}
-		}
-		return Collections.unmodifiableSet(affectedProductTreeNodes);
+		ProductTreeNode productNode = toolView.getProductNode(displayProduct, folderPath);
+		return productNode;
 	}
 
-	private void setNodeState(String status, Set<ProductTreeNode> affectedProductTreeNodes, SnykIssueCache cache) {
-		if (affectedProductTreeNodes.isEmpty()) {
+	private void setNodeState(String status, ProductTreeNode node, SnykIssueCache cache) {
+		if (node == null) {
 			return;
 		}
 		String nodeText;
-
 		if (SCAN_STATE_IN_PROGRESS.equals(status)) {
 			nodeText = NODE_TEXT_SCANNING;
-			setProductNodeText(affectedProductTreeNodes, nodeText);
+			node.setText(nodeText);
 		} else if (SCAN_STATE_ERROR.equals(status)) {
 			nodeText = ISnykToolView.NODE_TEXT_ERROR;
-			setProductNodeText(affectedProductTreeNodes, nodeText);
+			node.setText(nodeText);
 			toolView.refreshTree();
 		} else if (SCAN_STATE_SUCCESS.equals(status)) {
-			for (ProductTreeNode productTreeNode : affectedProductTreeNodes) {
-				var displayCounts = getCountsSuffix(productTreeNode, cache);
-				setProductNodeText(Set.of(productTreeNode), displayCounts);
-			}
+			var displayCounts = getCountsSuffix(node, cache);
+			node.setText(displayCounts);
 			toolView.refreshTree();
-		}
-	}
-
-	private void setProductNodeText(Set<ProductTreeNode> nodes, String nodeText) {
-		for (ProductTreeNode productTreeNode : nodes) {
-			toolView.setNodeText(productTreeNode, nodeText);
 		}
 	}
 
@@ -580,24 +560,39 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		toolView.removeInfoNodes(productNode);
 
-		// totalIssueCount is the number of issues returned by LS, which pre-filters on Issue View Options and Severity Filters (to be implemented at time of this comment - 6th May 2025).
+		// totalIssueCount is the number of issues returned by LS, which pre-filters on
+		// Issue View Options and Severity Filters
 		long totalIssueCount = issueCache.getTotalCount(productNode.getProduct());
 		long ignoredIssueCount = issueCache.getIgnoredCount(productNode.getProduct());
-		// Depending on Issue View Options, ignored issues might be pre-filtered by the LS and so ignoredIssueCount may be 0.
+		// Depending on Issue View Options, ignored issues might be pre-filtered by the
+		// LS and so ignoredIssueCount may be 0.
 		// In this case, openIssueCount is the total issue count returned by the LS.
 		long openIssueCount = totalIssueCount - ignoredIssueCount;
 		boolean isCodeNode = productNode.getProduct().equals(DISPLAYED_CODE_SECURITY);
 
-		var text = !isCodeNode ? getIssueFoundText(totalIssueCount) : getIssueFoundTextForCode(totalIssueCount, openIssueCount, ignoredIssueCount);
+		String text;
+		if (!isCodeNode) {
+			text = getIssueFoundText(totalIssueCount);
+		} else {
+			text = getIssueFoundTextForCode(totalIssueCount, openIssueCount, ignoredIssueCount);
+		}
+
 		toolView.addInfoNode(productNode, new InfoTreeNode(text));
 		if (totalIssueCount == 0) {
-			var ivoNode = !isCodeNode ? getNoIssueViewOptionsSelectedTreeNode() : getNoIssueViewOptionsSelectedTreeNodeForCode();
+			InfoTreeNode ivoNode;
+			if (!isCodeNode) {
+				ivoNode = getNoIssueViewOptionsSelectedTreeNode();
+			} else {
+				ivoNode = getNoIssueViewOptionsSelectedTreeNodeForCode();
+			}
+
 			if (ivoNode != null) {
 				toolView.addInfoNode(productNode, ivoNode);
 			}
 		} else {
 			long fixableIssueCount = issueCache.getFixableCount(productNode.getProduct());
-			var fixableText = !isCodeNode ? getFixableIssuesText(fixableIssueCount, false) : getFixableIssuesTextForCode(fixableIssueCount);
+			var fixableText = !isCodeNode ? getFixableIssuesText(fixableIssueCount, false)
+					: getFixableIssuesTextForCode(fixableIssueCount);
 			if (fixableText != null) {
 				toolView.addInfoNode(productNode, new InfoTreeNode(fixableText));
 			}
@@ -696,10 +691,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return null;
 	}
 
-	private String getFixableIssuesText(long fixableIssueCount, boolean sayOpenIssues) {
-		return fixableIssueCount > 0
-			? "⚡️ " + fixableIssueCount + (sayOpenIssues ? " open" : "") + " issue" + (fixableIssueCount == 1 ? " is" : "s are") + " fixable automatically."
-			: NO_FIXABLE_ISSUES;
+	private String getFixableIssuesText(long fixableIssueCount, boolean isIgnoresEnabled) {
+		if (fixableIssueCount > 0) {
+			final var classifyIssueForIgnoresText = isIgnoresEnabled ? " open" : "";
+			final var issue = " issue" + (fixableIssueCount == 1 ? " is" : "s are");
+			return "⚡️ " + fixableIssueCount + classifyIssueForIgnoresText + issue + " fixable automatically.";
+		}
+		return NO_FIXABLE_ISSUES;
 	}
 
 	private String getFixableIssuesTextForCode(long fixableIssueCount) {
