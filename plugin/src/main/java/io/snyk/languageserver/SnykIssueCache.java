@@ -73,7 +73,7 @@ public class SnykIssueCache {
 	// ----- Methods for Snyk Code Issues -----
 
 	/**
-	 * Adds or updates Snyk Code Security & Quality issues for a given path
+	 * Adds or updates Snyk Code Security issues for a given path
 	 *
 	 * @param path   The file path
 	 * @param issues The collection of issues to add
@@ -82,13 +82,8 @@ public class SnykIssueCache {
 		if (!Paths.get(path).startsWith(basePath)) {
 			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF + basePath);
 		}
-		var securityIssues = new TreeSet<Issue>(new IssueComparator());
-		for (Issue issue : issues) {
-			securityIssues.add(issue);
-		}
-
-		if (!securityIssues.isEmpty()) {
-			codeSecurityIssues.put(path, securityIssues);
+		if (!issues.isEmpty()) {
+			codeSecurityIssues.put(path, new TreeSet<>(issues));
 		} else {
 			codeSecurityIssues.remove(path);
 		}
@@ -108,7 +103,7 @@ public class SnykIssueCache {
 	}
 
 	/**
-	 * Removes Snyk Code issues for a given path. Removes both Quality & Security
+	 * Removes Snyk Code issues for a given path.
 	 * issues.
 	 *
 	 * @param path The file path

@@ -5,22 +5,22 @@
   </feature>
   <category-def name="io.snyk.scanner" label="Snyk Security">
     <description>
-      Secure development for developers and teams
+    Secure development for developers and teams
 
-      Snyk Security finds and fixes security vulnerabilities, infrastructure misconfigurations, and code quality issues
-      in your projects early in the development lifecycle to help you ace your security reviews and avoid a costly fix
-      later down the line. If you’re an individual developer, open-source contributor, or maintainer at a large organization,
-      Snyk helps you ship secure code, faster.
+    Snyk Security finds and fixes security vulnerabilities and infrastructure misconfigurations
+    in your projects early in the development lifecycle to help you ace your security reviews and avoid a costly fix
+    later down the line. If you’re an individual developer, open-source contributor, or maintainer at a large organization,
+    Snyk helps you ship secure code, faster.
 
-      Security for your entire application
-      Comprehensive security for proprietary code, open-source dependencies, and infrastructure as code (IaC)
-      configurations—all in one plugin. Whether you’re looking for a Java vulnerability scanner, a custom code
-      vulnerability scanner, or open-source security scanner, or an application security plugin.
+    Security for your entire application
+    Comprehensive security for proprietary code, open-source dependencies, and infrastructure as code (IaC)
+    configurations—all in one plugin. Whether you’re looking for a Java vulnerability scanner, a custom code
+    vulnerability scanner, or open-source security scanner, or an application security plugin.
 
-      Fast, free and accurate results
-      Get security analysis of your code, and configurations free of charge. Snyk scans for vulnerabilities
-      and misconfigurations in seconds. When returning your results, Snyk Security categorizes security issues by issue
-      type and severity.
+    Fast, free and accurate results
+    Get security analysis of your code, and configurations free of charge. Snyk scans for vulnerabilities
+    and misconfigurations in seconds. When returning your results, Snyk Security categorizes security issues by issue
+    type and severity.
     </description>
   </category-def>
 </site>
