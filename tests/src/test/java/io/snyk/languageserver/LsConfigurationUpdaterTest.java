@@ -75,7 +75,6 @@ class LsConfigurationUpdaterTest {
 			assertEquals(SystemUtils.OS_NAME, settings.getOsPlatform());
 
 			// Additional assertions based on setupPreferenceMock
-			assertEquals("false", settings.getActivateSnykCodeQuality());
 			assertEquals("/usr/local/bin/snyk", settings.getCliPath());
 			assertEquals("my-token", settings.getToken());
 			assertEquals("automatic", settings.getScanningMode());
@@ -109,8 +108,6 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "")).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true")).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("organization");
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_QUALITY, Boolean.FALSE.toString()))
-				.thenReturn("false");
 		final var path = "/usr/local/bin/snyk";
 		when(preferenceMock.getCliPath()).thenReturn(path);
 		when(preferenceMock.getPref(Preferences.AUTH_TOKEN_KEY, "")).thenReturn("my-token");

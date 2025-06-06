@@ -10,18 +10,18 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
  * UI.
  */
 public interface ISnykToolView {
-	String CONGRATS_NO_ISSUES_FOUND = "✅ Congrats! No issues found!";
-	String CONGRATS_NO_OPEN_ISSUES_FOUND = "✅ Congrats! No open issues found!";
-	String OPEN_ISSUES_ARE_DISABLED = "Open issues are disabled!";
-	String NO_IGNORED_ISSUES = "✋ No ignored issues, open issues are disabled";
-	String OPEN_AND_IGNORED_ISSUES_ARE_DISABLED = "Open and Ignored issues are disabled!";
-	String NO_FIXABLE_ISSUES = "There are no issues automatically fixable.";
-	String IGNORED_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your settings to view Ignored issues.";
-	String OPEN_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your settings to view Open issues.";
-	String ALL_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your settings to view Open or Ignored issues.";
+	public String CONGRATS_NO_ISSUES_FOUND = "✅ Congrats! No issues found!";
+	public String CONGRATS_NO_OPEN_ISSUES_FOUND = "✅ Congrats! No open issues found!";
+	public String OPEN_ISSUES_ARE_DISABLED = "Open issues are disabled!";
+	public String NO_IGNORED_ISSUES = "✋ No ignored issues, open issues are disabled";
+	public String OPEN_AND_IGNORED_ISSUES_ARE_DISABLED = "Open and Ignored issues are disabled!";
+	public String NO_FIXABLE_ISSUES = "There are no issues automatically fixable.";
+	public String IGNORED_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your settings to view Ignored issues.";
+	public String OPEN_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your settings to view Open issues.";
+	public String ALL_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your settings to view Open or Ignored issues.";
 
-	String NODE_TEXT_SCANNING = "Scanning...";
-	String NODE_TEXT_ERROR = "An error occurred";
+	public String NODE_TEXT_SCANNING = "Scanning...";
+	public String NODE_TEXT_ERROR = "An error occurred";
 
 	/**
 	 * Updates the text of the given node

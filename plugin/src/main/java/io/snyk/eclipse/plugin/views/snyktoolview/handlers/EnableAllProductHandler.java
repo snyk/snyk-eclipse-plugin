@@ -1,6 +1,4 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
-
-import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_QUALITY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
@@ -22,8 +20,7 @@ public class EnableAllProductHandler extends BaseHandler implements IElementUpda
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		List<String> productPrefs = List.of(ACTIVATE_SNYK_CODE_QUALITY, ACTIVATE_SNYK_CODE_SECURITY, ACTIVATE_SNYK_IAC,
-				ACTIVATE_SNYK_OPEN_SOURCE);
+		List<String> productPrefs = List.of(ACTIVATE_SNYK_CODE_SECURITY, ACTIVATE_SNYK_IAC, ACTIVATE_SNYK_OPEN_SOURCE);
 
 		updateMultiplePrefs(productPrefs);
 

@@ -28,7 +28,6 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 	private BooleanFieldEditor snykCodeSecurityCheckbox;
-	private BooleanFieldEditor snykCodeQualityCheckbox;
 	private ComboFieldEditor authenticationEditor;
 	private StringFieldEditor endpoint;
 	private TokenFieldEditor tokenField;
@@ -101,9 +100,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		snykCodeSecurityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE_SECURITY,
 				"Snyk Code Security enabled", getFieldEditorParent());
 		addField(snykCodeSecurityCheckbox);
-		snykCodeQualityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE_QUALITY,
-				"Snyk Code Quality enabled", getFieldEditorParent());
-		addField(snykCodeQualityCheckbox);
 
 		addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure-as-Code enabled",
 				getFieldEditorParent()));

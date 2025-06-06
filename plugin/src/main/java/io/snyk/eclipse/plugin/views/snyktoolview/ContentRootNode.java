@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_QUALITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_IAC;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
@@ -41,10 +40,8 @@ public final class ContentRootNode extends BaseTreeNode {
 			return (ProductTreeNode) this.getChildren()[0];
 		case ProductConstants.DISPLAYED_CODE_SECURITY:
 			return (ProductTreeNode) this.getChildren()[1];
-		case ProductConstants.DISPLAYED_CODE_QUALITY:
-			return (ProductTreeNode) this.getChildren()[2];
 		case ProductConstants.DISPLAYED_IAC:
-			return (ProductTreeNode) this.getChildren()[3];
+			return (ProductTreeNode) this.getChildren()[2];
 		default:
 			throw new IllegalArgumentException("unknown product in tree");
 		}
@@ -58,14 +55,10 @@ public final class ContentRootNode extends BaseTreeNode {
 		var codeSecurityRootNode = new ProductTreeNode(DISPLAYED_CODE_SECURITY);
 		codeSecurityRootNode.setParent(this);
 
-		var codeQualityRootNode = new ProductTreeNode(DISPLAYED_CODE_QUALITY);
-		codeQualityRootNode.setParent(this);
-
 		var iacRootNode = new ProductTreeNode(DISPLAYED_IAC);
 		iacRootNode.setParent(this);
 
-		ProductTreeNode[] productNodes = new ProductTreeNode[] { ossRootNode, codeSecurityRootNode, codeQualityRootNode,
-				iacRootNode, };
+		ProductTreeNode[] productNodes = new ProductTreeNode[] { ossRootNode, codeSecurityRootNode, iacRootNode, };
 		this.setChildren(productNodes);
 	}
 

@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_QUALITY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
@@ -45,7 +44,6 @@ public class TreeFilterManager {
 		new ProductFilter(tfm, ACTIVATE_SNYK_OPEN_SOURCE).applyFilter();
 		new ProductFilter(tfm, ACTIVATE_SNYK_IAC).applyFilter();
 		new ProductFilter(tfm, ACTIVATE_SNYK_CODE_SECURITY).applyFilter();
-		new ProductFilter(tfm, ACTIVATE_SNYK_CODE_QUALITY).applyFilter();
 
 		// Fix
 		new FixableFilter(tfm).applyFilter();

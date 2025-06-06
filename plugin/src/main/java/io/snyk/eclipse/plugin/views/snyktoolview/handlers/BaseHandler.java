@@ -1,5 +1,4 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
-import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_QUALITY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
@@ -70,8 +69,6 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater, IHa
 		switch(pref) {
 		case ACTIVATE_SNYK_OPEN_SOURCE:
 			return ENABLE_OSS;
-		case ACTIVATE_SNYK_CODE_QUALITY:
-			return ENABLE_CODE_QUALITY;
 		case ACTIVATE_SNYK_CODE_SECURITY:
 			return ENABLE_CODE_SECURITY;
 		case ACTIVATE_SNYK_IAC:

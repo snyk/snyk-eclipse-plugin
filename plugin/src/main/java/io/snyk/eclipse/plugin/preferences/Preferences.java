@@ -15,7 +15,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.http.auth.AuthOption;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
@@ -26,7 +25,6 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.EnvironmentConstants;
-import io.snyk.eclipse.plugin.preferences.AuthConstants.AuthOptionData;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 
@@ -45,7 +43,6 @@ public class Preferences {
 	public static final String CLI_PATH = "cli-path";
 	public static final String CLI_BASE_URL = "cli-base-url";
 	public static final String ACTIVATE_SNYK_CODE_SECURITY = "ACTIVATE_SNYK_CODE_SECURITY";
-	public static final String ACTIVATE_SNYK_CODE_QUALITY = "ACTIVATE_SNYK_CODE_QUALITY";
 	public static final String ACTIVATE_SNYK_OPEN_SOURCE = "ACTIVATE_SNYK_OPEN_SOURCE";
 	public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
 	public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
@@ -102,7 +99,7 @@ public class Preferences {
 		return instance;
 	}
 
-	public static synchronized Preferences getTestInstance(IEclipsePreferences insecure, ISecurePreferences secure) { // NOPMD
+	public static synchronized Preferences getTestInstance(IEclipsePreferences insecure, ISecurePreferences secure) {
 		Preferences preferences = new Preferences(insecure, secure);
 		setCurrentPreferences(preferences);
 		return preferences;
@@ -121,7 +118,6 @@ public class Preferences {
 		});
 
 		insecureStore.setDefault(ACTIVATE_SNYK_CODE_SECURITY, FALSE);
-		insecureStore.setDefault(ACTIVATE_SNYK_CODE_QUALITY, FALSE);
 		insecureStore.setDefault(ACTIVATE_SNYK_OPEN_SOURCE, TRUE);
 		insecureStore.setDefault(ACTIVATE_SNYK_IAC, TRUE);
 		insecureStore.setDefault(FILTER_SHOW_CRITICAL, TRUE);
@@ -166,7 +162,7 @@ public class Preferences {
 
 	private void migratePreferences() {
 		Set<String> constants = new HashSet<>(Arrays.asList(TRUSTED_FOLDERS, PATH_KEY, ENDPOINT_KEY, INSECURE_KEY,
-				CLI_PATH, CLI_BASE_URL, ACTIVATE_SNYK_CODE_SECURITY, ACTIVATE_SNYK_CODE_QUALITY,
+				CLI_PATH, CLI_BASE_URL, ACTIVATE_SNYK_CODE_SECURITY,
 				ACTIVATE_SNYK_OPEN_SOURCE, ACTIVATE_SNYK_IAC, ADDITIONAL_PARAMETERS, ADDITIONAL_ENVIRONMENT,
 				SEND_ERROR_REPORTS, LSP_VERSION, USE_TOKEN_AUTH, ANALYTICS_PLUGIN_INSTALLED_SENT, ENABLE_DELTA,
 				FILTER_SHOW_CRITICAL, FILTER_SHOW_HIGH, FILTER_SHOW_MEDIUM, FILTER_SHOW_LOW,

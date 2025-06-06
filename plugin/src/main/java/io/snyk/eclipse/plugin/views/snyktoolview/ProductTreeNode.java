@@ -28,10 +28,6 @@ public class ProductTreeNode extends BaseTreeNode {
 			setImageDescriptor(SnykIcons.getImageDescriptor(SnykIcons.IAC_ID));
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_IAC;
 			break;
-		case ProductConstants.DISPLAYED_CODE_QUALITY:
-			setImageDescriptor(SnykIcons.getImageDescriptor(SnykIcons.CODE_ID));
-			prefEnablementKey = Preferences.ACTIVATE_SNYK_CODE_QUALITY;
-			break;
 		case ProductConstants.DISPLAYED_CODE_SECURITY:
 			setImageDescriptor(SnykIcons.getImageDescriptor(SnykIcons.CODE_ID));
 			prefEnablementKey = Preferences.ACTIVATE_SNYK_CODE_SECURITY;
