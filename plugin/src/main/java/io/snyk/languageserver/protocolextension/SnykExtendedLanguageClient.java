@@ -208,7 +208,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 						}
 						return;
 					}
-					if (languageServerConfigReceived.isEmpty()) {
+					if (!languageServerConfigReceived.isEmpty()) {
 						executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 					}
 				} catch (Exception e) {
@@ -560,12 +560,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		toolView.removeInfoNodes(productNode);
 
-		// totalIssueCount is the number of issues returned by LS, which pre-filters on
-		// Issue View Options and Severity Filters
 		long totalIssueCount = issueCache.getTotalCount(productNode.getProduct());
 		long ignoredIssueCount = issueCache.getIgnoredCount(productNode.getProduct());
-		// Depending on Issue View Options, ignored issues might be pre-filtered by the
-		// LS and so ignoredIssueCount may be 0.
+		// Depending on Issue View Options, ignored issues might be pre-filtered by the and so ignoredIssueCount may be 0.
 		// In this case, openIssueCount is the total issue count returned by the LS.
 		long openIssueCount = totalIssueCount - ignoredIssueCount;
 		boolean isCodeNode = productNode.getProduct().equals(DISPLAYED_CODE_SECURITY);
