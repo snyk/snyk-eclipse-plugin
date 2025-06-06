@@ -1,5 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview.handlers;
-
+@FunctionalInterface
 public interface IHandlerCommands {
 	String WORKSPACE_SCAN = "io.snyk.eclipse.plugin.commands.snykWorkspaceScan";
 	String WORKSPACE_FOLDER_SCAN = "io.snyk.eclipse.plugin.commands.execute";
