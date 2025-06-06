@@ -99,7 +99,7 @@ public class Preferences {
 		return instance;
 	}
 
-	public static synchronized Preferences getTestInstance(IEclipsePreferences insecure, ISecurePreferences secure) { // NOPMD
+	public static synchronized Preferences getTestInstance(IEclipsePreferences insecure, ISecurePreferences secure) {
 		Preferences preferences = new Preferences(insecure, secure);
 		setCurrentPreferences(preferences);
 		return preferences;
