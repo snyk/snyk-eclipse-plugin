@@ -204,7 +204,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				try {
 					if (projectPath != null) {
 						if (languageServerConfigReceived.contains(projectPath)) {
-							executeCommand(LsConstants.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath));
+							executeCommand(LsConstants.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath.toString()));
 						}
 						return;
 					}
