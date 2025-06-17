@@ -1,5 +1,9 @@
 # Snyk Security Changelog
 
+## [3.2.1]
+### Changes
+- fixed compatibility with some older Eclipse versions, by removing GSON dependency
+
 ## [3.2.0]
 ### Changes
 - Fixed Issue Status view filters for ignored issues not hiding non-shown issues in editor (early access).

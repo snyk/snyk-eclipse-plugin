@@ -3,26 +3,18 @@ package io.snyk.languageserver.protocolextension.messageObjects;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.annotations.SerializedName;
-
 public class FolderConfig {
 
-    @SerializedName("folderPath")
     private String folderPath;
 
-    @SerializedName("baseBranch")
     private String baseBranch = "";
 
-    @SerializedName("localBranches")
     private List<String> localBranches = new ArrayList<>();
 
-    @SerializedName("additionalParameters")
     private List<String> additionalParameters = new ArrayList<>();
-    
-    @SerializedName("referenceFolderPath") 
+
     private String referenceFolderPath = "";
-    	    
-    @SerializedName("scanCommandConfig") 
+
     private ScanCommandConfig scanCommandConfig;
 
     public FolderConfig(String folderPath) {

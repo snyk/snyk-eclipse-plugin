@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
@@ -175,10 +175,16 @@ public class BrowserHandler {
 			String errorJson = ptn.getErrorMessage();
 			if (errorJson != null && !errorJson.isBlank()) {
 				shouldShowDefaultMessage = false;
-				var error = new Gson().fromJson(errorJson, ErrorMessage.class);
-				String errorHtml = htmlProvider.getErrorHtml(error.error, error.path);
+				String errorHTML;
+				try {
+					ErrorMessage errorMessage = new ObjectMapper().readValue(errorJson, ErrorMessage.class);
+					errorHTML = htmlProvider.getErrorHtml(errorMessage.error, errorMessage.path);
+				} catch (Exception e) {
+					errorHTML = htmlProvider.getErrorHtml("Error: failed to display error", "");
+				}
+				final String errorHTMLFinal = errorHTML;
 				Display.getDefault().syncExec(() -> {
-					browser.setText(errorHtml);
+					browser.setText(errorHTMLFinal);
 				});
 			}
 		}
