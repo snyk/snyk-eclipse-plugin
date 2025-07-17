@@ -1,5 +1,10 @@
 # Snyk Security Changelog
 
+## [3.3.0]
+### Changes
+- PAT support.
+- removed deprecated Snyk Code Quality.
+
 ## [3.2.1]
 ### Changes
 - fixed compatibility with some older Eclipse versions, by removing GSON dependency
