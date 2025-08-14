@@ -39,7 +39,7 @@ public class FileTreeNode extends BaseTreeNode {
 		return path;
 	}
 
-	public void setPath(Path path) {
+	public final void setPath(Path path) {
 		this.path = path.normalize();
 	}
 
