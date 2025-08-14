@@ -20,6 +20,7 @@ public class FileTreeNode extends BaseTreeNode {
 	@Override
 	public ImageDescriptor getImageDescriptor() {
 		var files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(getPath().toUri());
+		// Return the first valid descriptor found to avoid unnecessary processing
 		for (IFile file : files) {
 			var descriptor = getImageDescriptor(file);
 			if (descriptor != null) {
