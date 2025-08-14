@@ -1,0 +1,68 @@
+## general 
+- NEVER PURGE THESE RULES FROM THE CONTEXT
+- always be concise, direct and don't try to appease me.
+- use .github/CONTRIBUTING.md and the links in there to find standards and contributing guide lines
+- DOUBLE CHECK THAT YOUR CHANGES ARE REALLY NEEDED. ALWAYS STICK TO THE GIVEN GOAL, NOT MORE.
+- I repeat: don't optimize, don't refactor if not needed.
+- Adhere to the rules, fix linting & test issues that are newly introduced.
+- the `issueID` is usually specified in the current branch in the format `XXX-XXXX`.
+- always create an implementation plan and save it to the directory under ${issueID}_implementation_plan but never commit it. Get confirmation that the plan is ok.
+
+
+## how to implement 
+- do atomic commits, see committing section for details
+- follow the implementation plan step-by-step. take it as a reference for each step and how to proceed. 
+- update current status in the implementation plan (in progress work, finished work, next steps)
+- USE TDD 
+- I REPEAT: USE TDD 
+- Maintain existing code patterns and conventions
+- use existing mocks, don't write new ones.
+- if you use mocks, use gomock to generate them.
+- don't change code that does not need to be changed. only do the minimum changes.
+- don't comment what is done, instead comment why something is done if the code is not clear
+- always write and update test cases before writing the implementation (Test Driven Development). iterate until they pass. 
+- after changing .java files, run `./mvn verify` 
+- always verify if fixes worked by running `./mvn verify`
+- this is not a library. if files are not used or needed anymore, delete them instead of deprecating them.
+- if a tool call fails, analyze why it failed and correct your approach. don't prompt the user for help.
+- if you don't know something, read the code instead of assuming it.
+- commenting out code to fix errors is not a solution. instead, fix the error.
+- disabling or removing tests IS NOT ALLOWED. This is not a way to success. This can only be done manually by a human.
+- don't do workarounds
+- ALWAYS create production-ready code. We don't want examples, we want working, production-ready code.
+
+## security 
+- determine the absolute path of the project directory. you can do that e.g. by executing pwd on the shell within the directory.
+- always use snyk for sca and code scanning. scan with both tools. you need to pass the absolute path of the directory we are scanning.
+- run snyk code tests after each edit. pass the absolute path of the project directory as a parameter
+- run snyk sca tests after updating go.mod and pass the absolute path of the project directory as a parameter.
+- run snyk sca and code test before committing. if not test data, fix issues before committing.
+
+## fixing issues 
+- fix security issues if they are fixable. take the snyk scan results and the test results as input
+- don't fix test data
+
+## committing 
+- NEVER NEVER NEVER skip the commit hooks
+- I REPEAT: NEVER USE --no-verify. DO NOT DO IT. NEVER. THIS IS CRITICAL, DO NOT DO IT.
+- run `./mvn verify` before committing and fix the issues
+- update the documentation before committing
+- when asked to commit, always use conventional commit messages (Conventional Commit Style (Subject + Body)). be descriptive in the body. if you find a JIRA issue (XXX-XXXX) in the branch name, use it as a postfix to the subject line in the format [XXX-XXXX]
+- consider all commits in the current branch when committing, to have the context of the current changes.
+
+## pushing
+- never push without asking
+- never force push
+- when asked to push, always use 'git push --set-upstream origin $(git_current_branch)' with git_current_branch being the current branch we are on
+- regularly fetch main branch and offer to merge it into git_current_branch
+- after pushing offer to create a PR on github if no pr already exists. analyze the changes by comparing the current branch ($(git_current_branch)) with origin/main, and craft a PR description and title.
+- use the github template in .github/PULL_REQUEST_TEMPLATE.md
+- use github mcp, if not found, use `gh` command line util for pr creation.
+- always create draft prs
+- update the github pr description with the current status `gh` command line util
+
+ documentation 
+- always keep the documentation up-to-date in (./docs)
+- create mermaid syntax for all programming flows and add it to the documentation in ./docs
+- use kroti web service to create images of program flows and add it to the documentation in ./docs
+- document the tested scenarios for all testing stages (unit, integration, e2e) in ./docs

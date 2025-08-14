@@ -9,6 +9,7 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.BaseTreeNode;
 
 public class TreeLabelProvider implements ILabelProvider {
@@ -42,10 +43,17 @@ public class TreeLabelProvider implements ILabelProvider {
 		synchronized (images) {
 			Image image = images.get(imageDescriptor);
 			if (image == null || image.isDisposed()) {
-				final var resource = imageDescriptor.createResource(Display.getDefault());
-				images.put(imageDescriptor, (Image) resource);
+				// Remove disposed image from cache to prevent memory leak
+				if (image != null && image.isDisposed()) {
+					images.remove(imageDescriptor);
+				}
+				// Create new image and cache it
+				image = (Image) imageDescriptor.createResource(Display.getDefault());
+				if (image != null) {
+					images.put(imageDescriptor, image);
+				}
 			}
-			return images.get(imageDescriptor);
+			return image;
 		}
 	}
 
@@ -56,10 +64,20 @@ public class TreeLabelProvider implements ILabelProvider {
 
 	@Override
 	public void dispose() {
-		for (var entry : images.entrySet()) {
-			entry.getKey().destroyResource(entry.getValue());
+		synchronized (images) {
+			for (var entry : images.entrySet()) {
+				try {
+					Image image = entry.getValue();
+					if (image != null && !image.isDisposed()) {
+						entry.getKey().destroyResource(image);
+					}
+				} catch (Exception e) {
+					// Log but continue disposing other images
+					SnykLogger.logError(e);
+				}
+			}
+			images.clear();
 		}
-		images.clear();
 	}
 
 	@Override

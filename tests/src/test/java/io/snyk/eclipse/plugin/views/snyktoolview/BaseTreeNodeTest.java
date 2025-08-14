@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.TreeNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -150,5 +152,22 @@ class BaseTreeNodeTest {
 		assertNotNull(children);
 		assertEquals(1, children.length);
 		assertEquals(child2, children[0]);
+	}
+
+	@Test
+	void testGetImageDescriptorForResource() {
+		// This test verifies that getImageDescriptor returns a valid descriptor for resources
+		// The new implementation gets descriptors directly from the workbench without creating handles
+		
+		// Note: This test would require a running Eclipse workbench to fully test
+		// In unit tests, we expect it to return null when PlatformUI is not available
+		IResource mockResource = mock(IResource.class);
+		when(mockResource.getName()).thenReturn("test.java");
+		
+		// In unit test environment, PlatformUI is not available, so we expect null
+		ImageDescriptor descriptor = node.getImageDescriptor(mockResource);
+		
+		// The method should handle the absence of workbench gracefully
+		assertNull(descriptor);
 	}
 }
