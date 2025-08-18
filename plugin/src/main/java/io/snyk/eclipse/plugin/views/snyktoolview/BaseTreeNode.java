@@ -7,12 +7,9 @@ import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.TreeNode;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageDataProvider;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 
 public class BaseTreeNode extends TreeNode {
 	private ImageDescriptor imageDescriptor;
@@ -60,17 +57,21 @@ public class BaseTreeNode extends TreeNode {
 	}
 	
 	protected ImageDescriptor getImageDescriptor(IResource object) {	
-		ILabelProvider labelProvider = null;
+		// Get the image descriptor directly from the workbench to avoid disposed image issues
 		try {
-			labelProvider =  WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
-			Image image = labelProvider.getImage(object);
-			if (image == null || image.isDisposed())
-				return null;
+			imageDescriptor = PlatformUI.getWorkbench().getEditorRegistry()
+				.getImageDescriptor(object.getName());
 			
-			imageDescriptor = getImageDescriptorFromImage(image);
+			// If no descriptor found for file type, try to get default file icon
+			if (imageDescriptor == null) {
+				imageDescriptor = PlatformUI.getWorkbench().getSharedImages()
+					.getImageDescriptor(ISharedImages.IMG_OBJ_FILE);
+			}
+			
 			return imageDescriptor;
-		} finally {
-			if (labelProvider != null) labelProvider.dispose();
+		} catch (Exception e) {
+			// Return null if workbench is not available or any error occurs
+			return null;
 		}
 	}
 
@@ -105,18 +106,5 @@ public class BaseTreeNode extends TreeNode {
 	 */
 	public String getDetails() {
 		return "";
-	}
-	
-	protected ImageDescriptor getImageDescriptorFromImage(Image image) {
-		final var data = image.getImageData();
-	
-		ImageDataProvider provider = new ImageDataProvider() {
-			@Override
-			public ImageData getImageData(int zoom) {
-				return data;
-			}
-		};
-		final var fromImageDataProvider = ImageDescriptor.createFromImageDataProvider(provider);
-		return fromImageDataProvider;
 	}
 }
