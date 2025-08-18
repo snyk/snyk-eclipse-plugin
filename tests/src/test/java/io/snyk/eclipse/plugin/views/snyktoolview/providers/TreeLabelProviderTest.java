@@ -6,11 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -21,7 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -34,8 +34,20 @@ class TreeLabelProviderTest {
     private BaseTreeNode mockNode;
     private ImageDescriptor mockImageDescriptor;
     private Image mockImage;
+    private static MockedStatic<Display> displayStaticMock;
     private Display mockDisplay;
 
+    
+    @BeforeAll
+    static void init() {
+    	displayStaticMock = Mockito.mockStatic(Display.class);
+    }
+    
+    @AfterAll
+    static void cleanup() {
+    	displayStaticMock.closeOnDemand();
+    }
+    
     @BeforeEach
     void setUp() {
         labelProvider = new TreeLabelProvider();
@@ -43,10 +55,13 @@ class TreeLabelProviderTest {
         mockImageDescriptor = mock(ImageDescriptor.class);
         mockImage = mock(Image.class);
         mockDisplay = mock(Display.class);
+        displayStaticMock.reset();
+        displayStaticMock.when(Display::getDefault).thenReturn(mockDisplay);
     }
 
     @AfterEach
     void tearDown() {
+        displayStaticMock.reset();
         labelProvider.dispose();
     }
 
@@ -87,8 +102,6 @@ class TreeLabelProviderTest {
 
     @Test
     void testGetImageCachesImages() {
-        try (MockedStatic<Display> displayMock = Mockito.mockStatic(Display.class)) {
-            displayMock.when(Display::getDefault).thenReturn(mockDisplay);
             when(mockNode.getImageDescriptor()).thenReturn(mockImageDescriptor);
             when(mockImageDescriptor.createResource(mockDisplay)).thenReturn(mockImage);
             when(mockImage.isDisposed()).thenReturn(false);
@@ -103,13 +116,10 @@ class TreeLabelProviderTest {
             
             // Verify createResource was called only once
             verify(mockImageDescriptor, times(1)).createResource(mockDisplay);
-        }
     }
 
     @Test
     void testGetImageRecreatesDisposedImage() {
-        try (MockedStatic<Display> displayMock = Mockito.mockStatic(Display.class)) {
-            displayMock.when(Display::getDefault).thenReturn(mockDisplay);
             when(mockNode.getImageDescriptor()).thenReturn(mockImageDescriptor);
             when(mockImageDescriptor.createResource(mockDisplay)).thenReturn(mockImage);
             
@@ -128,13 +138,10 @@ class TreeLabelProviderTest {
             
             // Verify createResource was called twice
             verify(mockImageDescriptor, times(2)).createResource(mockDisplay);
-        }
     }
 
     @Test
     void testConcurrentGetImageThreadSafety() throws InterruptedException {
-        try (MockedStatic<Display> displayMock = Mockito.mockStatic(Display.class)) {
-            displayMock.when(Display::getDefault).thenReturn(mockDisplay);
             when(mockNode.getImageDescriptor()).thenReturn(mockImageDescriptor);
             when(mockImage.isDisposed()).thenReturn(false);
             
@@ -174,14 +181,10 @@ class TreeLabelProviderTest {
             // In test environment, this might be 0 if Display is not available
             assertTrue(createResourceCallCount.get() <= 1, 
                 "createResource was called more than once: " + createResourceCallCount.get());
-        }
     }
 
     @Test
-    void testDisposeReleasesAllImages() {
-        try (MockedStatic<Display> displayMock = Mockito.mockStatic(Display.class)) {
-            displayMock.when(Display::getDefault).thenReturn(mockDisplay);
-            
+    void testDisposeReleasesAllImages() {         
             // Create multiple nodes with different descriptors
             BaseTreeNode node1 = mock(BaseTreeNode.class);
             BaseTreeNode node2 = mock(BaseTreeNode.class);
@@ -207,7 +210,6 @@ class TreeLabelProviderTest {
             // Verify all images were destroyed
             verify(descriptor1).destroyResource(image1);
             verify(descriptor2).destroyResource(image2);
-        }
     }
 
     @Test
