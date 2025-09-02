@@ -1,5 +1,9 @@
 # Snyk Security Changelog
 
+## [3.4.0]
+### Fixes
+- resolve handle leak in image descriptor handling
+
 ## [3.3.0]
 ### Changes
 - PAT support.
