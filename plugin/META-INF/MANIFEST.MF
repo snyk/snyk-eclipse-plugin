@@ -29,7 +29,7 @@ Automatic-Module-Name: io.snyk.eclipse.plugin.tests
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  target/dependency/commons-codec-1.17.0.jar,
- target/dependency/commons-lang3-3.12.0.jar,
+ target/dependency/commons-lang3-3.18.0.jar,
  target/dependency/commons-text-1.14.0.jar,
  target/dependency/commons-logging-1.3.4.jar,
  target/dependency/httpclient-4.5.14.jar,
