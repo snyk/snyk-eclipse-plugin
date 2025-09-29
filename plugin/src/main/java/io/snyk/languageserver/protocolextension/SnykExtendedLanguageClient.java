@@ -94,7 +94,6 @@ import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsPara
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.LsSdk;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
-import io.snyk.languageserver.protocolextension.messageObjects.Settings;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
@@ -566,7 +565,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		// Depending on Issue View Options, ignored issues might be pre-filtered by the and so ignoredIssueCount may be 0.
 		// In this case, openIssueCount is the total issue count returned by the LS.
 		long openIssueCount = totalIssueCount - ignoredIssueCount;
-		boolean isCodeNode = productNode.getProduct().equals(DISPLAYED_CODE_SECURITY);
+		boolean isCodeNode = DISPLAYED_CODE_SECURITY.equals(productNode.getProduct());
 
 		String text;
 		if (!isCodeNode) {

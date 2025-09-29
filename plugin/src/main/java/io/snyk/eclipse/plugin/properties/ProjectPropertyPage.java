@@ -8,18 +8,14 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.preferences.IScopeContext;
-import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.StringFieldEditor;
-import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.Organization;
 
 /**
  * Configure project-specific settings for Snyk
@@ -42,8 +38,9 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		init();		
 		additionalParamsEditor = new StringFieldEditor(SNYK_ADDITIONAL_PARAMETERS, "Additional Parameters:",
 				getFieldEditorParent());
+		projectOrg.getTextControl(getFieldEditorParent()).setToolTipText("Additional parameters used when calling the CLI, e.g. `-d` or `--exclude=bin`");
 		
-		projectOrg = new StringFieldEditor(SNYK_ADDITIONAL_PARAMETERS, "Project Organization:",
+		projectOrg = new StringFieldEditor(SNYK_ORGANIZATION, "Project Organization:",
 				getFieldEditorParent());
 		projectOrg.getTextControl(getFieldEditorParent()).setToolTipText("The organization to be used with this project");
 

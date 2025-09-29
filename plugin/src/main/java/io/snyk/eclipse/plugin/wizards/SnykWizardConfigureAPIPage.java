@@ -15,73 +15,89 @@ import org.eclipse.swt.widgets.Text;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 
 public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
-  private Text endpoint;
-  private Button unknownCerts;
-  private String initialEndpoint = Preferences.getInstance().getEndpoint();
+	private Text endpoint;
+	private Button unknownCerts;
+	private String initialEndpoint = Preferences.getInstance().getEndpoint();
 
-  public SnykWizardConfigureAPIPage() {
-    super("Snyk Wizard");
-    setTitle("Configure Snyk API");
-    setDescription("Before scanning your code for vulnerabilities, we must first authenticate with Snyk.");
-  }
+	public SnykWizardConfigureAPIPage() {
+		super("Snyk Wizard");
+		this.setTitle("Configure Snyk API");
+		this.setDescription("Before scanning your code for vulnerabilities, we must first authenticate with Snyk.");
+	}
 
-  @Override
-  public void createControl(Composite parent) {
-    Composite composite = new Composite(parent, SWT.NONE);
-    GridData gd;
+	@Override
+	public final void setTitle(String title) {
+		super.setTitle(title);
+	}
 
-    GridLayout gl = new GridLayout();
-    int ncol = 2;
-    gl.numColumns = ncol;
-    composite.setLayout(gl);
+	@Override
+	public final void setDescription(String description) {
+		super.setDescription(description);
+	}
 
-    Label endpointLabel = new Label(composite, SWT.NONE);
-    endpointLabel.setText("Specify the Snyk API endpoint. Useful for custom Multi Tenant or Single Tenant setup (default: "+Preferences.DEFAULT_ENDPOINT+":");
+	@Override
+	public void createControl(Composite parent) {
+		Composite composite = new Composite(parent, SWT.NONE);
+		GridData gd;
 
-    endpoint = new Text(composite, SWT.BORDER);
+		GridLayout gl = new GridLayout();
+		int ncol = 2;
+		gl.numColumns = ncol;
+		composite.setLayout(gl);
 
-    gd = new GridData(GridData.FILL_HORIZONTAL);
-    gd.horizontalSpan = ncol;
-    endpoint.setLayoutData(gd);
+		Label endpointLabel = new Label(composite, SWT.NONE);
+		endpointLabel.setText(
+				"Specify the Snyk API endpoint. Useful for custom Multi Tenant or Single Tenant setup (default: "
+						+ Preferences.DEFAULT_ENDPOINT + ":");
 
-    String endpointValue = initialEndpoint == null || initialEndpoint.isBlank() ? Preferences.DEFAULT_ENDPOINT : initialEndpoint;
-    endpoint.setText(endpointValue);
+		endpoint = new Text(composite, SWT.BORDER);
 
-    createLine(composite, ncol);
+		gd = new GridData(GridData.FILL_HORIZONTAL);
+		gd.horizontalSpan = ncol;
+		endpoint.setLayoutData(gd);
 
-    Label unknownCertsLabel = new Label(composite, SWT.NONE);
-    unknownCertsLabel.setText("Disable certificate checks for SSL connections:");
+		String endpointValue = initialEndpoint == null || initialEndpoint.isBlank() ? Preferences.DEFAULT_ENDPOINT
+				: initialEndpoint;
+		endpoint.setText(endpointValue);
 
-    unknownCerts = new Button(composite, SWT.CHECK);
-    unknownCerts.setLayoutData(gd);
+		createLine(composite, ncol);
 
-    unknownCerts.setSelection(Preferences.getInstance().isInsecure());
+		Label unknownCertsLabel = new Label(composite, SWT.NONE);
+		unknownCertsLabel.setText("Disable certificate checks for SSL connections:");
 
-    // required to avoid an error in the system
-    setControl(composite);
-    setPageComplete(false);
-  }
+		unknownCerts = new Button(composite, SWT.CHECK);
+		unknownCerts.setLayoutData(gd);
 
-  public void handleEvent(Event e) {
-    getWizard().getContainer().updateButtons();
-  }
+		unknownCerts.setSelection(Preferences.getInstance().isInsecure());
 
-  public boolean canFlipToNextPage() {
-    return true;
-  }
+		// required to avoid an error in the system
+		setControl(composite);
+		setPageComplete(false);
+	}
 
-  public IWizardPage getNextPage() {
-    SnykWizardAuthenticatePage page = ((SnykWizard) getWizard()).authenticatePage;
-    page.setEndpoint(endpoint.getText());
-    page.setUnknownCerts(unknownCerts.getSelection());
+	@Override
+	public void handleEvent(Event e) {
+		getWizard().getContainer().updateButtons();
+	}
 
-    return page;
-  }
+	@Override
+	public boolean canFlipToNextPage() {
+		return true;
+	}
 
-  private void createLine(Composite parent, int ncol) {
-    Label line = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL | SWT.BOLD);
-    GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-    gridData.horizontalSpan = ncol;
-    line.setLayoutData(gridData);
-  }
+	@Override
+	public IWizardPage getNextPage() {
+		SnykWizardAuthenticatePage page = ((SnykWizard) getWizard()).authenticatePage;
+		page.setEndpoint(endpoint.getText());
+		page.setUnknownCerts(unknownCerts.getSelection());
+
+		return page;
+	}
+
+	private void createLine(Composite parent, int ncol) {
+		Label line = new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL | SWT.BOLD);
+		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+		gridData.horizontalSpan = ncol;
+		line.setLayoutData(gridData);
+	}
 }
