@@ -3,9 +3,7 @@ package io.snyk.languageserver;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 
 import io.snyk.eclipse.plugin.Activator;
@@ -13,7 +11,6 @@ import io.snyk.eclipse.plugin.preferences.AuthConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.IssueViewOptions;
-import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.Settings;

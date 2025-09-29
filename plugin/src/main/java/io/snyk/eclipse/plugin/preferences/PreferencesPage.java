@@ -109,7 +109,12 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 				getFieldEditorParent()));
 		addField(space());
 		addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
-		addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", WIDTH, getFieldEditorParent()));
+		final var orgEditor = new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", WIDTH, getFieldEditorParent());
+		orgEditor.setEnabled(false, getFieldEditorParent());
+		orgEditor.getTextControl(getFieldEditorParent()).setToolTipText("This field is superseded by the 'Project Organization' setting on the Snyk project property page");
+		orgEditor.getLabelControl(getFieldEditorParent()).setToolTipText("This field is superseded by the 'Project Organization' setting on the Snyk project property page");
+		addField(orgEditor);
+		
 		addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", WIDTH,
 				getFieldEditorParent()));
 		addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", WIDTH,

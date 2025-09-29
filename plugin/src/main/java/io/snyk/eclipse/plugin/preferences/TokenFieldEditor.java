@@ -3,6 +3,7 @@ package io.snyk.eclipse.plugin.preferences;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Text;
 
 public class TokenFieldEditor extends StringFieldEditor {
 	private Preferences preferences;
@@ -11,8 +12,15 @@ public class TokenFieldEditor extends StringFieldEditor {
 		super(name, labelText, 60, parent);
 		this.preferences = preferences;
 		super.setPreferenceStore(preferences.getSecureStore());
-		getTextControl().setEchoChar('*');
+		this.getTextControl().setEchoChar('*');
 	}
+	
+	@Override
+	protected final  Text getTextControl() {
+		return super.getTextControl();
+	}
+
+
 
 	public void emptyTextfield() {
 		setStringValue("");
