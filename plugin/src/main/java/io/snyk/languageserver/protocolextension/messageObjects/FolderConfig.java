@@ -6,6 +6,8 @@ import java.util.List;
 public class FolderConfig {
 
     private String folderPath;
+    
+    private String preferredOrg;
 
     private String baseBranch = "";
 
@@ -71,5 +73,13 @@ public class FolderConfig {
 
 	public void setScanCommandConfig(ScanCommandConfig scanCommandConfig) {
 		this.scanCommandConfig = scanCommandConfig;
+	}
+
+	public String getPreferredOrg() {
+		return preferredOrg;
+	}
+
+	public void setPreferredOrg(String preferredOrg) {
+		this.preferredOrg = preferredOrg;
 	}
 }

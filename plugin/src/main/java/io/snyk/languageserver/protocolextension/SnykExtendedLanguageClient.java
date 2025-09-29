@@ -94,6 +94,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsPara
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.LsSdk;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
+import io.snyk.languageserver.protocolextension.messageObjects.Settings;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
@@ -326,7 +327,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		executeCommand(LsConstants.COMMAND_SUBMIT_IGNORE_REQUEST,
 				List.of(workflow, issueId, ignoreType, ignoreReason, ignoreExpirationDate));
 	}
-
+	
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();
