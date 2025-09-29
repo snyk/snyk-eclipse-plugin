@@ -8,23 +8,29 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.preferences.IScopeContext;
+import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import io.snyk.languageserver.protocolextension.messageObjects.Organization;
 
 /**
  * Configure project-specific settings for Snyk
  */
 public class ProjectPropertyPage extends FieldEditorPreferencePage implements IWorkbenchPropertyPage {
 	public static final String SNYK_ADDITIONAL_PARAMETERS = "snyk.additionalParameters";
+	public static final String SNYK_ORGANIZATION = "snyk.projectOrganization";
 	private IAdaptable element;
 	private IProject project;
 	private StringFieldEditor additionalParamsEditor;
+	private StringFieldEditor projectOrg;
 	private Path projectPath;
 
 	public ProjectPropertyPage() {
@@ -36,26 +42,35 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		init();		
 		additionalParamsEditor = new StringFieldEditor(SNYK_ADDITIONAL_PARAMETERS, "Additional Parameters:",
 				getFieldEditorParent());
-
-		addField(additionalParamsEditor);
 		
+		projectOrg = new StringFieldEditor(SNYK_ADDITIONAL_PARAMETERS, "Project Organization:",
+				getFieldEditorParent());
+		projectOrg.getTextControl(getFieldEditorParent()).setToolTipText("The organization to be used with this project");
+
+		addField(additionalParamsEditor);		
 		populate();
 	}
 
 	private void populate() {
 		if (!FolderConfigs.LanguageServerConfigReceived.contains(projectPath)) {
 			additionalParamsEditor.setEnabled(false, getFieldEditorParent());
+			projectOrg.setEnabled(false, getFieldEditorParent());
 		} else {
 			var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
 			if (folderConfig.getAdditionalParameters() != null && folderConfig.getAdditionalParameters().isEmpty()) {				
+				final var preferenceStore = getPreferenceStore();
+				
 				additionalParamsEditor.setEnabled(true, getFieldEditorParent());
 				final var addParams = String.join(" ",  folderConfig.getAdditionalParameters());
-				
-				final var preferenceStore = getPreferenceStore();
 				preferenceStore.setDefault(SNYK_ADDITIONAL_PARAMETERS, addParams);
 				preferenceStore.setValue(SNYK_ADDITIONAL_PARAMETERS, addParams);
-				
 				additionalParamsEditor.setStringValue(addParams);
+				
+				projectOrg.setEnabled(true, getFieldEditorParent());
+				final var preferredOrg = folderConfig.getPreferredOrg();
+				preferenceStore.setDefault(SNYK_ORGANIZATION, preferredOrg);
+				preferenceStore.setValue(SNYK_ORGANIZATION, preferredOrg);
+				projectOrg.setStringValue(preferredOrg);
 			}
 		}
 	}
@@ -77,6 +92,7 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		CompletableFuture.runAsync(() -> {
 			var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
 			folderConfig.setAdditionalParameters(Arrays.asList(addParams));
+			folderConfig.setPreferredOrg(this.projectOrg.getStringValue().trim());
 			FolderConfigs.getInstance().addFolderConfig(folderConfig);
 			SnykExtendedLanguageClient.getInstance().updateConfiguration();
 		});
