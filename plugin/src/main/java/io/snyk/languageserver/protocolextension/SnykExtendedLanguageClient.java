@@ -546,7 +546,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private SnykIssueCache getIssueCache(String filePath) {
-		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(Paths.get(filePath));
+		final var path = Paths.get(filePath);
+		if (path == null) {
+			throw new RuntimeException("cannot resolve path "+filePath);
+		}
+		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(path);
 		if (issueCache == null) {
 			throw new IllegalArgumentException("No issue cache for param possible");
 		}
@@ -744,6 +748,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
+		if (filePath == null || filePath.isBlank()) {
+			return;
+		}
 		var issueCache = getIssueCache(filePath);
 		Diagnostic316[] diagnostics = param.getDiagnostics();
 		if (diagnostics == null || diagnostics.length == 0) {

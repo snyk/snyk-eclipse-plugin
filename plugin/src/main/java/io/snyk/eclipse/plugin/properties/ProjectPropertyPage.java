@@ -38,13 +38,14 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		init();		
 		additionalParamsEditor = new StringFieldEditor(SNYK_ADDITIONAL_PARAMETERS, "Additional Parameters:",
 				getFieldEditorParent());
-		projectOrg.getTextControl(getFieldEditorParent()).setToolTipText("Additional parameters used when calling the CLI, e.g. `-d` or `--exclude=bin`");
+		additionalParamsEditor.getTextControl(getFieldEditorParent()).setToolTipText("Additional parameters used when calling the CLI, e.g. `-d` or `--exclude=bin`");
 		
 		projectOrg = new StringFieldEditor(SNYK_ORGANIZATION, "Project Organization:",
 				getFieldEditorParent());
 		projectOrg.getTextControl(getFieldEditorParent()).setToolTipText("The organization to be used with this project");
 
 		addField(additionalParamsEditor);		
+		addField(projectOrg);
 		populate();
 	}
 
@@ -54,21 +55,22 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			projectOrg.setEnabled(false, getFieldEditorParent());
 		} else {
 			var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
-			if (folderConfig.getAdditionalParameters() != null && folderConfig.getAdditionalParameters().isEmpty()) {				
-				final var preferenceStore = getPreferenceStore();
-				
 				additionalParamsEditor.setEnabled(true, getFieldEditorParent());
 				final var addParams = String.join(" ",  folderConfig.getAdditionalParameters());
-				preferenceStore.setDefault(SNYK_ADDITIONAL_PARAMETERS, addParams);
-				preferenceStore.setValue(SNYK_ADDITIONAL_PARAMETERS, addParams);
-				additionalParamsEditor.setStringValue(addParams);
+				final var preferenceStore = getPreferenceStore();				
+				if (folderConfig.getAdditionalParameters() != null && !folderConfig.getAdditionalParameters().isEmpty()) {				
+					preferenceStore.setDefault(SNYK_ADDITIONAL_PARAMETERS, addParams);
+					preferenceStore.setValue(SNYK_ADDITIONAL_PARAMETERS, addParams);
+					additionalParamsEditor.setStringValue(addParams);
+				}
 				
 				projectOrg.setEnabled(true, getFieldEditorParent());
 				final var preferredOrg = folderConfig.getPreferredOrg();
-				preferenceStore.setDefault(SNYK_ORGANIZATION, preferredOrg);
-				preferenceStore.setValue(SNYK_ORGANIZATION, preferredOrg);
-				projectOrg.setStringValue(preferredOrg);
-			}
+				if (folderConfig.getPreferredOrg() != null && !folderConfig.getPreferredOrg().isEmpty()) {
+					preferenceStore.setDefault(SNYK_ORGANIZATION, preferredOrg);
+					preferenceStore.setValue(SNYK_ORGANIZATION, preferredOrg);
+					projectOrg.setStringValue(preferredOrg);
+				}
 		}
 	}
 
