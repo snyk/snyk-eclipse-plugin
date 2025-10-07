@@ -552,7 +552,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(path);
 		if (issueCache == null) {
-			throw new IllegalArgumentException("No issue cache for param possible");
+			SnykLogger.logInfo("cannot retrieve issue cache for "+path);
 		}
 		return issueCache;
 	}

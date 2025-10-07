@@ -6,8 +6,10 @@ import java.util.List;
 public class FolderConfig {
 
     private String folderPath;
-    
+
     private String preferredOrg;
+
+    private boolean orgSetByUser;
 
     private String baseBranch = "";
 
@@ -82,4 +84,12 @@ public class FolderConfig {
 	public void setPreferredOrg(String preferredOrg) {
 		this.preferredOrg = preferredOrg;
 	}
+
+    public boolean isOrgSetByUser() {
+        return orgSetByUser;
+    }
+
+    public void setOrgSetByUser(boolean orgSetByUser) {
+        this.orgSetByUser = orgSetByUser;
+    }
 }
