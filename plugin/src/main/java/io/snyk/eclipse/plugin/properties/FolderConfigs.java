@@ -69,9 +69,14 @@ public class FolderConfigs {
 			IScopeContext projectScope = new ProjectScope(project); //NOPMD, 
 			var projectSettings = projectScope.getNode(Activator.PLUGIN_ID);
 			String additionalParams = projectSettings.get(ProjectPropertyPage.SNYK_ADDITIONAL_PARAMETERS, "");
+			String preferredOrg = projectSettings.get(ProjectPropertyPage.SNYK_ORGANIZATION, "");
+			boolean isOrgSetByUser = !projectSettings.getBoolean(ProjectPropertyPage.SNYK_AUTO_SELECT_ORG, true);
+			
 			var additionalParamsList = Arrays.asList(additionalParams.split(" "));
 			var folderConfig = getFolderConfig(path);
 			folderConfig.setAdditionalParameters(additionalParamsList);
+			folderConfig.setPreferredOrg(preferredOrg);
+			folderConfig.setOrgSetByUser(isOrgSetByUser);
 			storeInMemory(path, folderConfig);
 			folderConfigs.add(folderConfig);
 		}
