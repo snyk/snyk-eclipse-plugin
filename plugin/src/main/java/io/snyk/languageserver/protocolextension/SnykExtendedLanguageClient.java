@@ -745,6 +745,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
 		var issueCache = getIssueCache(filePath);
+		if (issueCache == null) {
+			SnykLogger.logInfo("Issue cache is null for file path: " + filePath + ", skipping cache population");
+			return;
+		}
 		Diagnostic316[] diagnostics = param.getDiagnostics();
 		if (diagnostics == null || diagnostics.length == 0) {
 			issueCache.removeAllIssuesForPath(filePath);
