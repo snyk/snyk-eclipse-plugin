@@ -11,6 +11,8 @@ public class FolderConfig {
 
     private boolean orgSetByUser;
 
+    private String autoDeterminedOrg;
+
     private String baseBranch = "";
 
     private List<String> localBranches = new ArrayList<>();
@@ -91,5 +93,13 @@ public class FolderConfig {
 
     public void setOrgSetByUser(boolean orgSetByUser) {
         this.orgSetByUser = orgSetByUser;
+    }
+
+    public String getAutoDeterminedOrg() {
+        return autoDeterminedOrg;
+    }
+
+    public void setAutoDeterminedOrg(String autoDeterminedOrg) {
+        this.autoDeterminedOrg = autoDeterminedOrg;
     }
 }

@@ -53,4 +53,54 @@ class FolderConfigTest {
         assertNotNull(config.getAdditionalParameters());
         assertTrue(config.getAdditionalParameters().isEmpty());
     }
+
+    @Test
+    void testAutoDeterminedOrg() {
+        FolderConfig config = new FolderConfig("path");
+
+        // Test initial state
+        assertNull(config.getAutoDeterminedOrg());
+
+        // Test setting autoDeterminedOrg
+        String autoOrg = "auto-determined-org";
+        config.setAutoDeterminedOrg(autoOrg);
+        assertEquals(autoOrg, config.getAutoDeterminedOrg());
+
+        // Test setting null
+        config.setAutoDeterminedOrg(null);
+        assertNull(config.getAutoDeterminedOrg());
+    }
+
+    @Test
+    void testOrgSetByUser() {
+        FolderConfig config = new FolderConfig("path");
+
+        // Test initial state
+        assertFalse(config.isOrgSetByUser());
+
+        // Test setting orgSetByUser to true
+        config.setOrgSetByUser(true);
+        assertTrue(config.isOrgSetByUser());
+
+        // Test setting orgSetByUser to false
+        config.setOrgSetByUser(false);
+        assertFalse(config.isOrgSetByUser());
+    }
+
+    @Test
+    void testPreferredOrg() {
+        FolderConfig config = new FolderConfig("path");
+
+        // Test initial state
+        assertNull(config.getPreferredOrg());
+
+        // Test setting preferredOrg
+        String preferredOrg = "preferred-org";
+        config.setPreferredOrg(preferredOrg);
+        assertEquals(preferredOrg, config.getPreferredOrg());
+
+        // Test setting null
+        config.setPreferredOrg(null);
+        assertNull(config.getPreferredOrg());
+    }
 }
