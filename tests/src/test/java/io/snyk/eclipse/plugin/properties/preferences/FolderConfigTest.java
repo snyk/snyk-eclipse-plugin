@@ -103,4 +103,21 @@ class FolderConfigTest {
         config.setPreferredOrg(null);
         assertNull(config.getPreferredOrg());
     }
+
+    @Test
+    void testGlobalOrgFallback() {
+        FolderConfig config = new FolderConfig("path");
+
+        // Test that empty preferred org can be set
+        config.setPreferredOrg("");
+        assertEquals("", config.getPreferredOrg());
+
+        // Test that null preferred org can be set
+        config.setPreferredOrg(null);
+        assertNull(config.getPreferredOrg());
+
+        // Test that whitespace-only preferred org can be set
+        config.setPreferredOrg("   ");
+        assertEquals("   ", config.getPreferredOrg());
+    }
 }

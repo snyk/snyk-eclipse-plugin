@@ -16,6 +16,7 @@ import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 
 import io.snyk.eclipse.plugin.Activator;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
@@ -24,7 +25,7 @@ public class FolderConfigs {
 	public static Set<Path> LanguageServerConfigReceived = new ConcurrentSkipListSet<>();
 
 	protected static FolderConfigs instance;
-	
+
 	private static Map<Path, FolderConfig> inMemoryConfigs = new ConcurrentHashMap<>();
 
 	private FolderConfigs() {
@@ -66,12 +67,17 @@ public class FolderConfigs {
 		for (var project : openProjects) {
 			Path path = ResourceUtils.getFullPath(project);
 			//Linter does not like when new objects are created in loops, but here we do want to create new ProjectScopes in the loop.
-			IScopeContext projectScope = new ProjectScope(project); //NOPMD, 
+			IScopeContext projectScope = new ProjectScope(project); //NOPMD,
 			var projectSettings = projectScope.getNode(Activator.PLUGIN_ID);
 			String additionalParams = projectSettings.get(ProjectPropertyPage.SNYK_ADDITIONAL_PARAMETERS, "");
 			String preferredOrg = projectSettings.get(ProjectPropertyPage.SNYK_ORGANIZATION, "");
 			boolean isOrgSetByUser = !projectSettings.getBoolean(ProjectPropertyPage.SNYK_AUTO_SELECT_ORG, true);
-			
+
+			// If project-specific org is empty and org is set by user, use global org as fallback
+			if (isOrgSetByUser && (preferredOrg == null || preferredOrg.trim().isEmpty())) {
+				preferredOrg = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
+			}
+
 			var additionalParamsList = Arrays.asList(additionalParams.split(" "));
 			var folderConfig = getFolderConfig(path);
 			folderConfig.setAdditionalParameters(additionalParamsList);

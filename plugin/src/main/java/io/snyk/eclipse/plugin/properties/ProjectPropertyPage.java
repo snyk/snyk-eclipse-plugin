@@ -11,7 +11,6 @@ import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbenchPropertyPage;
@@ -117,18 +116,6 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 				additionalParamsEditor.setStringValue(addParams);
 			}
 
-			// Handle special case: if orgSetByUser is true and preferredOrg is empty,
-			// switch to auto-detect mode and use autoDeterminedOrg
-			if (folderConfig.isOrgSetByUser() &&
-				(folderConfig.getPreferredOrg() == null || folderConfig.getPreferredOrg().trim().isEmpty())) {
-				folderConfig.setOrgSetByUser(false);
-				// Update folderconfig and submit to Snyk Language Server
-				FolderConfigs.getInstance().addFolderConfig(folderConfig);
-				CompletableFuture.runAsync(() -> {
-					SnykExtendedLanguageClient.getInstance().updateConfiguration();
-				});
-			}
-
 			// Set auto-detect org checkbox (inverse of orgSetByUser)
 			autoDetectOrgCheckbox.setEnabled(true, getFieldEditorParent());
 			boolean autoDetect = !folderConfig.isOrgSetByUser();
@@ -149,7 +136,14 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			displayOrg = folderConfig.getAutoDeterminedOrg() != null ? folderConfig.getAutoDeterminedOrg() : "";
 		} else {
 			// When auto-detect is disabled, show the preferred organization
-			displayOrg = folderConfig.getPreferredOrg() != null ? folderConfig.getPreferredOrg() : "";
+			// If preferred org is empty, show the global organization as fallback
+			String preferredOrg = folderConfig.getPreferredOrg() != null ? folderConfig.getPreferredOrg() : "";
+			if (preferredOrg.trim().isEmpty()) {
+				// Use global organization setting as fallback
+				displayOrg = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
+			} else {
+				displayOrg = preferredOrg;
+			}
 		}
 
 		preferenceStore.setDefault(SNYK_ORGANIZATION, displayOrg);
@@ -176,16 +170,6 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			return;
 		}
 
-		// Validate that org is provided when auto-detect is disabled
-		boolean autoDetect = autoDetectOrgCheckbox.getBooleanValue();
-		if (!autoDetect) {
-			String org = projectOrg.getStringValue();
-			if (org == null || org.trim().isEmpty()) {
-				setErrorMessage("Preferred organization is required when auto-detect is disabled");
-				setValid(false);
-				return;
-			}
-		}
 
 		setErrorMessage(null);
 		setValid(true);
@@ -195,13 +179,8 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 	public boolean performOk() {
 		// Validate before saving
 		boolean autoDetect = this.autoDetectOrgCheckbox.getBooleanValue();
-		if (!autoDetect) {
-			String org = this.projectOrg.getStringValue();
-			if (org == null || org.trim().isEmpty()) {
-				setErrorMessage("Preferred organization is required when auto-detect is disabled");
-				return false;
-			}
-		}
+		// Note: We no longer require organization when auto-detect is disabled
+		// because we can fall back to the global organization setting
 
 		var retValue = super.performOk();
 		final var addParams = this.additionalParamsEditor.getStringValue().split(" ");
@@ -216,7 +195,9 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		} else {
 			// When auto-detect is disabled, set orgSetByUser to true and update preferredOrg
 			folderConfig.setOrgSetByUser(true);
-			folderConfig.setPreferredOrg(this.projectOrg.getStringValue().trim());
+			String projectOrgValue = this.projectOrg.getStringValue();
+			// Store the project-specific org (can be empty, will fall back to global)
+			folderConfig.setPreferredOrg(projectOrgValue != null ? projectOrgValue.trim() : "");
 		}
 
 		updateProjectOrg(folderConfig);
