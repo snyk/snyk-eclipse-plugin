@@ -4,8 +4,6 @@ import static org.eclipse.core.net.proxy.IProxyData.HTTPS_PROXY_TYPE;
 import static org.eclipse.core.net.proxy.IProxyData.HTTP_PROXY_TYPE;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,8 +21,6 @@ import org.osgi.framework.ServiceReference;
 
 import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.properties.FolderConfigs;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 public class LsRuntimeEnvironment {
   public static final Map<String, String> map = new HashMap<>();
@@ -78,58 +74,14 @@ public class LsRuntimeEnvironment {
   }
 
   void addOrganization(Map<String, String> env) {
-    // Try to get project-specific organization first
-    String orgToUse = getProjectSpecificOrganization();
-
-    // Fall back to global organization if no project-specific org found
-    if (orgToUse == null || orgToUse.trim().isEmpty()) {
-      orgToUse = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
-    }
-
-    if (orgToUse != null && !orgToUse.isBlank()) {
-      env.put(Preferences.ORGANIZATION_KEY, orgToUse);
+    // Pass the global organization setting to the Language Server
+    // The Language Server will handle all organization resolution logic
+    String globalOrg = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
+    if (globalOrg != null && !globalOrg.isBlank()) {
+      env.put(Preferences.ORGANIZATION_KEY, globalOrg);
     }
   }
 
-  private String getProjectSpecificOrganization() {
-    try {
-      // Get the current working directory to determine which project is being scanned
-      String currentDir = System.getProperty("user.dir");
-      if (currentDir == null || currentDir.trim().isEmpty()) {
-        return null;
-      }
-
-      Path currentPath = Paths.get(currentDir);
-      var folderConfigs = FolderConfigs.getInstance();
-      var folderConfig = folderConfigs.getFolderConfig(currentPath);
-
-      if (folderConfig == null) {
-        return null;
-      }
-
-      // Apply the same logic as in ProjectPropertyPage.updateProjectOrg()
-      boolean autoDetect = !folderConfig.isOrgSetByUser();
-
-      if (autoDetect) {
-        // When auto-detect is enabled, use the auto-determined organization
-        return folderConfig.getAutoDeterminedOrg() != null ? folderConfig.getAutoDeterminedOrg() : "";
-      } else {
-        // When auto-detect is disabled, use the preferred organization
-        // If preferred org is empty, use global org as fallback
-        String preferredOrg = folderConfig.getPreferredOrg() != null ? folderConfig.getPreferredOrg() : "";
-        if (preferredOrg.trim().isEmpty()) {
-          // Use global organization setting as fallback
-          return Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
-        } else {
-          return preferredOrg;
-        }
-      }
-    } catch (Exception e) {
-      // If anything goes wrong, fall back to global organization
-      SnykLogger.logError(e);
-      return null;
-    }
-  }
 
   public void addAdditionalParamsAndEnv(Map<String, String> env) {
     String additionalParams = Preferences.getInstance().getPref(Preferences.ADDITIONAL_PARAMETERS, "");

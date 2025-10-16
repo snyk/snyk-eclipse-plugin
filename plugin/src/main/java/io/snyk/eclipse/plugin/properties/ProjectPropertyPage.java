@@ -136,14 +136,8 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			displayOrg = folderConfig.getAutoDeterminedOrg() != null ? folderConfig.getAutoDeterminedOrg() : "";
 		} else {
 			// When auto-detect is disabled, show the preferred organization
-			// If preferred org is empty, show the global organization as fallback
-			String preferredOrg = folderConfig.getPreferredOrg() != null ? folderConfig.getPreferredOrg() : "";
-			if (preferredOrg.trim().isEmpty()) {
-				// Use global organization setting as fallback
-				displayOrg = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
-			} else {
-				displayOrg = preferredOrg;
-			}
+			// The Language Server will handle fallback to global organization
+			displayOrg = folderConfig.getPreferredOrg() != null ? folderConfig.getPreferredOrg() : "";
 		}
 
 		preferenceStore.setDefault(SNYK_ORGANIZATION, displayOrg);

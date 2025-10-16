@@ -45,8 +45,6 @@ public class LsConfigurationUpdater {
 				preferences.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false));
 		String sendErrorReports = preferences.getPref(Preferences.SEND_ERROR_REPORTS, "");
 		String enableTelemetry = preferences.getPref(Preferences.ENABLE_TELEMETRY, Boolean.FALSE.toString());
-		// Use project-specific organization logic for each folder config
-		// The global organization will be used as fallback in individual folder configs
 		String organization = preferences.getPref(Preferences.ORGANIZATION_KEY, "");
 		String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
 				Boolean.TRUE.toString());
