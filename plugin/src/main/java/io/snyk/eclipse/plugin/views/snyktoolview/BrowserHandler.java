@@ -180,6 +180,7 @@ public class BrowserHandler {
 					ErrorMessage errorMessage = new ObjectMapper().readValue(errorJson, ErrorMessage.class);
 					errorHTML = htmlProvider.getErrorHtml(errorMessage.error, errorMessage.path);
 				} catch (Exception e) {
+					SnykLogger.logError(new RuntimeException("Failed to parse error JSON: " + errorJson, e));
 					errorHTML = htmlProvider.getErrorHtml("Error: failed to display error", "");
 				}
 				final String errorHTMLFinal = errorHTML;
