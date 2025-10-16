@@ -52,7 +52,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 		addField(new LabelFieldEditor(
 				"If you're using SSO with Snyk and OAuth2, the custom endpoint configuration is automatically populated.\n"
-		                + "Otherwise, for public regional instances, see the docs: ", 
+		                + "Otherwise, for public regional instances, see the docs: ",
 				getFieldEditorParent()));
 		Link link = new Link(this.getFieldEditorParent(), SWT.NONE);
 
@@ -110,11 +110,11 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		addField(space());
 		addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
 		final var orgEditor = new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", WIDTH, getFieldEditorParent());
-		orgEditor.setEnabled(false, getFieldEditorParent());
-		orgEditor.getTextControl(getFieldEditorParent()).setToolTipText("This field is superseded by the 'Project Organization' setting on the Snyk project property page");
-		orgEditor.getLabelControl(getFieldEditorParent()).setToolTipText("This field is superseded by the 'Project Organization' setting on the Snyk project property page");
+		orgEditor.setEnabled(true, getFieldEditorParent());
+		orgEditor.getTextControl(getFieldEditorParent()).setToolTipText("Global organization setting. Used as fallback when project-specific organization is empty.");
+		orgEditor.getLabelControl(getFieldEditorParent()).setToolTipText("Global organization setting. Used as fallback when project-specific organization is empty.");
 		addField(orgEditor);
-		
+
 		addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", WIDTH,
 				getFieldEditorParent()));
 		addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", WIDTH,
