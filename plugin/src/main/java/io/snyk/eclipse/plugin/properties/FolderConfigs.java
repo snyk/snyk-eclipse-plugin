@@ -73,10 +73,7 @@ public class FolderConfigs {
 			String preferredOrg = projectSettings.get(ProjectPropertyPage.SNYK_ORGANIZATION, "");
 			boolean isOrgSetByUser = !projectSettings.getBoolean(ProjectPropertyPage.SNYK_AUTO_SELECT_ORG, true);
 
-			// If project-specific org is empty and org is set by user, use global org as fallback
-			if (isOrgSetByUser && (preferredOrg == null || preferredOrg.trim().isEmpty())) {
-				preferredOrg = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
-			}
+			// The Language Server will handle fallback to global organization
 
 			var additionalParamsList = Arrays.asList(additionalParams.split(" "));
 			var folderConfig = getFolderConfig(path);
