@@ -12,7 +12,12 @@ import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
@@ -48,27 +53,30 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		protected void valueChanged(boolean oldValue, boolean newValue) {
 			super.valueChanged(oldValue, newValue);
 			var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
-			folderConfig.setOrgSetByUser(!newValue);
-			projectOrg.setEnabled(!newValue, getFieldEditorParent());
+			if (folderConfig != null) {
+				folderConfig.setOrgSetByUser(!newValue);
+				projectOrg.setEnabled(!newValue, getFieldEditorParent());
 
-			if (newValue) {
-				// When auto-detect is enabled (checkbox is ticked)
-				folderConfig.setPreferredOrg("");
-				updateProjectOrg(folderConfig);
-			} else {
-				// When auto-detect is disabled (checkbox is unticked)
-				projectOrg.setStringValue("");
+				if (newValue) {
+					// When auto-detect is enabled (checkbox is ticked)
+					folderConfig.setPreferredOrg("");
+					updateProjectOrg(folderConfig);
+				} else {
+					// When auto-detect is disabled (checkbox is unticked)
+					projectOrg.setStringValue("");
+				}
 			}
 		}
 
 	}
+
 
 	public ProjectPropertyPage() {
 		super(GRID);
 	}
 
 	@Override
-	public void createFieldEditors() {
+	protected void createFieldEditors() {
 		init();
 		this.preferenceStore = getPreferenceStore();
 		additionalParamsEditor = new StringFieldEditor(SNYK_ADDITIONAL_PARAMETERS, "Additional Parameters:",
@@ -78,46 +86,113 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 
 		addField(additionalParamsEditor);
 
+		// Add a separator between sections
+		addField(new LabelFieldEditor("", getFieldEditorParent()));
+
+		// Add a separator label to group organization settings visually
+		addField(new LabelFieldEditor("Organization Settings", getFieldEditorParent()));
+
 		// Auto-select organization checkbox with help icon
 		autoDetectOrgCheckbox = new PropertyBooleanFieldEditor(SNYK_AUTO_SELECT_ORG, "Auto-select organization",
 				getFieldEditorParent());
 		addField(autoDetectOrgCheckbox);
 
 		var url = Preferences.getInstance().getEndpoint() + "/account";
+        var urlUserDocs = "https://docs.snyk.io/developer-tools/snyk-ide-plugins-and-extensions/eclipse-plugin/configuration-of-the-eclipse-plugin#global-settings";
 		addField(new LabelFieldEditor(
-				"Use automatic organization selection, where the most suitable organization for your project\n"
-						+ "is selected from the organizations you have access to which have the project imported, falling\n"
-						+ "back to the preferred organization as defined in your web account settings (" + url
-						+ ").\n\n"
-						+ "If you do not use this feature, then either the org you entered below, or if blank or incorrect, "
-						+ "your profile default organization is used.",
+				"Use automatic organization selection. When enabled, Snyk will automatically select the most\n"
+						+ "appropriate organization for your project using context found in your repository and your authentication.\n"
+						+ "If an organization is configured manually, this feature will be overridden. If an appropriate organization\n"
+						+ "cannot be identified automatically, the preferred organization defined in your web account settings will\n"
+						+ "be used as a fallback.",
 				getFieldEditorParent()));
 
-		projectOrg = new StringFieldEditor(SNYK_ORGANIZATION, "Preferred organization:", getFieldEditorParent());
-		projectOrg.getTextControl(getFieldEditorParent())
-				.setToolTipText("The organization to be used with this project");
+		// Add clickable links
+		Link webAccountLink = new Link(getFieldEditorParent(), SWT.NONE);
+		webAccountLink.setText("<a>web account settings</a>");
+		webAccountLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Program.launch(url);
+			}
+		});
+
+		Link userDocsLink = new Link(getFieldEditorParent(), SWT.NONE);
+		userDocsLink.setText("<a>User Docs</a>");
+		userDocsLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Program.launch(urlUserDocs);
+			}
+		});
+
+		projectOrg = new StringFieldEditor(SNYK_ORGANIZATION, "Organization:", getFieldEditorParent());
 		addField(projectOrg);
+
+        addField(new LabelFieldEditor(
+				"Specify the organization (ID or name) for Snyk to run scans against. If the organization is provided\n"
+						+ "manually, automatic organization selection is overridden. If the organization value is blank or invalid,\n"
+						+ "the preferred organization defined in your web account settings will be used.",
+				getFieldEditorParent()));
+
+		// Add clickable links for second description
+		Link webAccountLink2 = new Link(getFieldEditorParent(), SWT.NONE);
+		webAccountLink2.setText("<a>web account settings</a>");
+		webAccountLink2.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Program.launch(url);
+			}
+		});
+
+		Link userDocsLink2 = new Link(getFieldEditorParent(), SWT.NONE);
+		userDocsLink2.setText("<a>User Docs</a>");
+		userDocsLink2.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Program.launch(urlUserDocs);
+			}
+		});
 
 		populate();
 	}
 
 	private void populate() {
+		Composite parent = getFieldEditorParent();
+
 		if (!FolderConfigs.LanguageServerConfigReceived.contains(projectPath)) {
-			additionalParamsEditor.setEnabled(false, getFieldEditorParent());
-			autoDetectOrgCheckbox.setEnabled(false, getFieldEditorParent());
-			projectOrg.setEnabled(false, getFieldEditorParent());
+			// Language Server hasn't started yet - show default values and disable fields
+			additionalParamsEditor.setEnabled(false, parent);
+			autoDetectOrgCheckbox.setEnabled(false, parent);
+			projectOrg.setEnabled(false, parent);
+
+			// Set default values for display
+			additionalParamsEditor.setStringValue("");
+			projectOrg.setStringValue("");
+
+			// Set default auto-detect state (enabled by default)
+			preferenceStore.setDefault(SNYK_AUTO_SELECT_ORG, true);
+			preferenceStore.setValue(SNYK_AUTO_SELECT_ORG, true);
+			autoDetectOrgCheckbox.load();
+
+			// Set default organization value
+			preferenceStore.setDefault(SNYK_ORGANIZATION, "");
+			preferenceStore.setValue(SNYK_ORGANIZATION, "");
 		} else {
+			// Language Server has started - load actual configuration
 			var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
-			additionalParamsEditor.setEnabled(true, getFieldEditorParent());
-			final var addParams = String.join(" ", folderConfig.getAdditionalParameters());
-			if (folderConfig.getAdditionalParameters() != null && !folderConfig.getAdditionalParameters().isEmpty()) {
-				preferenceStore.setDefault(SNYK_ADDITIONAL_PARAMETERS, addParams);
-				preferenceStore.setValue(SNYK_ADDITIONAL_PARAMETERS, addParams);
-				additionalParamsEditor.setStringValue(addParams);
-			}
+			additionalParamsEditor.setEnabled(true, parent);
+
+			// Handle additional parameters
+			final var addParams = folderConfig.getAdditionalParameters() != null
+				? String.join(" ", folderConfig.getAdditionalParameters())
+				: "";
+			preferenceStore.setDefault(SNYK_ADDITIONAL_PARAMETERS, addParams);
+			preferenceStore.setValue(SNYK_ADDITIONAL_PARAMETERS, addParams);
+			additionalParamsEditor.setStringValue(addParams);
 
 			// Set auto-detect org checkbox (inverse of orgSetByUser)
-			autoDetectOrgCheckbox.setEnabled(true, getFieldEditorParent());
+			autoDetectOrgCheckbox.setEnabled(true, parent);
 			boolean autoDetect = !folderConfig.isOrgSetByUser();
 			preferenceStore.setDefault(SNYK_AUTO_SELECT_ORG, autoDetect);
 			preferenceStore.setValue(SNYK_AUTO_SELECT_ORG, autoDetect);
@@ -128,6 +203,15 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 	}
 
 	private void updateProjectOrg(FolderConfig folderConfig) {
+		Composite parent = getFieldEditorParent();
+
+		if (folderConfig == null) {
+			// Handle null folderConfig gracefully
+			projectOrg.setEnabled(false, parent);
+			projectOrg.setStringValue("");
+			return;
+		}
+
 		boolean autoDetect = !folderConfig.isOrgSetByUser();
 
 		String displayOrg;
@@ -140,10 +224,13 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			displayOrg = folderConfig.getPreferredOrg() != null ? folderConfig.getPreferredOrg() : "";
 		}
 
+		// Ensure displayOrg is not null
+		displayOrg = displayOrg != null ? displayOrg : "";
+
 		preferenceStore.setDefault(SNYK_ORGANIZATION, displayOrg);
 		preferenceStore.setValue(SNYK_ORGANIZATION, displayOrg);
 
-		projectOrg.setEnabled(!autoDetect, getFieldEditorParent());
+		projectOrg.setEnabled(!autoDetect, parent);
 		projectOrg.setStringValue(displayOrg);
 	}
 
@@ -164,7 +251,6 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			return;
 		}
 
-
 		setErrorMessage(null);
 		setValid(true);
 	}
@@ -177,9 +263,23 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		// because we can fall back to the global organization setting
 
 		var retValue = super.performOk();
-		final var addParams = this.additionalParamsEditor.getStringValue().split(" ");
+
+		// Only proceed with saving if Language Server has started
+		if (!FolderConfigs.LanguageServerConfigReceived.contains(projectPath)) {
+			// Language Server hasn't started yet - just return without saving
+			return retValue;
+		}
+
+		final var addParams = this.additionalParamsEditor.getStringValue() != null
+			? this.additionalParamsEditor.getStringValue().split(" ")
+			: new String[0];
 
 		var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
+		if (folderConfig == null) {
+			// Handle null folderConfig gracefully
+			return retValue;
+		}
+
 		folderConfig.setAdditionalParameters(Arrays.asList(addParams));
 
 		if (autoDetect) {
@@ -187,7 +287,8 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			folderConfig.setOrgSetByUser(false);
 			// Don't change preferredOrg when auto-detect is enabled
 		} else {
-			// When auto-detect is disabled, set orgSetByUser to true and update preferredOrg
+			// When auto-detect is disabled, set orgSetByUser to true and update
+			// preferredOrg
 			folderConfig.setOrgSetByUser(true);
 			String projectOrgValue = this.projectOrg.getStringValue();
 			// Store the project-specific org (can be empty, will fall back to global)
