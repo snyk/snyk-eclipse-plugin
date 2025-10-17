@@ -18,6 +18,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -156,9 +157,11 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		Action ignoreAction = getIgnoreAction();
 		Action monitorAction = getMonitorAction();
+		Action openProjectPreferencesAction = getOpenProjectPreferencesAction();
 
 		menuMgr.add(ignoreAction);
 		menuMgr.add(monitorAction);
+		menuMgr.add(openProjectPreferencesAction);
 	}
 
 	private Action getIgnoreAction() {
@@ -239,6 +242,37 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			@Override
 			public boolean isEnabled() {
 				return true;
+			}
+		};
+	}
+
+	private Action getOpenProjectPreferencesAction() {
+		return new Action("Open Project Preferences") {
+			@Override
+			public void run() {
+				if (selectedNode instanceof ContentRootNode) {
+					ContentRootNode contentNode = (ContentRootNode) selectedNode;
+					Path projectPath = contentNode.getPath();
+					if (projectPath != null) {
+						IProject project = ResourceUtils.getProjectByPath(projectPath);
+						if (project != null) {
+							// Open the project properties dialog and navigate to Snyk preferences
+							PreferencesUtil.createPropertyDialogOn(
+								getSite().getShell(),
+								project,
+								"io.snyk.eclipse.plugin.properties.projectpropertypage",
+								null,
+								null
+							).open();
+						}
+					}
+				}
+			}
+
+			@Override
+			public boolean isEnabled() {
+				return selectedNode instanceof ContentRootNode &&
+					   ((ContentRootNode) selectedNode).getPath() != null;
 			}
 		};
 	}

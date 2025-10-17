@@ -42,7 +42,7 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 	private StringFieldEditor projectOrg;
 	private Path projectPath;
 	private BooleanFieldEditor autoDetectOrgCheckbox;
-	private IPreferenceStore preferenceStore = null;
+	private IPreferenceStore preferenceStore;
 
 	private class PropertyBooleanFieldEditor extends BooleanFieldEditor {
 		public PropertyBooleanFieldEditor(String name, String label, Composite parent) {
