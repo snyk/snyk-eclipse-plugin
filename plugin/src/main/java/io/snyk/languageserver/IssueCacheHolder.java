@@ -34,6 +34,9 @@ public class IssueCacheHolder {
 		}
 		
 		var project = getProjectByPath(path);
+		if (project == null) {
+			return null;
+		}
 		Path projectPath = getFullPath(project);
 		caches.putIfAbsent(projectPath, new SnykIssueCache(projectPath));
 		

@@ -52,7 +52,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 		addField(new LabelFieldEditor(
 				"If you're using SSO with Snyk and OAuth2, the custom endpoint configuration is automatically populated.\n"
-		                + "Otherwise, for public regional instances, see the docs: ", 
+		                + "Otherwise, for public regional instances, see the docs: ",
 				getFieldEditorParent()));
 		Link link = new Link(this.getFieldEditorParent(), SWT.NONE);
 
@@ -109,7 +109,24 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 				getFieldEditorParent()));
 		addField(space());
 		addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
-		addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", WIDTH, getFieldEditorParent()));
+
+		// Add label with tooltip text below orgEditor
+		addField(new LabelFieldEditor(
+            "Specify the organization (ID or name) for Snyk to run scans against.\n"
+                    + "Organization selection follows this order:\n"
+                    + "1. Project-specific settings (if configured)\n"
+                    + "2. This global setting (if the project-specific setting is empty)\n"
+                    + "3. Your web account's preferred organization (if both above are empty)\n"
+                    + "Manual organization settings override automatic organization selection.",
+            getFieldEditorParent()));
+
+        final var orgEditor = new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", WIDTH, getFieldEditorParent());
+		orgEditor.setEnabled(true, getFieldEditorParent());
+		orgEditor.getTextControl(getFieldEditorParent()).setToolTipText(
+				"Specify the organization (ID or name) for Snyk to run scans against. If the organization is provided manually, automatic organization selection is overridden. If the organization value is blank or invalid, the preferred organization defined in your web account settings will be used.");
+		addField(orgEditor);
+
+
 		addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", WIDTH,
 				getFieldEditorParent()));
 		addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", WIDTH,

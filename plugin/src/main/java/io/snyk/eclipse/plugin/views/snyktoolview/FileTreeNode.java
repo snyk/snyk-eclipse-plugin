@@ -34,6 +34,11 @@ public class FileTreeNode extends BaseTreeNode {
 	public String getText() {
 		return getPath().toString();
 	}
+	
+	@Override
+	public final void setText(String text) {
+		super.setText(text);
+	}
 
 	public Path getPath() {
 		return path;

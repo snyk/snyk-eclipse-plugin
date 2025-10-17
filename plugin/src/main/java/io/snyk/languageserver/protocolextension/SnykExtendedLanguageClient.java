@@ -326,7 +326,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		executeCommand(LsConstants.COMMAND_SUBMIT_IGNORE_REQUEST,
 				List.of(workflow, issueId, ignoreType, ignoreReason, ignoreExpirationDate));
 	}
-
+	
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();
@@ -546,9 +546,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private SnykIssueCache getIssueCache(String filePath) {
-		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(Paths.get(filePath));
+		final var path = Paths.get(filePath);
+		if (path == null) {
+			throw new RuntimeException("cannot resolve path "+filePath);
+		}
+		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(path);
 		if (issueCache == null) {
-			throw new IllegalArgumentException("No issue cache for param possible");
+			SnykLogger.logInfo("cannot retrieve issue cache for "+path);
 		}
 		return issueCache;
 	}
@@ -565,7 +569,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		// Depending on Issue View Options, ignored issues might be pre-filtered by the and so ignoredIssueCount may be 0.
 		// In this case, openIssueCount is the total issue count returned by the LS.
 		long openIssueCount = totalIssueCount - ignoredIssueCount;
-		boolean isCodeNode = productNode.getProduct().equals(DISPLAYED_CODE_SECURITY);
+		boolean isCodeNode = DISPLAYED_CODE_SECURITY.equals(productNode.getProduct());
 
 		String text;
 		if (!isCodeNode) {
@@ -744,6 +748,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
+		if (filePath == null || filePath.isBlank()) {
+			return;
+		}
 		var issueCache = getIssueCache(filePath);
 		if (issueCache == null) {
 			SnykLogger.logInfo("Issue cache is null for file path: " + filePath + ", skipping cache population");

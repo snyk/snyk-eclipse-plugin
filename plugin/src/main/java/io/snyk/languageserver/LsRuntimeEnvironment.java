@@ -74,11 +74,14 @@ public class LsRuntimeEnvironment {
   }
 
   void addOrganization(Map<String, String> env) {
-    String pref = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
-    if (pref != null && !pref.isBlank()) {
-      env.put(Preferences.ORGANIZATION_KEY, pref);
+    // Pass the global organization setting to the Language Server
+    // The Language Server will handle all organization resolution logic
+    String globalOrg = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
+    if (globalOrg != null && !globalOrg.isBlank()) {
+      env.put(Preferences.ORGANIZATION_KEY, globalOrg);
     }
   }
+
 
   public void addAdditionalParamsAndEnv(Map<String, String> env) {
     String additionalParams = Preferences.getInstance().getPref(Preferences.ADDITIONAL_PARAMETERS, "");
