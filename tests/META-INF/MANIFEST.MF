@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: io.snyk.eclipse.plugin.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-SymbolicName: io.snyk.eclipse.plugin.tests;singleton:=true
-Bundle-Version: 3.4.0.qualifier
+Bundle-Version: 3.5.0.qualifier
 Bundle-Vendor: Snyk
 Fragment-Host: io.snyk.eclipse.plugin
 Automatic-Module-Name: io.snyk
