@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-  <feature url="features/io.snyk.scanner_3.4.0.qualifier.jar" id="io.snyk.scanner" version="3.4.0.qualifier">
+  <feature url="features/io.snyk.scanner_3.5.0.qualifier.jar" id="io.snyk.scanner" version="3.5.0.qualifier">
     <category name="io.snyk.scanner"/>
   </feature>
   <category-def name="io.snyk.scanner" label="Snyk Security">
