@@ -302,7 +302,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		int totalIssueCount = 1;
 		int fixableIssueCount = 1;
 		int ignoredIssueCount = 0;
-		var expectedNodes = List.of("✋ 1 open issue & 0 ignored issues", "⚡️ 1 open issue is fixable automatically.");
+		var expectedNodes = List.of("✋ 1 open issue", "⚡️ 1 open issue is fixable automatically.");
 		runInfoNodeTest(scanProduct, totalIssueCount, fixableIssueCount, ignoredIssueCount, expectedNodes);
 	}
 

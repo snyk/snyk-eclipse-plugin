@@ -100,7 +100,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFolder
 import io.snyk.languageserver.protocolextension.messageObjects.SummaryPanelParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
-@SuppressWarnings("restriction")
+@SuppressWarnings({"restriction", "PMD.AvoidCatchingGenericException"})
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private static final String MARKER_TYPE = "io.snyk.languageserver.marker";
 	private ProgressManager progressManager = new ProgressManager(this);
@@ -628,6 +628,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (totalIssueCount == 0) {
 				return CONGRATS_NO_ISSUES_FOUND;
 			} else {
+                if (ignoredIssueCount == 0) {
+                    return "✋ " + openIssuesText;
+                }
 				return "✋ " + openIssuesText + " & " + ignoredIssuesText;
 			}
 		}
