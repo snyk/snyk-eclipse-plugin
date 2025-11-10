@@ -86,11 +86,12 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		if (!Preferences.getInstance().isTest()) {
 			waitForInit();
 		}
-		
+
 		Settings currentSettings = null;
 		try {
 			currentSettings = new LsConfigurationUpdater().getCurrentSettings();
-		} catch (RuntimeException e) {
+		} catch (IllegalStateException | IllegalArgumentException e) {
+			// Handle initialization errors gracefully - log and return null to allow LS to start
 			SnykLogger.logError(e);
 		}
 		return currentSettings;
