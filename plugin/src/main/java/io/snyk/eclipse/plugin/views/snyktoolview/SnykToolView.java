@@ -421,18 +421,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 				return;
 			}
 
-			boolean enableConsistentIgnores = Preferences.getInstance()
-					.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED, false);
-
-			if (enableConsistentIgnores) {
-				// Show the commands
-				addCommandIfNotPresent(submenu, "io.snyk.eclipse.plugin.commands.snykShowOpenIgnored");
-				addCommandIfNotPresent(submenu, "io.snyk.eclipse.plugin.commands.snykShowIgnored");
-			} else {
-				// Hide the commands
-				submenu.remove("io.snyk.eclipse.plugin.commands.snykShowOpenIgnored");
-				submenu.remove("io.snyk.eclipse.plugin.commands.snykShowIgnored");
-			}
+			// Always show the commands, regardless of CCI status
+			addCommandIfNotPresent(submenu, "io.snyk.eclipse.plugin.commands.snykShowOpenIgnored");
+			addCommandIfNotPresent(submenu, "io.snyk.eclipse.plugin.commands.snykShowIgnored");
 
 			menuManager.update(true);
 
