@@ -65,8 +65,9 @@ public class FolderConfigs {
 
 		for (var project : openProjects) {
 			Path path = ResourceUtils.getFullPath(project);
-			//Linter does not like when new objects are created in loops, but here we do want to create new ProjectScopes in the loop.
-			IScopeContext projectScope = new ProjectScope(project); //NOPMD,
+			// Linter does not like when new objects are created in loops, but here we do
+			// want to create new ProjectScopes in the loop.
+			IScopeContext projectScope = new ProjectScope(project); // NOPMD,
 			var projectSettings = projectScope.getNode(Activator.PLUGIN_ID);
 			String additionalParams = projectSettings.get(ProjectPropertyPage.SNYK_ADDITIONAL_PARAMETERS, "");
 			String preferredOrg = projectSettings.get(ProjectPropertyPage.SNYK_ORGANIZATION, "");
@@ -87,7 +88,9 @@ public class FolderConfigs {
 	}
 
 	/**
-	 * Gets folder config for given path, if none exists it is created with defaults and returned
+	 * Gets folder config for given path, if none exists it is created with defaults
+	 * and returned
+	 * 
 	 * @param folderPath the path of the folder (usually the project)
 	 * @return a folder config (always)
 	 */

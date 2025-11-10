@@ -255,26 +255,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		executeCommand(LsConstants.COMMAND_TRUST_WORKSPACE_FOLDERS, new ArrayList<>());
 	}
 
-	public boolean getSastEnabled() {
-		try {
-			CompletableFuture<Object> lsSastSettings = executeCommand(LsConstants.COMMAND_GET_SETTINGS_SAST_ENABLED,
-					new ArrayList<>());
-			Object result;
-			try {
-				result = lsSastSettings.get(5, TimeUnit.SECONDS);
-			} catch (TimeoutException e) {
-				SnykLogger.logInfo("did not get a response for sast settings, disabling Snyk Code");
-				return false;
-			}
-			SastSettings sastSettings = om.convertValue(result, SastSettings.class);
-			return sastSettings != null ? sastSettings.sastEnabled : false;
-		} catch (Exception e) {
-			SnykLogger.logError(e);
-		}
-
-		return false;
-	}
-
 	public boolean getFeatureFlagStatus(String featureFlag) {
 		try {
 			CompletableFuture<Object> lsGlobalIgnoresFeatureFlag = executeCommand(
@@ -865,24 +845,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	static class SastSettings {
 		public boolean sastEnabled;
-
-		public LocalCodeEngine localCodeEngine;
-
 		public boolean reportFalsePositivesEnabled;
-
 		public String org;
-
 		public boolean autofixEnabled;
 	}
 
-	/**
-	 * SAST local code engine configuration.
-	 */
-	static class LocalCodeEngine {
-		public boolean enabled;
-
-		public String url;
-	}
 
 	public static <T> T convertInstanceOfObject(Object o, Class<T> clazz) {
 		try {
