@@ -94,9 +94,13 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "Snyk Open Source enabled",
 				getFieldEditorParent()));
 		snykCodeSecurityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE_SECURITY,
-				"Snyk Code Security enabled. Snyk Code scans must be enabled for the organization to run.",
-                getFieldEditorParent());
+				"Snyk Code Security enabled", getFieldEditorParent());
 		addField(snykCodeSecurityCheckbox);
+		// Set tooltip on both label and checkbox
+		snykCodeSecurityCheckbox.getLabelControl(getFieldEditorParent()).setToolTipText(
+				"Code must be enabled for your organization to run.");
+		snykCodeSecurityCheckbox.getCheckbox(getFieldEditorParent()).setToolTipText(
+				"Code must be enabled for your organization to run.");
 		addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure-as-Code enabled",
 				getFieldEditorParent()));
 

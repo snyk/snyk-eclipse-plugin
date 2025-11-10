@@ -314,13 +314,13 @@
                     commandId="io.snyk.eclipse.plugin.commands.snykShowOpenIgnored"
                     icon="icons/enabled.png"
                     style="push"
-                    tooltip="Show Open Issues. Note: This filter will only take effect if Code Consistent Ignores (CCI) is enabled for the organization.">
+                    tooltip="Show Open Issues. Note: This filter will only take effect if Code Consistent Ignores is enabled for the organization.">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykShowIgnored"
                     icon="icons/enabled.png"
                     style="push"
-                    tooltip="Show Ignored. Note: This filter will only take effect if Code Consistent Ignores (CCI) is enabled for the organization.">
+                    tooltip="Show Ignored. Note: This filter will only take effect if Code Consistent Ignores is enabled for the organization.">
                 </command>
                 <command
                       commandId="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"
