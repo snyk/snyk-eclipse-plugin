@@ -18,6 +18,7 @@ import org.osgi.framework.Bundle;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.protocolextension.messageObjects.PresentableError;
 
 public class BaseHtmlProvider {
 	private final Random random = new Random();
@@ -206,9 +207,33 @@ public class BaseHtmlProvider {
 		currentTheme = themeManager.getCurrentTheme();
 		return currentTheme;
 	}
-	public String getErrorHtml(String errorMessage, String path) {
-        String escapedErrorMessage = errorMessage == null ? "Unknown error" : StringEscapeUtils.escapeHtml3((errorMessage));
-        String escapedPath = path == null ? "Unknown path" : StringEscapeUtils.escapeHtml3(path);
+	public String getErrorHtml(PresentableError presentableError) {
+		StringBuilder errorDetails = new StringBuilder();
+
+		if (presentableError == null) {
+			errorDetails.append("<tr><td><strong>error:</strong></td><td>Unknown error</td></tr>");
+		} else {
+			// Filter out showNotification and treeNodeSuffix - they're not for display
+			if (presentableError.getCode() != null && presentableError.getCode() != 0) {
+				errorDetails.append(String.format("<tr><td><strong>code:</strong></td><td>%d</td></tr>%n", presentableError.getCode()));
+			}
+
+			if (presentableError.getError() != null && !presentableError.getError().isBlank()) {
+				String escapedError = StringEscapeUtils.escapeHtml4(presentableError.getError());
+				errorDetails.append(String.format("<tr><td><strong>error:</strong></td><td>%s</td></tr>%n", escapedError));
+			}
+
+			if (presentableError.getPath() != null && !presentableError.getPath().isBlank()) {
+				String escapedPath = StringEscapeUtils.escapeHtml4(presentableError.getPath());
+				errorDetails.append(String.format("<tr><td><strong>path:</strong></td><td>%s</td></tr>%n", escapedPath));
+			}
+
+			if (presentableError.getCommand() != null && !presentableError.getCommand().isBlank()) {
+				String escapedCommand = StringEscapeUtils.escapeHtml4(presentableError.getCommand());
+				errorDetails.append(String.format("<tr><td><strong>command:</strong></td><td>%s</td></tr>%n", escapedCommand));
+			}
+		}
+
 		var html = String.format("""
 				<!DOCTYPE html>
 				<html lang="en">
@@ -216,7 +241,7 @@ public class BaseHtmlProvider {
 					<meta http-equiv='Content-Type' content='text/html; charset=unicode' />
 				    <meta charset="UTF-8">
 				    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-				      <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-ideNonce'; style-src 'self' 'nonce-ideNonce';">
+				    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-ideNonce'; style-src 'self' 'nonce-ideNonce';">
 				    <title>Snyk for Eclipse</title>
 				    <style nonce=ideNonce>
 				        body {
@@ -228,27 +253,29 @@ public class BaseHtmlProvider {
 				            display: flex;
 				            align-items: center;
 				        }
-				        .logo {
-				            margin-right: 20px;
+				        table {
+				            border-spacing: 10px 5px;
+				        }
+				        td {
+				            vertical-align: top;
+				            padding: 5px;
+				        }
+				        td:first-child {
+				            width: 100px;
 				        }
 				    </style>
 				</head>
 				<body>
 				    <div class="container">
 				        <div>
-				            <p><strong>An error occurred:</strong></p>
-				            <p>
 				            <table>
-				            	<tr><td width="150"	>Error message:</td><td id="errorContainer">%s</td></tr>
-				            	<tr></tr>
-				            	<tr><td width="150"	>Path:</td><td id="pathContainer">%s</td></tr>
+				            %s
 				            </table>
-				            </p>
 				        </div>
 				    </div>
 				</body>
 				</html>
-				""",escapedErrorMessage, escapedPath);
+				""", errorDetails.toString());
 		return replaceCssVariables(html);
 	}
 }

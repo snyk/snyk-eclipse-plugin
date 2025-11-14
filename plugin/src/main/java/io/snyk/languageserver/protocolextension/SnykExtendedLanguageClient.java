@@ -390,7 +390,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		case SCAN_STATE_ERROR:
 			scanState.setScanInProgress(inProgressKey, false);
 			if (productTreeNode != null) {
-				productTreeNode.setErrorMessage(param.getErrorMessage());
+				productTreeNode.setPresentableError(param.getPresentableError());
 			}
 			break;
 		default:
@@ -504,7 +504,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			nodeText = NODE_TEXT_SCANNING;
 			node.setText(nodeText);
 		} else if (SCAN_STATE_ERROR.equals(status)) {
-			nodeText = ISnykToolView.NODE_TEXT_ERROR;
+			var presentableError = node.getPresentableError();
+			if (presentableError != null && presentableError.getTreeNodeSuffix() != null) {
+				nodeText = presentableError.getTreeNodeSuffix();
+			} else {
+				nodeText = ISnykToolView.NODE_TEXT_ERROR;
+			}
 			node.setText(nodeText);
 			toolView.refreshTree();
 		} else if (SCAN_STATE_SUCCESS.equals(status)) {

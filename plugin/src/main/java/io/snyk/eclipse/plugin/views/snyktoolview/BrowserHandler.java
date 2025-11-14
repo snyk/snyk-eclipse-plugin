@@ -162,8 +162,6 @@ public class BrowserHandler {
 		setDefaultBrowserText();
 	}
 
-	private record ErrorMessage(String error, String path) {
-	}
 
 	public CompletableFuture<Void> updateBrowserContent(TreeNode node) {
 		// Generate HTML content based on the selected node
@@ -172,20 +170,12 @@ public class BrowserHandler {
 		boolean shouldShowDefaultMessage = true;
 		if (node instanceof ProductTreeNode) {
 			var ptn = (ProductTreeNode) node;
-			String errorJson = ptn.getErrorMessage();
-			if (errorJson != null && !errorJson.isBlank()) {
+			var presentableError = ptn.getPresentableError();
+			if (presentableError != null && presentableError.getError() != null) {
 				shouldShowDefaultMessage = false;
-				String errorHTML;
-				try {
-					ErrorMessage errorMessage = new ObjectMapper().readValue(errorJson, ErrorMessage.class);
-					errorHTML = htmlProvider.getErrorHtml(errorMessage.error, errorMessage.path);
-				} catch (Exception e) {
-					SnykLogger.logError(new RuntimeException("Failed to parse error JSON: " + errorJson, e));
-					errorHTML = htmlProvider.getErrorHtml("Error: failed to display error", "");
-				}
-				final String errorHTMLFinal = errorHTML;
+				String errorHTML = htmlProvider.getErrorHtml(presentableError);
 				Display.getDefault().syncExec(() -> {
-					browser.setText(errorHTMLFinal);
+					browser.setText(errorHTML);
 				});
 			}
 		}
