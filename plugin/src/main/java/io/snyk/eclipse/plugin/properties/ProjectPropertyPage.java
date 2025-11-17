@@ -170,9 +170,9 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 			additionalParamsEditor.setStringValue("");
 			projectOrg.setStringValue("");
 
-			// Set default auto-detect state (enabled by default)
-			preferenceStore.setDefault(SNYK_AUTO_SELECT_ORG, true);
-			preferenceStore.setValue(SNYK_AUTO_SELECT_ORG, true);
+			// Set default auto-detect state (disabled by default)
+			preferenceStore.setDefault(SNYK_AUTO_SELECT_ORG, false);
+			preferenceStore.setValue(SNYK_AUTO_SELECT_ORG, false);
 			autoDetectOrgCheckbox.load();
 
 			// Set default organization value
