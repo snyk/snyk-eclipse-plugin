@@ -10,11 +10,12 @@ import org.eclipse.jface.viewers.TreeNode;
 import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
+import io.snyk.languageserver.protocolextension.messageObjects.PresentableError;
 
 public class ProductTreeNode extends BaseTreeNode {
 
 	private String product;
-	private String errorMessage;
+	private PresentableError presentableError;
 	private String prefEnablementKey;
 
 	private final void initialize(String value) {
@@ -127,7 +128,7 @@ public class ProductTreeNode extends BaseTreeNode {
 	public void reset() {
 		this.removeChildren();
 		this.setValue(product);
-		this.setErrorMessage(null);
+		this.setPresentableError(null);
 	}
 
 	public String getProduct() {
@@ -138,11 +139,18 @@ public class ProductTreeNode extends BaseTreeNode {
 		this.product = product;
 	}
 
-	public String getErrorMessage() {
-		return errorMessage;
+	public PresentableError getPresentableError() {
+		return presentableError;
 	}
 
-	public void setErrorMessage(String errorMessage) {
-		this.errorMessage = errorMessage;
+	public void setPresentableError(PresentableError presentableError) {
+		this.presentableError = presentableError;
+	}
+
+	public String getErrorMessage() {
+		if (presentableError == null) {
+			return null;
+		}
+		return presentableError.getError();
 	}
 }
