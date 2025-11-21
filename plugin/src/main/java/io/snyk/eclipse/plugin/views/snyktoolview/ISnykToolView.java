@@ -21,7 +21,7 @@ public interface ISnykToolView {
 	public String ALL_ISSUES_FILTERED_BUT_AVAILABLE = "Adjust your settings to view Open or Ignored issues.";
 
 	public String NODE_TEXT_SCANNING = "Scanning...";
-	public String NODE_TEXT_ERROR = "An error occurred";
+	public String NODE_TEXT_ERROR = "(error)";
 
 	/**
 	 * Updates the text of the given node

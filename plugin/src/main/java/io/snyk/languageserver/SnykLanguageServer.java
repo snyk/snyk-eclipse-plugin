@@ -15,6 +15,7 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.protocolextension.messageObjects.Settings;
 
 @SuppressWarnings("restriction")
 public class SnykLanguageServer extends ProcessStreamConnectionProvider implements StreamConnectionProvider {
@@ -41,8 +42,9 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 	}
 
 	public static void waitForInit() {
-		if (Preferences.getInstance().isTest()) return;
-		waitForDownload();		
+		if (Preferences.getInstance().isTest())
+			return;
+		waitForDownload();
 		waitForSecurePreferencesToBeReady();
 	}
 
@@ -81,13 +83,15 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 
 	@Override
 	public Object getInitializationOptions(URI rootUri) {
-		if (!Preferences.getInstance().isTest()) {			
+		if (!Preferences.getInstance().isTest()) {
 			waitForInit();
 		}
-		LsConfigurationUpdater.Settings currentSettings = null;
+
+		Settings currentSettings = null;
 		try {
 			currentSettings = new LsConfigurationUpdater().getCurrentSettings();
-		} catch (RuntimeException e) {
+		} catch (IllegalStateException | IllegalArgumentException e) {
+			// Handle initialization errors gracefully - log and return null to allow LS to start
 			SnykLogger.logError(e);
 		}
 		return currentSettings;

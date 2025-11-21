@@ -23,7 +23,6 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
@@ -52,7 +51,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 		addField(new LabelFieldEditor(
 				"If you're using SSO with Snyk and OAuth2, the custom endpoint configuration is automatically populated.\n"
-		                + "Otherwise, for public regional instances, see the docs: ", 
+		                + "Otherwise, for public regional instances, see the docs: ",
 				getFieldEditorParent()));
 		Link link = new Link(this.getFieldEditorParent(), SWT.NONE);
 
@@ -91,25 +90,40 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		addField(space());
 		addField(new LabelFieldEditor("The following options involve the Snyk Language Server.",
 				getFieldEditorParent()));
-		addField(new LabelFieldEditor(
-				"Activating Snyk Code will cause upload of source code to Snyk or the given endpoint address.",
-				getFieldEditorParent()));
 		addField(space());
 		addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "Snyk Open Source enabled",
 				getFieldEditorParent()));
 		snykCodeSecurityCheckbox = new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_CODE_SECURITY,
-				"Snyk Code Security enabled", getFieldEditorParent());
+				"Snyk Code Security enabled\nNote: Code must be enabled for your organization to run.", getFieldEditorParent());
 		addField(snykCodeSecurityCheckbox);
-
 		addField(new BooleanFieldEditor(Preferences.ACTIVATE_SNYK_IAC, "Snyk Infrastructure-as-Code enabled",
 				getFieldEditorParent()));
+
+
 
 		addField(space());
 		addField(new BooleanFieldEditor(Preferences.SCANNING_MODE_AUTOMATIC, "Scan automatically on start-up and save",
 				getFieldEditorParent()));
 		addField(space());
 		addField(new LabelFieldEditor("Advanced options:", getFieldEditorParent()));
-		addField(new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", WIDTH, getFieldEditorParent()));
+
+		// Add label with tooltip text below orgEditor
+		addField(new LabelFieldEditor(
+            "Specify the organization (ID or name) for Snyk to run scans against.\n"
+                    + "Organization selection follows this order:\n"
+                    + "1. Project-specific settings (if configured)\n"
+                    + "2. This global setting (if the project-specific setting is empty)\n"
+                    + "3. Your web account's preferred organization (if both above are empty)\n"
+                    + "Manual organization settings override automatic organization selection.",
+            getFieldEditorParent()));
+
+        final var orgEditor = new StringFieldEditor(Preferences.ORGANIZATION_KEY, "Organization:", WIDTH, getFieldEditorParent());
+		orgEditor.setEnabled(true, getFieldEditorParent());
+		orgEditor.getTextControl(getFieldEditorParent()).setToolTipText(
+				"Specify the organization (ID or name) for Snyk to run scans against. If the organization is provided manually, automatic organization selection is overridden. If the organization value is blank or invalid, the preferred organization defined in your web account settings will be used.");
+		addField(orgEditor);
+
+
 		addField(new StringFieldEditor(Preferences.ADDITIONAL_PARAMETERS, "Additional Parameters:", WIDTH,
 				getFieldEditorParent()));
 		addField(new StringFieldEditor(Preferences.ADDITIONAL_ENVIRONMENT, "Additional Environment:", WIDTH,
@@ -148,7 +162,6 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		StringFieldEditor trustedFoldersEditor = new StringFieldEditor(Preferences.TRUSTED_FOLDERS, "Trusted Folders:",
 				WIDTH, getFieldEditorParent());
 		addField(trustedFoldersEditor);
-		disableSnykCodeIfOrgDisabled();
 	}
 
 	private SelectionAdapter authenticateSelectionAdapter() {
@@ -187,46 +200,12 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	@Override
 	public boolean performOk() {
 		boolean superOK = super.performOk();
-		disableSnykCodeIfOrgDisabled();
 		CompletableFuture.runAsync(() -> {
 			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 			lc.updateConfiguration();
 			lc.refreshFeatureFlags();
 		});
 		return superOK;
-	}
-
-	private void disableSnykCodeIfOrgDisabled() {
-		CompletableFuture.runAsync(() -> {
-			SnykLanguageServer.waitForInit();
-			boolean isSastEnabled;
-			try {
-				isSastEnabled = SnykExtendedLanguageClient.getInstance().getSastEnabled();
-			} catch (Exception e) {
-				SnykLogger.logError(e);
-				return;
-			}
-
-			String message = "Snyk Code disabled, because it is not enabled for your organization. After you close this preference page, it will stay disabled.";
-			final var enabled = isSastEnabled;
-			Display.getCurrent().asyncExec(new Runnable() {
-				boolean showMessage;
-				boolean checkBoxValue;
-
-				@Override
-				public void run() {
-					checkBoxValue = snykCodeSecurityCheckbox != null && snykCodeSecurityCheckbox.getBooleanValue();
-					if (checkBoxValue && !enabled) {
-						snykCodeSecurityCheckbox
-								.setLabelText(snykCodeSecurityCheckbox.getLabelText() + " (" + message + ")");
-						showMessage = true;
-					}
-
-					if (showMessage)
-						SnykLogger.logInfo(message);
-				}
-			});
-		});
 	}
 
 }

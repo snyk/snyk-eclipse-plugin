@@ -7,6 +7,12 @@ public class FolderConfig {
 
     private String folderPath;
 
+    private String preferredOrg;
+
+    private boolean orgSetByUser;
+
+    private String autoDeterminedOrg;
+
     private String baseBranch = "";
 
     private List<String> localBranches = new ArrayList<>();
@@ -72,4 +78,28 @@ public class FolderConfig {
 	public void setScanCommandConfig(ScanCommandConfig scanCommandConfig) {
 		this.scanCommandConfig = scanCommandConfig;
 	}
+
+	public String getPreferredOrg() {
+		return preferredOrg;
+	}
+
+	public void setPreferredOrg(String preferredOrg) {
+		this.preferredOrg = preferredOrg;
+	}
+
+    public boolean isOrgSetByUser() {
+        return orgSetByUser;
+    }
+
+    public void setOrgSetByUser(boolean orgSetByUser) {
+        this.orgSetByUser = orgSetByUser;
+    }
+
+    public String getAutoDeterminedOrg() {
+        return autoDeterminedOrg;
+    }
+
+    public void setAutoDeterminedOrg(String autoDeterminedOrg) {
+        this.autoDeterminedOrg = autoDeterminedOrg;
+    }
 }

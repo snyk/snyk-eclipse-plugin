@@ -255,26 +255,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		executeCommand(LsConstants.COMMAND_TRUST_WORKSPACE_FOLDERS, new ArrayList<>());
 	}
 
-	public boolean getSastEnabled() {
-		try {
-			CompletableFuture<Object> lsSastSettings = executeCommand(LsConstants.COMMAND_GET_SETTINGS_SAST_ENABLED,
-					new ArrayList<>());
-			Object result;
-			try {
-				result = lsSastSettings.get(5, TimeUnit.SECONDS);
-			} catch (TimeoutException e) {
-				SnykLogger.logInfo("did not get a response for sast settings, disabling Snyk Code");
-				return false;
-			}
-			SastSettings sastSettings = om.convertValue(result, SastSettings.class);
-			return sastSettings != null ? sastSettings.sastEnabled : false;
-		} catch (Exception e) {
-			SnykLogger.logError(e);
-		}
-
-		return false;
-	}
-
 	public boolean getFeatureFlagStatus(String featureFlag) {
 		try {
 			CompletableFuture<Object> lsGlobalIgnoresFeatureFlag = executeCommand(
@@ -326,7 +306,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		executeCommand(LsConstants.COMMAND_SUBMIT_IGNORE_REQUEST,
 				List.of(workflow, issueId, ignoreType, ignoreReason, ignoreExpirationDate));
 	}
-
+	
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();
@@ -410,7 +390,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		case SCAN_STATE_ERROR:
 			scanState.setScanInProgress(inProgressKey, false);
 			if (productTreeNode != null) {
-				productTreeNode.setErrorMessage(param.getErrorMessage());
+				productTreeNode.setPresentableError(param.getPresentableError());
 			}
 			break;
 		default:
@@ -524,7 +504,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			nodeText = NODE_TEXT_SCANNING;
 			node.setText(nodeText);
 		} else if (SCAN_STATE_ERROR.equals(status)) {
-			nodeText = ISnykToolView.NODE_TEXT_ERROR;
+			var presentableError = node.getPresentableError();
+			if (presentableError != null && presentableError.getTreeNodeSuffix() != null) {
+				nodeText = presentableError.getTreeNodeSuffix();
+			} else {
+				nodeText = ISnykToolView.NODE_TEXT_ERROR;
+			}
 			node.setText(nodeText);
 			toolView.refreshTree();
 		} else if (SCAN_STATE_SUCCESS.equals(status)) {
@@ -546,9 +531,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private SnykIssueCache getIssueCache(String filePath) {
-		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(Paths.get(filePath));
+		final var path = Paths.get(filePath);
+		if (path == null) {
+			throw new RuntimeException("cannot resolve path "+filePath);
+		}
+		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(path);
 		if (issueCache == null) {
-			throw new IllegalArgumentException("No issue cache for param possible");
+			SnykLogger.logInfo("cannot retrieve issue cache for "+path);
 		}
 		return issueCache;
 	}
@@ -565,7 +554,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		// Depending on Issue View Options, ignored issues might be pre-filtered by the and so ignoredIssueCount may be 0.
 		// In this case, openIssueCount is the total issue count returned by the LS.
 		long openIssueCount = totalIssueCount - ignoredIssueCount;
-		boolean isCodeNode = productNode.getProduct().equals(DISPLAYED_CODE_SECURITY);
+		boolean isCodeNode = DISPLAYED_CODE_SECURITY.equals(productNode.getProduct());
 
 		String text;
 		if (!isCodeNode) {
@@ -747,6 +736,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
+		if (filePath == null || filePath.isBlank()) {
+			return;
+		}
 		var issueCache = getIssueCache(filePath);
 		if (issueCache == null) {
 			SnykLogger.logInfo("Issue cache is null for file path: " + filePath + ", skipping cache population");
@@ -858,24 +850,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	static class SastSettings {
 		public boolean sastEnabled;
-
-		public LocalCodeEngine localCodeEngine;
-
 		public boolean reportFalsePositivesEnabled;
-
 		public String org;
-
 		public boolean autofixEnabled;
 	}
 
-	/**
-	 * SAST local code engine configuration.
-	 */
-	static class LocalCodeEngine {
-		public boolean enabled;
-
-		public String url;
-	}
 
 	public static <T> T convertInstanceOfObject(Object o, Class<T> clazz) {
 		try {
