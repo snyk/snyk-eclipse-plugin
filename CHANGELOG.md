@@ -1,5 +1,14 @@
 # Snyk Security Changelog
 
+## [3.6.0]
+### Changes
+- Add setting organization configuration at the project level.
+- Add support for automatic organization configuration.
+
+## [3.5.0]
+### Fixes
+- Small bug fixes and dependency updates.
+
 ## [3.4.0]
 ### Fixes
 - resolve handle leak in image descriptor handling
