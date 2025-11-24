@@ -314,13 +314,13 @@
                     commandId="io.snyk.eclipse.plugin.commands.snykShowOpenIgnored"
                     icon="icons/enabled.png"
                     style="push"
-                    tooltip="Show Open Issues. Note: This filter will only take effect if Code Consistent Ignores is enabled for the organization.">
+                    tooltip="Show Open Issues. Code Consistent Ignores helps your teams focus on important tasks by filtering out distractions. It ensures that once an ignore is created, it is consistently respected regardless of how and where the test is run and what branch is being tested. Note: These filters will have no effect if Code Consistent Ignores is disabled for the organization.">
                 </command>
                 <command
                     commandId="io.snyk.eclipse.plugin.commands.snykShowIgnored"
                     icon="icons/enabled.png"
                     style="push"
-                    tooltip="Show Ignored. Note: This filter will only take effect if Code Consistent Ignores is enabled for the organization.">
+                    tooltip="Show Ignored Issues. Code Consistent Ignores helps your teams focus on important tasks by filtering out distractions. It ensures that once an ignore is created, it is consistently respected regardless of how and where the test is run and what branch is being tested. Note: These filters will have no effect if Code Consistent Ignores is disabled for the organization.">
                 </command>
                 <command
                       commandId="io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues"

@@ -100,11 +100,13 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		var url = Preferences.getInstance().getEndpoint() + "/account";
         var urlUserDocs = "https://docs.snyk.io/developer-tools/snyk-ide-plugins-and-extensions/eclipse-plugin/configuration-of-the-eclipse-plugin#global-settings";
 		addField(new LabelFieldEditor(
-				"Use automatic organization selection. When enabled, Snyk will automatically select the most\n"
+				"[Experimental] Use automatic organization selection. When enabled, Snyk will automatically select the most\n"
 						+ "appropriate organization for your project using context found in your repository and your authentication.\n"
-						+ "If an organization is configured manually, this feature will be overridden. If an appropriate organization\n"
-						+ "cannot be identified automatically, the preferred organization defined in your web account settings will\n"
-						+ "be used as a fallback.",
+						+ "\n"
+						+ "If an organization is configured manually, this feature will be overridden.\n"
+						+ "\n"
+						+ "If an appropriate organization cannot be identified automatically, the preferred organization defined in your\n"
+						+ "web account settings will be used as a fallback.",
 				getFieldEditorParent()));
 
 		// Add clickable links
@@ -130,9 +132,9 @@ public class ProjectPropertyPage extends FieldEditorPreferencePage implements IW
 		addField(projectOrg);
 
         addField(new LabelFieldEditor(
-				"Specify the organization (ID or name) for Snyk to run scans against. If the organization is provided\n"
-						+ "manually, automatic organization selection is overridden. If the organization value is blank or invalid,\n"
-						+ "the preferred organization defined in your web account settings will be used.",
+				"[Experimental] Specify the organization (ID or name) for Snyk to run scans against for this specific IDE project.\n"
+						+ "\n"
+						+ "If the organization value is blank or invalid, the value from the global Organization field will be used.",
 				getFieldEditorParent()));
 
 		// Add clickable links for second description
