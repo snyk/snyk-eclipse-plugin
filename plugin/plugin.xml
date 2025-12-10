@@ -34,7 +34,7 @@
     </extension>
     <extension point="org.eclipse.ui.preferencePages">
         <page
-            class="io.snyk.eclipse.plugin.preferences.PreferencesPage"
+            class="io.snyk.eclipse.plugin.preferences.HTMLSettingsPreferencePage"
             id="io.snyk.eclipse.plugin.properties.preferencespage"
             name="%page.name">
         </page>

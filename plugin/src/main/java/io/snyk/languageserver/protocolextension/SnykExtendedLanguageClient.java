@@ -903,4 +903,22 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public ProgressManager getProgressManager() {
 		return this.progressManager;
 	}
+
+	public String getConfigHtml() {
+		try {
+			CompletableFuture<Object> configHtmlFuture = executeCommand(
+					LsConstants.COMMAND_WORKSPACE_CONFIGURATION, new ArrayList<>());
+			Object result = configHtmlFuture.get(10, TimeUnit.SECONDS);
+			return result != null ? String.valueOf(result) : null;
+		} catch (TimeoutException e) {
+			SnykLogger.logInfo("Timeout getting configuration HTML from language server");
+		} catch (Exception e) {
+			SnykLogger.logInfo("Error getting configuration HTML: " + e.getMessage());
+		}
+		return null;
+	}
+
+	public void logout() {
+		executeCommand(LsConstants.COMMAND_LOGOUT, new ArrayList<>());
+	}
 }

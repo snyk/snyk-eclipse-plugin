@@ -81,6 +81,7 @@ public class Preferences {
 	public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
+	public static final String USE_NEW_CONFIG_DIALOG = "useNewConfigDialog";
 
 	private static final Set<String> encryptedPreferenceKeys = Set.of(AUTH_TOKEN_KEY);
 	private final IEclipsePreferences insecurePreferences;
@@ -138,6 +139,7 @@ public class Preferences {
 		insecureStore.setDefault(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
 		insecureStore.setDefault(RELEASE_CHANNEL, "stable");
+		insecureStore.setDefault(USE_NEW_CONFIG_DIALOG, FALSE);
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 		insecureStore.setDefault(ENDPOINT_KEY, DEFAULT_ENDPOINT);
 		insecureStore.setDefault(ORGANIZATION_KEY, "");
@@ -319,6 +321,10 @@ public class Preferences {
 
 	public static boolean isDeltaEnabled() {
 		return getInstance().getBooleanPref(Preferences.ENABLE_DELTA);
+	}
+
+	public static boolean isNewConfigDialogEnabled() {
+		return getInstance().getBooleanPref(Preferences.USE_NEW_CONFIG_DIALOG);
 	}
 
 	public static void setCurrentPreferences(Preferences prefs) {
