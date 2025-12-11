@@ -191,4 +191,30 @@ class PreferencesTest {
 		assertEquals("2", prefs.getLspVersion());
 	}
 
+	@Test
+	public void testIsNewConfigDialogEnabled_defaultIsFalse() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		PreferencesUtils.setPreferences(prefs);
+		assertFalse(Preferences.isNewConfigDialogEnabled());
+	}
+
+	@Test
+	public void testIsNewConfigDialogEnabled_trueWhenPreferenceSet() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		PreferencesUtils.setPreferences(prefs);
+		prefs.store(Preferences.USE_LS_HTML_CONFIG_DIALOG, "true");
+		assertTrue(Preferences.isNewConfigDialogEnabled());
+	}
+
+	@Test
+	public void testIsNewConfigDialogEnabled_falseWhenPreferenceSetToFalse() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		PreferencesUtils.setPreferences(prefs);
+		prefs.store(Preferences.USE_LS_HTML_CONFIG_DIALOG, "false");
+		assertFalse(Preferences.isNewConfigDialogEnabled());
+	}
+
 }
