@@ -168,23 +168,22 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 
 		// Asynchronously try to get HTML from language server
 		CompletableFuture.runAsync(() -> {
-			try {
-				SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-				if (lc != null) {
-					String lsHtml = lc.getConfigHtml();
-					if (lsHtml != null && !lsHtml.isBlank()) {
-						String styledLsHtml = htmlProvider.replaceCssVariables(lsHtml, false);
-						Display.getDefault().asyncExec(() -> {
-							if (browser != null && !browser.isDisposed()) {
-								browser.setText(styledLsHtml);
-								isUsingFallback = false;
-							}
-						});
-					}
+			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+			if (lc != null) {
+				String lsHtml = lc.getConfigHtml();
+				if (lsHtml != null && !lsHtml.isBlank()) {
+					String styledLsHtml = htmlProvider.replaceCssVariables(lsHtml, false);
+					Display.getDefault().asyncExec(() -> {
+						if (browser != null && !browser.isDisposed()) {
+							browser.setText(styledLsHtml);
+							isUsingFallback = false;
+						}
+					});
 				}
-			} catch (RuntimeException e) {
-				SnykLogger.logInfo("Could not load HTML from language server: " + e.getMessage());
 			}
+		}).exceptionally(e -> {
+			SnykLogger.logInfo("Could not load HTML from language server: " + e.getMessage());
+			return null;
 		});
 	}
 

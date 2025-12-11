@@ -24,6 +24,11 @@ public class BaseHtmlProvider {
 	private final Random random = new Random();
 	private final Map<String, String> colorCache = new HashMap<>();
 	private String nonce = "";
+
+	// Suffix used to neutralize VSCode CSS variable fallbacks (e.g., "var(--vscode-foo, fallback)")
+	// We replace "var(--vscode-foo," with "value; --unused:" so the fallback becomes a no-op property
+	private static final String VSCODE_VAR_SUFFIX = "; --unused:";
+
 	public String getCss() {
 		return "";
 	}
@@ -155,30 +160,30 @@ public class BaseHtmlProvider {
 		String buttonBgColor = getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0");
 		String sectionBgColor = getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0");
 
-		htmlStyled = htmlStyled.replace("var(--vscode-font-family,", textColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-editor-font-family,", textColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-font-size,", "13px; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-editor-background,", bgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-foreground,", textColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-input-foreground,", textColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-editor-foreground,", textColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-disabledForeground,", "#808080; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-errorForeground,", "#f48771; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-input-background,", inputBgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-editor-inactiveSelectionBackground,", sectionBgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-button-background,", buttonBgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-button-foreground,", textColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-button-hoverBackground,", buttonBgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-button-secondaryBackground,", buttonBgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-button-secondaryForeground,", textColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-button-secondaryHoverBackground,", buttonBgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-list-hoverBackground,", sectionBgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-input-border,", borderColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-panel-border,", borderColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-focusBorder,", focusColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-scrollbarSlider-background,", inputBgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-scrollbarSlider-hoverBackground,", inputBgColor + "; --unused:");
-		htmlStyled = htmlStyled.replace("var(--vscode-scrollbarSlider-activeBackground,", inputBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-font-family,", textColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-editor-font-family,", textColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-font-size,", "13px" + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-editor-background,", bgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-foreground,", textColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-input-foreground,", textColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-editor-foreground,", textColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-disabledForeground,", "#808080" + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-errorForeground,", "#f48771" + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-input-background,", inputBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-editor-inactiveSelectionBackground,", sectionBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-button-background,", buttonBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-button-foreground,", textColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-button-hoverBackground,", buttonBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-button-secondaryBackground,", buttonBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-button-secondaryForeground,", textColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-button-secondaryHoverBackground,", buttonBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-list-hoverBackground,", sectionBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-input-border,", borderColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-panel-border,", borderColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-focusBorder,", focusColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-scrollbarSlider-background,", inputBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-scrollbarSlider-hoverBackground,", inputBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace("var(--vscode-scrollbarSlider-activeBackground,", inputBgColor + VSCODE_VAR_SUFFIX);
 
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
 		htmlStyled = htmlStyled.replace("${nonce}", nonce);

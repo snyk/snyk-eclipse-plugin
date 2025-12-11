@@ -1,9 +1,7 @@
 package io.snyk.eclipse.plugin.preferences;
 
-import org.eclipse.core.runtime.IExecutableExtension;
 import org.eclipse.core.runtime.IExecutableExtensionFactory;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
 
 /**
  * Factory that creates either the HTML-based or native preference page
@@ -14,17 +12,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
  * - System property: snyk.useHtmlSettings=true
  * - Eclipse preference (once set, persists)
  */
-public class SnykPreferencePageFactory implements IExecutableExtensionFactory, IExecutableExtension {
-
-	private IConfigurationElement config;
-	private String propertyName;
-
-	@Override
-	public void setInitializationData(IConfigurationElement config, String propertyName, Object data)
-			throws CoreException {
-		this.config = config;
-		this.propertyName = propertyName;
-	}
+public class SnykPreferencePageFactory implements IExecutableExtensionFactory {
 
 	@Override
 	public Object create() throws CoreException {
