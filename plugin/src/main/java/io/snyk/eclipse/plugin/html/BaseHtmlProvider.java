@@ -29,6 +29,14 @@ public class BaseHtmlProvider {
 	// We replace "var(--vscode-foo," with "value; --unused:" so the fallback becomes a no-op property
 	private static final String VSCODE_VAR_SUFFIX = "; --unused:";
 
+	// Eclipse theme color keys
+	private static final String THEME_INACTIVE_TAB_BG = "org.eclipse.ui.workbench.INACTIVE_TAB_BG_START";
+	private static final String THEME_ACTIVE_TAB_KEYLINE = "org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR";
+
+	// Default fallback colors
+	private static final String DEFAULT_SECTION_BG_COLOR = "#F0F0F0";
+	private static final String DEFAULT_BORDER_COLOR = "#CCCCCC";
+
 	public String getCss() {
 		return "";
 	}
@@ -131,34 +139,34 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("var(--background-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_END", "#FFFFFF"));
 		htmlStyled = htmlStyled.replace("var(--code-background-color)",
-				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+				getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR));
 		htmlStyled = htmlStyled.replace("var(--button-color)",
-				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+				getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR));
 		htmlStyled = htmlStyled.replace("var(--circle-color)",
-				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+				getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR));
 		htmlStyled = htmlStyled.replace("var(--border-color)",
-				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
+				getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR));
 		htmlStyled = htmlStyled.replace("var(--input-border)",
-				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
+				getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR));
 		htmlStyled = htmlStyled.replace("var(--link-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
 		htmlStyled = htmlStyled.replace("var(--horizontal-border-color)",
-				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
+				getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR));
 
 		// Additional variables for fallback HTML
 		htmlStyled = htmlStyled.replace("var(--section-background-color)",
-				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+				getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR));
 		htmlStyled = htmlStyled.replace("var(--input-background-color)",
-				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+				getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR));
 		htmlStyled = htmlStyled.replace("var(--focus-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
 
 		// Replace VSCode CSS variables used in LS-served HTML (settings page)
 		String textColor = getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_SELECTED_TEXT_COLOR", "#000000");
 		String bgColor = getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_END", "#FFFFFF");
-		String inputBgColor = getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0");
-		String borderColor = getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC");
+		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
+		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
 		String focusColor = getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF");
-		String buttonBgColor = getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0");
-		String sectionBgColor = getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0");
+		String buttonBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
+		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 
 		htmlStyled = htmlStyled.replace("var(--vscode-font-family,", textColor + VSCODE_VAR_SUFFIX);
 		htmlStyled = htmlStyled.replace("var(--vscode-editor-font-family,", textColor + VSCODE_VAR_SUFFIX);
