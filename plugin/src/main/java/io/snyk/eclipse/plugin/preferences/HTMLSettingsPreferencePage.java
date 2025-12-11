@@ -25,9 +25,11 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
@@ -35,9 +37,10 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
 	private Browser browser;
-	private boolean isUsingFallback = false;
-	private boolean modified = false;
+	private boolean isUsingFallback;
+	private boolean modified;
 	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final BaseHtmlProvider htmlProvider = new BaseHtmlProvider();
 
 	public HTMLSettingsPreferencePage() {
 		super();
@@ -156,7 +159,8 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 		// Load fallback HTML first to avoid blocking the UI
 		String fallbackHtml = loadFallbackHtml();
 		if (fallbackHtml != null && !fallbackHtml.isBlank()) {
-			browser.setText(fallbackHtml);
+			String styledHtml = htmlProvider.replaceCssVariables(fallbackHtml);
+			browser.setText(styledHtml);
 			isUsingFallback = true;
 		} else {
 			browser.setText("<html><body><p>Loading settings...</p></body></html>");
@@ -169,15 +173,16 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 				if (lc != null) {
 					String lsHtml = lc.getConfigHtml();
 					if (lsHtml != null && !lsHtml.isBlank()) {
+						String styledLsHtml = htmlProvider.replaceCssVariables(lsHtml);
 						Display.getDefault().asyncExec(() -> {
 							if (browser != null && !browser.isDisposed()) {
-								browser.setText(lsHtml);
+								browser.setText(styledLsHtml);
 								isUsingFallback = false;
 							}
 						});
 					}
 				}
-			} catch (Exception e) {
+			} catch (RuntimeException e) {
 				SnykLogger.logInfo("Could not load HTML from language server: " + e.getMessage());
 			}
 		});
@@ -238,9 +243,9 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 
 			applyIfPresent(config, "authenticationMethod", value -> {
 				String method = String.valueOf(value);
-				if ("oauth".equals(method)) {
+				if (AuthConstants.AUTH_OAUTH2.equals(method)) {
 					prefs.store(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2);
-				} else if ("token".equals(method)) {
+				} else if (AuthConstants.AUTH_API_TOKEN.equals(method)) {
 					prefs.store(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_API_TOKEN);
 				}
 			});
@@ -283,7 +288,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 				prefs.store(Preferences.ENABLE_TELEMETRY, String.valueOf(value)));
 
 			modified = false;
-		} catch (Exception e) {
+		} catch (JsonProcessingException e) {
 			SnykLogger.logError(e);
 		}
 	}
@@ -319,9 +324,10 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 			String lsHtml = lc.getConfigHtml();
 			if (lsHtml != null && !lsHtml.isBlank()) {
 				isUsingFallback = false;
+				String styledHtml = htmlProvider.replaceCssVariables(lsHtml);
 				Display.getDefault().asyncExec(() -> {
 					if (browser != null && !browser.isDisposed()) {
-						browser.setText(lsHtml);
+						browser.setText(styledHtml);
 					}
 				});
 			}

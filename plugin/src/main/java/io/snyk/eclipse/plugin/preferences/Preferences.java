@@ -81,7 +81,7 @@ public class Preferences {
 	public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
-	public static final String USE_NEW_CONFIG_DIALOG = "useNewConfigDialog";
+	public static final String USE_LS_HTML_CONFIG_DIALOG = "useLsHtmlConfigDialog";
 
 	private static final Set<String> encryptedPreferenceKeys = Set.of(AUTH_TOKEN_KEY);
 	private final IEclipsePreferences insecurePreferences;
@@ -139,7 +139,7 @@ public class Preferences {
 		insecureStore.setDefault(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
 		insecureStore.setDefault(RELEASE_CHANNEL, "stable");
-		insecureStore.setDefault(USE_NEW_CONFIG_DIALOG, FALSE);
+		insecureStore.setDefault(USE_LS_HTML_CONFIG_DIALOG, TRUE);
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 		insecureStore.setDefault(ENDPOINT_KEY, DEFAULT_ENDPOINT);
 		insecureStore.setDefault(ORGANIZATION_KEY, "");
@@ -192,6 +192,14 @@ public class Preferences {
 
 	public final void waitForSecureStorage() {
 		while (true) {
+			if (this.securePreferences == null) {
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+				}
+				continue;
+			}
 			try {
 				this.securePreferences.put("canEncrypt", TRUE, true);
 				for (var entry : this.prefSaveMap.entrySet()) {
@@ -200,7 +208,7 @@ public class Preferences {
 				this.prefSaveMap.clear();
 				this.secureStorageReady = true;
 				break;
-			} catch (NullPointerException | StorageException e) {
+			} catch (StorageException e) {
 				try {
 					Thread.sleep(2000);
 				} catch (InterruptedException ie) {
@@ -324,7 +332,20 @@ public class Preferences {
 	}
 
 	public static boolean isNewConfigDialogEnabled() {
-		return getInstance().getBooleanPref(Preferences.USE_NEW_CONFIG_DIALOG);
+		// Check environment variable first
+		String envValue = System.getenv("SNYK_USE_HTML_SETTINGS");
+		if (envValue != null && !envValue.isBlank()) {
+			return Boolean.parseBoolean(envValue);
+		}
+
+		// Check system property
+		String sysProp = System.getProperty("snyk.useHtmlSettings");
+		if (sysProp != null && !sysProp.isBlank()) {
+			return Boolean.parseBoolean(sysProp);
+		}
+
+		// Fall back to stored preference
+		return getInstance().getBooleanPref(Preferences.USE_LS_HTML_CONFIG_DIALOG);
 	}
 
 	public static void setCurrentPreferences(Preferences prefs) {

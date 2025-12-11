@@ -18,35 +18,35 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snyk Configuration</title>
-    <style>
+    <style nonce="ideNonce">
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            font-size: 13px;
-            color: #333333;
-            background-color: #ffffff;
+            font-family: var(--default-font);
+            font-size: var(--main-font-size);
+            color: var(--text-color);
+            background-color: var(--background-color);
             padding: 20px;
             margin: 0;
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 1.5em;
             margin-bottom: 20px;
-            color: #1a1a1a;
+            color: var(--text-color);
         }
 
         h2 {
-            font-size: 18px;
+            font-size: 1.2em;
             margin-top: 20px;
             margin-bottom: 15px;
-            color: #1a1a1a;
-            border-bottom: 1px solid #e0e0e0;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 8px;
         }
 
         .section {
             margin-bottom: 30px;
             padding: 15px;
-            background-color: #f5f5f5;
+            background-color: var(--code-background-color);
             border-radius: 4px;
         }
 
@@ -58,7 +58,7 @@
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
-            color: #333333;
+            color: var(--text-color);
         }
 
         .checkbox-label {
@@ -82,9 +82,9 @@
         select {
             width: 100%;
             padding: 8px;
-            background-color: #ffffff;
-            color: #333333;
-            border: 1px solid #cccccc;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
             border-radius: 2px;
             box-sizing: border-box;
             font-family: inherit;
@@ -93,24 +93,28 @@
 
         input:focus,
         select:focus {
-            outline: 1px solid #0066cc;
+            outline: 1px solid var(--link-color);
             outline-offset: -1px;
         }
 
         .description {
             display: block;
-            font-size: 11px;
-            color: #666666;
+            font-size: 0.85em;
+            color: var(--dimmed-text-color);
             margin-top: 4px;
             font-style: italic;
         }
 
         .info-message {
             padding: 15px;
-            background-color: #e7f3ff;
-            border: 1px solid #0066cc;
+            background-color: var(--code-background-color);
+            border: 1px solid var(--link-color);
             border-radius: 4px;
             margin-bottom: 20px;
+        }
+
+        a {
+            color: var(--link-color);
         }
     </style>
 </head>
