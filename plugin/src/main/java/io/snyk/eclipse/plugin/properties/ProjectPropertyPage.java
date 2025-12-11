@@ -37,9 +37,7 @@ public class ProjectPropertyPage extends PreferencePage implements IWorkbenchPro
 		container.setLayout(layout);
 
 		Label infoLabel = new Label(container, SWT.WRAP);
-		infoLabel.setText("Snyk settings are configured globally for all projects.\n\n" +
-				"To configure Snyk settings such as authentication, scan types, severity filters, " +
-				"and organization settings, please use the main Snyk preferences page.");
+		infoLabel.setText("Snyk project settings are configured in the Snyk Plugin Preferences.");
 		GridData labelData = new GridData(SWT.FILL, SWT.TOP, true, false);
 		labelData.widthHint = 400;
 		infoLabel.setLayoutData(labelData);

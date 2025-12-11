@@ -159,7 +159,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 		// Load fallback HTML first to avoid blocking the UI
 		String fallbackHtml = loadFallbackHtml();
 		if (fallbackHtml != null && !fallbackHtml.isBlank()) {
-			String styledHtml = htmlProvider.replaceCssVariables(fallbackHtml);
+			String styledHtml = htmlProvider.replaceCssVariables(fallbackHtml, false);
 			browser.setText(styledHtml);
 			isUsingFallback = true;
 		} else {
@@ -173,7 +173,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 				if (lc != null) {
 					String lsHtml = lc.getConfigHtml();
 					if (lsHtml != null && !lsHtml.isBlank()) {
-						String styledLsHtml = htmlProvider.replaceCssVariables(lsHtml);
+						String styledLsHtml = htmlProvider.replaceCssVariables(lsHtml, false);
 						Display.getDefault().asyncExec(() -> {
 							if (browser != null && !browser.isDisposed()) {
 								browser.setText(styledLsHtml);
@@ -324,7 +324,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 			String lsHtml = lc.getConfigHtml();
 			if (lsHtml != null && !lsHtml.isBlank()) {
 				isUsingFallback = false;
-				String styledHtml = htmlProvider.replaceCssVariables(lsHtml);
+				String styledHtml = htmlProvider.replaceCssVariables(lsHtml, false);
 				Display.getDefault().asyncExec(() -> {
 					if (browser != null && !browser.isDisposed()) {
 						browser.setText(styledHtml);

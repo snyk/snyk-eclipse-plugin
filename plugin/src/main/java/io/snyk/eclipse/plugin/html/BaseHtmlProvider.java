@@ -98,6 +98,10 @@ public class BaseHtmlProvider {
 	}
 
 	public String replaceCssVariables(String html) {
+		return replaceCssVariables(html, true);
+	}
+
+	public String replaceCssVariables(String html, boolean useRelativeFontSize) {
 		// Build the CSS with the nonce
 		String nonce = getNonce();
 		String css = "<style nonce=\"" + nonce + "\">" + getCss() + "</style>";
@@ -105,7 +109,11 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("<style nonce=\"ideNonce\" data-ide-style></style>", css);
 		htmlStyled = htmlStyled.replace("var(--default-font)",
 				" ui-sans-serif, \"SF Pro Text\", \"Segoe UI\", \"Ubuntu\", Tahoma, Geneva, Verdana, sans-serif;");
-		htmlStyled = htmlStyled.replace("var(--main-font-size)", getRelativeFontSize(getDefaultFontSize()));
+		if (useRelativeFontSize) {
+			htmlStyled = htmlStyled.replace("var(--main-font-size)", getRelativeFontSize(getDefaultFontSize()));
+		} else {
+			htmlStyled = htmlStyled.replace("var(--main-font-size)", "13px");
+		}
 
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace("var(--text-color)",
@@ -130,6 +138,47 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("var(--link-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
 		htmlStyled = htmlStyled.replace("var(--horizontal-border-color)",
 				getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
+
+		// Additional variables for fallback HTML
+		htmlStyled = htmlStyled.replace("var(--section-background-color)",
+				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+		htmlStyled = htmlStyled.replace("var(--input-background-color)",
+				getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0"));
+		htmlStyled = htmlStyled.replace("var(--focus-color)", getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF"));
+
+		// Replace VSCode CSS variables used in LS-served HTML (settings page)
+		String textColor = getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_SELECTED_TEXT_COLOR", "#000000");
+		String bgColor = getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_BG_END", "#FFFFFF");
+		String inputBgColor = getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0");
+		String borderColor = getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC");
+		String focusColor = getColorAsHex("ACTIVE_HYPERLINK_COLOR", "#0000FF");
+		String buttonBgColor = getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0");
+		String sectionBgColor = getColorAsHex("org.eclipse.ui.workbench.INACTIVE_TAB_BG_START", "#F0F0F0");
+
+		htmlStyled = htmlStyled.replace("var(--vscode-font-family,", textColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-editor-font-family,", textColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-font-size,", "13px; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-editor-background,", bgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-foreground,", textColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-input-foreground,", textColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-editor-foreground,", textColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-disabledForeground,", "#808080; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-errorForeground,", "#f48771; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-input-background,", inputBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-editor-inactiveSelectionBackground,", sectionBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-button-background,", buttonBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-button-foreground,", textColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-button-hoverBackground,", buttonBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-button-secondaryBackground,", buttonBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-button-secondaryForeground,", textColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-button-secondaryHoverBackground,", buttonBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-list-hoverBackground,", sectionBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-input-border,", borderColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-panel-border,", borderColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-focusBorder,", focusColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-scrollbarSlider-background,", inputBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-scrollbarSlider-hoverBackground,", inputBgColor + "; --unused:");
+		htmlStyled = htmlStyled.replace("var(--vscode-scrollbarSlider-activeBackground,", inputBgColor + "; --unused:");
 
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
 		htmlStyled = htmlStyled.replace("${nonce}", nonce);
