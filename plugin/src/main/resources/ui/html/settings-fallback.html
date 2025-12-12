@@ -248,6 +248,14 @@
             </div>
 
             <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="insecure" id="insecure" {{INSECURE_CHECKED}}>
+                    Insecure (Skip SSL Verification)
+                    <span class="badge bg-secondary" data-bs-toggle="tooltip" title="If enabled, the plugin will ignore SSL certificate errors. Use this when connecting to self-signed or internal CA servers.">?</span>
+                </label>
+            </div>
+
+            <div class="form-group">
                 <label for="cliPath">CLI Path <span class="badge bg-secondary" data-bs-toggle="tooltip" title="Path to Snyk CLI executable">?</span></label>
                 <input type="text" id="cliPath" name="cliPath" value="{{CLI_PATH}}" placeholder="/path/to/snyk-cli">
             </div>
@@ -259,14 +267,6 @@
                     <option value="rc" {{CHANNEL_RC_SELECTED}}>Release Candidate</option>
                     <option value="preview" {{CHANNEL_PREVIEW_SELECTED}}>Preview</option>
                 </select>
-            </div>
-
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="insecure" id="insecure" {{INSECURE_CHECKED}}>
-                    Insecure (Skip SSL Verification)
-                    <span class="badge bg-secondary" data-bs-toggle="tooltip" title="If enabled, the plugin will ignore SSL certificate errors. Use this when connecting to self-signed or internal CA servers.">?</span>
-                </label>
             </div>
         </div>
     </form>
