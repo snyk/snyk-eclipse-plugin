@@ -10,6 +10,7 @@
     {{CHANNEL_STABLE_SELECTED}} - "selected" or ""
     {{CHANNEL_RC_SELECTED}} - "selected" or ""
     {{CHANNEL_PREVIEW_SELECTED}} - "selected" or ""
+    {{INSECURE_CHECKED}} - "checked" or ""
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -259,6 +260,14 @@
                     <option value="preview" {{CHANNEL_PREVIEW_SELECTED}}>Preview</option>
                 </select>
             </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="insecure" id="insecure" {{INSECURE_CHECKED}}>
+                    Insecure (Skip SSL Verification)
+                    <span class="badge bg-secondary" data-bs-toggle="tooltip" title="If enabled, the plugin will ignore SSL certificate errors. Use this when connecting to self-signed or internal CA servers.">?</span>
+                </label>
+            </div>
         </div>
     </form>
 
@@ -275,7 +284,8 @@
                     cliPath: get('cliPath').value,
                     manageBinariesAutomatically: get('manageBinariesAutomatically').checked,
                     cliBaseDownloadURL: get('cliBaseDownloadURL').value,
-                    cliReleaseChannel: get('cliReleaseChannel').value
+                    cliReleaseChannel: get('cliReleaseChannel').value,
+                    insecure: get('insecure').checked
                 };
             }
 

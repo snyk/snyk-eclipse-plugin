@@ -212,7 +212,8 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 					.replace("{{CLI_PATH}}", prefs.getCliPath())
 					.replace("{{CHANNEL_STABLE_SELECTED}}", "stable".equals(prefs.getReleaseChannel()) ? "selected" : "")
 					.replace("{{CHANNEL_RC_SELECTED}}", "rc".equals(prefs.getReleaseChannel()) ? "selected" : "")
-					.replace("{{CHANNEL_PREVIEW_SELECTED}}", "preview".equals(prefs.getReleaseChannel()) ? "selected" : "");
+					.replace("{{CHANNEL_PREVIEW_SELECTED}}", "preview".equals(prefs.getReleaseChannel()) ? "selected" : "")
+					.replace("{{INSECURE_CHECKED}}", prefs.isInsecure() ? "checked" : "");
 		} catch (IOException e) {
 			SnykLogger.logError(e);
 			return null;
