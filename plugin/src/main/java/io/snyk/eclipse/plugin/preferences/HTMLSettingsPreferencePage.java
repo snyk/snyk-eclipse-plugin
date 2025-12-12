@@ -24,6 +24,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -291,9 +293,34 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 				prefs.store(Preferences.ENABLE_TELEMETRY, String.valueOf(value)));
 
 			modified = false;
+
+			// Refresh toolbar UI to reflect changes made in HTML settings
+			refreshToolbarUI();
 		} catch (JsonProcessingException e) {
 			SnykLogger.logError(e);
 		}
+	}
+
+	private void refreshToolbarUI() {
+		Display.getDefault().asyncExec(() -> {
+			ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
+			if (commandService != null) {
+				// Refresh severity filter commands
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterCritical", null);
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterHigh", null);
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterMedium", null);
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterLow", null);
+				// Refresh product filter commands
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableOSS", null);
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableCodeSecurity", null);
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableIAC", null);
+				// Refresh issue view options commands
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykShowOpenIgnored", null);
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykShowIgnored", null);
+				// Refresh delta findings command
+				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues", null);
+			}
+		});
 	}
 
 	private void applyIfPresent(Map<String, Object> config, String key, java.util.function.Consumer<Object> consumer) {
