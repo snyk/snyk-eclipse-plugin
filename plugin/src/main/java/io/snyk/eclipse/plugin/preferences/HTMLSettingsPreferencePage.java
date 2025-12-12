@@ -169,7 +169,8 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 			browser.setText(styledHtml);
 			isUsingFallback = true;
 		} else {
-			browser.setText("<html><body><p>Loading settings...</p></body></html>");
+			String loadingHtml = htmlProvider.replaceCssVariables(getLoadingHtml(), false);
+			browser.setText(loadingHtml);
 		}
 
 		// Asynchronously try to get HTML from language server
@@ -191,6 +192,45 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 			SnykLogger.logInfo("Could not load HTML from language server: " + e.getMessage());
 			return null;
 		});
+	}
+
+	private String getLoadingHtml() {
+		return """
+			<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<title>Snyk Settings</title>
+				<style nonce="ideNonce">
+					body {
+						font-family: var(--default-font);
+						font-size: 13px;
+						color: var(--text-color);
+						background-color: var(--background-color);
+						padding: 20px;
+						margin: 0;
+					}
+					h1 {
+						font-size: 24px;
+						margin-bottom: 20px;
+						color: var(--text-color);
+					}
+					.loading-message {
+						padding: 15px;
+						background-color: var(--section-background-color);
+						border: 1px solid var(--border-color);
+						border-radius: 4px;
+					}
+				</style>
+			</head>
+			<body>
+				<h1>Snyk Settings</h1>
+				<div class="loading-message">
+					<p>Loading settings...</p>
+				</div>
+			</body>
+			</html>
+			""";
 	}
 
 	private String loadFallbackHtml() {
