@@ -343,7 +343,12 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 	}
 
 	private void refreshToolbarUI() {
-		Display.getDefault().asyncExec(() -> {
+		Display display = Display.getCurrent();
+		if (display == null) {
+			SnykLogger.logInfo("refreshToolbarUI: No display available, skipping UI refresh");
+			return;
+		}
+		display.asyncExec(() -> {
 			ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
 			if (commandService != null) {
 				// Refresh severity filter commands
