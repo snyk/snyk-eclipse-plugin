@@ -281,17 +281,17 @@
 
             function markModified() {
                 window.__modified__ = true;
-                if (typeof window.__ideNotifyModified__ === 'function') {
-                    window.__ideNotifyModified__();
+                if (typeof window.__onFormDirtyChange__ === 'function') {
+                    window.__onFormDirtyChange__(true);
                 }
             }
 
-            window.saveConfig = function() {
+            window.getAndSaveIdeConfig = function() {
                 var data = collectData();
                 var jsonString = JSON.stringify(data);
                 try {
-                    if (typeof window.__ideSaveConfig__ === 'function') {
-                        window.__ideSaveConfig__(jsonString);
+                    if (typeof window.__saveIdeConfig__ === 'function') {
+                        window.__saveIdeConfig__(jsonString);
                         window.__modified__ = false;
                     }
                 } catch (e) {

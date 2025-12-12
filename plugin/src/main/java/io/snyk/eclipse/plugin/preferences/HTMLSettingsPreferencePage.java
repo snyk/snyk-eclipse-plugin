@@ -66,7 +66,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 	}
 
 	private void initializeBrowserFunctions() {
-		new BrowserFunction(browser, "__ideSaveConfig__") {
+		new BrowserFunction(browser, "__saveIdeConfig__") {
 			@Override
 			public Object function(Object[] arguments) {
 				if (arguments.length > 0 && arguments[0] instanceof String) {
@@ -77,10 +77,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 			}
 		};
 
-		new BrowserFunction(browser, "__ideNotifyModified__") {
+		new BrowserFunction(browser, "__onFormDirtyChange__") {
 			@Override
 			public Object function(Object[] arguments) {
-				modified = true;
+				if (arguments.length > 0 && arguments[0] instanceof Boolean) {
+					modified = (Boolean) arguments[0];
+				} else {
+					modified = true;
+				}
 				return null;
 			}
 		};
@@ -300,15 +304,16 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 
 	@Override
 	public boolean performOk() {
-		browser.execute("if (typeof window.saveConfig === 'function') { window.saveConfig(); }");
+		// Both LS HTML and fallback HTML expose window.getAndSaveIdeConfig()
+		browser.evaluate("if (typeof window.getAndSaveIdeConfig === 'function') { window.getAndSaveIdeConfig(); }");
 
-		CompletableFuture.runAsync(() -> {
-			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-			if (lc != null) {
-				lc.updateConfiguration();
+		SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+		if (lc != null) {
+			lc.updateConfiguration();
+			CompletableFuture.runAsync(() -> {
 				lc.refreshFeatureFlags();
-			}
-		});
+			});
+		}
 
 		return super.performOk();
 	}
