@@ -1,6 +1,9 @@
 package io.snyk.languageserver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -71,6 +74,13 @@ class LsConfigurationUpdaterTest {
 			assertEquals("automatic", settings.getScanningMode());
 			assertEquals(AuthConstants.AUTH_OAUTH2, settings.getAuthenticationMethod());
 			assertEquals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, settings.getRequiredProtocolVersion());
+
+			// Verify filter severity is included
+			assertNotNull(settings.getFilterSeverity());
+			assertTrue(settings.getFilterSeverity().isCritical());
+			assertFalse(settings.getFilterSeverity().isHigh());
+			assertTrue(settings.getFilterSeverity().isMedium());
+			assertFalse(settings.getFilterSeverity().isLow());
 		}
 	}
 
@@ -105,5 +115,11 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2)).thenReturn("oauth");
 		when(preferenceMock.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString())).thenReturn("true");
+
+		// Severity filter mocks
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_CRITICAL, true)).thenReturn(true);
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_HIGH, true)).thenReturn(false);
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_MEDIUM, true)).thenReturn(true);
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_LOW, true)).thenReturn(false);
 	}
 }
