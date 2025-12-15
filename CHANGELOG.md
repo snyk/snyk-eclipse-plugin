@@ -1,5 +1,9 @@
 # Snyk Security Changelog
 
+## [3.7.0]
+### Changes
+- Improved Settings UI for simpler configuration of Snyk settings.
+
 ## [3.6.0]
 ### Changes
 - Add setting organization configuration at the project level.
