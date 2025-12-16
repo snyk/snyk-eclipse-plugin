@@ -44,6 +44,7 @@ class PreferencesTest {
 	@BeforeEach
 	void setUp() {
 		PreferencesUtils.setPreferences(null);
+		Preferences.setEnvProvider(k -> null);
 	}
 
 	@Test
@@ -200,11 +201,11 @@ class PreferencesTest {
 	}
 
 	@Test
-	public void testIsNewConfigDialogEnabled_falseWhenPreferenceSetToFalse() {
+	public void testIsNewConfigDialogEnabled_falseWhenEnvVarSetToFalse() {
 		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
 				new InMemorySecurePreferenceStore());
 		PreferencesUtils.setPreferences(prefs);
-		prefs.store(Preferences.USE_LS_HTML_CONFIG_DIALOG, "false");
+		Preferences.setEnvProvider(k -> "SNYK_USE_HTML_SETTINGS".equals(k) ? "false" : null);
 		assertFalse(Preferences.isNewConfigDialogEnabled());
 	}
 

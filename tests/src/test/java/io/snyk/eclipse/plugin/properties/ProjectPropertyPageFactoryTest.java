@@ -22,16 +22,18 @@ class ProjectPropertyPageFactoryTest {
 		InMemorySecurePreferenceStore secureStore = new InMemorySecurePreferenceStore();
 		prefs = Preferences.getTestInstance(store, secureStore);
 		PreferencesUtils.setPreferences(prefs);
+		Preferences.setEnvProvider(k -> null);
 	}
 
 	@AfterEach
 	void tearDown() {
 		PreferencesUtils.setPreferences(null);
+		Preferences.setEnvProvider(null);
 	}
 
 	@Test
 	void create_returnsProjectPropertyPage_whenNewConfigDialogEnabled() throws CoreException {
-		prefs.store(Preferences.USE_LS_HTML_CONFIG_DIALOG, "true");
+		Preferences.setEnvProvider(k -> "SNYK_USE_HTML_SETTINGS".equals(k) ? "true" : null);
 
 		ProjectPropertyPageFactory factory = new ProjectPropertyPageFactory();
 		Object result = factory.create();
@@ -41,7 +43,7 @@ class ProjectPropertyPageFactoryTest {
 
 	@Test
 	void create_returnsNativeProjectPropertyPage_whenNewConfigDialogDisabled() throws CoreException {
-		prefs.store(Preferences.USE_LS_HTML_CONFIG_DIALOG, "false");
+		Preferences.setEnvProvider(k -> "SNYK_USE_HTML_SETTINGS".equals(k) ? "false" : null);
 
 		ProjectPropertyPageFactory factory = new ProjectPropertyPageFactory();
 		Object result = factory.create();
