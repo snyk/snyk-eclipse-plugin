@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -90,6 +91,7 @@ public class Preferences {
 	private IPreferenceStore secureStore;
 	private boolean secureStorageReady;
 	private Map<String, String> prefSaveMap = new ConcurrentHashMap<>();
+	private static Function<String, String> envProvider = System::getenv;
 
 	public static synchronized Preferences getInstance() {
 		if (instance == null) {
@@ -183,7 +185,7 @@ public class Preferences {
 			} catch (IllegalStateException | StorageException e) { // NOPMD // no handling needed in this case
 			}
 		}
-		
+
 		if (getBooleanPref(USE_TOKEN_AUTH)) {
 			store(AUTHENTICATION_METHOD, AuthConstants.AUTH_API_TOKEN);
 			store(USE_TOKEN_AUTH, FALSE);
@@ -332,20 +334,16 @@ public class Preferences {
 	}
 
 	public static boolean isNewConfigDialogEnabled() {
-		// Check environment variable first
-		String envValue = System.getenv("SNYK_USE_HTML_SETTINGS");
-		if (envValue != null && !envValue.isBlank()) {
-			return Boolean.parseBoolean(envValue);
+		String envValue = envProvider.apply("SNYK_USE_HTML_SETTINGS");
+		if (envValue == null || envValue.isBlank()) {
+			return true;
 		}
+		return Boolean.parseBoolean(envValue);
+	}
 
-		// Check system property
-		String sysProp = System.getProperty("snyk.useHtmlSettings");
-		if (sysProp != null && !sysProp.isBlank()) {
-			return Boolean.parseBoolean(sysProp);
-		}
-
-		// Fall back to stored preference
-		return getInstance().getBooleanPref(Preferences.USE_LS_HTML_CONFIG_DIALOG);
+    // Set environment variable provider for testing. This is not used in production code.
+    static void setEnvProvider(Function<String, String> provider) {
+		envProvider = provider == null ? System::getenv : provider;
 	}
 
 	public static void setCurrentPreferences(Preferences prefs) {

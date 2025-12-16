@@ -9,8 +9,6 @@ import org.eclipse.core.runtime.CoreException;
  * 
  * The preference can be set via:
  * - Environment variable: SNYK_USE_HTML_SETTINGS=true
- * - System property: snyk.useHtmlSettings=true
- * - Eclipse preference (once set, persists)
  */
 public class SnykPreferencePageFactory implements IExecutableExtensionFactory {
 

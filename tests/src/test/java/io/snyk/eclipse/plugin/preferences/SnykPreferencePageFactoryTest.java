@@ -19,16 +19,18 @@ class SnykPreferencePageFactoryTest {
 		InMemorySecurePreferenceStore secureStore = new InMemorySecurePreferenceStore();
 		prefs = Preferences.getTestInstance(store, secureStore);
 		PreferencesUtils.setPreferences(prefs);
+		Preferences.setEnvProvider(k -> null);
 	}
 
 	@AfterEach
 	void tearDown() {
 		PreferencesUtils.setPreferences(null);
+		Preferences.setEnvProvider(null);
 	}
 
 	@Test
 	void create_returnsHTMLSettingsPreferencePage_whenNewConfigDialogEnabled() throws CoreException {
-		prefs.store(Preferences.USE_LS_HTML_CONFIG_DIALOG, "true");
+		Preferences.setEnvProvider(k -> "SNYK_USE_HTML_SETTINGS".equals(k) ? "true" : null);
 
 		SnykPreferencePageFactory factory = new SnykPreferencePageFactory();
 		Object result = factory.create();
@@ -38,11 +40,21 @@ class SnykPreferencePageFactoryTest {
 
 	@Test
 	void create_returnsPreferencesPage_whenNewConfigDialogDisabled() throws CoreException {
-		prefs.store(Preferences.USE_LS_HTML_CONFIG_DIALOG, "false");
+		Preferences.setEnvProvider(k -> "SNYK_USE_HTML_SETTINGS".equals(k) ? "false" : null);
 
 		SnykPreferencePageFactory factory = new SnykPreferencePageFactory();
 		Object result = factory.create();
 
 		assertInstanceOf(PreferencesPage.class, result);
+	}
+
+	@Test
+	void create_returnsHTMLSettingsPreferencePage_whenEnvVarUnset() throws CoreException {
+		Preferences.setEnvProvider(k -> null);
+
+		SnykPreferencePageFactory factory = new SnykPreferencePageFactory();
+		Object result = factory.create();
+
+		assertInstanceOf(HTMLSettingsPreferencePage.class, result);
 	}
 }
