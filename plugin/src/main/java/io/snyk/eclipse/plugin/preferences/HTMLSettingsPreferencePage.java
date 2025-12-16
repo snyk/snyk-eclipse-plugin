@@ -94,18 +94,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 		new BrowserFunction(browser, "__ideLogin__") {
 			@Override
 			public Object function(Object[] arguments) {
-				if (arguments.length > 0 && arguments[0] instanceof String) {
-					String jsonConfig = (String) arguments[0];
-					if (jsonConfig != null && !jsonConfig.isBlank() && !"login".equals(jsonConfig)) {
-						parseAndSaveConfig(jsonConfig);
-					}
-				}
 				CompletableFuture.runAsync(() -> {
 					SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-					if (lc != null) {
-						lc.updateConfiguration();
-						SnykWizard.createAndLaunch();
+					if (lc == null) {
+						SnykLogger.logError(new IllegalStateException("Language client instance is null during login"));
+						return;
 					}
+					lc.updateConfiguration();
+					SnykWizard.createAndLaunch();
 				});
 				return null;
 			}
@@ -116,9 +112,11 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 			public Object function(Object[] arguments) {
 				CompletableFuture.runAsync(() -> {
 					SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-					if (lc != null) {
-						lc.logout();
+					if (lc == null) {
+						SnykLogger.logError(new IllegalStateException("Language client instance is null during logout"));
+						return;
 					}
+					lc.logout();
 				});
 				return null;
 			}
@@ -162,81 +160,45 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 	}
 
 	private void loadContent() {
-		// Load fallback HTML first to avoid blocking the UI
 		String fallbackHtml = loadFallbackHtml();
 		if (fallbackHtml != null && !fallbackHtml.isBlank()) {
 			String styledHtml = htmlProvider.replaceCssVariables(fallbackHtml, false);
 			browser.setText(styledHtml);
 			isUsingFallback = true;
 		} else {
-			String loadingHtml = htmlProvider.replaceCssVariables(getLoadingHtml(), false);
-			browser.setText(loadingHtml);
+			SnykLogger.logError(new IllegalStateException("Fallback settings HTML could not be loaded"));
 		}
 
 		// Asynchronously try to get HTML from language server
 		CompletableFuture.runAsync(() -> {
 			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-			if (lc != null) {
-				String lsHtml = lc.getConfigHtml();
-				if (lsHtml != null && !lsHtml.isBlank()) {
-					String styledLsHtml = htmlProvider.replaceCssVariables(lsHtml, false);
-					Display.getDefault().asyncExec(() -> {
-						if (browser != null && !browser.isDisposed()) {
-							browser.setText(styledLsHtml);
-							isUsingFallback = false;
-						}
-					});
-				}
+			if (lc == null) {
+				SnykLogger.logInfo("Language client instance is null during load content");
+				return;
 			}
+			String lsHtml = lc.getConfigHtml();
+			if (lsHtml == null || lsHtml.isBlank()) {
+				SnykLogger.logInfo("Language server HTML is null or blank during load content");
+				return;
+			}
+			String styledLsHtml = htmlProvider.replaceCssVariables(lsHtml, false);
+			Display.getDefault().asyncExec(() -> {
+				if (browser == null || browser.isDisposed()) {
+					return;
+				}
+				browser.setText(styledLsHtml);
+				isUsingFallback = false;
+			});
 		}).exceptionally(e -> {
 			SnykLogger.logInfo("Could not load HTML from language server: " + e.getMessage());
 			return null;
 		});
 	}
 
-	private String getLoadingHtml() {
-		return """
-			<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<title>Snyk Settings</title>
-				<style nonce="ideNonce">
-					body {
-						font-family: var(--default-font);
-						font-size: 13px;
-						color: var(--text-color);
-						background-color: var(--background-color);
-						padding: 20px;
-						margin: 0;
-					}
-					h1 {
-						font-size: 24px;
-						margin-bottom: 20px;
-						color: var(--text-color);
-					}
-					.loading-message {
-						padding: 15px;
-						background-color: var(--section-background-color);
-						border: 1px solid var(--border-color);
-						border-radius: 4px;
-					}
-				</style>
-			</head>
-			<body>
-				<h1>Snyk Settings</h1>
-				<div class="loading-message">
-					<p>Loading settings...</p>
-				</div>
-			</body>
-			</html>
-			""";
-	}
-
 	private String loadFallbackHtml() {
 		try (InputStream inputStream = getClass().getResourceAsStream("/ui/html/settings-fallback.html")) {
 			if (inputStream == null) {
-				SnykLogger.logInfo("Fallback HTML resource not found");
+				SnykLogger.logError(new IllegalStateException("Fallback HTML resource not found"));
 				return null;
 			}
 
@@ -266,11 +228,11 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 			Map<String, Object> config = objectMapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
 			Preferences prefs = Preferences.getInstance();
 
-			applyIfPresent(config, "activateSnykOpenSource", value -> 
+			applyIfPresent(config, "activateSnykOpenSource", value ->
 				prefs.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, String.valueOf(value)));
-			applyIfPresent(config, "activateSnykCode", value -> 
+			applyIfPresent(config, "activateSnykCode", value ->
 				prefs.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, String.valueOf(value)));
-			applyIfPresent(config, "activateSnykIac", value -> 
+			applyIfPresent(config, "activateSnykIac", value ->
 				prefs.store(Preferences.ACTIVATE_SNYK_IAC, String.valueOf(value)));
 
 			applyIfPresent(config, "scanningMode", value -> {
@@ -278,13 +240,13 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 				prefs.store(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
 			});
 
-			applyIfPresent(config, "organization", value -> 
+			applyIfPresent(config, "organization", value ->
 				prefs.store(Preferences.ORGANIZATION_KEY, String.valueOf(value)));
-			applyIfPresent(config, "endpoint", value -> 
+			applyIfPresent(config, "endpoint", value ->
 				prefs.store(Preferences.ENDPOINT_KEY, String.valueOf(value)));
-			applyIfPresent(config, "token", value -> 
+			applyIfPresent(config, "token", value ->
 				prefs.store(Preferences.AUTH_TOKEN_KEY, String.valueOf(value)));
-			applyIfPresent(config, "insecure", value -> 
+			applyIfPresent(config, "insecure", value ->
 				prefs.store(Preferences.INSECURE_KEY, String.valueOf(value)));
 
 			applyIfPresent(config, "authenticationMethod", value -> {
@@ -298,39 +260,39 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 
 			if (config.containsKey("filterSeverity") && config.get("filterSeverity") instanceof Map) {
 				Map<String, Object> severity = (Map<String, Object>) config.get("filterSeverity");
-				applyIfPresent(severity, "critical", value -> 
+				applyIfPresent(severity, "critical", value ->
 					prefs.store(Preferences.FILTER_SHOW_CRITICAL, String.valueOf(value)));
-				applyIfPresent(severity, "high", value -> 
+				applyIfPresent(severity, "high", value ->
 					prefs.store(Preferences.FILTER_SHOW_HIGH, String.valueOf(value)));
-				applyIfPresent(severity, "medium", value -> 
+				applyIfPresent(severity, "medium", value ->
 					prefs.store(Preferences.FILTER_SHOW_MEDIUM, String.valueOf(value)));
-				applyIfPresent(severity, "low", value -> 
+				applyIfPresent(severity, "low", value ->
 					prefs.store(Preferences.FILTER_SHOW_LOW, String.valueOf(value)));
 			}
 
 			if (config.containsKey("issueViewOptions") && config.get("issueViewOptions") instanceof Map) {
 				Map<String, Object> options = (Map<String, Object>) config.get("issueViewOptions");
-				applyIfPresent(options, "openIssues", value -> 
+				applyIfPresent(options, "openIssues", value ->
 					prefs.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, String.valueOf(value)));
-				applyIfPresent(options, "ignoredIssues", value -> 
+				applyIfPresent(options, "ignoredIssues", value ->
 					prefs.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, String.valueOf(value)));
 			}
 
-			applyIfPresent(config, "enableDeltaFindings", value -> 
+			applyIfPresent(config, "enableDeltaFindings", value ->
 				prefs.store(Preferences.ENABLE_DELTA, String.valueOf(value)));
 
-			applyIfPresent(config, "cliPath", value -> 
+			applyIfPresent(config, "cliPath", value ->
 				prefs.store(Preferences.CLI_PATH, String.valueOf(value)));
-			applyIfPresent(config, "manageBinariesAutomatically", value -> 
+			applyIfPresent(config, "manageBinariesAutomatically", value ->
 				prefs.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, String.valueOf(value)));
-			applyIfPresent(config, "cliBaseDownloadURL", value -> 
+			applyIfPresent(config, "cliBaseDownloadURL", value ->
 				prefs.store(Preferences.CLI_BASE_URL, String.valueOf(value)));
-			applyIfPresent(config, "cliReleaseChannel", value -> 
+			applyIfPresent(config, "cliReleaseChannel", value ->
 				prefs.store(Preferences.RELEASE_CHANNEL, String.valueOf(value)));
 
-			applyIfPresent(config, "sendErrorReports", value -> 
+			applyIfPresent(config, "sendErrorReports", value ->
 				prefs.store(Preferences.SEND_ERROR_REPORTS, String.valueOf(value)));
-			applyIfPresent(config, "enableTelemetry", value -> 
+			applyIfPresent(config, "enableTelemetry", value ->
 				prefs.store(Preferences.ENABLE_TELEMETRY, String.valueOf(value)));
 
 			modified = false;
