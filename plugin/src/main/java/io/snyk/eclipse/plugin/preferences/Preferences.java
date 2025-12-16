@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -81,6 +82,7 @@ public class Preferences {
 	public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
+	public static final String USE_LS_HTML_CONFIG_DIALOG = "useLsHtmlConfigDialog";
 
 	private static final Set<String> encryptedPreferenceKeys = Set.of(AUTH_TOKEN_KEY);
 	private final IEclipsePreferences insecurePreferences;
@@ -89,6 +91,7 @@ public class Preferences {
 	private IPreferenceStore secureStore;
 	private boolean secureStorageReady;
 	private Map<String, String> prefSaveMap = new ConcurrentHashMap<>();
+	private static Function<String, String> envProvider = System::getenv;
 
 	public static synchronized Preferences getInstance() {
 		if (instance == null) {
@@ -138,6 +141,7 @@ public class Preferences {
 		insecureStore.setDefault(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
 		insecureStore.setDefault(RELEASE_CHANNEL, "stable");
+		insecureStore.setDefault(USE_LS_HTML_CONFIG_DIALOG, TRUE);
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 		insecureStore.setDefault(ENDPOINT_KEY, DEFAULT_ENDPOINT);
 		insecureStore.setDefault(ORGANIZATION_KEY, "");
@@ -181,7 +185,7 @@ public class Preferences {
 			} catch (IllegalStateException | StorageException e) { // NOPMD // no handling needed in this case
 			}
 		}
-		
+
 		if (getBooleanPref(USE_TOKEN_AUTH)) {
 			store(AUTHENTICATION_METHOD, AuthConstants.AUTH_API_TOKEN);
 			store(USE_TOKEN_AUTH, FALSE);
@@ -190,6 +194,14 @@ public class Preferences {
 
 	public final void waitForSecureStorage() {
 		while (true) {
+			if (this.securePreferences == null) {
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+				}
+				continue;
+			}
 			try {
 				this.securePreferences.put("canEncrypt", TRUE, true);
 				for (var entry : this.prefSaveMap.entrySet()) {
@@ -198,7 +210,7 @@ public class Preferences {
 				this.prefSaveMap.clear();
 				this.secureStorageReady = true;
 				break;
-			} catch (NullPointerException | StorageException e) {
+			} catch (StorageException e) {
 				try {
 					Thread.sleep(2000);
 				} catch (InterruptedException ie) {
@@ -319,6 +331,19 @@ public class Preferences {
 
 	public static boolean isDeltaEnabled() {
 		return getInstance().getBooleanPref(Preferences.ENABLE_DELTA);
+	}
+
+	public static boolean isNewConfigDialogEnabled() {
+		String envValue = envProvider.apply("SNYK_USE_HTML_SETTINGS");
+		if (envValue == null || envValue.isBlank()) {
+			return false;
+		}
+		return Boolean.parseBoolean(envValue);
+	}
+
+	// Set environment variable provider for testing. This is not used in production code.
+	public static void setEnvProvider(Function<String, String> provider) {
+		envProvider = provider == null ? System::getenv : provider;
 	}
 
 	public static void setCurrentPreferences(Preferences prefs) {

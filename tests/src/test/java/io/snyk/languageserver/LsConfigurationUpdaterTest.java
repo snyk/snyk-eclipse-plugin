@@ -1,17 +1,17 @@
 package io.snyk.languageserver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.Platform;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
@@ -23,15 +23,9 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import io.snyk.languageserver.download.LsBinaries;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 
 class LsConfigurationUpdaterTest {
 	private Preferences preferenceMock;
-
-	@Mock
-	private FolderConfigsParam folderConfigsParamMock;
-
 	FolderConfigs mockFolderConfigs;
 
 	@BeforeEach
@@ -80,6 +74,13 @@ class LsConfigurationUpdaterTest {
 			assertEquals("automatic", settings.getScanningMode());
 			assertEquals(AuthConstants.AUTH_OAUTH2, settings.getAuthenticationMethod());
 			assertEquals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, settings.getRequiredProtocolVersion());
+
+			// Verify filter severity is included
+			assertNotNull(settings.getFilterSeverity());
+			assertTrue(settings.getFilterSeverity().isCritical());
+			assertFalse(settings.getFilterSeverity().isHigh());
+			assertTrue(settings.getFilterSeverity().isMedium());
+			assertFalse(settings.getFilterSeverity().isLow());
 		}
 	}
 
@@ -115,8 +116,10 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString())).thenReturn("true");
 
-		List<FolderConfig> mockFolderConfigsParam = new ArrayList<>();
-		when(mockFolderConfigs.getAll()).thenReturn(mockFolderConfigsParam);
-
+		// Severity filter mocks
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_CRITICAL, true)).thenReturn(true);
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_HIGH, true)).thenReturn(false);
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_MEDIUM, true)).thenReturn(true);
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_LOW, true)).thenReturn(false);
 	}
 }

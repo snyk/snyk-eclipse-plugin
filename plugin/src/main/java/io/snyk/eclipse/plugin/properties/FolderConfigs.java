@@ -2,21 +2,12 @@ package io.snyk.eclipse.plugin.properties;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ProjectScope;
-import org.eclipse.core.runtime.preferences.IScopeContext;
-
-import io.snyk.eclipse.plugin.Activator;
-import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
@@ -57,34 +48,6 @@ public class FolderConfigs {
 		for (FolderConfig folderConfig : folderConfigs) {
 			addFolderConfig(folderConfig);
 		}
-	}
-
-	public List<FolderConfig> getAll() {
-		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
-		List<FolderConfig> folderConfigs = new ArrayList<>(openProjects.size());
-
-		for (var project : openProjects) {
-			Path path = ResourceUtils.getFullPath(project);
-			// Linter does not like when new objects are created in loops, but here we do
-			// want to create new ProjectScopes in the loop.
-			IScopeContext projectScope = new ProjectScope(project); // NOPMD,
-			var projectSettings = projectScope.getNode(Activator.PLUGIN_ID);
-			String additionalParams = projectSettings.get(ProjectPropertyPage.SNYK_ADDITIONAL_PARAMETERS, "");
-			String preferredOrg = projectSettings.get(ProjectPropertyPage.SNYK_ORGANIZATION, "");
-			boolean isOrgSetByUser = !projectSettings.getBoolean(ProjectPropertyPage.SNYK_AUTO_SELECT_ORG, true);
-
-			// The Language Server will handle fallback to global organization
-
-			var additionalParamsList = Arrays.asList(additionalParams.split(" "));
-			var folderConfig = getFolderConfig(path);
-			folderConfig.setAdditionalParameters(additionalParamsList);
-			folderConfig.setPreferredOrg(preferredOrg);
-			folderConfig.setOrgSetByUser(isOrgSetByUser);
-			storeInMemory(path, folderConfig);
-			folderConfigs.add(folderConfig);
-		}
-
-		return Collections.unmodifiableList(folderConfigs);
 	}
 
 	/**

@@ -8,6 +8,7 @@ public final class LsConstants {
 	}
 
 	public static final String COMMAND_LOGIN = "snyk.login";
+	public static final String COMMAND_LOGOUT = "snyk.logout";
 	public static final String COMMAND_GET_ACTIVE_USER = "snyk.getActiveUser";
 	public static final String COMMAND_WORKSPACE_SCAN = "snyk.workspace.scan";
 	public static final String COMMAND_WORKSPACE_FOLDER_SCAN = "snyk.workspaceFolder.scan";
@@ -20,6 +21,7 @@ public final class LsConstants {
 	public static final String COMMAND_CODE_SUBMIT_FIX_FEEDBACK = "snyk.code.submitFixFeedback";
 	public static final String COMMAND_SNYK_CLI = "snyk.executeCLI";
 	public static final String COMMAND_SUBMIT_IGNORE_REQUEST = "snyk.submitIgnoreRequest";
+	public static final String COMMAND_WORKSPACE_CONFIGURATION = "snyk.workspace.configuration";
 	public static final String SNYK_HAS_AUTHENTICATED = "$/snyk.hasAuthenticated";
 	public static final String SNYK_IS_AVAILABLE_CLI = "$/snyk.isAvailableCli";
 	public static final String SNYK_ADD_TRUSTED_FOLDERS = "$/snyk.addTrustedFolders";

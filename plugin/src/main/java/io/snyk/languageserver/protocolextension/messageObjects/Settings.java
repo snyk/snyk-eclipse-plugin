@@ -38,6 +38,7 @@ public class Settings {
 	private final String requiredProtocolVersion = LsBinaries.REQUIRED_LS_PROTOCOL_VERSION;
 	private final String authenticationMethod;
 	private final List<FolderConfig> folderConfigs;
+	private final FilterSeverity filterSeverity;
 
 	public Settings(String activateSnykOpenSource, String activateSnykCodeSecurity, String activateSnykIac,
 			String insecure, String endpoint, String additionalParams, String additionalEnv, String path,
@@ -45,7 +46,7 @@ public class Settings {
 			String manageBinariesAutomatically, String cliPath, String token, String integrationName,
 			String integrationVersion, String automaticAuthentication, String[] trustedFolders,
 			String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings,
-			String authenticationMethod, List<FolderConfig> folderConfigs) {
+			String authenticationMethod, List<FolderConfig> folderConfigs, FilterSeverity filterSeverity) {
 		this.activateSnykOpenSource = activateSnykOpenSource;
 		this.activateSnykCodeSecurity = activateSnykCodeSecurity;
 		this.activateSnykIac = activateSnykIac;
@@ -70,6 +71,7 @@ public class Settings {
 		this.enableDeltaFindings = enableDeltaFindings;
 		this.authenticationMethod = authenticationMethod;
 		this.folderConfigs = folderConfigs;
+		this.filterSeverity = filterSeverity;
 	}
 
 	public String getPath() {
@@ -186,5 +188,9 @@ public class Settings {
 
 	public String getEnableDeltaFindings() {
 		return enableDeltaFindings;
+	}
+
+	public FilterSeverity getFilterSeverity() {
+		return filterSeverity;
 	}
 }

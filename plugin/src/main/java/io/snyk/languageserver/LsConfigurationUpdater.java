@@ -12,6 +12,7 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.properties.IssueViewOptions;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import io.snyk.languageserver.protocolextension.messageObjects.FilterSeverity;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.Settings;
 
@@ -70,10 +71,16 @@ public class LsConfigurationUpdater {
 			folderConfigs.add(FolderConfigs.getInstance().getFolderConfig(p));
 		}
 
+		FilterSeverity filterSeverity = new FilterSeverity(
+				preferences.getBooleanPref(Preferences.FILTER_SHOW_CRITICAL, true),
+				preferences.getBooleanPref(Preferences.FILTER_SHOW_HIGH, true),
+				preferences.getBooleanPref(Preferences.FILTER_SHOW_MEDIUM, true),
+				preferences.getBooleanPref(Preferences.FILTER_SHOW_LOW, true));
+
 		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykIac,
 				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports,
 				enableTelemetry, organization, manageBinariesAutomatically, cliPath, token, integrationName,
 				integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode,
-				enableDeltaFindings, authenticationMethod, folderConfigs);
+				enableDeltaFindings, authenticationMethod, folderConfigs, filterSeverity);
 	}
 }

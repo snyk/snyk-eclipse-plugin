@@ -1,5 +1,9 @@
 # Snyk Security Changelog
 
+## [3.7.0]
+### Changes
+- Added support for improved Settings UI for simpler configuration of Snyk settings. Enable by setting the environment variable SNYK_USE_HTML_SETTINGS to true.
+
 ## [3.6.0]
 ### Changes
 - Add setting organization configuration at the project level.

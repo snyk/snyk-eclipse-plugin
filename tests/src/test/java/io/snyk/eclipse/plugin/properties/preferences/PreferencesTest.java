@@ -44,6 +44,7 @@ class PreferencesTest {
 	@BeforeEach
 	void setUp() {
 		PreferencesUtils.setPreferences(null);
+		Preferences.setEnvProvider(k -> null);
 	}
 
 	@Test
@@ -189,6 +190,23 @@ class PreferencesTest {
 		assertEquals("1", prefs.getLspVersion());
 		prefs.store(LSP_VERSION, "2");
 		assertEquals("2", prefs.getLspVersion());
+	}
+
+	@Test
+	public void testIsNewConfigDialogEnabled_defaultIsFalse() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		PreferencesUtils.setPreferences(prefs);
+		assertFalse(Preferences.isNewConfigDialogEnabled());
+	}
+
+	@Test
+	public void testIsNewConfigDialogEnabled_falseWhenEnvVarSetToFalse() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		PreferencesUtils.setPreferences(prefs);
+		Preferences.setEnvProvider(k -> "SNYK_USE_HTML_SETTINGS".equals(k) ? "false" : null);
+		assertFalse(Preferences.isNewConfigDialogEnabled());
 	}
 
 }
