@@ -1,13 +1,10 @@
 package io.snyk.eclipse.plugin.preferences;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
@@ -202,9 +199,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 				return null;
 			}
 
-			String template = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-					.lines()
-					.collect(Collectors.joining("\n"));
+			String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
 			Preferences prefs = Preferences.getInstance();
 
