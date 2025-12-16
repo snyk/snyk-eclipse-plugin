@@ -46,7 +46,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 
 	public HTMLSettingsPreferencePage() {
 		super();
-		noDefaultAndApplyButton();
+		super.noDefaultAndApplyButton();
 	}
 
 	@Override

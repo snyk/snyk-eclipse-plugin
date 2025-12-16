@@ -24,7 +24,7 @@ public class ProjectPropertyPage extends PreferencePage implements IWorkbenchPro
 
 	public ProjectPropertyPage() {
 		super();
-		noDefaultAndApplyButton();
+		super.noDefaultAndApplyButton();
 	}
 
 	@Override
