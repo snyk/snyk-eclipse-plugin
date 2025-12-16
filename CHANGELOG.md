@@ -2,7 +2,7 @@
 
 ## [3.7.0]
 ### Changes
-- Improved Settings UI for simpler configuration of Snyk settings.
+- Added support for improved Settings UI for simpler configuration of Snyk settings. Enable by setting the environment variable SNYK_USE_HTML_SETTINGS to true.
 
 ## [3.6.0]
 ### Changes
