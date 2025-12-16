@@ -341,8 +341,8 @@ public class Preferences {
 		return Boolean.parseBoolean(envValue);
 	}
 
-    // Set environment variable provider for testing. This is not used in production code.
-    static void setEnvProvider(Function<String, String> provider) {
+	// Set environment variable provider for testing. This is not used in production code.
+	public static void setEnvProvider(Function<String, String> provider) {
 		envProvider = provider == null ? System::getenv : provider;
 	}
 
