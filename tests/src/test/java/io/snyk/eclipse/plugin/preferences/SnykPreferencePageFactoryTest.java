@@ -49,12 +49,12 @@ class SnykPreferencePageFactoryTest {
 	}
 
 	@Test
-	void create_returnsHTMLSettingsPreferencePage_whenEnvVarUnset() throws CoreException {
+	void create_returnsPreferencesPage_whenEnvVarUnset() throws CoreException {
 		Preferences.setEnvProvider(k -> null);
 
 		SnykPreferencePageFactory factory = new SnykPreferencePageFactory();
 		Object result = factory.create();
 
-		assertInstanceOf(HTMLSettingsPreferencePage.class, result);
+		assertInstanceOf(PreferencesPage.class, result);
 	}
 }

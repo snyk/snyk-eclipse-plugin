@@ -42,6 +42,16 @@ class ProjectPropertyPageFactoryTest {
 	}
 
 	@Test
+	void create_returnsNativeProjectPropertyPage_whenEnvVarUnset() throws CoreException {
+		Preferences.setEnvProvider(k -> null);
+
+		ProjectPropertyPageFactory factory = new ProjectPropertyPageFactory();
+		Object result = factory.create();
+
+		assertInstanceOf(NativeProjectPropertyPage.class, result);
+	}
+
+	@Test
 	void create_returnsNativeProjectPropertyPage_whenNewConfigDialogDisabled() throws CoreException {
 		Preferences.setEnvProvider(k -> "SNYK_USE_HTML_SETTINGS".equals(k) ? "false" : null);
 

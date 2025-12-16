@@ -336,7 +336,7 @@ public class Preferences {
 	public static boolean isNewConfigDialogEnabled() {
 		String envValue = envProvider.apply("SNYK_USE_HTML_SETTINGS");
 		if (envValue == null || envValue.isBlank()) {
-			return true;
+			return false;
 		}
 		return Boolean.parseBoolean(envValue);
 	}

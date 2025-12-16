@@ -193,11 +193,11 @@ class PreferencesTest {
 	}
 
 	@Test
-	public void testIsNewConfigDialogEnabled_defaultIsTrue() {
+	public void testIsNewConfigDialogEnabled_defaultIsFalse() {
 		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
 				new InMemorySecurePreferenceStore());
 		PreferencesUtils.setPreferences(prefs);
-		assertTrue(Preferences.isNewConfigDialogEnabled());
+		assertFalse(Preferences.isNewConfigDialogEnabled());
 	}
 
 	@Test
