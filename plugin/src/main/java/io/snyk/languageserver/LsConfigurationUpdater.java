@@ -72,8 +72,7 @@ public class LsConfigurationUpdater {
 			if (value > 0) {
 				riskScoreThreshold = value;
 			}
-		} catch (NumberFormatException e) {
-			// ignore, keep null
+		} catch (NumberFormatException e) { // NOPMD - invalid values default to null (no threshold)
 		}
 
 		// only add folder configs that are initialized
