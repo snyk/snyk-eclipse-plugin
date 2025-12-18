@@ -65,6 +65,17 @@ public class LsConfigurationUpdater {
 
 		String enableDeltaFindings = preferences.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString());
 
+		Integer riskScoreThreshold = null;
+		String riskScoreThresholdStr = preferences.getPref(Preferences.RISK_SCORE_THRESHOLD, "0");
+		try {
+			int value = Integer.parseInt(riskScoreThresholdStr);
+			if (value > 0) {
+				riskScoreThreshold = value;
+			}
+		} catch (NumberFormatException e) {
+			// ignore, keep null
+		}
+
 		// only add folder configs that are initialized
 		var folderConfigs = new ArrayList<FolderConfig>();
 		for (var p : Collections.unmodifiableSet(FolderConfigs.LanguageServerConfigReceived)) {
@@ -81,6 +92,6 @@ public class LsConfigurationUpdater {
 				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports,
 				enableTelemetry, organization, manageBinariesAutomatically, cliPath, token, integrationName,
 				integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode,
-				enableDeltaFindings, authenticationMethod, folderConfigs, filterSeverity);
+				enableDeltaFindings, riskScoreThreshold, authenticationMethod, folderConfigs, filterSeverity);
 	}
 }

@@ -189,6 +189,15 @@ class HTMLSettingsPreferencePageTest {
 	}
 
 	@Test
+	void parseAndSaveConfig_savesRiskScoreThreshold() throws Exception {
+		String json = "{\"riskScoreThreshold\": 200}";
+
+		invokeParseAndSaveConfig(json);
+
+		assertEquals("200", prefs.getPref(Preferences.RISK_SCORE_THRESHOLD));
+	}
+
+	@Test
 	void parseAndSaveConfig_savesSendErrorReports() throws Exception {
 		String json = "{\"sendErrorReports\": false}";
 

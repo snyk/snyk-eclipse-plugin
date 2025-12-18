@@ -58,6 +58,7 @@ public class Preferences {
 	public static final String LSP_VERSION = "LSP_VERSION";
 	public static final String ANALYTICS_PLUGIN_INSTALLED_SENT = "analyticsPluginInstalledSent";
 	public static final String ENABLE_DELTA = "ENABLE_DELTA";
+	public static final String RISK_SCORE_THRESHOLD = "RISK_SCORE_THRESHOLD";
 
 	// all filter preferences are positive: SHOW = true, HIDE = false
 	public static final String FILTER_SHOW_CRITICAL = "FILTER_SHOW_CRITICAL";
@@ -128,6 +129,7 @@ public class Preferences {
 		insecureStore.setDefault(FILTER_SHOW_MEDIUM, TRUE);
 		insecureStore.setDefault(FILTER_SHOW_LOW, TRUE);
 		insecureStore.setDefault(ENABLE_DELTA, FALSE);
+		insecureStore.setDefault(RISK_SCORE_THRESHOLD, "0");
 		insecureStore.setDefault(FILTER_IGNORES_SHOW_OPEN_ISSUES, TRUE);
 		insecureStore.setDefault(FILTER_IGNORES_SHOW_IGNORED_ISSUES, FALSE);
 		insecureStore.setDefault(FILTER_SHOW_ONLY_FIXABLE, FALSE);
