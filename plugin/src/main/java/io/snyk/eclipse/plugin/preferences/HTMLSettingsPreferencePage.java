@@ -276,6 +276,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 			applyIfPresent(config, "enableDeltaFindings", value ->
 				prefs.store(Preferences.ENABLE_DELTA, String.valueOf(value)));
 
+			applyIfPresent(config, "riskScoreThreshold", value -> {
+				if (value instanceof Number) {
+					prefs.store(Preferences.RISK_SCORE_THRESHOLD, String.valueOf(((Number) value).intValue()));
+				} else {
+					prefs.store(Preferences.RISK_SCORE_THRESHOLD, String.valueOf(value));
+				}
+			});
+
 			applyIfPresent(config, "cliPath", value ->
 				prefs.store(Preferences.CLI_PATH, String.valueOf(value)));
 			applyIfPresent(config, "manageBinariesAutomatically", value ->

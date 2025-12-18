@@ -35,6 +35,7 @@ public class Settings {
 	private final String osPlatform = SystemUtils.OS_NAME;
 	private final String scanningMode;
 	private final String enableDeltaFindings;
+	private final Integer riskScoreThreshold;
 	private final String requiredProtocolVersion = LsBinaries.REQUIRED_LS_PROTOCOL_VERSION;
 	private final String authenticationMethod;
 	private final List<FolderConfig> folderConfigs;
@@ -46,7 +47,8 @@ public class Settings {
 			String manageBinariesAutomatically, String cliPath, String token, String integrationName,
 			String integrationVersion, String automaticAuthentication, String[] trustedFolders,
 			String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings,
-			String authenticationMethod, List<FolderConfig> folderConfigs, FilterSeverity filterSeverity) {
+			Integer riskScoreThreshold, String authenticationMethod, List<FolderConfig> folderConfigs,
+			FilterSeverity filterSeverity) {
 		this.activateSnykOpenSource = activateSnykOpenSource;
 		this.activateSnykCodeSecurity = activateSnykCodeSecurity;
 		this.activateSnykIac = activateSnykIac;
@@ -69,6 +71,7 @@ public class Settings {
 		this.enableTrustedFoldersFeature = enableTrustedFoldersFeature;
 		this.scanningMode = scanningMode;
 		this.enableDeltaFindings = enableDeltaFindings;
+		this.riskScoreThreshold = riskScoreThreshold;
 		this.authenticationMethod = authenticationMethod;
 		this.folderConfigs = folderConfigs;
 		this.filterSeverity = filterSeverity;
@@ -188,6 +191,10 @@ public class Settings {
 
 	public String getEnableDeltaFindings() {
 		return enableDeltaFindings;
+	}
+
+	public Integer getRiskScoreThreshold() {
+		return riskScoreThreshold;
 	}
 
 	public FilterSeverity getFilterSeverity() {

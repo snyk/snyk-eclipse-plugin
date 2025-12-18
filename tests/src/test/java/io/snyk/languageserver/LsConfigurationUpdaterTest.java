@@ -75,6 +75,9 @@ class LsConfigurationUpdaterTest {
 			assertEquals(AuthConstants.AUTH_OAUTH2, settings.getAuthenticationMethod());
 			assertEquals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, settings.getRequiredProtocolVersion());
 
+			// Verify risk score threshold is included
+			assertEquals(Integer.valueOf(200), settings.getRiskScoreThreshold());
+
 			// Verify filter severity is included
 			assertNotNull(settings.getFilterSeverity());
 			assertTrue(settings.getFilterSeverity().isCritical());
@@ -115,6 +118,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getPref(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2)).thenReturn("oauth");
 		when(preferenceMock.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString())).thenReturn("true");
+		when(preferenceMock.getPref(Preferences.RISK_SCORE_THRESHOLD, "0")).thenReturn("200");
 
 		// Severity filter mocks
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_CRITICAL, true)).thenReturn(true);
