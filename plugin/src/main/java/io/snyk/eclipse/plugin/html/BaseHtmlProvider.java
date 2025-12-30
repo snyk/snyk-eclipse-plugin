@@ -84,6 +84,7 @@ public class BaseHtmlProvider {
 	// Default fallback colors
 	private static final String DEFAULT_SECTION_BG_COLOR = "#F0F0F0";
 	private static final String DEFAULT_BORDER_COLOR = "#CCCCCC";
+	private static final String DEFAULT_WHITE_COLOR = "#FFFFFF";
 
 	public String getCss() {
 		return "";
@@ -180,8 +181,8 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace(CSS_VAR_TEXT_COLOR, getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000"));
 		htmlStyled = htmlStyled.replace(CSS_VAR_DIMMED_TEXT_COLOR, getColorAsHex(THEME_ACTIVE_TAB_TEXT, "#4F5456"));
 
-		htmlStyled = htmlStyled.replace(CSS_VAR_IDE_BACKGROUND_COLOR, getColorAsHex(THEME_ACTIVE_NOFOCUS_TAB_BG, "#FFFFFF"));
-		htmlStyled = htmlStyled.replace(CSS_VAR_BACKGROUND_COLOR, getColorAsHex(THEME_ACTIVE_TAB_BG_END, "#FFFFFF"));
+		htmlStyled = htmlStyled.replace(CSS_VAR_IDE_BACKGROUND_COLOR, getColorAsHex(THEME_ACTIVE_NOFOCUS_TAB_BG, DEFAULT_WHITE_COLOR));
+		htmlStyled = htmlStyled.replace(CSS_VAR_BACKGROUND_COLOR, getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR));
 		htmlStyled = htmlStyled.replace(CSS_VAR_CODE_BACKGROUND_COLOR,
 				getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR));
 		htmlStyled = htmlStyled.replace(CSS_VAR_BUTTON_COLOR,
@@ -205,12 +206,12 @@ public class BaseHtmlProvider {
 
 		// Replace VSCode CSS variables used in LS-served HTML (settings page)
 		String textColor = getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000");
-		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, "#FFFFFF");
+		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
 		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
 		String focusColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0000FF");
 		String buttonBgColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066CC");
-		String buttonFgColor = "#FFFFFF";
+		String buttonFgColor = DEFAULT_WHITE_COLOR;
 		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 
 		htmlStyled = htmlStyled.replace(VSCODE_VAR_FONT_FAMILY_PREFIX, textColor + VSCODE_VAR_SUFFIX);

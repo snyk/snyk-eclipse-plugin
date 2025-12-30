@@ -32,7 +32,7 @@ import org.eclipse.ui.commands.ICommandService;
 
 public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
-  private static HTMLSettingsPreferencePage instance;
+  private static volatile HTMLSettingsPreferencePage instance;
   private Browser browser;
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final BaseHtmlProvider htmlProvider = new BaseHtmlProvider();
@@ -275,45 +275,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         // Folder Configs
         if (config.getFolderConfigs() != null && !config.getFolderConfigs().isEmpty()) {
           for (IdeConfigData.FolderConfigData folderConfigData : config.getFolderConfigs()) {
-            if (folderConfigData.getFolderPath() != null) {
-              FolderConfig folderConfig =
-                  FolderConfigs.getInstance()
-                      .getFolderConfig(Paths.get(folderConfigData.getFolderPath()));
-
-              if (folderConfigData.getPreferredOrg() != null) {
-                folderConfig.setPreferredOrg(folderConfigData.getPreferredOrg());
-              }
-              if (folderConfigData.getAutoDeterminedOrg() != null) {
-                folderConfig.setAutoDeterminedOrg(folderConfigData.getAutoDeterminedOrg());
-              }
-              if (folderConfigData.getOrgSetByUser() != null) {
-                folderConfig.setOrgSetByUser(folderConfigData.getOrgSetByUser());
-              }
-              if (folderConfigData.getAdditionalEnv() != null) {
-                folderConfig.setAdditionalEnv(folderConfigData.getAdditionalEnv());
-              }
-              if (folderConfigData.getAdditionalParameters() != null) {
-                String[] params = folderConfigData.getAdditionalParameters().trim().split("\\s+");
-                folderConfig.setAdditionalParameters(List.of(params));
-              }
-              if (folderConfigData.getScanCommandConfig() != null) {
-                Map<String, IdeConfigData.ScanCommandConfigData> sourceConfigMap =
-                    folderConfigData.getScanCommandConfig();
-                Map<String, ScanCommandConfig> targetConfigMap = new HashMap<>();
-                for (Map.Entry<String, IdeConfigData.ScanCommandConfigData> entry :
-                    sourceConfigMap.entrySet()) {
-                  IdeConfigData.ScanCommandConfigData configData = entry.getValue();
-                  ScanCommandConfig scanCommandConfig =
-                      new ScanCommandConfig(
-                          configData.getPreScanCommand(),
-                          Boolean.TRUE.equals(configData.getPreScanOnlyReferenceFolder()),
-                          configData.getPostScanCommand(),
-                          Boolean.TRUE.equals(configData.getPostScanOnlyReferenceFolder()));
-                  targetConfigMap.put(entry.getKey(), scanCommandConfig);
-                }
-                folderConfig.setScanCommandConfig(targetConfigMap);
-              }
-            }
+            processFolderConfig(folderConfigData);
           }
         }
       }
@@ -323,6 +285,54 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     } catch (JsonProcessingException e) {
       SnykLogger.logError(e);
     }
+  }
+
+  private void processFolderConfig(IdeConfigData.FolderConfigData folderConfigData) {
+    if (folderConfigData.getFolderPath() == null) {
+      return;
+    }
+
+    FolderConfig folderConfig =
+        FolderConfigs.getInstance().getFolderConfig(Paths.get(folderConfigData.getFolderPath()));
+
+    if (folderConfigData.getPreferredOrg() != null) {
+      folderConfig.setPreferredOrg(folderConfigData.getPreferredOrg());
+    }
+    if (folderConfigData.getAutoDeterminedOrg() != null) {
+      folderConfig.setAutoDeterminedOrg(folderConfigData.getAutoDeterminedOrg());
+    }
+    if (folderConfigData.getOrgSetByUser() != null) {
+      folderConfig.setOrgSetByUser(folderConfigData.getOrgSetByUser());
+    }
+    if (folderConfigData.getAdditionalEnv() != null) {
+      folderConfig.setAdditionalEnv(folderConfigData.getAdditionalEnv());
+    }
+    if (folderConfigData.getAdditionalParameters() != null) {
+      String[] params = folderConfigData.getAdditionalParameters().trim().split("\\s+");
+      folderConfig.setAdditionalParameters(List.of(params));
+    }
+    if (folderConfigData.getScanCommandConfig() != null) {
+      Map<String, ScanCommandConfig> targetConfigMap =
+          convertScanCommandConfig(folderConfigData.getScanCommandConfig());
+      folderConfig.setScanCommandConfig(targetConfigMap);
+    }
+  }
+
+  private Map<String, ScanCommandConfig> convertScanCommandConfig(
+      Map<String, IdeConfigData.ScanCommandConfigData> sourceConfigMap) {
+    Map<String, ScanCommandConfig> targetConfigMap = new HashMap<>();
+    for (Map.Entry<String, IdeConfigData.ScanCommandConfigData> entry :
+        sourceConfigMap.entrySet()) {
+      IdeConfigData.ScanCommandConfigData configData = entry.getValue();
+      ScanCommandConfig scanCommandConfig =
+          new ScanCommandConfig(
+              configData.getPreScanCommand(),
+              Boolean.TRUE.equals(configData.getPreScanOnlyReferenceFolder()),
+              configData.getPostScanCommand(),
+              Boolean.TRUE.equals(configData.getPostScanOnlyReferenceFolder()));
+      targetConfigMap.put(entry.getKey(), scanCommandConfig);
+    }
+    return targetConfigMap;
   }
 
   private void refreshToolbarUI() {
@@ -378,10 +388,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 
   @Override
   public void dispose() {
-    if (instance == this) {
-      instance = null;
+    if (this.equals(instance)) {
+      clearInstance();
     }
     super.dispose();
+  }
+
+  private static void clearInstance() {
+    instance = null;
   }
 
   public static void notifyAuthTokenChanged(String token) {
