@@ -244,11 +244,6 @@ class HTMLSettingsPreferencePageTest {
 		// Should not throw, preferences should remain unchanged
 	}
 
-	@Test
-	void isModified_returnsFalseInitially() {
-		assertFalse(page.isModified());
-	}
-
 	private void invokeParseAndSaveConfig(String json) throws Exception {
 		Method method = HTMLSettingsPreferencePage.class.getDeclaredMethod("parseAndSaveConfig", String.class);
 		method.setAccessible(true);

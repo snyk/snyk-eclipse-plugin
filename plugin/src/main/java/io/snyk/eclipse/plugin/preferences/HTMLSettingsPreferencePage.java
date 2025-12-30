@@ -1,21 +1,27 @@
 package io.snyk.eclipse.plugin.preferences;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
+import io.snyk.eclipse.plugin.properties.FolderConfigs;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
+import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;
-import org.eclipse.swt.browser.LocationEvent;
-import org.eclipse.swt.browser.LocationListener;
-import org.eclipse.swt.browser.ProgressAdapter;
-import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -24,359 +30,374 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
-import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.wizards.SnykWizard;
-import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-
 public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
-	private Browser browser;
-	private boolean isUsingFallback;
-	private boolean modified;
-	private final ObjectMapper objectMapper = new ObjectMapper();
-	private final BaseHtmlProvider htmlProvider = new BaseHtmlProvider();
+  private static HTMLSettingsPreferencePage instance;
+  private Browser browser;
+  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final BaseHtmlProvider htmlProvider = new BaseHtmlProvider();
 
-	public HTMLSettingsPreferencePage() {
-		super();
-		super.noDefaultAndApplyButton();
-	}
+  public HTMLSettingsPreferencePage() {
+    super();
+    super.noDefaultAndApplyButton();
+    instance = this;
+  }
 
-	@Override
-	public void init(IWorkbench workbench) {
-		setMessage("Snyk Preferences");
-	}
+  @Override
+  public void init(IWorkbench workbench) {
+    setMessage("Snyk Preferences");
+  }
 
-	@Override
-	protected Control createContents(Composite parent) {
-		Composite container = new Composite(parent, SWT.NONE);
-		container.setLayout(new FillLayout());
+  @Override
+  protected Control createContents(Composite parent) {
+    Composite container = new Composite(parent, SWT.NONE);
+    container.setLayout(new FillLayout());
 
-		browser = new Browser(container, SWT.NONE);
-		initializeBrowserFunctions();
-		initializeBrowserListeners();
-		loadContent();
+    browser = new Browser(container, SWT.NONE);
+    initializeBrowserFunctions();
+    loadContent();
 
-		return container;
-	}
+    return container;
+  }
 
-	private void initializeBrowserFunctions() {
-		new BrowserFunction(browser, "__saveIdeConfig__") {
-			@Override
-			public Object function(Object[] arguments) {
-				if (arguments.length > 0 && arguments[0] instanceof String) {
-					String jsonString = (String) arguments[0];
-					parseAndSaveConfig(jsonString);
-				}
-				return null;
-			}
-		};
+  private void initializeBrowserFunctions() {
+    new BrowserFunction(browser, "__saveIdeConfig__") {
+      @Override
+      public Object function(Object[] arguments) {
+        if (arguments.length > 0 && arguments[0] instanceof String) {
+          String jsonString = (String) arguments[0];
+          parseAndSaveConfig(jsonString);
+        }
+        return null;
+      }
+    };
 
-		new BrowserFunction(browser, "__onFormDirtyChange__") {
-			@Override
-			public Object function(Object[] arguments) {
-				if (arguments.length > 0 && arguments[0] instanceof Boolean) {
-					modified = (Boolean) arguments[0];
-				} else {
-					modified = true;
-				}
-				return null;
-			}
-		};
+    new BrowserFunction(browser, "__ideLogin__") {
+      @Override
+      public Object function(Object[] arguments) {
+        CompletableFuture.runAsync(
+            () -> {
+              SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+              if (lc == null) {
+                SnykLogger.logError(
+                    new IllegalStateException("Language client instance is null during login"));
+                return;
+              }
+              lc.triggerAuthentication();
+            });
+        return null;
+      }
+    };
 
-		new BrowserFunction(browser, "__ideLogin__") {
-			@Override
-			public Object function(Object[] arguments) {
-				CompletableFuture.runAsync(() -> {
-					SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-					if (lc == null) {
-						SnykLogger.logError(new IllegalStateException("Language client instance is null during login"));
-						return;
-					}
-					lc.updateConfiguration();
-					SnykWizard.createAndLaunch();
-				});
-				return null;
-			}
-		};
+    new BrowserFunction(browser, "__ideLogout__") {
+      @Override
+      public Object function(Object[] arguments) {
+        CompletableFuture.runAsync(
+            () -> {
+              SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+              if (lc == null) {
+                SnykLogger.logError(
+                    new IllegalStateException("Language client instance is null during logout"));
+                return;
+              }
+              lc.logout();
+            });
+        return null;
+      }
+    };
+  }
 
-		new BrowserFunction(browser, "__ideLogout__") {
-			@Override
-			public Object function(Object[] arguments) {
-				CompletableFuture.runAsync(() -> {
-					SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-					if (lc == null) {
-						SnykLogger.logError(new IllegalStateException("Language client instance is null during logout"));
-						return;
-					}
-					lc.logout();
-				});
-				return null;
-			}
-		};
-	}
+  private void loadContent() {
+    CompletableFuture.runAsync(
+            () -> {
+              String lsHtml = null;
+              int maxRetries = 2;
+              int retryDelayMs = 2000;
 
-	private void initializeBrowserListeners() {
-		browser.addLocationListener(new LocationListener() {
-			@Override
-			public void changing(LocationEvent event) {
-				String url = event.location;
-				if (url.startsWith("http")) {
-					event.doit = false;
-					Program.launch(url);
-				}
-			}
+              for (int attempt = 1; attempt <= maxRetries; attempt++) {
+                SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+                if (lc != null) {
+                  lsHtml = lc.getConfigHtml();
+                  if (lsHtml != null && !lsHtml.isBlank()) {
+                    break;
+                  }
+                }
 
-			@Override
-			public void changed(LocationEvent event) {
-			}
-		});
+                if (attempt < maxRetries) {
+                  try {
+                    Thread.sleep(retryDelayMs);
+                  } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                  }
+                }
+              }
 
-		browser.addProgressListener(new ProgressAdapter() {
-			@Override
-			public void completed(ProgressEvent event) {
-				injectCallbackFunctions();
-			}
-		});
-	}
+              String finalHtml;
 
-	private void injectCallbackFunctions() {
-		String script = """
-			(function() {
-				if (window.__callbacksInjected__) {
-					return;
-				}
-				window.__callbacksInjected__ = true;
-			})();
-			""";
-		browser.execute(script);
-	}
+              if (lsHtml != null && !lsHtml.isBlank()) {
+                finalHtml = htmlProvider.replaceCssVariables(lsHtml, false);
+              } else {
+                SnykLogger.logInfo("Failed to load HTML from language server, using fallback");
+                String fallbackHtml = loadFallbackHtml();
+                if (fallbackHtml != null && !fallbackHtml.isBlank()) {
+                  finalHtml = htmlProvider.replaceCssVariables(fallbackHtml, false);
+                } else {
+                  SnykLogger.logError(
+                      new IllegalStateException("Fallback settings HTML could not be loaded"));
+                  return;
+                }
+              }
 
-	private void loadContent() {
-		String fallbackHtml = loadFallbackHtml();
-		if (fallbackHtml != null && !fallbackHtml.isBlank()) {
-			String styledHtml = htmlProvider.replaceCssVariables(fallbackHtml, false);
-			browser.setText(styledHtml);
-			isUsingFallback = true;
-		} else {
-			SnykLogger.logError(new IllegalStateException("Fallback settings HTML could not be loaded"));
-		}
+              String htmlToDisplay = finalHtml;
+              Display.getDefault()
+                  .asyncExec(
+                      () -> {
+                        if (browser == null || browser.isDisposed()) {
+                          return;
+                        }
+                        browser.setText(htmlToDisplay);
+                      });
+            })
+        .exceptionally(
+            e -> {
+              SnykLogger.logError(new Exception("Failed to load settings HTML", e));
+              return null;
+            });
+  }
 
-		// Asynchronously try to get HTML from language server
-		CompletableFuture.runAsync(() -> {
-			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-			if (lc == null) {
-				SnykLogger.logInfo("Language client instance is null during load content");
-				return;
-			}
-			String lsHtml = lc.getConfigHtml();
-			if (lsHtml == null || lsHtml.isBlank()) {
-				SnykLogger.logInfo("Language server HTML is null or blank during load content");
-				return;
-			}
-			String styledLsHtml = htmlProvider.replaceCssVariables(lsHtml, false);
-			Display.getDefault().asyncExec(() -> {
-				if (browser == null || browser.isDisposed()) {
-					return;
-				}
-				browser.setText(styledLsHtml);
-				isUsingFallback = false;
-			});
-		}).exceptionally(e -> {
-			SnykLogger.logInfo("Could not load HTML from language server: " + e.getMessage());
-			return null;
-		});
-	}
+  private String loadFallbackHtml() {
+    try (InputStream inputStream =
+        getClass().getResourceAsStream("/ui/html/settings-fallback.html")) {
+      if (inputStream == null) {
+        SnykLogger.logError(new IllegalStateException("Fallback HTML resource not found"));
+        return null;
+      }
 
-	private String loadFallbackHtml() {
-		try (InputStream inputStream = getClass().getResourceAsStream("/ui/html/settings-fallback.html")) {
-			if (inputStream == null) {
-				SnykLogger.logError(new IllegalStateException("Fallback HTML resource not found"));
-				return null;
-			}
+      String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
-			String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+      Preferences prefs = Preferences.getInstance();
 
-			Preferences prefs = Preferences.getInstance();
+      return template
+          .replace("{{MANAGE_BINARIES_CHECKED}}", prefs.isManagedBinaries() ? "checked" : "")
+          .replace(
+              "{{CLI_BASE_DOWNLOAD_URL}}",
+              prefs.getPref(Preferences.CLI_BASE_URL, "https://downloads.snyk.io"))
+          .replace("{{CLI_PATH}}", prefs.getCliPath())
+          .replace(
+              "{{CHANNEL_STABLE_SELECTED}}",
+              "stable".equals(prefs.getReleaseChannel()) ? "selected" : "")
+          .replace(
+              "{{CHANNEL_RC_SELECTED}}", "rc".equals(prefs.getReleaseChannel()) ? "selected" : "")
+          .replace(
+              "{{CHANNEL_PREVIEW_SELECTED}}",
+              "preview".equals(prefs.getReleaseChannel()) ? "selected" : "")
+          .replace("{{INSECURE_CHECKED}}", prefs.isInsecure() ? "checked" : "");
+    } catch (IOException e) {
+      SnykLogger.logError(e);
+      return null;
+    }
+  }
 
-			return template
-					.replace("{{MANAGE_BINARIES_CHECKED}}", prefs.isManagedBinaries() ? "checked" : "")
-					.replace("{{CLI_BASE_DOWNLOAD_URL}}", prefs.getPref(Preferences.CLI_BASE_URL, "https://downloads.snyk.io"))
-					.replace("{{CLI_PATH}}", prefs.getCliPath())
-					.replace("{{CHANNEL_STABLE_SELECTED}}", "stable".equals(prefs.getReleaseChannel()) ? "selected" : "")
-					.replace("{{CHANNEL_RC_SELECTED}}", "rc".equals(prefs.getReleaseChannel()) ? "selected" : "")
-					.replace("{{CHANNEL_PREVIEW_SELECTED}}", "preview".equals(prefs.getReleaseChannel()) ? "selected" : "")
-					.replace("{{INSECURE_CHECKED}}", prefs.isInsecure() ? "checked" : "");
-		} catch (IOException e) {
-			SnykLogger.logError(e);
-			return null;
-		}
-	}
+  private void parseAndSaveConfig(String jsonString) {
+    try {
+      IdeConfigData config = objectMapper.readValue(jsonString, IdeConfigData.class);
+      Preferences prefs = Preferences.getInstance();
 
-	@SuppressWarnings("unchecked")
-	private void parseAndSaveConfig(String jsonString) {
-		try {
-			Map<String, Object> config = objectMapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
-			Preferences prefs = Preferences.getInstance();
+      boolean isFallback = Boolean.TRUE.equals(config.getIsFallbackForm());
 
-			applyIfPresent(config, "activateSnykOpenSource", value ->
-				prefs.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, String.valueOf(value)));
-			applyIfPresent(config, "activateSnykCode", value ->
-				prefs.store(Preferences.ACTIVATE_SNYK_CODE_SECURITY, String.valueOf(value)));
-			applyIfPresent(config, "activateSnykIac", value ->
-				prefs.store(Preferences.ACTIVATE_SNYK_IAC, String.valueOf(value)));
+      // CLI Settings - always persist for both fallback and full forms
+      prefs.store(Preferences.CLI_PATH, String.valueOf(config.getCliPath()));
+      prefs.store(
+          Preferences.MANAGE_BINARIES_AUTOMATICALLY,
+          String.valueOf(config.getManageBinariesAutomatically()));
+      prefs.store(Preferences.CLI_BASE_URL, String.valueOf(config.getCliBaseDownloadURL()));
+      prefs.store(Preferences.RELEASE_CHANNEL, String.valueOf(config.getCliReleaseChannel()));
+      prefs.store(Preferences.INSECURE_KEY, String.valueOf(config.getInsecure()));
 
-			applyIfPresent(config, "scanningMode", value -> {
-				boolean isAutomatic = "auto".equals(value);
-				prefs.store(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
-			});
+      // Only persist non-CLI fields if not fallback form
+      if (!isFallback) {
+        // Scan Settings
+        prefs.store(
+            Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
+            String.valueOf(config.getActivateSnykOpenSource()));
+        prefs.store(
+            Preferences.ACTIVATE_SNYK_CODE_SECURITY, String.valueOf(config.getActivateSnykCode()));
+        prefs.store(Preferences.ACTIVATE_SNYK_IAC, String.valueOf(config.getActivateSnykIac()));
 
-			applyIfPresent(config, "organization", value ->
-				prefs.store(Preferences.ORGANIZATION_KEY, String.valueOf(value)));
-			applyIfPresent(config, "endpoint", value ->
-				prefs.store(Preferences.ENDPOINT_KEY, String.valueOf(value)));
-			applyIfPresent(config, "token", value ->
-				prefs.store(Preferences.AUTH_TOKEN_KEY, String.valueOf(value)));
-			applyIfPresent(config, "insecure", value ->
-				prefs.store(Preferences.INSECURE_KEY, String.valueOf(value)));
+        if (config.getScanningMode() != null) {
+          boolean isAutomatic = "auto".equals(config.getScanningMode());
+          prefs.store(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
+        }
 
-			applyIfPresent(config, "authenticationMethod", value -> {
-				String method = String.valueOf(value);
-				if (AuthConstants.AUTH_OAUTH2.equals(method)) {
-					prefs.store(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2);
-				} else if (AuthConstants.AUTH_API_TOKEN.equals(method)) {
-					prefs.store(Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_API_TOKEN);
-				}
-			});
+        // Issue View Settings
+        if (config.getIssueViewOptions() != null) {
+          IdeConfigData.IssueViewOptions options = config.getIssueViewOptions();
+          prefs.store(
+              Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, String.valueOf(options.getOpenIssues()));
+          prefs.store(
+              Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES,
+              String.valueOf(options.getIgnoredIssues()));
+        }
+        prefs.store(Preferences.ENABLE_DELTA, String.valueOf(config.getEnableDeltaFindings()));
 
-			if (config.containsKey("filterSeverity") && config.get("filterSeverity") instanceof Map) {
-				Map<String, Object> severity = (Map<String, Object>) config.get("filterSeverity");
-				applyIfPresent(severity, "critical", value ->
-					prefs.store(Preferences.FILTER_SHOW_CRITICAL, String.valueOf(value)));
-				applyIfPresent(severity, "high", value ->
-					prefs.store(Preferences.FILTER_SHOW_HIGH, String.valueOf(value)));
-				applyIfPresent(severity, "medium", value ->
-					prefs.store(Preferences.FILTER_SHOW_MEDIUM, String.valueOf(value)));
-				applyIfPresent(severity, "low", value ->
-					prefs.store(Preferences.FILTER_SHOW_LOW, String.valueOf(value)));
-			}
+        // Authentication Settings
+        if (config.getAuthenticationMethod() != null) {
+          String method = config.getAuthenticationMethod();
+          if (AuthConstants.AUTH_OAUTH2.equals(method)
+              || AuthConstants.AUTH_API_TOKEN.equals(method)) {
+            prefs.store(Preferences.AUTHENTICATION_METHOD, method);
+          }
+        }
 
-			if (config.containsKey("issueViewOptions") && config.get("issueViewOptions") instanceof Map) {
-				Map<String, Object> options = (Map<String, Object>) config.get("issueViewOptions");
-				applyIfPresent(options, "openIssues", value ->
-					prefs.store(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, String.valueOf(value)));
-				applyIfPresent(options, "ignoredIssues", value ->
-					prefs.store(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, String.valueOf(value)));
-			}
+        // Connection Settings
+        prefs.store(Preferences.ENDPOINT_KEY, String.valueOf(config.getEndpoint()));
+        prefs.store(Preferences.AUTH_TOKEN_KEY, String.valueOf(config.getToken()));
+        prefs.store(Preferences.ORGANIZATION_KEY, String.valueOf(config.getOrganization()));
 
-			applyIfPresent(config, "enableDeltaFindings", value ->
-				prefs.store(Preferences.ENABLE_DELTA, String.valueOf(value)));
+        // Trusted Folders
+        if (config.getTrustedFolders() != null) {
+          String trustedFoldersString = String.join(File.pathSeparator, config.getTrustedFolders());
+          prefs.store(Preferences.TRUSTED_FOLDERS, trustedFoldersString);
+        }
 
-			applyIfPresent(config, "riskScoreThreshold", value -> {
-				if (value instanceof Number) {
-					prefs.store(Preferences.RISK_SCORE_THRESHOLD, String.valueOf(((Number) value).intValue()));
-				} else {
-					prefs.store(Preferences.RISK_SCORE_THRESHOLD, String.valueOf(value));
-				}
-			});
+        // Filter Settings
+        if (config.getFilterSeverity() != null) {
+          IdeConfigData.FilterSeverity severity = config.getFilterSeverity();
+          prefs.store(Preferences.FILTER_SHOW_CRITICAL, String.valueOf(severity.getCritical()));
+          prefs.store(Preferences.FILTER_SHOW_HIGH, String.valueOf(severity.getHigh()));
+          prefs.store(Preferences.FILTER_SHOW_MEDIUM, String.valueOf(severity.getMedium()));
+          prefs.store(Preferences.FILTER_SHOW_LOW, String.valueOf(severity.getLow()));
+        }
+        prefs.store(
+            Preferences.RISK_SCORE_THRESHOLD, String.valueOf(config.getRiskScoreThreshold()));
 
-			applyIfPresent(config, "cliPath", value ->
-				prefs.store(Preferences.CLI_PATH, String.valueOf(value)));
-			applyIfPresent(config, "manageBinariesAutomatically", value ->
-				prefs.store(Preferences.MANAGE_BINARIES_AUTOMATICALLY, String.valueOf(value)));
-			applyIfPresent(config, "cliBaseDownloadURL", value ->
-				prefs.store(Preferences.CLI_BASE_URL, String.valueOf(value)));
-			applyIfPresent(config, "cliReleaseChannel", value ->
-				prefs.store(Preferences.RELEASE_CHANNEL, String.valueOf(value)));
+        // Folder Configs
+        if (config.getFolderConfigs() != null && !config.getFolderConfigs().isEmpty()) {
+          for (IdeConfigData.FolderConfigData folderConfigData : config.getFolderConfigs()) {
+            if (folderConfigData.getFolderPath() != null) {
+              FolderConfig folderConfig =
+                  FolderConfigs.getInstance()
+                      .getFolderConfig(Paths.get(folderConfigData.getFolderPath()));
 
-			applyIfPresent(config, "sendErrorReports", value ->
-				prefs.store(Preferences.SEND_ERROR_REPORTS, String.valueOf(value)));
-			applyIfPresent(config, "enableTelemetry", value ->
-				prefs.store(Preferences.ENABLE_TELEMETRY, String.valueOf(value)));
+              if (folderConfigData.getPreferredOrg() != null) {
+                folderConfig.setPreferredOrg(folderConfigData.getPreferredOrg());
+              }
+              if (folderConfigData.getAutoDeterminedOrg() != null) {
+                folderConfig.setAutoDeterminedOrg(folderConfigData.getAutoDeterminedOrg());
+              }
+              if (folderConfigData.getOrgSetByUser() != null) {
+                folderConfig.setOrgSetByUser(folderConfigData.getOrgSetByUser());
+              }
+              if (folderConfigData.getAdditionalEnv() != null) {
+                folderConfig.setAdditionalEnv(folderConfigData.getAdditionalEnv());
+              }
+              if (folderConfigData.getAdditionalParameters() != null) {
+                String[] params = folderConfigData.getAdditionalParameters().trim().split("\\s+");
+                folderConfig.setAdditionalParameters(List.of(params));
+              }
+              if (folderConfigData.getScanCommandConfig() != null) {
+                Map<String, IdeConfigData.ScanCommandConfigData> sourceConfigMap =
+                    folderConfigData.getScanCommandConfig();
+                Map<String, ScanCommandConfig> targetConfigMap = new HashMap<>();
+                for (Map.Entry<String, IdeConfigData.ScanCommandConfigData> entry :
+                    sourceConfigMap.entrySet()) {
+                  IdeConfigData.ScanCommandConfigData configData = entry.getValue();
+                  ScanCommandConfig scanCommandConfig =
+                      new ScanCommandConfig(
+                          configData.getPreScanCommand(),
+                          Boolean.TRUE.equals(configData.getPreScanOnlyReferenceFolder()),
+                          configData.getPostScanCommand(),
+                          Boolean.TRUE.equals(configData.getPostScanOnlyReferenceFolder()));
+                  targetConfigMap.put(entry.getKey(), scanCommandConfig);
+                }
+                folderConfig.setScanCommandConfig(targetConfigMap);
+              }
+            }
+          }
+        }
+      }
 
-			modified = false;
+      // Refresh toolbar UI to reflect changes made in HTML settings
+      refreshToolbarUI();
+    } catch (JsonProcessingException e) {
+      SnykLogger.logError(e);
+    }
+  }
 
-			// Refresh toolbar UI to reflect changes made in HTML settings
-			refreshToolbarUI();
-		} catch (JsonProcessingException e) {
-			SnykLogger.logError(e);
-		}
-	}
+  private void refreshToolbarUI() {
+    Display display = Display.getCurrent();
+    if (display == null) {
+      SnykLogger.logInfo("refreshToolbarUI: No display available, skipping UI refresh");
+      return;
+    }
+    display.asyncExec(
+        () -> {
+          ICommandService commandService =
+              PlatformUI.getWorkbench().getService(ICommandService.class);
+          if (commandService != null) {
+            // Refresh severity filter commands
+            commandService.refreshElements(
+                "io.snyk.eclipse.plugin.commands.snykFilterCritical", null);
+            commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterHigh", null);
+            commandService.refreshElements(
+                "io.snyk.eclipse.plugin.commands.snykFilterMedium", null);
+            commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterLow", null);
+            // Refresh product filter commands
+            commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableOSS", null);
+            commandService.refreshElements(
+                "io.snyk.eclipse.plugin.commands.enableCodeSecurity", null);
+            commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableIAC", null);
+            // Refresh issue view options commands
+            commandService.refreshElements(
+                "io.snyk.eclipse.plugin.commands.snykShowOpenIgnored", null);
+            commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykShowIgnored", null);
+            // Refresh delta findings command
+            commandService.refreshElements(
+                "io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues", null);
+          }
+        });
+  }
 
-	private void refreshToolbarUI() {
-		Display display = Display.getCurrent();
-		if (display == null) {
-			SnykLogger.logInfo("refreshToolbarUI: No display available, skipping UI refresh");
-			return;
-		}
-		display.asyncExec(() -> {
-			ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
-			if (commandService != null) {
-				// Refresh severity filter commands
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterCritical", null);
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterHigh", null);
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterMedium", null);
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterLow", null);
-				// Refresh product filter commands
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableOSS", null);
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableCodeSecurity", null);
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableIAC", null);
-				// Refresh issue view options commands
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykShowOpenIgnored", null);
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykShowIgnored", null);
-				// Refresh delta findings command
-				commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues", null);
-			}
-		});
-	}
+  @Override
+  public boolean performOk() {
+    browser.evaluate(
+        "if (typeof window.getAndSaveIdeConfig === 'function') { window.getAndSaveIdeConfig(); }");
 
-	private void applyIfPresent(Map<String, Object> config, String key, java.util.function.Consumer<Object> consumer) {
-		if (config.containsKey(key) && config.get(key) != null) {
-			consumer.accept(config.get(key));
-		}
-	}
+    SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+    if (lc != null) {
+      CompletableFuture.runAsync(
+          () -> {
+            lc.updateConfiguration();
+            lc.refreshFeatureFlags();
+          });
+    }
 
-	@Override
-	public boolean performOk() {
-		// Both LS HTML and fallback HTML expose window.getAndSaveIdeConfig()
-		browser.evaluate("if (typeof window.getAndSaveIdeConfig === 'function') { window.getAndSaveIdeConfig(); }");
+    return super.performOk();
+  }
 
-		SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-		if (lc != null) {
-			lc.updateConfiguration();
-			CompletableFuture.runAsync(() -> {
-				lc.refreshFeatureFlags();
-			});
-		}
+  @Override
+  public void dispose() {
+    if (instance == this) {
+      instance = null;
+    }
+    super.dispose();
+  }
 
-		return super.performOk();
-	}
-
-	public void refreshWithLsConfig() {
-		if (!isUsingFallback) {
-			return;
-		}
-
-		SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-		if (lc != null) {
-			String lsHtml = lc.getConfigHtml();
-			if (lsHtml != null && !lsHtml.isBlank()) {
-				isUsingFallback = false;
-				String styledHtml = htmlProvider.replaceCssVariables(lsHtml, false);
-				Display.getDefault().asyncExec(() -> {
-					if (browser != null && !browser.isDisposed()) {
-						browser.setText(styledHtml);
-					}
-				});
-			}
-		}
-	}
-
-	public boolean isModified() {
-		return modified;
-	}
+  public static void notifyAuthTokenChanged(String token) {
+    if (instance != null && instance.browser != null && !instance.browser.isDisposed()) {
+      Display.getDefault()
+          .asyncExec(
+              () -> {
+                if (instance != null
+                    && instance.browser != null
+                    && !instance.browser.isDisposed()) {
+                  instance.browser.evaluate(
+                      "if (typeof window.setAuthToken === 'function') { window.setAuthToken('"
+                          + token
+                          + "'); }");
+                }
+              });
+    }
+  }
 }

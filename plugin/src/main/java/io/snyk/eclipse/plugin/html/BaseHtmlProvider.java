@@ -209,7 +209,8 @@ public class BaseHtmlProvider {
 		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
 		String focusColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0000FF");
-		String buttonBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
+		String buttonBgColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066CC");
+		String buttonFgColor = "#FFFFFF";
 		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 
 		htmlStyled = htmlStyled.replace(VSCODE_VAR_FONT_FAMILY_PREFIX, textColor + VSCODE_VAR_SUFFIX);
@@ -224,11 +225,11 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace(VSCODE_VAR_INPUT_BACKGROUND_PREFIX, inputBgColor + VSCODE_VAR_SUFFIX);
 		htmlStyled = htmlStyled.replace(VSCODE_VAR_EDITOR_INACTIVE_SELECTION_BG_PREFIX, sectionBgColor + VSCODE_VAR_SUFFIX);
 		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_BACKGROUND_PREFIX, buttonBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_FOREGROUND_PREFIX, textColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_HOVER_BG_PREFIX, buttonBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_SECONDARY_BG_PREFIX, buttonBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_FOREGROUND_PREFIX, buttonFgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_HOVER_BG_PREFIX, focusColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_SECONDARY_BG_PREFIX, sectionBgColor + VSCODE_VAR_SUFFIX);
 		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_SECONDARY_FOREGROUND_PREFIX, textColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_SECONDARY_HOVER_BG_PREFIX, buttonBgColor + VSCODE_VAR_SUFFIX);
+		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_SECONDARY_HOVER_BG_PREFIX, inputBgColor + VSCODE_VAR_SUFFIX);
 		htmlStyled = htmlStyled.replace(VSCODE_VAR_LIST_HOVER_BG_PREFIX, sectionBgColor + VSCODE_VAR_SUFFIX);
 		htmlStyled = htmlStyled.replace(VSCODE_VAR_INPUT_BORDER_PREFIX, borderColor + VSCODE_VAR_SUFFIX);
 		htmlStyled = htmlStyled.replace(VSCODE_VAR_PANEL_BORDER_PREFIX, borderColor + VSCODE_VAR_SUFFIX);
