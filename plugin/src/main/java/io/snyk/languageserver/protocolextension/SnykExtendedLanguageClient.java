@@ -67,6 +67,7 @@ import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.analytics.AbstractTask;
 import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
+import io.snyk.eclipse.plugin.preferences.HTMLSettingsPreferencePage;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
@@ -323,7 +324,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		if (differentToken) {
 			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
-			io.snyk.eclipse.plugin.preferences.HTMLSettingsPreferencePage.notifyAuthTokenChanged(newToken);
+			HTMLSettingsPreferencePage.notifyAuthTokenChanged(newToken);
 		}
 
 		if (!Preferences.getInstance().isTest()) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
@@ -36,6 +37,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   private Browser browser;
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final BaseHtmlProvider htmlProvider = new BaseHtmlProvider();
+  private final Object authLock = new Object();
 
   public HTMLSettingsPreferencePage() {
     super();
@@ -77,13 +79,15 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       public Object function(Object[] arguments) {
         CompletableFuture.runAsync(
             () -> {
-              SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-              if (lc == null) {
-                SnykLogger.logError(
-                    new IllegalStateException("Language client instance is null during login"));
-                return;
+              synchronized (authLock) {
+                SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+                if (lc == null) {
+                  SnykLogger.logError(
+                      new IllegalStateException("Language client instance is null during login"));
+                  return;
+                }
+                lc.triggerAuthentication();
               }
-              lc.triggerAuthentication();
             });
         return null;
       }
@@ -94,13 +98,15 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       public Object function(Object[] arguments) {
         CompletableFuture.runAsync(
             () -> {
-              SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-              if (lc == null) {
-                SnykLogger.logError(
-                    new IllegalStateException("Language client instance is null during logout"));
-                return;
+              synchronized (authLock) {
+                SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+                if (lc == null) {
+                  SnykLogger.logError(
+                      new IllegalStateException("Language client instance is null during logout"));
+                  return;
+                }
+                lc.logout();
               }
-              lc.logout();
             });
         return null;
       }
@@ -204,77 +210,75 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       IdeConfigData config = objectMapper.readValue(jsonString, IdeConfigData.class);
       Preferences prefs = Preferences.getInstance();
 
-      boolean isFallback = Boolean.TRUE.equals(config.getIsFallbackForm());
+      boolean isFallback = Boolean.TRUE.equals(config.isFallbackForm());
 
       // CLI Settings - always persist for both fallback and full forms
-      prefs.store(Preferences.CLI_PATH, String.valueOf(config.getCliPath()));
+      prefs.store(Preferences.CLI_PATH, String.valueOf(config.cliPath()));
       prefs.store(
           Preferences.MANAGE_BINARIES_AUTOMATICALLY,
-          String.valueOf(config.getManageBinariesAutomatically()));
-      prefs.store(Preferences.CLI_BASE_URL, String.valueOf(config.getCliBaseDownloadURL()));
-      prefs.store(Preferences.RELEASE_CHANNEL, String.valueOf(config.getCliReleaseChannel()));
-      prefs.store(Preferences.INSECURE_KEY, String.valueOf(config.getInsecure()));
+          String.valueOf(config.manageBinariesAutomatically()));
+      prefs.store(Preferences.CLI_BASE_URL, String.valueOf(config.cliBaseDownloadURL()));
+      prefs.store(Preferences.RELEASE_CHANNEL, String.valueOf(config.cliReleaseChannel()));
+      prefs.store(Preferences.INSECURE_KEY, String.valueOf(config.insecure()));
 
       // Only persist non-CLI fields if not fallback form
       if (!isFallback) {
         // Scan Settings
         prefs.store(
             Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
-            String.valueOf(config.getActivateSnykOpenSource()));
+            String.valueOf(config.activateSnykOpenSource()));
         prefs.store(
-            Preferences.ACTIVATE_SNYK_CODE_SECURITY, String.valueOf(config.getActivateSnykCode()));
-        prefs.store(Preferences.ACTIVATE_SNYK_IAC, String.valueOf(config.getActivateSnykIac()));
+            Preferences.ACTIVATE_SNYK_CODE_SECURITY, String.valueOf(config.activateSnykCode()));
+        prefs.store(Preferences.ACTIVATE_SNYK_IAC, String.valueOf(config.activateSnykIac()));
 
-        if (config.getScanningMode() != null) {
-          boolean isAutomatic = "auto".equals(config.getScanningMode());
+        if (config.scanningMode() != null) {
+          boolean isAutomatic = "auto".equals(config.scanningMode());
           prefs.store(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
         }
 
         // Issue View Settings
-        if (config.getIssueViewOptions() != null) {
-          IdeConfigData.IssueViewOptions options = config.getIssueViewOptions();
+        if (config.issueViewOptions() != null) {
+          IdeConfigData.IssueViewOptions options = config.issueViewOptions();
           prefs.store(
-              Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, String.valueOf(options.getOpenIssues()));
+              Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, String.valueOf(options.openIssues()));
           prefs.store(
               Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES,
-              String.valueOf(options.getIgnoredIssues()));
+              String.valueOf(options.ignoredIssues()));
         }
-        prefs.store(Preferences.ENABLE_DELTA, String.valueOf(config.getEnableDeltaFindings()));
+        prefs.store(Preferences.ENABLE_DELTA, String.valueOf(config.enableDeltaFindings()));
 
         // Authentication Settings
-        if (config.getAuthenticationMethod() != null) {
-          String method = config.getAuthenticationMethod();
-          if (AuthConstants.AUTH_OAUTH2.equals(method)
-              || AuthConstants.AUTH_API_TOKEN.equals(method)) {
-            prefs.store(Preferences.AUTHENTICATION_METHOD, method);
-          }
+        if (config.authenticationMethod() != null) {
+          prefs.store(Preferences.AUTHENTICATION_METHOD, config.authenticationMethod());
         }
 
         // Connection Settings
-        prefs.store(Preferences.ENDPOINT_KEY, String.valueOf(config.getEndpoint()));
-        prefs.store(Preferences.AUTH_TOKEN_KEY, String.valueOf(config.getToken()));
-        prefs.store(Preferences.ORGANIZATION_KEY, String.valueOf(config.getOrganization()));
+        prefs.store(Preferences.ENDPOINT_KEY, String.valueOf(config.endpoint()));
+        prefs.store(Preferences.AUTH_TOKEN_KEY, String.valueOf(config.token()));
+        if (config.organization() != null) {
+          prefs.store(Preferences.ORGANIZATION_KEY, String.valueOf(config.organization()));
+        }
 
         // Trusted Folders
-        if (config.getTrustedFolders() != null) {
-          String trustedFoldersString = String.join(File.pathSeparator, config.getTrustedFolders());
+        if (config.trustedFolders() != null) {
+          String trustedFoldersString = String.join(File.pathSeparator, config.trustedFolders());
           prefs.store(Preferences.TRUSTED_FOLDERS, trustedFoldersString);
         }
 
         // Filter Settings
-        if (config.getFilterSeverity() != null) {
-          IdeConfigData.FilterSeverity severity = config.getFilterSeverity();
-          prefs.store(Preferences.FILTER_SHOW_CRITICAL, String.valueOf(severity.getCritical()));
-          prefs.store(Preferences.FILTER_SHOW_HIGH, String.valueOf(severity.getHigh()));
-          prefs.store(Preferences.FILTER_SHOW_MEDIUM, String.valueOf(severity.getMedium()));
-          prefs.store(Preferences.FILTER_SHOW_LOW, String.valueOf(severity.getLow()));
+        if (config.filterSeverity() != null) {
+          IdeConfigData.FilterSeverity severity = config.filterSeverity();
+          prefs.store(Preferences.FILTER_SHOW_CRITICAL, String.valueOf(severity.critical()));
+          prefs.store(Preferences.FILTER_SHOW_HIGH, String.valueOf(severity.high()));
+          prefs.store(Preferences.FILTER_SHOW_MEDIUM, String.valueOf(severity.medium()));
+          prefs.store(Preferences.FILTER_SHOW_LOW, String.valueOf(severity.low()));
         }
         prefs.store(
-            Preferences.RISK_SCORE_THRESHOLD, String.valueOf(config.getRiskScoreThreshold()));
+            Preferences.RISK_SCORE_THRESHOLD, String.valueOf(config.riskScoreThreshold()));
 
         // Folder Configs
-        if (config.getFolderConfigs() != null && !config.getFolderConfigs().isEmpty()) {
-          for (IdeConfigData.FolderConfigData folderConfigData : config.getFolderConfigs()) {
+        if (config.folderConfigs() != null && !config.folderConfigs().isEmpty()) {
+          for (IdeConfigData.FolderConfigData folderConfigData : config.folderConfigs()) {
             processFolderConfig(folderConfigData);
           }
         }
@@ -288,32 +292,32 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   }
 
   private void processFolderConfig(IdeConfigData.FolderConfigData folderConfigData) {
-    if (folderConfigData.getFolderPath() == null) {
+    if (folderConfigData.folderPath() == null) {
       return;
     }
 
     FolderConfig folderConfig =
-        FolderConfigs.getInstance().getFolderConfig(Paths.get(folderConfigData.getFolderPath()));
+        FolderConfigs.getInstance().getFolderConfig(Paths.get(folderConfigData.folderPath()));
 
-    if (folderConfigData.getPreferredOrg() != null) {
-      folderConfig.setPreferredOrg(folderConfigData.getPreferredOrg());
+    if (folderConfigData.preferredOrg() != null) {
+      folderConfig.setPreferredOrg(folderConfigData.preferredOrg());
     }
-    if (folderConfigData.getAutoDeterminedOrg() != null) {
-      folderConfig.setAutoDeterminedOrg(folderConfigData.getAutoDeterminedOrg());
+    if (folderConfigData.autoDeterminedOrg() != null) {
+      folderConfig.setAutoDeterminedOrg(folderConfigData.autoDeterminedOrg());
     }
-    if (folderConfigData.getOrgSetByUser() != null) {
-      folderConfig.setOrgSetByUser(folderConfigData.getOrgSetByUser());
+    if (folderConfigData.orgSetByUser() != null) {
+      folderConfig.setOrgSetByUser(folderConfigData.orgSetByUser());
     }
-    if (folderConfigData.getAdditionalEnv() != null) {
-      folderConfig.setAdditionalEnv(folderConfigData.getAdditionalEnv());
+    if (folderConfigData.additionalEnv() != null) {
+      folderConfig.setAdditionalEnv(folderConfigData.additionalEnv());
     }
-    if (folderConfigData.getAdditionalParameters() != null) {
-      String[] params = folderConfigData.getAdditionalParameters().trim().split("\\s+");
+    if (folderConfigData.additionalParameters() != null) {
+      String[] params = folderConfigData.additionalParameters().trim().split("\\s+");
       folderConfig.setAdditionalParameters(List.of(params));
     }
-    if (folderConfigData.getScanCommandConfig() != null) {
+    if (folderConfigData.scanCommandConfig() != null) {
       Map<String, ScanCommandConfig> targetConfigMap =
-          convertScanCommandConfig(folderConfigData.getScanCommandConfig());
+          convertScanCommandConfig(folderConfigData.scanCommandConfig());
       folderConfig.setScanCommandConfig(targetConfigMap);
     }
   }
@@ -326,10 +330,10 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       IdeConfigData.ScanCommandConfigData configData = entry.getValue();
       ScanCommandConfig scanCommandConfig =
           new ScanCommandConfig(
-              configData.getPreScanCommand(),
-              Boolean.TRUE.equals(configData.getPreScanOnlyReferenceFolder()),
-              configData.getPostScanCommand(),
-              Boolean.TRUE.equals(configData.getPostScanOnlyReferenceFolder()));
+              configData.preScanCommand(),
+              Boolean.TRUE.equals(configData.preScanOnlyReferenceFolder()),
+              configData.postScanCommand(),
+              Boolean.TRUE.equals(configData.postScanOnlyReferenceFolder()));
       targetConfigMap.put(entry.getKey(), scanCommandConfig);
     }
     return targetConfigMap;
@@ -347,24 +351,19 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
               PlatformUI.getWorkbench().getService(ICommandService.class);
           if (commandService != null) {
             // Refresh severity filter commands
-            commandService.refreshElements(
-                "io.snyk.eclipse.plugin.commands.snykFilterCritical", null);
-            commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterHigh", null);
-            commandService.refreshElements(
-                "io.snyk.eclipse.plugin.commands.snykFilterMedium", null);
-            commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykFilterLow", null);
+            commandService.refreshElements(IHandlerCommands.SHOW_CRITICAL, null);
+            commandService.refreshElements(IHandlerCommands.SHOW_HIGH, null);
+            commandService.refreshElements(IHandlerCommands.SHOW_MEDIUM, null);
+            commandService.refreshElements(IHandlerCommands.SHOW_LOW, null);
             // Refresh product filter commands
-            commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableOSS", null);
-            commandService.refreshElements(
-                "io.snyk.eclipse.plugin.commands.enableCodeSecurity", null);
-            commandService.refreshElements("io.snyk.eclipse.plugin.commands.enableIAC", null);
+            commandService.refreshElements(IHandlerCommands.ENABLE_OSS, null);
+            commandService.refreshElements(IHandlerCommands.ENABLE_CODE_SECURITY, null);
+            commandService.refreshElements(IHandlerCommands.ENABLE_IAC, null);
             // Refresh issue view options commands
-            commandService.refreshElements(
-                "io.snyk.eclipse.plugin.commands.snykShowOpenIgnored", null);
-            commandService.refreshElements("io.snyk.eclipse.plugin.commands.snykShowIgnored", null);
+            commandService.refreshElements(IHandlerCommands.IGNORES_SHOW_OPEN, null);
+            commandService.refreshElements(IHandlerCommands.IGNORES_SHOW_IGNORED, null);
             // Refresh delta findings command
-            commandService.refreshElements(
-                "io.snyk.eclipse.plugin.commands.snykFilterNetNewIssues", null);
+            commandService.refreshElements(IHandlerCommands.ENABLE_DELTA, null);
           }
         });
   }
@@ -389,13 +388,9 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   @Override
   public void dispose() {
     if (this.equals(instance)) {
-      clearInstance();
+      instance = null;
     }
     super.dispose();
-  }
-
-  private static void clearInstance() {
-    instance = null;
   }
 
   public static void notifyAuthTokenChanged(String token) {
