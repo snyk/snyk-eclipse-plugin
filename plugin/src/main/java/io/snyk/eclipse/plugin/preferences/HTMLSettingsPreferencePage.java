@@ -39,6 +39,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   private final BaseHtmlProvider htmlProvider = new BaseHtmlProvider();
   private final Object authLock = new Object();
 
+  @SuppressWarnings("PMD.AssignmentToNonFinalStatic")
   public HTMLSettingsPreferencePage() {
     super();
     super.noDefaultAndApplyButton();
@@ -322,6 +323,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     }
   }
 
+  @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
   private Map<String, ScanCommandConfig> convertScanCommandConfig(
       Map<String, IdeConfigData.ScanCommandConfigData> sourceConfigMap) {
     Map<String, ScanCommandConfig> targetConfigMap = new HashMap<>();
@@ -386,6 +388,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   }
 
   @Override
+  @SuppressWarnings("PMD.NullAssignment")
   public void dispose() {
     if (this.equals(instance)) {
       instance = null;

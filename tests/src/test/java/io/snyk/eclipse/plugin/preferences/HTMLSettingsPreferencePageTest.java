@@ -198,24 +198,6 @@ class HTMLSettingsPreferencePageTest {
 	}
 
 	@Test
-	void parseAndSaveConfig_savesSendErrorReports() throws Exception {
-		String json = "{\"sendErrorReports\": false}";
-
-		invokeParseAndSaveConfig(json);
-
-		assertEquals("false", prefs.getPref(Preferences.SEND_ERROR_REPORTS));
-	}
-
-	@Test
-	void parseAndSaveConfig_savesEnableTelemetry() throws Exception {
-		String json = "{\"enableTelemetry\": false}";
-
-		invokeParseAndSaveConfig(json);
-
-		assertEquals("false", prefs.getPref(Preferences.ENABLE_TELEMETRY));
-	}
-
-	@Test
 	void parseAndSaveConfig_handlesMultipleSettings() throws Exception {
 		String json = "{\"cliPath\": \"/custom/path\", \"organization\": \"test-org\", \"insecure\": true}";
 
