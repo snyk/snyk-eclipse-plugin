@@ -313,8 +313,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       folderConfig.setAdditionalEnv(folderConfigData.additionalEnv());
     }
     if (folderConfigData.additionalParameters() != null) {
-      String[] params = folderConfigData.additionalParameters().trim().split("\\s+");
-      folderConfig.setAdditionalParameters(List.of(params));
+      folderConfig.setAdditionalParameters(folderConfigData.additionalParameters());
     }
     if (folderConfigData.scanCommandConfig() != null) {
       Map<String, ScanCommandConfig> targetConfigMap =

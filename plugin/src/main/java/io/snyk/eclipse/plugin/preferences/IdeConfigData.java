@@ -75,7 +75,7 @@ public record IdeConfigData(
   @JsonIgnoreProperties(ignoreUnknown = true)
   public record FolderConfigData(
       String folderPath,
-      String additionalParameters,
+      List<String> additionalParameters,
       String additionalEnv,
       String preferredOrg,
       String autoDeterminedOrg,
