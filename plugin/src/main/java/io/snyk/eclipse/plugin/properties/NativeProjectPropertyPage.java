@@ -92,7 +92,7 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 		var url = Preferences.getInstance().getEndpoint() + "/account";
 		var urlUserDocs = "https://docs.snyk.io/developer-tools/snyk-ide-plugins-and-extensions/eclipse-plugin/configuration-of-the-eclipse-plugin#global-settings";
 		addField(new LabelFieldEditor(
-				"[Experimental] Use automatic organization selection. When enabled, Snyk will automatically select the most\n"
+				"Use automatic organization selection. When enabled, Snyk will automatically select the most\n"
 						+ "appropriate organization for your project using context found in your repository and your authentication.\n"
 						+ "\n"
 						+ "If an organization is configured manually, this feature will be overridden.\n"
@@ -123,7 +123,7 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 		addField(projectOrg);
 
 		addField(new LabelFieldEditor(
-				"[Experimental] Specify the organization (ID or name) for Snyk to run scans against for this specific IDE project.\n"
+				"Specify the organization (ID or name) for Snyk to run scans against for this specific IDE project.\n"
 						+ "\n"
 						+ "If the organization value is blank or invalid, the value from the global Organization field will be used.",
 				getFieldEditorParent()));
