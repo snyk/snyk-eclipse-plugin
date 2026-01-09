@@ -23,6 +23,7 @@ public class Settings {
 	private final String organization;
 	private final String manageBinariesAutomatically;
 	private final String cliPath;
+	private final String cliBaseDownloadURL;
 	private final String token;
 	private final String integrationName;
 	private final String integrationVersion;
@@ -44,8 +45,8 @@ public class Settings {
 	public Settings(String activateSnykOpenSource, String activateSnykCodeSecurity, String activateSnykIac,
 			String insecure, String endpoint, String additionalParams, String additionalEnv, String path,
 			IssueViewOptions issueViewOptions, String sendErrorReports, String enableTelemetry, String organization,
-			String manageBinariesAutomatically, String cliPath, String token, String integrationName,
-			String integrationVersion, String automaticAuthentication, String[] trustedFolders,
+			String manageBinariesAutomatically, String cliPath, String cliBaseDownloadURL, String token,
+			String integrationName, String integrationVersion, String automaticAuthentication, String[] trustedFolders,
 			String enableTrustedFoldersFeature, String scanningMode, String enableDeltaFindings,
 			Integer riskScoreThreshold, String authenticationMethod, List<FolderConfig> folderConfigs,
 			FilterSeverity filterSeverity) {
@@ -63,6 +64,7 @@ public class Settings {
 		this.organization = organization;
 		this.manageBinariesAutomatically = manageBinariesAutomatically;
 		this.cliPath = cliPath;
+		this.cliBaseDownloadURL = cliBaseDownloadURL;
 		this.token = token;
 		this.integrationName = integrationName;
 		this.integrationVersion = integrationVersion;
@@ -131,6 +133,10 @@ public class Settings {
 
 	public String getCliPath() {
 		return cliPath;
+	}
+
+	public String getCliBaseDownloadURL() {
+		return cliBaseDownloadURL;
 	}
 
 	public String getToken() {

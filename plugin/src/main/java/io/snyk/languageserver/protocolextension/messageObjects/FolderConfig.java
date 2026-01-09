@@ -2,6 +2,7 @@ package io.snyk.languageserver.protocolextension.messageObjects;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class FolderConfig {
 
@@ -19,9 +20,11 @@ public class FolderConfig {
 
     private List<String> additionalParameters = new ArrayList<>();
 
+    private String additionalEnv = "";
+
     private String referenceFolderPath = "";
 
-    private ScanCommandConfig scanCommandConfig;
+    private Map<String, ScanCommandConfig> scanCommandConfig;
 
     public FolderConfig(String folderPath) {
         this.folderPath = folderPath;
@@ -62,6 +65,15 @@ public class FolderConfig {
         this.additionalParameters = additionalParameters != null ? additionalParameters : List.of();
     }
 
+    public String getAdditionalEnv() {
+		if (additionalEnv == null) return "";
+        return additionalEnv;
+    }
+
+    public void setAdditionalEnv(String additionalEnv) {
+        this.additionalEnv = additionalEnv;
+    }
+
 	public String getReferenceFolderPath() {
 		if (referenceFolderPath == null) return "";
 		return referenceFolderPath;
@@ -71,11 +83,11 @@ public class FolderConfig {
 		this.referenceFolderPath = referenceFolderPath;
 	}
 
-	public ScanCommandConfig getScanCommandConfig() {
+	public Map<String, ScanCommandConfig> getScanCommandConfig() {
 		return scanCommandConfig;
 	}
 
-	public void setScanCommandConfig(ScanCommandConfig scanCommandConfig) {
+	public void setScanCommandConfig(Map<String, ScanCommandConfig> scanCommandConfig) {
 		this.scanCommandConfig = scanCommandConfig;
 	}
 

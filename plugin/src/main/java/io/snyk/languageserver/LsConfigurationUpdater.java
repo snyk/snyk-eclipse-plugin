@@ -50,6 +50,7 @@ public class LsConfigurationUpdater {
 		String manageBinariesAutomatically = preferences.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY,
 				Boolean.TRUE.toString());
 		String cliPath = preferences.getCliPath();
+		String cliBaseDownloadURL = preferences.getPref(Preferences.CLI_BASE_URL, "https://downloads.snyk.io");
 		String token = preferences.getPref(Preferences.AUTH_TOKEN_KEY, "");
 		String integrationName = Activator.INTEGRATION_NAME;
 		String integrationVersion = Activator.PLUGIN_VERSION;
@@ -89,8 +90,8 @@ public class LsConfigurationUpdater {
 
 		return new Settings(activateSnykOpenSource, activateSnykCodeSecurity, activateSnykIac,
 				insecure, endpoint, additionalParams, additionalEnv, path, issueViewOptions, sendErrorReports,
-				enableTelemetry, organization, manageBinariesAutomatically, cliPath, token, integrationName,
-				integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature, scanningMode,
-				enableDeltaFindings, riskScoreThreshold, authenticationMethod, folderConfigs, filterSeverity);
+				enableTelemetry, organization, manageBinariesAutomatically, cliPath, cliBaseDownloadURL, token,
+				integrationName, integrationVersion, automaticAuthentication, trustedFolders, enableTrustedFolderFeature,
+				scanningMode, enableDeltaFindings, riskScoreThreshold, authenticationMethod, folderConfigs, filterSeverity);
 	}
 }
