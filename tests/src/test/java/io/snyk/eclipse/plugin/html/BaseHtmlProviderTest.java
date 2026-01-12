@@ -84,33 +84,6 @@ class BaseHtmlProviderTest extends LsBaseTest {
 	}
 
 	@Test
-	void replaceCssVariables_replacesVscodeVariables() {
-		String html = "<div style=\"color: var(--vscode-foreground, #000)\">Test</div>";
-
-		String result = htmlProvider.replaceCssVariables(html);
-
-		assertFalse(result.contains("var(--vscode-foreground,"));
-	}
-
-	@Test
-	void replaceCssVariables_replacesVscodeInputBackground() {
-		String html = "<input style=\"background: var(--vscode-input-background, #fff)\">";
-
-		String result = htmlProvider.replaceCssVariables(html);
-
-		assertFalse(result.contains("var(--vscode-input-background,"));
-	}
-
-	@Test
-	void replaceCssVariables_replacesVscodeFocusBorder() {
-		String html = "<input style=\"border-color: var(--vscode-focusBorder, blue)\">";
-
-		String result = htmlProvider.replaceCssVariables(html);
-
-		assertFalse(result.contains("var(--vscode-focusBorder,"));
-	}
-
-	@Test
 	void replaceCssVariables_replacesNonce() {
 		String html = "<style nonce=\"ideNonce\">body{}</style>";
 

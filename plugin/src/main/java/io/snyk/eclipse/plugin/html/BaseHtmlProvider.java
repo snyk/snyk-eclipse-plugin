@@ -25,9 +25,6 @@ public class BaseHtmlProvider {
 	private final Map<String, String> colorCache = new HashMap<>();
 	private String nonce = "";
 
-	// Suffix used to neutralize VSCode CSS variable fallbacks (e.g., "var(--vscode-foo, fallback)")
-	// We replace "var(--vscode-foo," with "value; --unused:" so the fallback becomes a no-op property
-	private static final String VSCODE_VAR_SUFFIX = "; --unused:";
 
 	// Eclipse theme color keys
 	private static final String THEME_INACTIVE_TAB_BG = "org.eclipse.ui.workbench.INACTIVE_TAB_BG_START";
@@ -38,6 +35,7 @@ public class BaseHtmlProvider {
 	private static final String THEME_ACTIVE_TAB_BG_END = "org.eclipse.ui.workbench.ACTIVE_TAB_BG_END";
 	private static final String THEME_ACTIVE_HYPERLINK = "ACTIVE_HYPERLINK_COLOR";
 	private static final String THEME_DARK_BACKGROUND = "org.eclipse.ui.workbench.DARK_BACKGROUND";
+	private static final String THEME_HYPERLINK_COLOR = "org.eclipse.ui.editors.hyperlinkColor";
 
 	private static final String CSS_VAR_DEFAULT_FONT = "var(--default-font)";
 	private static final String CSS_VAR_MAIN_FONT_SIZE = "var(--main-font-size)";
@@ -56,30 +54,29 @@ public class BaseHtmlProvider {
 	private static final String CSS_VAR_INPUT_BACKGROUND_COLOR = "var(--input-background-color)";
 	private static final String CSS_VAR_FOCUS_COLOR = "var(--focus-color)";
 
-	private static final String VSCODE_VAR_FONT_FAMILY_PREFIX = "var(--vscode-font-family,";
-	private static final String VSCODE_VAR_EDITOR_FONT_FAMILY_PREFIX = "var(--vscode-editor-font-family,";
-	private static final String VSCODE_VAR_FONT_SIZE_PREFIX = "var(--vscode-font-size,";
-	private static final String VSCODE_VAR_EDITOR_BACKGROUND_PREFIX = "var(--vscode-editor-background,";
-	private static final String VSCODE_VAR_FOREGROUND_PREFIX = "var(--vscode-foreground,";
-	private static final String VSCODE_VAR_INPUT_FOREGROUND_PREFIX = "var(--vscode-input-foreground,";
-	private static final String VSCODE_VAR_EDITOR_FOREGROUND_PREFIX = "var(--vscode-editor-foreground,";
-	private static final String VSCODE_VAR_DISABLED_FOREGROUND_PREFIX = "var(--vscode-disabledForeground,";
-	private static final String VSCODE_VAR_ERROR_FOREGROUND_PREFIX = "var(--vscode-errorForeground,";
-	private static final String VSCODE_VAR_INPUT_BACKGROUND_PREFIX = "var(--vscode-input-background,";
-	private static final String VSCODE_VAR_EDITOR_INACTIVE_SELECTION_BG_PREFIX = "var(--vscode-editor-inactiveSelectionBackground,";
-	private static final String VSCODE_VAR_BUTTON_BACKGROUND_PREFIX = "var(--vscode-button-background,";
-	private static final String VSCODE_VAR_BUTTON_FOREGROUND_PREFIX = "var(--vscode-button-foreground,";
-	private static final String VSCODE_VAR_BUTTON_HOVER_BG_PREFIX = "var(--vscode-button-hoverBackground,";
-	private static final String VSCODE_VAR_BUTTON_SECONDARY_BG_PREFIX = "var(--vscode-button-secondaryBackground,";
-	private static final String VSCODE_VAR_BUTTON_SECONDARY_FOREGROUND_PREFIX = "var(--vscode-button-secondaryForeground,";
-	private static final String VSCODE_VAR_BUTTON_SECONDARY_HOVER_BG_PREFIX = "var(--vscode-button-secondaryHoverBackground,";
-	private static final String VSCODE_VAR_LIST_HOVER_BG_PREFIX = "var(--vscode-list-hoverBackground,";
-	private static final String VSCODE_VAR_INPUT_BORDER_PREFIX = "var(--vscode-input-border,";
-	private static final String VSCODE_VAR_PANEL_BORDER_PREFIX = "var(--vscode-panel-border,";
-	private static final String VSCODE_VAR_FOCUS_BORDER_PREFIX = "var(--vscode-focusBorder,";
-	private static final String VSCODE_VAR_SCROLLBAR_SLIDER_BG_PREFIX = "var(--vscode-scrollbarSlider-background,";
-	private static final String VSCODE_VAR_SCROLLBAR_SLIDER_HOVER_BG_PREFIX = "var(--vscode-scrollbarSlider-hoverBackground,";
-	private static final String VSCODE_VAR_SCROLLBAR_SLIDER_ACTIVE_BG_PREFIX = "var(--vscode-scrollbarSlider-activeBackground,";
+	// CSS variables used in LS-served HTML (styles.css from snyk-ls)
+	private static final String CSS_VAR_LS_BACKGROUND_COLOR = "var(--background-color)";
+	private static final String CSS_VAR_LS_TEXT_COLOR = "var(--text-color)";
+	private static final String CSS_VAR_LS_INPUT_FOREGROUND = "var(--input-foreground)";
+	private static final String CSS_VAR_LS_EDITOR_FOREGROUND = "var(--editor-foreground)";
+	private static final String CSS_VAR_LS_DISABLED_FOREGROUND = "var(--disabled-foreground)";
+	private static final String CSS_VAR_LS_ERROR_FOREGROUND = "var(--error-foreground)";
+	private static final String CSS_VAR_LS_INPUT_BACKGROUND = "var(--input-background)";
+	private static final String CSS_VAR_LS_SECTION_BACKGROUND = "var(--section-background)";
+	private static final String CSS_VAR_LS_BUTTON_BACKGROUND_COLOR = "var(--button-background-color)";
+	private static final String CSS_VAR_LS_BUTTON_FOREGROUND = "var(--button-foreground)";
+	private static final String CSS_VAR_LS_BUTTON_HOVER_BACKGROUND = "var(--button-hover-background)";
+	private static final String CSS_VAR_LS_BUTTON_SECONDARY_BACKGROUND = "var(--button-secondary-background)";
+	private static final String CSS_VAR_LS_BUTTON_SECONDARY_FOREGROUND = "var(--button-secondary-foreground)";
+	private static final String CSS_VAR_LS_BUTTON_SECONDARY_HOVER_BACKGROUND = "var(--button-secondary-hover-background)";
+	private static final String CSS_VAR_LS_LIST_HOVER_BACKGROUND = "var(--list-hover-background)";
+	private static final String CSS_VAR_LS_INPUT_BORDER = "var(--input-border)";
+	private static final String CSS_VAR_LS_BORDER_COLOR = "var(--border-color)";
+	private static final String CSS_VAR_LS_FOCUS_BORDER = "var(--focus-border)";
+	private static final String CSS_VAR_LS_SCROLLBAR_BACKGROUND = "var(--scrollbar-background)";
+	private static final String CSS_VAR_LS_SCROLLBAR_HOVER_BACKGROUND = "var(--scrollbar-hover-background)";
+	private static final String CSS_VAR_LS_SCROLLBAR_ACTIVE_BACKGROUND = "var(--scrollbar-active-background)";
+
 
 	// Default fallback colors
 	private static final String DEFAULT_SECTION_BG_COLOR = "#F0F0F0";
@@ -204,41 +201,44 @@ public class BaseHtmlProvider {
 				getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR));
 		htmlStyled = htmlStyled.replace(CSS_VAR_FOCUS_COLOR, getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR));
 
-		// Replace VSCode CSS variables used in LS-served HTML (settings page)
-		String textColor = getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000");
-		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
-		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
-		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
-		String focusColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
-		String buttonBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
-		String buttonFgColor = getColorAsHex(THEME_ACTIVE_TAB_TEXT, "#000000");
-		String buttonHoverBgColor = getColorAsHex(THEME_ACTIVE_NOFOCUS_TAB_BG, "#E0E0E0");
-		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
+		// Replace CSS variables used in LS-served HTML (settings page)
+		// Get Eclipse theme colors
+		String textColor = getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#cccccc");
+		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, "#1e1e1e");
+		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, "#3c3c3c");
+		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, "#454545");
+		String focusColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, "#007acc");
+		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, "#2a2d2e");
 
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_FONT_FAMILY_PREFIX, textColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_EDITOR_FONT_FAMILY_PREFIX, textColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_FONT_SIZE_PREFIX, "13px" + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_EDITOR_BACKGROUND_PREFIX, bgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_FOREGROUND_PREFIX, textColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_INPUT_FOREGROUND_PREFIX, textColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_EDITOR_FOREGROUND_PREFIX, textColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_DISABLED_FOREGROUND_PREFIX, "#808080" + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_ERROR_FOREGROUND_PREFIX, "#f48771" + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_INPUT_BACKGROUND_PREFIX, inputBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_EDITOR_INACTIVE_SELECTION_BG_PREFIX, sectionBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_BACKGROUND_PREFIX, buttonBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_FOREGROUND_PREFIX, buttonFgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_HOVER_BG_PREFIX, buttonHoverBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_SECONDARY_BG_PREFIX, sectionBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_SECONDARY_FOREGROUND_PREFIX, textColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_BUTTON_SECONDARY_HOVER_BG_PREFIX, inputBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_LIST_HOVER_BG_PREFIX, sectionBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_INPUT_BORDER_PREFIX, borderColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_PANEL_BORDER_PREFIX, borderColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_FOCUS_BORDER_PREFIX, focusColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_SCROLLBAR_SLIDER_BG_PREFIX, inputBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_SCROLLBAR_SLIDER_HOVER_BG_PREFIX, inputBgColor + VSCODE_VAR_SUFFIX);
-		htmlStyled = htmlStyled.replace(VSCODE_VAR_SCROLLBAR_SLIDER_ACTIVE_BG_PREFIX, inputBgColor + VSCODE_VAR_SUFFIX);
+		// Button colors: Use Eclipse hyperlink color for primary, inactive tab for secondary
+		String buttonBgColor = getColorAsHex(THEME_HYPERLINK_COLOR, "#419cff");
+		String buttonFgColor = "#ffffff";
+		String buttonHoverBgColor = adjustBrightness(buttonBgColor, 1.15f);
+		String buttonSecondaryBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, "#3b4042");
+		String buttonSecondaryHoverBgColor = adjustBrightness(buttonSecondaryBgColor, 1.15f);
+
+		// Replace LS CSS variables with Eclipse theme values
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BACKGROUND_COLOR, bgColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_TEXT_COLOR, textColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_INPUT_FOREGROUND, textColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_EDITOR_FOREGROUND, textColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_DISABLED_FOREGROUND, "#808080");
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_ERROR_FOREGROUND, "#f48771");
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_INPUT_BACKGROUND, inputBgColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SECTION_BACKGROUND, sectionBgColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_BACKGROUND_COLOR, buttonBgColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_FOREGROUND, buttonFgColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_HOVER_BACKGROUND, buttonHoverBgColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_SECONDARY_BACKGROUND, buttonSecondaryBgColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_SECONDARY_FOREGROUND, textColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_SECONDARY_HOVER_BACKGROUND, buttonSecondaryHoverBgColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_LIST_HOVER_BACKGROUND, "rgba(255, 255, 255, 0.05)");
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_INPUT_BORDER, borderColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BORDER_COLOR, borderColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_FOCUS_BORDER, focusColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_BACKGROUND, inputBgColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_HOVER_BACKGROUND, adjustBrightness(inputBgColor, 1.1f));
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_ACTIVE_BACKGROUND, adjustBrightness(inputBgColor, 1.2f));
 
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
 		htmlStyled = htmlStyled.replace("${nonce}", nonce);
@@ -288,6 +288,36 @@ public class BaseHtmlProvider {
 				return String.format("#%02x%02x%02x", rgb.red, rgb.green, rgb.blue);
 			}
 		});
+	}
+
+	/**
+	 * Adjusts the brightness of a hex color by a given factor.
+	 * @param hexColor The hex color string (e.g., "#0e639c")
+	 * @param factor Brightness multiplier (> 1.0 for lighter, < 1.0 for darker)
+	 * @return Adjusted hex color string
+	 */
+	private String adjustBrightness(String hexColor, float factor) {
+		if (hexColor == null || hexColor.isEmpty() || !hexColor.startsWith("#")) {
+			return hexColor;
+		}
+
+		try {
+			// Parse hex color
+			String hex = hexColor.substring(1);
+			int r = Integer.parseInt(hex.substring(0, 2), 16);
+			int g = Integer.parseInt(hex.substring(2, 4), 16);
+			int b = Integer.parseInt(hex.substring(4, 6), 16);
+
+			// Adjust brightness
+			r = Math.min(255, Math.max(0, (int)(r * factor)));
+			g = Math.min(255, Math.max(0, (int)(g * factor)));
+			b = Math.min(255, Math.max(0, (int)(b * factor)));
+
+			return String.format("#%02x%02x%02x", r, g, b);
+		} catch (NumberFormatException | IndexOutOfBoundsException e) {
+			SnykLogger.logError(new Exception("Failed to adjust brightness for color: " + hexColor, e));
+			return hexColor;
+		}
 	}
 
 	public Boolean isDarkTheme() {
