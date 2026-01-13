@@ -203,18 +203,18 @@ public class BaseHtmlProvider {
 
 		// Replace CSS variables used in LS-served HTML (settings page)
 		// Get Eclipse theme colors
-		String textColor = getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#cccccc");
-		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, "#1e1e1e");
-		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, "#3c3c3c");
-		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, "#454545");
-		String focusColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, "#007acc");
-		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, "#2a2d2e");
+		String textColor = getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000");
+		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
+		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
+		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
+		String focusColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
+		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 
 		// Button colors: Use Eclipse hyperlink color for primary, inactive tab for secondary
-		String buttonBgColor = getColorAsHex(THEME_HYPERLINK_COLOR, "#419cff");
-		String buttonFgColor = "#ffffff";
+		String buttonBgColor = getColorAsHex(THEME_HYPERLINK_COLOR, "#0000FF");
+		String buttonFgColor = DEFAULT_WHITE_COLOR;
 		String buttonHoverBgColor = adjustBrightness(buttonBgColor, 1.15f);
-		String buttonSecondaryBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, "#3b4042");
+		String buttonSecondaryBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 		String buttonSecondaryHoverBgColor = adjustBrightness(buttonSecondaryBgColor, 1.15f);
 
 		// Replace LS CSS variables with Eclipse theme values
