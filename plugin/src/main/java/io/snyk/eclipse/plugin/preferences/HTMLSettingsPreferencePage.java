@@ -56,7 +56,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     Composite container = new Composite(parent, SWT.NONE);
     container.setLayout(new FillLayout());
 
-    browser = new Browser(container, SWT.NONE);
+    browser = new Browser(container, SWT.WEBKIT);
     initializeBrowserFunctions();
     loadContent();
 
