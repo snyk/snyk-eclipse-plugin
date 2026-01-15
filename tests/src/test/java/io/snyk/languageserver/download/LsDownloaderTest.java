@@ -173,6 +173,44 @@ public class LsDownloaderTest extends LsBaseTest {
     assertEquals(expected, actual);
   }
 
+  @Test
+  void downloadShouldPropagateHttpErrorFromHandler() throws IOException {
+    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
+
+    // Mock SHA response - which will have succeeded first before binary download is attempted
+    var checksums = "abc123  snyk-ls_testVersion_linux_amd64\n";
+    InputStream shaStream = new ByteArrayInputStream(checksums.getBytes());
+    mockShaStream(shaStream);
+
+    // Mock binary download to throw HTTP error
+    String errorMessage = "Download failed with HTTP 404 Not Found for URL: https://test.url";
+    when(httpClient.execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class),
+        any(HttpContext.class))).thenThrow(new IOException(errorMessage));
+
+    RuntimeException exception = assertThrows(RuntimeException.class, () -> cut.download(mock(IProgressMonitor.class)));
+    assertTrue(exception.getCause().getMessage().contains("404"), "Should contain status code");
+    assertTrue(exception.getCause().getMessage().contains("https://test.url"), "Should contain URL");
+  }
+
+  @Test
+  void downloadShouldFailWhenPlatformNotInChecksumFile() throws IOException {
+    // Simulates unsupported platform scenario (e.g. Windows ARM64) where SHA file exists
+    // but doesn't contain the platform-specific binary name
+    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
+
+    // Mock SHA response with checksums that don't include our test platform (linux_amd64)
+    var checksums = "abc123  snyk-ls_testVersion_windows_amd64.exe\n"
+        + "def456  snyk-ls_testVersion_darwin_arm64\n";
+    InputStream shaStream = new ByteArrayInputStream(checksums.getBytes());
+    mockShaStream(shaStream);
+
+    ChecksumVerificationException exception = assertThrows(ChecksumVerificationException.class,
+        () -> cut.download(mock(IProgressMonitor.class)));
+    assertTrue(exception.getMessage().contains("Could not find sha"), "Should indicate SHA not found");
+    assertTrue(exception.getMessage().contains("snyk-ls_testVersion_linux_amd64"),
+        "Should include the missing platform binary name");
+  }
+
   private void mockShaStream(InputStream shaStream) throws IOException {
     CloseableHttpResponse shaHttpResponseMock = mock(CloseableHttpResponse.class);
     when(httpClient.execute(any(LsShaRequest.class), any(HttpContext.class))).thenReturn(shaHttpResponseMock);

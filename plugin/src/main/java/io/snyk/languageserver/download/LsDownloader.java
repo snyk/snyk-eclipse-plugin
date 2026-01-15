@@ -82,7 +82,8 @@ public class LsDownloader {
 
 			monitor.subTask("Starting download of CLI version " + version);
 			LsDownloadRequest binaryRequest = new LsDownloadRequest(version, runtimeEnvironment);
-			tempFile = httpClient.execute(binaryRequest, new FileDownloadResponseHandler(tempFile, monitor), context);
+			String downloadUrl = binaryRequest.getURI().toString();
+			tempFile = httpClient.execute(binaryRequest, new FileDownloadResponseHandler(tempFile, monitor, downloadUrl), context);
 			monitor.worked(80);
 			logger.info("LS: Downloaded file.");
 

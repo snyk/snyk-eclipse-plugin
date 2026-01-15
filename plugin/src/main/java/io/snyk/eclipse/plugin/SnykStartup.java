@@ -1,7 +1,5 @@
 package io.snyk.eclipse.plugin;
 
-import static io.snyk.eclipse.plugin.utils.SnykLogger.logError;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -50,6 +48,8 @@ public class SnykStartup implements IStartup {
 			protected IStatus run(IProgressMonitor monitor) {
 				monitor.beginTask("Initializing...", 100);
 				downloadIfNeeded(monitor);
+
+				// Even if download failed, try to start LS - there might be an existing binary
 				monitor.subTask("Starting Language Server...");
 
 				try {
@@ -76,12 +76,30 @@ public class SnykStartup implements IStartup {
 						monitor.subTask("Downloading CLI");
 						logger.info("LS: Need to download");
 						downloading = true;
-						download(monitor);
+						IStatus status = download(monitor);
+						if (!status.isOK()) {
+							logDownloadFailure(status);
+						}
 					}
 				} catch (Exception exception) {
-					logError(exception);
+					logDownloadFailure(exception.getMessage());
 				}
 				downloading = false;
+			}
+
+			private void logDownloadFailure(IStatus status) {
+				String errorMessage = status.getMessage();
+				if (status.getException() != null) {
+					errorMessage += ": " + status.getException().getMessage();
+				}
+				logDownloadFailure(errorMessage);
+			}
+
+			private void logDownloadFailure(String errorMessage) {
+				// Log the error - user may just be offline but have an existing binary. We show a user-facing error later if binary is missing.
+				String message = "Failed to download Snyk CLI: " + errorMessage
+						+ ". Will try to start with existing binary if available.";
+				logger.error(message);
 			}
 		};
 		initJob.setPriority(Job.LONG);
