@@ -116,15 +116,15 @@ public class LsDownloader {
 				throw new IOException("Could not set executable permission on " + destinationFile);
 		} catch (ChecksumVerificationException e) {
 			throw e;
-		} catch (Exception e) {
+		} catch (IOException e) {
 			logger.error("IOException", e);
 			throw new RuntimeException(e);
 		} finally {
 			try {
-				if (tempFile != null && tempFile.exists())
-					if (!tempFile.delete())
-						tempFile.deleteOnExit();
-			} catch (Exception e) {
+				if (tempFile != null && tempFile.exists() && !tempFile.delete()) {
+					tempFile.deleteOnExit();
+				}
+			} catch (SecurityException e) {
 				SnykLogger.logError(e);
 			}
 		}

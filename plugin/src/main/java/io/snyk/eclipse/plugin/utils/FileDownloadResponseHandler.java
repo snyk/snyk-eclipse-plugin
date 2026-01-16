@@ -76,7 +76,7 @@ public class FileDownloadResponseHandler implements ResponseHandler<File> {
 					new InputStreamReader(httpResponse.getEntity().getContent(), StandardCharsets.UTF_8))) {
 				return reader.lines().collect(Collectors.joining("\n"));
 			}
-		} catch (Exception e) {
+		} catch (IOException | UnsupportedOperationException e) {
 			return "(could not read response body: " + e.getMessage() + ")";
 		}
 	}
