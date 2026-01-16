@@ -92,7 +92,7 @@ public class LsDownloaderTest extends LsBaseTest {
   }
 
   @Test
-  void download_whenFinished_updatesLSPVersion() throws IOException {
+  void download_whenFinished_updatesLSPVersion() throws IOException, ChecksumVerificationException {
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     Path source = Paths.get("src/test/resources/ls-dummy-binary");
     var testFile = Files.createTempFile("download-test", "tmp").toFile();
@@ -112,7 +112,7 @@ public class LsDownloaderTest extends LsBaseTest {
   }
 
   @Test
-  void downloadShouldIssueDownloadRequestForShaAndBinary() throws IOException {
+  void downloadShouldIssueDownloadRequestForShaAndBinary() throws IOException, ChecksumVerificationException {
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     Path source = Paths.get("src/test/resources/ls-dummy-binary");
     var testFile = Files.createTempFile("download-test", "tmp").toFile();
@@ -140,7 +140,7 @@ public class LsDownloaderTest extends LsBaseTest {
   }
 
   @Test
-  void respectsLSBinaryPath() throws IOException {
+  void respectsLSBinaryPath() throws IOException, ChecksumVerificationException {
     String lsBinaryPath = getTempFile().toString();
     Files.delete(Path.of(lsBinaryPath));
     Preferences.getInstance().store(Preferences.CLI_PATH, lsBinaryPath);
@@ -166,7 +166,7 @@ public class LsDownloaderTest extends LsBaseTest {
   }
 
   @Test
-  void getVersionShouldDownloadAndExtractTheLatestVersion() {
+  void getVersionShouldDownloadAndExtractTheLatestVersion() throws ChecksumVerificationException {
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     var expected = "1.1234.0";
     var actual = cut.getVersion("stable");
@@ -187,9 +187,9 @@ public class LsDownloaderTest extends LsBaseTest {
     when(httpClient.execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class),
         any(HttpContext.class))).thenThrow(new IOException(errorMessage));
 
-    RuntimeException exception = assertThrows(RuntimeException.class, () -> cut.download(mock(IProgressMonitor.class)));
-    assertTrue(exception.getCause().getMessage().contains("404"), "Should contain status code");
-    assertTrue(exception.getCause().getMessage().contains("https://test.url"), "Should contain URL");
+    IOException exception = assertThrows(IOException.class, () -> cut.download(mock(IProgressMonitor.class)));
+    assertTrue(exception.getMessage().contains("404"), "Should contain status code");
+    assertTrue(exception.getMessage().contains("https://test.url"), "Should contain URL");
   }
 
   @Test

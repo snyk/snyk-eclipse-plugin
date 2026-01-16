@@ -14,6 +14,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.swt.SWTException;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -27,6 +28,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.SnykLanguageServer;
+import io.snyk.languageserver.download.ChecksumVerificationException;
 import io.snyk.languageserver.download.HttpClientFactory;
 import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.download.LsDownloader;
@@ -62,7 +64,7 @@ public class SnykStartup implements IStartup {
 							SnykWizard.createAndLaunch();
 						}
 					});
-				} catch (RuntimeException e) {
+				} catch (IllegalStateException | SWTException e) {
 					SnykLogger.logError(e);
 				}
 				monitor.done();
@@ -81,10 +83,11 @@ public class SnykStartup implements IStartup {
 							logDownloadFailure(status);
 						}
 					}
-				} catch (Exception exception) {
-					logDownloadFailure(exception.getMessage());
+				} catch (IllegalStateException e) {
+					logDownloadFailure(e.getMessage());
+				} finally {
+					downloading = false;
 				}
-				downloading = false;
 			}
 
 			private void logDownloadFailure(IStatus status) {
@@ -159,7 +162,7 @@ public class SnykStartup implements IStartup {
 			lsFile.getParentFile().mkdirs();
 			lsDownloader.download(monitor);
 			lsFile.setExecutable(true);
-		} catch (RuntimeException | URISyntaxException e) {
+		} catch (IOException | URISyntaxException | SecurityException | ChecksumVerificationException e) {
 			return Status.error("Download of Snyk Language Server failed", e);
 		}
 		return Status.OK_STATUS;
