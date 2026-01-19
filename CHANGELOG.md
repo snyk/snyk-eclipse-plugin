@@ -2,7 +2,9 @@
 
 ## [3.7.0]
 ### Changes
-- Added support for improved Settings UI for simpler configuration of Snyk settings. Enable by setting the environment variable SNYK_USE_HTML_SETTINGS to true.
+- Added support for improved Settings UI for simpler configuration of Snyk settings (experimental). Enable by setting the environment variable SNYK_USE_HTML_SETTINGS to true.
+- Automatic organization configuration is now enabled by default.
+- Added support for risk score filtering (closed beta).
 
 ## [3.6.0]
 ### Changes
