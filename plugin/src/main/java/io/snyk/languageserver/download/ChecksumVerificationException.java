@@ -1,6 +1,6 @@
 package io.snyk.languageserver.download;
 
-public class ChecksumVerificationException extends RuntimeException {
+public class ChecksumVerificationException extends Exception {
 	private static final long serialVersionUID = 7210924932018107815L;
 
 	public ChecksumVerificationException(String s) {
