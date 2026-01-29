@@ -45,7 +45,7 @@ public class LsDownloader {
 		}
 	}
 
-	public void download(IProgressMonitor monitor) {
+	public void download(IProgressMonitor monitor) throws IOException, ChecksumVerificationException {
 		File destinationFile = new File(Preferences.getInstance().getCliPath());
 		File tempFile = null;
 		try {
@@ -82,7 +82,8 @@ public class LsDownloader {
 
 			monitor.subTask("Starting download of CLI version " + version);
 			LsDownloadRequest binaryRequest = new LsDownloadRequest(version, runtimeEnvironment);
-			tempFile = httpClient.execute(binaryRequest, new FileDownloadResponseHandler(tempFile, monitor), context);
+			String downloadUrl = binaryRequest.getURI().toString();
+			tempFile = httpClient.execute(binaryRequest, new FileDownloadResponseHandler(tempFile, monitor, downloadUrl), context);
 			monitor.worked(80);
 			logger.info("LS: Downloaded file.");
 
@@ -113,17 +114,12 @@ public class LsDownloader {
 			monitor.worked(5);
 			if (!destinationFile.setExecutable(true))
 				throw new IOException("Could not set executable permission on " + destinationFile);
-		} catch (ChecksumVerificationException e) {
-			throw e;
-		} catch (Exception e) {
-			logger.error("IOException", e);
-			throw new RuntimeException(e);
 		} finally {
 			try {
-				if (tempFile != null && tempFile.exists())
-					if (!tempFile.delete())
-						tempFile.deleteOnExit();
-			} catch (Exception e) {
+				if (tempFile != null && tempFile.exists() && !tempFile.delete()) {
+					tempFile.deleteOnExit();
+				}
+			} catch (Exception e) { // NOPMD - intentional catch-all for cleanup
 				SnykLogger.logError(e);
 			}
 		}
@@ -144,7 +140,7 @@ public class LsDownloader {
 		return response;
 	}
 
-	String getSha(String version) {
+	String getSha(String version) throws ChecksumVerificationException {
 		LsShaRequest shaRequest = new LsShaRequest(version);
 		try (CloseableHttpResponse response = httpClient.execute(shaRequest, context)) {
 			if (response.getStatusLine().getStatusCode() >= 400) { // NOPMD, AvoidLiteralsInIfCondition
@@ -164,7 +160,7 @@ public class LsDownloader {
 		}
 	}
 
-	private void verifyChecksum(String expectedSha, byte[] checksumDownloadedFile) {
+	private void verifyChecksum(String expectedSha, byte[] checksumDownloadedFile) throws ChecksumVerificationException {
 		try {
 			byte[] sha = MessageDigest.getInstance("SHA-256").digest(checksumDownloadedFile);
 			String actualSha = bytesToHex(sha).toLowerCase(Locale.getDefault());

@@ -1,7 +1,5 @@
 package io.snyk.eclipse.plugin;
 
-import static io.snyk.eclipse.plugin.utils.SnykLogger.logError;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -16,6 +14,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.swt.SWTException;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -29,6 +28,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.SnykLanguageServer;
+import io.snyk.languageserver.download.ChecksumVerificationException;
 import io.snyk.languageserver.download.HttpClientFactory;
 import io.snyk.languageserver.download.LsBinaries;
 import io.snyk.languageserver.download.LsDownloader;
@@ -50,6 +50,8 @@ public class SnykStartup implements IStartup {
 			protected IStatus run(IProgressMonitor monitor) {
 				monitor.beginTask("Initializing...", 100);
 				downloadIfNeeded(monitor);
+
+				// Even if download failed, try to start LS - there might be an existing binary
 				monitor.subTask("Starting Language Server...");
 
 				try {
@@ -62,7 +64,7 @@ public class SnykStartup implements IStartup {
 							SnykWizard.createAndLaunch();
 						}
 					});
-				} catch (RuntimeException e) {
+				} catch (RuntimeException e) { // NOPMD - intentional catch-all of runtime exceptions for UI initialization
 					SnykLogger.logError(e);
 				}
 				monitor.done();
@@ -76,12 +78,31 @@ public class SnykStartup implements IStartup {
 						monitor.subTask("Downloading CLI");
 						logger.info("LS: Need to download");
 						downloading = true;
-						download(monitor);
+						IStatus status = download(monitor);
+						if (!status.isOK()) {
+							logDownloadFailure(status);
+						}
 					}
-				} catch (Exception exception) {
-					logError(exception);
+				} catch (Exception e) { // NOPMD - intentional catch-all for download failures
+					logDownloadFailure(e.getMessage());
+				} finally {
+					downloading = false;
 				}
-				downloading = false;
+			}
+
+			private void logDownloadFailure(IStatus status) {
+				String errorMessage = status.getMessage();
+				if (status.getException() != null) {
+					errorMessage += ": " + status.getException().getMessage();
+				}
+				logDownloadFailure(errorMessage);
+			}
+
+			private void logDownloadFailure(String errorMessage) {
+				// Log the error - user may just be offline but have an existing binary. We show a user-facing error later if binary is missing.
+				String message = "Failed to download Snyk CLI: " + errorMessage
+						+ ". Will try to start with existing binary if available.";
+				logger.error(message);
 			}
 		};
 		initJob.setPriority(Job.LONG);
@@ -141,7 +162,7 @@ public class SnykStartup implements IStartup {
 			lsFile.getParentFile().mkdirs();
 			lsDownloader.download(monitor);
 			lsFile.setExecutable(true);
-		} catch (RuntimeException | URISyntaxException e) {
+		} catch (RuntimeException | IOException | URISyntaxException | ChecksumVerificationException e) { // NOPMD - intentional catch-all of runtime exceptions for download errors
 			return Status.error("Download of Snyk Language Server failed", e);
 		}
 		return Status.OK_STATUS;

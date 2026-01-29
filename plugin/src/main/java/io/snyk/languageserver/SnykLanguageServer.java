@@ -1,5 +1,6 @@
 package io.snyk.languageserver;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
@@ -30,15 +31,39 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 	public void start() throws IOException {
 		var prefs = Preferences.getInstance();
 		waitForInit();
-		List<String> commands = Lists.of(prefs.getCliPath(), "language-server", "-l", "info");
+
+		String cliPath = getCliPathOrThrow(prefs);
+
+		List<String> commands = Lists.of(cliPath, "language-server", "-l", "info");
 		String workingDir = SystemUtils.USER_DIR;
 		setCommands(commands);
 		setWorkingDirectory(workingDir);
 		try {
 			super.start();
 		} catch (IOException e) {
-			SnykLogger.logAndShow("Cannot start the Snyk CLI. Please check the CLI path.");
+			SnykLogger.logAndShow("Cannot start the Snyk CLI. Please check the CLI path: " + cliPath);
+			throw e;
 		}
+	}
+
+	/**
+	 * Returns CLI path if binary exists, logs and throws IOException with helpful message if not.
+	 */
+	static String getCliPathOrThrow(Preferences prefs) throws IOException {
+		String cliPath = prefs.getCliPath();
+		File cliBinary = new File(cliPath);
+		if (!cliBinary.exists()) {
+			var sb = new StringBuilder(200);
+			sb.append("Snyk CLI binary not found at: '").append(cliPath).append("'. \n");
+			if (prefs.isManagedBinaries()) {
+				sb.append("'Manage Binaries Automatically' is enabled - check the Error Log for download details. \n");
+			}
+			sb.append("You can also specify a custom CLI path in Snyk Preferences.");
+			String message = sb.toString();
+			SnykLogger.logAndShow(message);
+			throw new IOException(message);
+		}
+		return cliPath;
 	}
 
 	public static void waitForInit() {

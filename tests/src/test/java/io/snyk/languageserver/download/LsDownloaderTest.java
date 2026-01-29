@@ -92,7 +92,7 @@ public class LsDownloaderTest extends LsBaseTest {
   }
 
   @Test
-  void download_whenFinished_updatesLSPVersion() throws IOException {
+  void download_whenFinished_updatesLSPVersion() throws IOException, ChecksumVerificationException {
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     Path source = Paths.get("src/test/resources/ls-dummy-binary");
     var testFile = Files.createTempFile("download-test", "tmp").toFile();
@@ -112,7 +112,7 @@ public class LsDownloaderTest extends LsBaseTest {
   }
 
   @Test
-  void downloadShouldIssueDownloadRequestForShaAndBinary() throws IOException {
+  void downloadShouldIssueDownloadRequestForShaAndBinary() throws IOException, ChecksumVerificationException {
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     Path source = Paths.get("src/test/resources/ls-dummy-binary");
     var testFile = Files.createTempFile("download-test", "tmp").toFile();
@@ -140,7 +140,7 @@ public class LsDownloaderTest extends LsBaseTest {
   }
 
   @Test
-  void respectsLSBinaryPath() throws IOException {
+  void respectsLSBinaryPath() throws IOException, ChecksumVerificationException {
     String lsBinaryPath = getTempFile().toString();
     Files.delete(Path.of(lsBinaryPath));
     Preferences.getInstance().store(Preferences.CLI_PATH, lsBinaryPath);
@@ -166,11 +166,49 @@ public class LsDownloaderTest extends LsBaseTest {
   }
 
   @Test
-  void getVersionShouldDownloadAndExtractTheLatestVersion() {
+  void getVersionShouldDownloadAndExtractTheLatestVersion() throws ChecksumVerificationException {
     LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
     var expected = "1.1234.0";
     var actual = cut.getVersion("stable");
     assertEquals(expected, actual);
+  }
+
+  @Test
+  void downloadShouldPropagateHttpErrorFromHandler() throws IOException {
+    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
+
+    // Mock SHA response - which will have succeeded first before binary download is attempted
+    var checksums = "abc123  snyk-ls_testVersion_linux_amd64\n";
+    InputStream shaStream = new ByteArrayInputStream(checksums.getBytes());
+    mockShaStream(shaStream);
+
+    // Mock binary download to throw HTTP error
+    String errorMessage = "Download failed with HTTP 404 Not Found for URL: https://test.url";
+    when(httpClient.execute(any(LsDownloadRequest.class), any(FileDownloadResponseHandler.class),
+        any(HttpContext.class))).thenThrow(new IOException(errorMessage));
+
+    IOException exception = assertThrows(IOException.class, () -> cut.download(mock(IProgressMonitor.class)));
+    assertTrue(exception.getMessage().contains("404"), "Should contain status code");
+    assertTrue(exception.getMessage().contains("https://test.url"), "Should contain URL");
+  }
+
+  @Test
+  void downloadShouldFailWhenPlatformNotInChecksumFile() throws IOException {
+    // Simulates unsupported platform scenario (e.g. Windows ARM64) where SHA file exists
+    // but doesn't contain the platform-specific binary name
+    LsDownloader cut = new LsDownloader(httpClientFactory, environment, mock(ILog.class));
+
+    // Mock SHA response with checksums that don't include our test platform (linux_amd64)
+    var checksums = "abc123  snyk-ls_testVersion_windows_amd64.exe\n"
+        + "def456  snyk-ls_testVersion_darwin_arm64\n";
+    InputStream shaStream = new ByteArrayInputStream(checksums.getBytes());
+    mockShaStream(shaStream);
+
+    ChecksumVerificationException exception = assertThrows(ChecksumVerificationException.class,
+        () -> cut.download(mock(IProgressMonitor.class)));
+    assertTrue(exception.getMessage().contains("Could not find sha"), "Should indicate SHA not found");
+    assertTrue(exception.getMessage().contains("snyk-ls_testVersion_linux_amd64"),
+        "Should include the missing platform binary name");
   }
 
   private void mockShaStream(InputStream shaStream) throws IOException {
