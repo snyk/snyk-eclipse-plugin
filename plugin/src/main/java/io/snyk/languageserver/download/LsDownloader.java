@@ -119,7 +119,7 @@ public class LsDownloader {
 				if (tempFile != null && tempFile.exists() && !tempFile.delete()) {
 					tempFile.deleteOnExit();
 				}
-			} catch (SecurityException e) {
+			} catch (Exception e) { // NOPMD - intentional catch-all for cleanup
 				SnykLogger.logError(e);
 			}
 		}

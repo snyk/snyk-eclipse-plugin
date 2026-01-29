@@ -64,7 +64,7 @@ public class SnykStartup implements IStartup {
 							SnykWizard.createAndLaunch();
 						}
 					});
-				} catch (IllegalStateException | SWTException e) {
+				} catch (RuntimeException e) { // NOPMD - intentional catch-all of runtime exceptions for UI initialization
 					SnykLogger.logError(e);
 				}
 				monitor.done();
@@ -83,7 +83,7 @@ public class SnykStartup implements IStartup {
 							logDownloadFailure(status);
 						}
 					}
-				} catch (IllegalStateException e) {
+				} catch (Exception e) { // NOPMD - intentional catch-all for download failures
 					logDownloadFailure(e.getMessage());
 				} finally {
 					downloading = false;
@@ -162,7 +162,7 @@ public class SnykStartup implements IStartup {
 			lsFile.getParentFile().mkdirs();
 			lsDownloader.download(monitor);
 			lsFile.setExecutable(true);
-		} catch (IOException | URISyntaxException | SecurityException | ChecksumVerificationException e) {
+		} catch (RuntimeException | IOException | URISyntaxException | ChecksumVerificationException e) { // NOPMD - intentional catch-all of runtime exceptions for download errors
 			return Status.error("Download of Snyk Language Server failed", e);
 		}
 		return Status.OK_STATUS;

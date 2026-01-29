@@ -34,7 +34,11 @@ public class FileDownloadResponseHandler implements ResponseHandler<File> {
 	public File handleResponse(HttpResponse httpResponse) throws IOException {
 		int statusCode = httpResponse.getStatusLine().getStatusCode();
 
-		if (statusCode < 200 || statusCode > 299) {
+		// Accept 2xx (success) and 3xx (redirect) status codes.
+		// Note: We don't expect to see 3xx here since HttpClient follows redirects automatically.
+		// Redirect issues (circular redirects, too many redirects) throw RedirectException.
+		// If we do see 3xx, we'll treat it as okay.
+		if (statusCode < 200 || statusCode >= 400) {
 			handleHttpError(httpResponse, statusCode);
 		}
 
