@@ -73,26 +73,44 @@ public class ResourceUtils {
 	}
 
 	public static List<IProject> getAccessibleTopLevelProjects() {
-		var projects = Arrays.stream(ResourcesPlugin.getWorkspace().getRoot().getProjects()).filter((project) -> {
+		var allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		SnykLogger.logInfo("Workspace contains " + allProjects.length + " project(s)");
+
+		for (IProject project : allProjects) {
+			var path = getFullPath(project);
+			if (!project.isAccessible()) {
+				SnykLogger.logInfo("Project filtered (not accessible): " + project.getName() + " path=" + path);
+			} else if (project.isDerived()) {
+				SnykLogger.logInfo("Project filtered (derived): " + project.getName() + " path=" + path);
+			} else if (project.isHidden()) {
+				SnykLogger.logInfo("Project filtered (hidden): " + project.getName() + " path=" + path);
+			}
+		}
+
+		var projects = Arrays.stream(allProjects).filter((project) -> {
 			return project.isAccessible() && !project.isDerived() && !project.isHidden();
 		}).sorted(projectByPathComparator).collect(Collectors.toList());
 
+		SnykLogger.logInfo("After filtering: " + projects.size() + " accessible project(s)");
+
 		Set<IProject> topLevel = new TreeSet<>(projectByPathComparator);
-		boolean add = true;
 		for (IProject iProject : projects) {
 			var projectPath = ResourceUtils.getFullPath(iProject);
+			boolean isSubProject = false;
 			for (IProject tp : topLevel) {
 				var topLevelPath = ResourceUtils.getFullPath(tp);
 				if (projectPath.startsWith(topLevelPath)) {
-					add = false;
+					isSubProject = true;
+					SnykLogger.logInfo("Project filtered (sub-project of " + tp.getName() + "): " + iProject.getName() + " path=" + projectPath);
 					break;
 				}
 			}
-			if (add) {
+			if (!isSubProject) {
 				topLevel.add(iProject);
 			}
 		}
 
+		SnykLogger.logInfo("Top-level projects: " + topLevel.stream().map(p -> p.getName() + "=" + getFullPath(p)).collect(Collectors.joining(", ")));
 		return new ArrayList<>(topLevel);
 	}
 }
