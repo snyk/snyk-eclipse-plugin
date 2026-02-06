@@ -77,16 +77,16 @@ public class ResourceUtils {
 
 	public static List<IProject> getAccessibleTopLevelProjects() {
 		var allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-		SnykLogger.logInfo("Workspace contains " + allProjects.length + " project(s)");
+		SnykLogger.logDebug("Workspace contains " + allProjects.length + " project(s)");
 
 		for (IProject project : allProjects) {
 			var path = getFullPath(project);
 			if (!project.isAccessible()) {
-				SnykLogger.logInfo("Project filtered (not accessible): " + project.getName() + PATH_LOG_PREFIX + path);
+				SnykLogger.logDebug("Project filtered (not accessible): " + project.getName() + PATH_LOG_PREFIX + path);
 			} else if (project.isDerived()) {
-				SnykLogger.logInfo("Project filtered (derived): " + project.getName() + PATH_LOG_PREFIX + path);
+				SnykLogger.logDebug("Project filtered (derived): " + project.getName() + PATH_LOG_PREFIX + path);
 			} else if (project.isHidden()) {
-				SnykLogger.logInfo("Project filtered (hidden): " + project.getName() + PATH_LOG_PREFIX + path);
+				SnykLogger.logDebug("Project filtered (hidden): " + project.getName() + PATH_LOG_PREFIX + path);
 			}
 		}
 
@@ -94,7 +94,7 @@ public class ResourceUtils {
 			return project.isAccessible() && !project.isDerived() && !project.isHidden();
 		}).sorted(projectByPathComparator).collect(Collectors.toList());
 
-		SnykLogger.logInfo("After filtering: " + projects.size() + " accessible project(s)");
+		SnykLogger.logDebug("After filtering: " + projects.size() + " accessible project(s)");
 
 		Set<IProject> topLevel = new TreeSet<>(projectByPathComparator);
 		for (IProject iProject : projects) {
@@ -104,7 +104,7 @@ public class ResourceUtils {
 				var topLevelPath = ResourceUtils.getFullPath(tp);
 				if (projectPath.startsWith(topLevelPath)) {
 					isSubProject = true;
-					SnykLogger.logInfo("Project filtered (sub-project of " + tp.getName() + "): " + iProject.getName() + PATH_LOG_PREFIX + projectPath);
+					SnykLogger.logDebug("Project filtered (sub-project of " + tp.getName() + "): " + iProject.getName() + PATH_LOG_PREFIX + projectPath);
 					break;
 				}
 			}
@@ -113,7 +113,7 @@ public class ResourceUtils {
 			}
 		}
 
-		SnykLogger.logInfo("Top-level projects: " + topLevel.stream().map(p -> p.getName() + "=" + getFullPath(p)).collect(Collectors.joining(", ")));
+		SnykLogger.logDebug("Top-level projects: " + topLevel.stream().map(p -> p.getName() + "=" + getFullPath(p)).collect(Collectors.joining(", ")));
 		return new ArrayList<>(topLevel);
 	}
 }
