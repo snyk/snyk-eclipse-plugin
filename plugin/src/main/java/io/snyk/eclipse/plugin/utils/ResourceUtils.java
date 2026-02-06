@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -19,6 +20,8 @@ import org.eclipse.core.runtime.FileLocator;
 import org.osgi.framework.Bundle;
 
 public class ResourceUtils {
+
+	private static final String PATH_LOG_PREFIX = " path=";
 
 	private static final Comparator<IProject> projectByPathComparator = new Comparator<IProject>() {
 		@Override
@@ -46,7 +49,7 @@ public class ResourceUtils {
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			openStream.transferTo(output);
 			return output.toByteArray();
-		} catch (Exception e) {
+		} catch (IOException e) {
 			SnykLogger.logError(e);
 			return new byte[0];
 		}
@@ -79,11 +82,11 @@ public class ResourceUtils {
 		for (IProject project : allProjects) {
 			var path = getFullPath(project);
 			if (!project.isAccessible()) {
-				SnykLogger.logInfo("Project filtered (not accessible): " + project.getName() + " path=" + path);
+				SnykLogger.logInfo("Project filtered (not accessible): " + project.getName() + PATH_LOG_PREFIX + path);
 			} else if (project.isDerived()) {
-				SnykLogger.logInfo("Project filtered (derived): " + project.getName() + " path=" + path);
+				SnykLogger.logInfo("Project filtered (derived): " + project.getName() + PATH_LOG_PREFIX + path);
 			} else if (project.isHidden()) {
-				SnykLogger.logInfo("Project filtered (hidden): " + project.getName() + " path=" + path);
+				SnykLogger.logInfo("Project filtered (hidden): " + project.getName() + PATH_LOG_PREFIX + path);
 			}
 		}
 
@@ -101,7 +104,7 @@ public class ResourceUtils {
 				var topLevelPath = ResourceUtils.getFullPath(tp);
 				if (projectPath.startsWith(topLevelPath)) {
 					isSubProject = true;
-					SnykLogger.logInfo("Project filtered (sub-project of " + tp.getName() + "): " + iProject.getName() + " path=" + projectPath);
+					SnykLogger.logInfo("Project filtered (sub-project of " + tp.getName() + "): " + iProject.getName() + PATH_LOG_PREFIX + projectPath);
 					break;
 				}
 			}
