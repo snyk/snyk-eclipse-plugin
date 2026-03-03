@@ -6,6 +6,7 @@ import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
+import io.snyk.languageserver.CommandHandler;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
@@ -14,7 +15,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import org.eclipse.swt.browser.ProgressAdapter;
+import org.eclipse.swt.browser.ProgressEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -37,7 +42,6 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   private Browser browser;
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final BaseHtmlProvider htmlProvider = new BaseHtmlProvider();
-  private final Object authLock = new Object();
 
   @SuppressWarnings("PMD.AssignmentToNonFinalStatic")
   public HTMLSettingsPreferencePage() {
@@ -58,6 +62,13 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 
     browser = new Browser(container, SWT.WEBKIT);
     initializeBrowserFunctions();
+    browser.addProgressListener(
+        new ProgressAdapter() {
+          @Override
+          public void completed(ProgressEvent event) {
+            injectExecuteCommandScript();
+          }
+        });
     loadContent();
 
     return container;
@@ -75,43 +86,90 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       }
     };
 
-    new BrowserFunction(browser, "__ideLogin__") {
+    new BrowserFunction(browser, "__ideExecuteCommandBridge__") {
       @Override
       public Object function(Object[] arguments) {
-        CompletableFuture.runAsync(
-            () -> {
-              synchronized (authLock) {
-                SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-                if (lc == null) {
-                  SnykLogger.logError(
-                      new IllegalStateException("Language client instance is null during login"));
-                  return;
-                }
-                lc.triggerAuthentication();
-              }
-            });
-        return null;
-      }
-    };
+        if (arguments.length < 1 || !(arguments[0] instanceof String)) {
+          return null;
+        }
+        String command = (String) arguments[0];
+        String argsJson =
+            arguments.length > 1 && arguments[1] instanceof String
+                ? (String) arguments[1]
+                : "[]";
+        String callbackId =
+            arguments.length > 2 && arguments[2] instanceof String
+                ? (String) arguments[2]
+                : "";
 
-    new BrowserFunction(browser, "__ideLogout__") {
-      @Override
-      public Object function(Object[] arguments) {
-        CompletableFuture.runAsync(
-            () -> {
-              synchronized (authLock) {
-                SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-                if (lc == null) {
-                  SnykLogger.logError(
-                      new IllegalStateException("Language client instance is null during logout"));
-                  return;
-                }
-                lc.logout();
-              }
-            });
+        List<Object> args;
+        try {
+          args = Arrays.asList(objectMapper.readValue(argsJson, Object[].class));
+        } catch (Exception e) {
+          SnykLogger.logError(e);
+          args = Collections.emptyList();
+        }
+
+        final List<Object> finalArgs = args;
+        final String finalCallbackId = callbackId;
+        CommandHandler.getInstance()
+            .executeCommand(command, finalArgs)
+            .thenAccept(
+                result -> {
+                  if (finalCallbackId == null || finalCallbackId.isEmpty()) {
+                    return;
+                  }
+                  try {
+                    String resultJson =
+                        result == null ? "null" : objectMapper.writeValueAsString(result);
+                    String escaped = finalCallbackId.replace("\\", "\\\\").replace("'", "\\'");
+                    String script =
+                        "if(window.__ideCallbacks__&&window.__ideCallbacks__['"
+                            + escaped
+                            + "']){"
+                            + "var cb=window.__ideCallbacks__['"
+                            + escaped
+                            + "'];"
+                            + "delete window.__ideCallbacks__['"
+                            + escaped
+                            + "'];"
+                            + "cb("
+                            + resultJson
+                            + ");}";
+                    Display.getDefault()
+                        .asyncExec(
+                            () -> {
+                              if (!browser.isDisposed()) {
+                                browser.evaluate(script);
+                              }
+                            });
+                  } catch (Exception e) {
+                    SnykLogger.logError(e);
+                  }
+                });
         return null;
       }
     };
+  }
+
+  private void injectExecuteCommandScript() {
+    if (browser == null || browser.isDisposed()) {
+      return;
+    }
+    browser.execute(
+        "(function() {"
+            + "  if (window.__ideCallbacks__) { return; }"
+            + "  window.__ideCallbacks__ = {};"
+            + "  var __cbCounter = 0;"
+            + "  window.__ideExecuteCommand__ = function(command, args, callback) {"
+            + "    var callbackId = '';"
+            + "    if (typeof callback === 'function') {"
+            + "      callbackId = '__cb_' + (++__cbCounter);"
+            + "      window.__ideCallbacks__[callbackId] = callback;"
+            + "    }"
+            + "    __ideExecuteCommandBridge__(command, JSON.stringify(args || []), callbackId);"
+            + "  };"
+            + "})();");
   }
 
   private void loadContent() {
