@@ -359,7 +359,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     super.dispose();
   }
 
-  public static void notifyAuthTokenChanged(String token) {
+  public static void notifyAuthTokenChanged(String token, String apiUrl) {
     if (instance != null && instance.browser != null && !instance.browser.isDisposed()) {
       Display.getDefault()
           .asyncExec(
@@ -370,6 +370,8 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
                   instance.browser.evaluate(
                       "if (typeof window.setAuthToken === 'function') { window.setAuthToken('"
                           + token
+                          + "', '"
+                          + (apiUrl != null ? apiUrl : "")
                           + "'); }");
                 }
               });
