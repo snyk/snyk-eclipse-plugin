@@ -1,6 +1,8 @@
 package io.snyk.eclipse.plugin.html;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.snyk.eclipse.plugin.preferences.AuthConstants;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.CommandHandler;
 import java.util.Arrays;
@@ -75,6 +77,32 @@ public class ExecuteCommandBridge {
     browser.execute(buildClientScript());
   }
 
+  static void saveLoginArgs(List<Object> args) {
+    try {
+      String authMethodStr = String.valueOf(args.get(0));
+      String authMethod;
+      switch (authMethodStr) {
+        case "pat":
+          authMethod = AuthConstants.AUTH_PERSONAL_ACCESS_TOKEN;
+          break;
+        case "token":
+          authMethod = AuthConstants.AUTH_API_TOKEN;
+          break;
+        default:
+          authMethod = AuthConstants.AUTH_OAUTH2;
+          break;
+      }
+      String endpoint = args.get(1) != null ? String.valueOf(args.get(1)) : "";
+      String insecure = String.valueOf(args.get(2));
+      Preferences prefs = Preferences.getInstance();
+      prefs.store(Preferences.AUTHENTICATION_METHOD, authMethod);
+      prefs.store(Preferences.ENDPOINT_KEY, endpoint);
+      prefs.store(Preferences.INSECURE_KEY, insecure);
+    } catch (Exception e) {
+      SnykLogger.logError(e);
+    }
+  }
+
   private static void registerBridgeFunction(Browser browser) {
     new BrowserFunction(browser, "__ideExecuteCommandBridge__") {
       @Override
@@ -94,6 +122,10 @@ public class ExecuteCommandBridge {
         } catch (Exception e) {
           SnykLogger.logError(e);
           args = Collections.emptyList();
+        }
+
+        if ("snyk.login".equals(command) && args.size() >= 3) {
+          saveLoginArgs(args);
         }
 
         final List<Object> finalArgs = args;

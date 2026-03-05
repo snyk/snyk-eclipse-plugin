@@ -315,16 +315,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var oldToken = prefs.getAuthToken();
 		var oldApi = prefs.getEndpoint();
 
-		if (param.getApiUrl() != null && !param.getApiUrl().isBlank() && !param.getApiUrl().equals(oldApi)) {
+		String newToken = param.getToken();
+		boolean differentToken = !newToken.equals(oldToken);
+		boolean differentApi = param.getApiUrl() != null && !param.getApiUrl().isBlank() && !param.getApiUrl().equals(oldApi);
+
+		if (differentApi) {
 			prefs.store(Preferences.ENDPOINT_KEY, param.getApiUrl());
 		}
 
-		String newToken = param.getToken();
-		boolean differentToken = !newToken.equals(oldToken);
-
 		if (differentToken) {
 			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
-			HTMLSettingsPreferencePage.notifyAuthTokenChanged(newToken);
+			HTMLSettingsPreferencePage.notifyAuthTokenChanged(newToken, param.getApiUrl());
 		}
 
 		if (!Preferences.getInstance().isTest()) {
