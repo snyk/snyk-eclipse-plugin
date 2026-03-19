@@ -204,7 +204,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	@Override
 	@SuppressWarnings("PMD.NullAssignment")
 	public void dispose() {
-		if (this == instance) {
+		if (instance != null && instance.equals(this)) {
 			instance = null;
 		}
 		super.dispose();
