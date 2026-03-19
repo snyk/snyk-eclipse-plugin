@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.html;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.preferences.AuthConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
@@ -78,29 +79,25 @@ public class ExecuteCommandBridge {
   }
 
   static void saveLoginArgs(List<Object> args) {
-    try {
-      String authMethodStr = String.valueOf(args.get(0));
-      String authMethod;
-      switch (authMethodStr) {
-        case "pat":
-          authMethod = AuthConstants.AUTH_PERSONAL_ACCESS_TOKEN;
-          break;
-        case "token":
-          authMethod = AuthConstants.AUTH_API_TOKEN;
-          break;
-        default:
-          authMethod = AuthConstants.AUTH_OAUTH2;
-          break;
-      }
-      String endpoint = args.get(1) != null ? String.valueOf(args.get(1)) : "";
-      String insecure = String.valueOf(args.get(2));
-      Preferences prefs = Preferences.getInstance();
-      prefs.store(Preferences.AUTHENTICATION_METHOD, authMethod);
-      prefs.store(Preferences.ENDPOINT_KEY, endpoint);
-      prefs.store(Preferences.INSECURE_KEY, insecure);
-    } catch (Exception e) {
-      SnykLogger.logError(e);
+    String authMethodStr = String.valueOf(args.get(0));
+    String authMethod;
+    switch (authMethodStr) {
+      case "pat":
+        authMethod = AuthConstants.AUTH_PERSONAL_ACCESS_TOKEN;
+        break;
+      case "token":
+        authMethod = AuthConstants.AUTH_API_TOKEN;
+        break;
+      default:
+        authMethod = AuthConstants.AUTH_OAUTH2;
+        break;
     }
+    String endpoint = args.get(1) != null ? String.valueOf(args.get(1)) : "";
+    String insecure = String.valueOf(args.get(2));
+    Preferences prefs = Preferences.getInstance();
+    prefs.store(Preferences.AUTHENTICATION_METHOD, authMethod);
+    prefs.store(Preferences.ENDPOINT_KEY, endpoint);
+    prefs.store(Preferences.INSECURE_KEY, insecure);
   }
 
   private static void registerBridgeFunction(Browser browser) {
@@ -119,7 +116,7 @@ public class ExecuteCommandBridge {
         List<Object> args;
         try {
           args = Arrays.asList(OBJECT_MAPPER.readValue(argsJson, Object[].class));
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
           SnykLogger.logError(e);
           args = Collections.emptyList();
         }
@@ -162,7 +159,7 @@ public class ExecuteCommandBridge {
                                 browser.evaluate(script);
                               }
                             });
-                  } catch (Exception e) {
+                  } catch (JsonProcessingException e) {
                     SnykLogger.logError(e);
                   }
                 });
