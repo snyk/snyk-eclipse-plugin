@@ -351,7 +351,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   }
 
   @Override
-  @SuppressWarnings({"PMD.NullAssignment", "PMD.CompareObjectsWithEquals"})
+  @SuppressWarnings("PMD.NullAssignment")
   public void dispose() {
     if (instance != null && instance.equals(this)) {
       instance = null;
