@@ -425,7 +425,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void updateSummaryPanel(SummaryPanelParams summary) {
 		CompletableFuture.runAsync(() -> {
 			openToolView();
-			this.toolView.updateSummary(summary.getSummary());
+			if (this.toolView != null) {
+				this.toolView.updateSummary(summary.getSummary());
+			}
 		});
 	}
 
@@ -483,7 +485,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		Display.getDefault().syncExec(() -> {
 			IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 			try {
-				toolView = (ISnykToolView) activePage.showView(SnykToolView.ID);
+				toolView = (ISnykToolView) activePage.showView(SnykToolView.ID, null, IWorkbenchPage.VIEW_VISIBLE);
 			} catch (PartInitException e) {
 				SnykLogger.logError(e);
 				return;
