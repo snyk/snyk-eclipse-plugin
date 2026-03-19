@@ -353,7 +353,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   @Override
   @SuppressWarnings("PMD.NullAssignment")
   public void dispose() {
-    if (this.equals(instance)) {
+    if (this == instance) {
       instance = null;
     }
     super.dispose();
@@ -367,11 +367,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
                 if (instance != null
                     && instance.browser != null
                     && !instance.browser.isDisposed()) {
+                  String safeToken = token.replace("\\", "\\\\").replace("'", "\\'");
+                  String safeApiUrl =
+                      (apiUrl != null ? apiUrl : "").replace("\\", "\\\\").replace("'", "\\'");
                   instance.browser.evaluate(
                       "if (typeof window.setAuthToken === 'function') { window.setAuthToken('"
-                          + token
+                          + safeToken
                           + "', '"
-                          + (apiUrl != null ? apiUrl : "")
+                          + safeApiUrl
                           + "'); }");
                 }
               });
