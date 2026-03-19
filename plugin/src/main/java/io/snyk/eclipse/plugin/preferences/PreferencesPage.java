@@ -214,7 +214,7 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 		if (instance != null && instance.tokenField != null) {
 			Display.getDefault().asyncExec(() -> {
 				if (instance != null && instance.tokenField != null) {
-					instance.tokenField.setStringValue(token);
+					instance.tokenField.updateToken(token);
 				}
 			});
 		}
