@@ -78,6 +78,17 @@ public class ExecuteCommandBridge {
     browser.execute(buildClientScript());
   }
 
+  /**
+   * Escapes a string for safe inclusion inside a single-quoted JavaScript string literal.
+   * Backslashes and single quotes are escaped.
+   */
+  public static String escapeForJsString(String value) {
+    if (value == null) {
+      return "";
+    }
+    return value.replace("\\", "\\\\").replace("'", "\\'");
+  }
+
   /** Returns true if the command is in the snyk.* namespace and may be dispatched from a webview. */
   static boolean isAllowedCommand(String command) {
     return command != null && command.startsWith("snyk.");
@@ -146,8 +157,7 @@ public class ExecuteCommandBridge {
                   try {
                     String resultJson =
                         result == null ? "null" : OBJECT_MAPPER.writeValueAsString(result);
-                    String escaped =
-                        finalCallbackId.replace("\\", "\\\\").replace("'", "\\'");
+                    String escaped = escapeForJsString(finalCallbackId);
                     String script =
                         "if(window.__ideCallbacks__&&window.__ideCallbacks__['"
                             + escaped

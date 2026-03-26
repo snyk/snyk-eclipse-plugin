@@ -57,6 +57,15 @@ class ExecuteCommandBridgeTest extends LsBaseTest {
   }
 
   @Test
+  void saveLoginArgs_defaultsToOauthForUnrecognizedAuthMethod() {
+    List<Object> args = Arrays.asList("unknown_method", "https://api.snyk.io", false);
+
+    ExecuteCommandBridge.saveLoginArgs(args);
+
+    assertEquals(AuthConstants.AUTH_OAUTH2, prefs.getPref(Preferences.AUTHENTICATION_METHOD, ""));
+  }
+
+  @Test
   void saveLoginArgs_savesPatAuthMethod() {
     List<Object> args = Arrays.asList("pat", "https://api.snyk.io", false);
 
@@ -105,5 +114,19 @@ class ExecuteCommandBridgeTest extends LsBaseTest {
     assertFalse(ExecuteCommandBridge.isAllowedCommand("workbench.action.terminal.new"));
     assertFalse(ExecuteCommandBridge.isAllowedCommand("vscode.open"));
     assertFalse(ExecuteCommandBridge.isAllowedCommand(""));
+  }
+
+  @Test
+  void escapeForJsString_escapesBackslashesAndSingleQuotes() {
+    assertEquals("hello", ExecuteCommandBridge.escapeForJsString("hello"));
+    assertEquals("it\\'s", ExecuteCommandBridge.escapeForJsString("it's"));
+    assertEquals("path\\\\to\\\\file", ExecuteCommandBridge.escapeForJsString("path\\to\\file"));
+    assertEquals("a\\'b\\\\c", ExecuteCommandBridge.escapeForJsString("a'b\\c"));
+  }
+
+  @Test
+  void escapeForJsString_handlesEmptyAndNull() {
+    assertEquals("", ExecuteCommandBridge.escapeForJsString(""));
+    assertEquals("", ExecuteCommandBridge.escapeForJsString(null));
   }
 }

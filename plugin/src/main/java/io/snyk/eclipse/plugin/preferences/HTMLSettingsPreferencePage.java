@@ -367,9 +367,8 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
                 if (instance != null
                     && instance.browser != null
                     && !instance.browser.isDisposed()) {
-                  String safeToken = token.replace("\\", "\\\\").replace("'", "\\'");
-                  String safeApiUrl =
-                      (apiUrl != null ? apiUrl : "").replace("\\", "\\\\").replace("'", "\\'");
+                  String safeToken = ExecuteCommandBridge.escapeForJsString(token);
+                  String safeApiUrl = ExecuteCommandBridge.escapeForJsString(apiUrl);
                   instance.browser.evaluate(
                       "if (typeof window.setAuthToken === 'function') { window.setAuthToken('"
                           + safeToken
