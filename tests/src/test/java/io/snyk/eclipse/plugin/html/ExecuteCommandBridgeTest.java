@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.html;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.snyk.eclipse.plugin.preferences.AuthConstants;
@@ -90,5 +91,19 @@ class ExecuteCommandBridgeTest extends LsBaseTest {
     ExecuteCommandBridge.saveLoginArgs(args);
 
     assertEquals("true", prefs.getPref(Preferences.INSECURE_KEY, "false"));
+  }
+
+  @Test
+  void isAllowedCommand_allowsSnykPrefixedCommands() {
+    assertTrue(ExecuteCommandBridge.isAllowedCommand("snyk.login"));
+    assertTrue(ExecuteCommandBridge.isAllowedCommand("snyk.logout"));
+    assertTrue(ExecuteCommandBridge.isAllowedCommand("snyk.navigateToRange"));
+  }
+
+  @Test
+  void isAllowedCommand_rejectsNonSnykCommands() {
+    assertFalse(ExecuteCommandBridge.isAllowedCommand("workbench.action.terminal.new"));
+    assertFalse(ExecuteCommandBridge.isAllowedCommand("vscode.open"));
+    assertFalse(ExecuteCommandBridge.isAllowedCommand(""));
   }
 }

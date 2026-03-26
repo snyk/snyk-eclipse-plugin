@@ -78,6 +78,11 @@ public class ExecuteCommandBridge {
     browser.execute(buildClientScript());
   }
 
+  /** Returns true if the command is in the snyk.* namespace and may be dispatched from a webview. */
+  static boolean isAllowedCommand(String command) {
+    return command != null && command.startsWith("snyk.");
+  }
+
   static void saveLoginArgs(List<Object> args) {
     String authMethodStr = String.valueOf(args.get(0));
     String authMethod;
@@ -108,6 +113,10 @@ public class ExecuteCommandBridge {
           return null;
         }
         String command = (String) arguments[0];
+        if (!isAllowedCommand(command)) {
+          SnykLogger.logInfo("Webview attempted to execute disallowed command: " + command);
+          return null;
+        }
         String argsJson =
             arguments.length > 1 && arguments[1] instanceof String ? (String) arguments[1] : "[]";
         String callbackId =
