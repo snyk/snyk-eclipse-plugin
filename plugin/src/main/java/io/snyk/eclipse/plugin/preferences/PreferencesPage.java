@@ -26,6 +26,8 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class PreferencesPage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+	private static volatile PreferencesPage instance;
+
 	private BooleanFieldEditor snykCodeSecurityCheckbox;
 	private ComboFieldEditor authenticationEditor;
 	private StringFieldEditor endpoint;
@@ -34,8 +36,10 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	public static final int WIDTH = 60;
 
+	@SuppressWarnings("PMD.AssignmentToNonFinalStatic")
 	public PreferencesPage() {
 		super(GRID);
+		instance = this;
 	}
 
 	@Override
@@ -195,6 +199,25 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	private FieldEditor space() {
 		return new LabelFieldEditor("", getFieldEditorParent());
+	}
+
+	@Override
+	@SuppressWarnings("PMD.NullAssignment")
+	public void dispose() {
+		if (instance != null && instance.equals(this)) {
+			instance = null;
+		}
+		super.dispose();
+	}
+
+	public static void notifyAuthTokenChanged(String token) {
+		if (instance != null && instance.tokenField != null) {
+			Display.getDefault().asyncExec(() -> {
+				if (instance != null && instance.tokenField != null) {
+					instance.tokenField.updateToken(token);
+				}
+			});
+		}
 	}
 
 	@Override
