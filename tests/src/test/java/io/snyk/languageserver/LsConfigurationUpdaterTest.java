@@ -224,6 +224,148 @@ class LsConfigurationUpdaterTest {
 		assertNotNull(deserialized.getFolderConfigs());
 	}
 
+	@Test
+	void testBuildConfigurationParam_additionalEnvChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ADDITIONAL_ENVIRONMENT)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.ADDITIONAL_ENV).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_sendErrorReportsChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.SEND_ERROR_REPORTS)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.SEND_ERROR_REPORTS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_enableTelemetryChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENABLE_TELEMETRY)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.ENABLE_TELEMETRY).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_manageBinariesChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.MANAGE_BINARIES_AUTOMATICALLY)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.MANAGE_BINARIES_AUTOMATICALLY).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_cliPathChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.CLI_PATH)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.CLI_PATH).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_cliBaseDownloadUrlChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.CLI_BASE_URL)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.CLI_BASE_DOWNLOAD_URL).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_authenticationMethodChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.AUTHENTICATION_METHOD)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.AUTHENTICATION_METHOD).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_enableDeltaChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENABLE_DELTA)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.ENABLE_DELTA_FINDINGS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_riskScoreThresholdChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.RISK_SCORE_THRESHOLD).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_trustedFoldersChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.TRUSTED_FOLDERS)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.TRUSTED_FOLDERS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_issueViewOptionsChangedWhenOneConstituentChanged() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_OPTIONS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_issueViewOptionsUnchangedWhenNoConstituentChanged() {
+		setupPreferenceMock();
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertFalse(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_OPTIONS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_filterSeverityChangedWhenOneConstituentChanged() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_SHOW_MEDIUM)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.FILTER_SEVERITY).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_filterSeverityUnchangedWhenNoConstituentChanged() {
+		setupPreferenceMock();
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertFalse(param.getSettings().get(LsSettingsKeys.FILTER_SEVERITY).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_systemConstantsAlwaysUnchanged() {
+		setupPreferenceMock();
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		Map<String, ConfigSetting> settings = param.getSettings();
+
+		assertFalse(settings.get(LsSettingsKeys.INTEGRATION_NAME).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.INTEGRATION_VERSION).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.AUTOMATIC_AUTHENTICATION).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.REQUIRED_PROTOCOL_VERSION).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.RUNTIME_NAME).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.RUNTIME_VERSION).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.OS_ARCH).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.OS_PLATFORM).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.ENABLE_TRUSTED_FOLDERS_FEATURE).getChanged());
+	}
+
 	private void setupPreferenceMock() {
 		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC, "true")).thenReturn("iac");
 		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC, "false")).thenReturn("iac");

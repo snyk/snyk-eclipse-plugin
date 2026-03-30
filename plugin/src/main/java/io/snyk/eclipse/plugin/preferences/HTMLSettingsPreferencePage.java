@@ -213,72 +213,67 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       boolean isFallback = Boolean.TRUE.equals(config.isFallbackForm());
 
       // CLI Settings - always persist for both fallback and full forms
-      prefs.store(Preferences.CLI_PATH, String.valueOf(config.cliPath()));
-      prefs.store(
+      prefs.storeAndTrackChange(Preferences.CLI_PATH, String.valueOf(config.cliPath()));
+      prefs.storeAndTrackChange(
           Preferences.MANAGE_BINARIES_AUTOMATICALLY,
           String.valueOf(config.manageBinariesAutomatically()));
-      prefs.store(Preferences.CLI_BASE_URL, String.valueOf(config.cliBaseDownloadURL()));
-      prefs.store(Preferences.RELEASE_CHANNEL, String.valueOf(config.cliReleaseChannel()));
-      prefs.store(Preferences.INSECURE_KEY, String.valueOf(config.insecure()));
+      prefs.storeAndTrackChange(Preferences.CLI_BASE_URL, String.valueOf(config.cliBaseDownloadURL()));
+      prefs.storeAndTrackChange(Preferences.RELEASE_CHANNEL, String.valueOf(config.cliReleaseChannel()));
+      prefs.storeAndTrackChange(Preferences.INSECURE_KEY, String.valueOf(config.insecure()));
 
       // Only persist non-CLI fields if not fallback form
       if (!isFallback) {
         // Scan Settings
-        prefs.store(
+        prefs.storeAndTrackChange(
             Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
             String.valueOf(config.activateSnykOpenSource()));
-        prefs.store(
+        prefs.storeAndTrackChange(
             Preferences.ACTIVATE_SNYK_CODE_SECURITY, String.valueOf(config.activateSnykCode()));
-        prefs.store(Preferences.ACTIVATE_SNYK_IAC, String.valueOf(config.activateSnykIac()));
+        prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_IAC, String.valueOf(config.activateSnykIac()));
 
         if (config.scanningMode() != null) {
           boolean isAutomatic = "auto".equals(config.scanningMode());
-          prefs.store(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
+          prefs.storeAndTrackChange(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
         }
 
         // Issue View Settings
         if (config.issueViewOptions() != null) {
           IdeConfigData.IssueViewOptions options = config.issueViewOptions();
-          prefs.store(
+          prefs.storeAndTrackChange(
               Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, String.valueOf(options.openIssues()));
-          prefs.store(
+          prefs.storeAndTrackChange(
               Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES,
               String.valueOf(options.ignoredIssues()));
         }
-        prefs.store(Preferences.ENABLE_DELTA, String.valueOf(config.enableDeltaFindings()));
+        prefs.storeAndTrackChange(Preferences.ENABLE_DELTA, String.valueOf(config.enableDeltaFindings()));
 
         // Authentication Settings
         if (config.authenticationMethod() != null) {
-          prefs.store(Preferences.AUTHENTICATION_METHOD, config.authenticationMethod());
+          prefs.storeAndTrackChange(Preferences.AUTHENTICATION_METHOD, config.authenticationMethod());
         }
 
         // Connection Settings
-        prefs.store(Preferences.ENDPOINT_KEY, String.valueOf(config.endpoint()));
-        String oldToken = prefs.getAuthToken();
-        String newToken = String.valueOf(config.token());
-        prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
-        if (!java.util.Objects.equals(oldToken, newToken)) {
-          prefs.markExplicitlyChanged(Preferences.AUTH_TOKEN_KEY);
-        }
+        prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, String.valueOf(config.endpoint()));
+        prefs.storeAndTrackChange(Preferences.AUTH_TOKEN_KEY, String.valueOf(config.token()));
         if (config.organization() != null) {
-          prefs.store(Preferences.ORGANIZATION_KEY, String.valueOf(config.organization()));
+          prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, String.valueOf(config.organization()));
         }
 
         // Trusted Folders
         if (config.trustedFolders() != null) {
           String trustedFoldersString = String.join(File.pathSeparator, config.trustedFolders());
-          prefs.store(Preferences.TRUSTED_FOLDERS, trustedFoldersString);
+          prefs.storeAndTrackChange(Preferences.TRUSTED_FOLDERS, trustedFoldersString);
         }
 
         // Filter Settings
         if (config.filterSeverity() != null) {
           IdeConfigData.FilterSeverity severity = config.filterSeverity();
-          prefs.store(Preferences.FILTER_SHOW_CRITICAL, String.valueOf(severity.critical()));
-          prefs.store(Preferences.FILTER_SHOW_HIGH, String.valueOf(severity.high()));
-          prefs.store(Preferences.FILTER_SHOW_MEDIUM, String.valueOf(severity.medium()));
-          prefs.store(Preferences.FILTER_SHOW_LOW, String.valueOf(severity.low()));
+          prefs.storeAndTrackChange(Preferences.FILTER_SHOW_CRITICAL, String.valueOf(severity.critical()));
+          prefs.storeAndTrackChange(Preferences.FILTER_SHOW_HIGH, String.valueOf(severity.high()));
+          prefs.storeAndTrackChange(Preferences.FILTER_SHOW_MEDIUM, String.valueOf(severity.medium()));
+          prefs.storeAndTrackChange(Preferences.FILTER_SHOW_LOW, String.valueOf(severity.low()));
         }
-        prefs.store(
+        prefs.storeAndTrackChange(
             Preferences.RISK_SCORE_THRESHOLD, String.valueOf(config.riskScoreThreshold()));
 
         // Folder Configs
@@ -304,24 +299,24 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     String pathStr = folderConfigData.folderPath();
     FolderConfigSettings.getInstance().computeFolderConfig(pathStr, config -> {
       if (folderConfigData.preferredOrg() != null) {
-        config = config.withSetting(LsFolderSettingsKeys.PREFERRED_ORG, folderConfigData.preferredOrg(), true);
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.PREFERRED_ORG, folderConfigData.preferredOrg());
       }
       if (folderConfigData.autoDeterminedOrg() != null) {
-        config = config.withSetting(LsFolderSettingsKeys.AUTO_DETERMINED_ORG, folderConfigData.autoDeterminedOrg(), true);
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.AUTO_DETERMINED_ORG, folderConfigData.autoDeterminedOrg());
       }
       if (folderConfigData.orgSetByUser() != null) {
-        config = config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, folderConfigData.orgSetByUser(), true);
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, folderConfigData.orgSetByUser());
       }
       if (folderConfigData.additionalEnv() != null) {
-        config = config.withSetting(LsFolderSettingsKeys.ADDITIONAL_ENV, folderConfigData.additionalEnv(), true);
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_ENV, folderConfigData.additionalEnv());
       }
       if (folderConfigData.additionalParameters() != null) {
-        config = config.withSetting(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, folderConfigData.additionalParameters(), true);
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, folderConfigData.additionalParameters());
       }
       if (folderConfigData.scanCommandConfig() != null) {
         Map<String, ScanCommandConfig> targetConfigMap =
             convertScanCommandConfig(folderConfigData.scanCommandConfig());
-        config = config.withSetting(LsFolderSettingsKeys.SCAN_COMMAND_CONFIG, targetConfigMap, true);
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.SCAN_COMMAND_CONFIG, targetConfigMap);
       }
       return config;
     });

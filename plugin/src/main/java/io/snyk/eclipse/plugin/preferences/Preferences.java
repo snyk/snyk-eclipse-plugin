@@ -9,6 +9,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -385,6 +386,17 @@ public class Preferences {
 			return false;
 		}
 		return true;
+	}
+
+	public final void storeAndTrackChange(String key, String value) {
+		if (key == null || value == null) {
+			return;
+		}
+		String oldValue = getPref(key, "");
+		store(key, value);
+		if (!Objects.equals(oldValue, value)) {
+			markExplicitlyChanged(key);
+		}
 	}
 
 	public void markExplicitlyChanged(String key) {

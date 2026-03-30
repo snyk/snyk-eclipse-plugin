@@ -8,6 +8,7 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_TO_DISP
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -753,6 +754,39 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykConfiguration(param);
 
 		assertEquals("true", pref.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
+	}
+
+	@Test
+	void snykConfigurationDoesNotMarkSettingsAsExplicitlyChanged() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"endpoint": {
+							"value": "https://ls-pushed.snyk.io",
+							"changed": true
+						},
+						"activateSnykOpenSource": {
+							"value": "true",
+							"changed": false
+						},
+						"insecure": {
+							"value": "false",
+							"changed": false
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		// Inbound settings use prefs.store(), not storeAndTrackChange,
+		// so they should NOT be marked as explicitly changed by the user
+		assertFalse(pref.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertFalse(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+		assertFalse(pref.isExplicitlyChanged(Preferences.INSECURE_KEY));
 	}
 
 	@Test

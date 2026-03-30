@@ -101,8 +101,8 @@ public class ReferenceChooserDialog extends TitleAreaDialog {
 
 		String pathStr = projectPath.toString();
 		FolderConfigSettings.getInstance().computeFolderConfig(pathStr, config ->
-				config.withSetting(LsFolderSettingsKeys.BASE_BRANCH, referenceBranch, true)
-						.withSetting(LsFolderSettingsKeys.REFERENCE_FOLDER_PATH, referenceFolder, true));
+				config.withSettingIfChanged(LsFolderSettingsKeys.BASE_BRANCH, referenceBranch)
+						.withSettingIfChanged(LsFolderSettingsKeys.REFERENCE_FOLDER_PATH, referenceFolder));
 
 		CompletableFuture.runAsync(() -> {
 			final var lc = SnykExtendedLanguageClient.getInstance();

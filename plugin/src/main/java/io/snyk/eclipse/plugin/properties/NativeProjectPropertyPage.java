@@ -60,12 +60,12 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 
 				if (newValue) {
 					configSettings.computeFolderConfig(pathStr, config ->
-							config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, !newValue, true)
-									.withSetting(LsFolderSettingsKeys.PREFERRED_ORG, "", true));
+							config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, !newValue)
+									.withSettingIfChanged(LsFolderSettingsKeys.PREFERRED_ORG, ""));
 					updateProjectOrg(pathStr);
 				} else {
 					configSettings.computeFolderConfig(pathStr, config ->
-							config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, !newValue, true));
+							config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, !newValue));
 					projectOrg.setStringValue("");
 				}
 			}
@@ -260,15 +260,15 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 				: Arrays.asList(addParamsStr.split("\\s+"));
 
 		configSettings.computeFolderConfig(pathStr, config -> {
-			config = config.withSetting(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, addParams, true);
+			config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, addParams);
 
 			if (autoDetect) {
-				config = config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, false, true);
+				config = config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, false);
 			} else {
-				config = config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, true, true);
+				config = config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, true);
 				String projectOrgValue = this.projectOrg.getStringValue();
-				config = config.withSetting(LsFolderSettingsKeys.PREFERRED_ORG,
-						projectOrgValue != null ? projectOrgValue.trim() : "", true);
+				config = config.withSettingIfChanged(LsFolderSettingsKeys.PREFERRED_ORG,
+						projectOrgValue != null ? projectOrgValue.trim() : "");
 			}
 
 			return config;

@@ -269,4 +269,55 @@ class PreferencesTest {
 		assertFalse(prefs.isExplicitlyChanged("path"));
 	}
 
+	@Test
+	public void testStoreAndTrackChange_marksChangedWhenValueDiffers() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.store(Preferences.ENDPOINT_KEY, "https://old.endpoint.io");
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://new.endpoint.io");
+
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertEquals("https://new.endpoint.io", prefs.getPref(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_doesNotMarkChangedWhenValueSame() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.store(Preferences.ENDPOINT_KEY, "https://same.endpoint.io");
+
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://same.endpoint.io");
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_marksChangedOnFirstWrite() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "my-org");
+
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+		assertEquals("my-org", prefs.getPref(Preferences.ORGANIZATION_KEY));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_handlesNullKeyGracefully() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(null, "value");
+		// should not throw
+	}
+
+	@Test
+	public void testStoreAndTrackChange_handlesNullValueGracefully() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, null);
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+	}
+
 }
