@@ -3,6 +3,7 @@ package io.snyk.eclipse.plugin.preferences;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
+import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
 import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
@@ -36,7 +37,6 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   private Browser browser;
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final BaseHtmlProvider htmlProvider = new BaseHtmlProvider();
-  private final Object authLock = new Object();
 
   @SuppressWarnings("PMD.AssignmentToNonFinalStatic")
   public HTMLSettingsPreferencePage() {
@@ -74,43 +74,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       }
     };
 
-    new BrowserFunction(browser, "__ideLogin__") {
-      @Override
-      public Object function(Object[] arguments) {
-        CompletableFuture.runAsync(
-            () -> {
-              synchronized (authLock) {
-                SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-                if (lc == null) {
-                  SnykLogger.logError(
-                      new IllegalStateException("Language client instance is null during login"));
-                  return;
-                }
-                lc.triggerAuthentication();
-              }
-            });
-        return null;
-      }
-    };
-
-    new BrowserFunction(browser, "__ideLogout__") {
-      @Override
-      public Object function(Object[] arguments) {
-        CompletableFuture.runAsync(
-            () -> {
-              synchronized (authLock) {
-                SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-                if (lc == null) {
-                  SnykLogger.logError(
-                      new IllegalStateException("Language client instance is null during logout"));
-                  return;
-                }
-                lc.logout();
-              }
-            });
-        return null;
-      }
-    };
+    ExecuteCommandBridge.install(browser);
   }
 
   private void loadContent() {
@@ -389,13 +353,13 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   @Override
   @SuppressWarnings("PMD.NullAssignment")
   public void dispose() {
-    if (this.equals(instance)) {
+    if (instance != null && instance.equals(this)) {
       instance = null;
     }
     super.dispose();
   }
 
-  public static void notifyAuthTokenChanged(String token) {
+  public static void notifyAuthTokenChanged(String token, String apiUrl) {
     if (instance != null && instance.browser != null && !instance.browser.isDisposed()) {
       Display.getDefault()
           .asyncExec(
@@ -403,9 +367,13 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
                 if (instance != null
                     && instance.browser != null
                     && !instance.browser.isDisposed()) {
+                  String safeToken = ExecuteCommandBridge.escapeForJsString(token);
+                  String safeApiUrl = ExecuteCommandBridge.escapeForJsString(apiUrl);
                   instance.browser.evaluate(
                       "if (typeof window.setAuthToken === 'function') { window.setAuthToken('"
-                          + token
+                          + safeToken
+                          + "', '"
+                          + safeApiUrl
                           + "'); }");
                 }
               });

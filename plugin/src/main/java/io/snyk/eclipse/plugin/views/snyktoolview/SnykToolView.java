@@ -353,7 +353,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void refreshBrowser(String status) {
 		Display.getDefault().asyncExec(() -> {
-			if (null != status && status.equals(SCAN_STATE_IN_PROGRESS)) {
+			if (SCAN_STATE_IN_PROGRESS.equals(status)) {
 				this.browserHandler.setScanningBrowserText();
 			} else {
 				this.browserHandler.setDefaultBrowserText();

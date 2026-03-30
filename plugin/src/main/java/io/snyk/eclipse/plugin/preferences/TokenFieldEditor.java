@@ -36,6 +36,10 @@ public class TokenFieldEditor extends StringFieldEditor {
 		setStringValue("");
 	}
 
+	public void updateToken(String token) {
+		setStringValue(token);
+	}
+
 	@Override
 	public void setPreferenceStore(IPreferenceStore store) {
 		// we don't let the page override the preference store to a non-secure store

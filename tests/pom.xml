@@ -107,6 +107,7 @@
                     <failIfNoTests/>
                     <useUIHarness>false</useUIHarness>
                     <providerHint>junit59</providerHint>
+                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
                 </configuration>
             </plugin>
         </plugins>
