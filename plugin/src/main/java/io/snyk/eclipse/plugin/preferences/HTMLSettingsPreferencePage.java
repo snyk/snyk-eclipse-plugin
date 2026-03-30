@@ -3,17 +3,17 @@ package io.snyk.eclipse.plugin.preferences;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
-import io.snyk.eclipse.plugin.properties.FolderConfigs;
+import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
+import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
+import io.snyk.languageserver.protocolextension.messageObjects.LspFolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -297,29 +297,32 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       return;
     }
 
-    FolderConfig folderConfig =
-        FolderConfigs.getInstance().getFolderConfig(Paths.get(folderConfigData.folderPath()));
+    String pathStr = folderConfigData.folderPath();
+    FolderConfigSettings configSettings = FolderConfigSettings.getInstance();
+    LspFolderConfig config = configSettings.getFolderConfig(pathStr);
 
     if (folderConfigData.preferredOrg() != null) {
-      folderConfig.setPreferredOrg(folderConfigData.preferredOrg());
+      config = config.withSetting(LsFolderSettingsKeys.PREFERRED_ORG, folderConfigData.preferredOrg(), true);
     }
     if (folderConfigData.autoDeterminedOrg() != null) {
-      folderConfig.setAutoDeterminedOrg(folderConfigData.autoDeterminedOrg());
+      config = config.withSetting(LsFolderSettingsKeys.AUTO_DETERMINED_ORG, folderConfigData.autoDeterminedOrg(), true);
     }
     if (folderConfigData.orgSetByUser() != null) {
-      folderConfig.setOrgSetByUser(folderConfigData.orgSetByUser());
+      config = config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, folderConfigData.orgSetByUser(), true);
     }
     if (folderConfigData.additionalEnv() != null) {
-      folderConfig.setAdditionalEnv(folderConfigData.additionalEnv());
+      config = config.withSetting(LsFolderSettingsKeys.ADDITIONAL_ENV, folderConfigData.additionalEnv(), true);
     }
     if (folderConfigData.additionalParameters() != null) {
-      folderConfig.setAdditionalParameters(folderConfigData.additionalParameters());
+      config = config.withSetting(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, folderConfigData.additionalParameters(), true);
     }
     if (folderConfigData.scanCommandConfig() != null) {
       Map<String, ScanCommandConfig> targetConfigMap =
           convertScanCommandConfig(folderConfigData.scanCommandConfig());
-      folderConfig.setScanCommandConfig(targetConfigMap);
+      config = config.withSetting(LsFolderSettingsKeys.SCAN_COMMAND_CONFIG, targetConfigMap, true);
     }
+
+    configSettings.updateFolderConfig(pathStr, config);
   }
 
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")

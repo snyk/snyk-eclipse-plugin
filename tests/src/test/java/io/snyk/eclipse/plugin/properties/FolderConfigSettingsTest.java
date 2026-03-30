@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -204,6 +205,142 @@ class FolderConfigSettingsTest {
 	@Test
 	void getReferenceFolderPathReturnsEmptyForMissing() {
 		assertEquals("", settings.getReferenceFolderPath("/nonexistent"));
+	}
+
+	@Test
+	void isConfiguredReturnsFalseForMissingPath() {
+		assertFalse(settings.isConfigured("/nonexistent"));
+	}
+
+	@Test
+	void isConfiguredReturnsTrueWhenConfigExists() {
+		LspFolderConfig config = createFolderConfig("/project", "main");
+		settings.addFolderConfig(config);
+
+		assertTrue(settings.isConfigured("/project"));
+	}
+
+	@Test
+	void isConfiguredReturnsTrueForEmptySettingsConfig() {
+		String json = """
+				{
+					"folder_path": "/project",
+					"settings": {}
+				}
+				""";
+		LspFolderConfig config = gson.fromJson(json, LspFolderConfig.class);
+		settings.addFolderConfig(config);
+
+		assertTrue(settings.isConfigured("/project"));
+	}
+
+	@Test
+	void isConfiguredReturnsFalseForNullPath() {
+		assertFalse(settings.isConfigured(null));
+	}
+
+	@Test
+	void isConfiguredUsesPathNormalization() {
+		LspFolderConfig config = createFolderConfig("/home/user/project", "main");
+		settings.addFolderConfig(config);
+
+		assertTrue(settings.isConfigured("/home/user/./project/../project"));
+	}
+
+	@Test
+	void updateFolderConfigStoresConfig() {
+		LspFolderConfig config = createFolderConfig("/project", "main");
+		settings.addFolderConfig(config);
+
+		LspFolderConfig original = settings.getFolderConfig("/project");
+		LspFolderConfig updated = original.withSetting("base_branch", "develop", true);
+		settings.updateFolderConfig("/project", updated);
+
+		assertEquals("develop", settings.getBaseBranch("/project"));
+	}
+
+	@Test
+	void updateFolderConfigNormalizesPath() {
+		LspFolderConfig config = createFolderConfig("/home/user/project", "main");
+		settings.addFolderConfig(config);
+
+		LspFolderConfig updated = config.withSetting("base_branch", "develop", true);
+		settings.updateFolderConfig("/home/user/./project", updated);
+
+		assertEquals("develop", settings.getBaseBranch("/home/user/project"));
+	}
+
+	@Test
+	void updateFolderConfigCreatesNewEntryIfNotExist() {
+		LspFolderConfig config = createFolderConfig("/new-project", "feature");
+		settings.updateFolderConfig("/new-project", config);
+
+		assertTrue(settings.isConfigured("/new-project"));
+		assertEquals("feature", settings.getBaseBranch("/new-project"));
+	}
+
+	@Test
+	void isOrgSetByUserReturnsFalseForMissing() {
+		assertFalse(settings.isOrgSetByUser("/nonexistent"));
+	}
+
+	@Test
+	void isOrgSetByUserReturnsTrueWhenSet() {
+		String json = """
+				{
+					"folder_path": "/project",
+					"settings": {
+						"org_set_by_user": {
+							"value": true
+						}
+					}
+				}
+				""";
+		LspFolderConfig config = gson.fromJson(json, LspFolderConfig.class);
+		settings.addFolderConfig(config);
+
+		assertTrue(settings.isOrgSetByUser("/project"));
+	}
+
+	@Test
+	void isOrgSetByUserReturnsFalseWhenExplicitlyFalse() {
+		String json = """
+				{
+					"folder_path": "/project",
+					"settings": {
+						"org_set_by_user": {
+							"value": false
+						}
+					}
+				}
+				""";
+		LspFolderConfig config = gson.fromJson(json, LspFolderConfig.class);
+		settings.addFolderConfig(config);
+
+		assertFalse(settings.isOrgSetByUser("/project"));
+	}
+
+	@Test
+	void getAutoDeterminedOrgReturnsValue() {
+		String json = """
+				{
+					"folder_path": "/project",
+					"settings": {
+						"auto_determined_org": {
+							"value": "determined-org"
+						}
+					}
+				}
+				""";
+		LspFolderConfig config = gson.fromJson(json, LspFolderConfig.class);
+		settings.addFolderConfig(config);
+
+		assertEquals("determined-org", settings.getAutoDeterminedOrg("/project"));
+	}
+
+	@Test
+	void getAutoDeterminedOrgReturnsEmptyForMissing() {
+		assertEquals("", settings.getAutoDeterminedOrg("/nonexistent"));
 	}
 
 	@Test

@@ -411,11 +411,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void folderConfig(FolderConfigsParam folderConfigParam) {
 		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
 		var fcs = FolderConfigs.getInstance();
+		var folderConfigSettings = FolderConfigSettings.getInstance();
 		for (FolderConfig folderConfig : folderConfigs) {
 			fcs.addFolderConfig(folderConfig);
 			final var folderPath = folderConfig.getFolderPath();
 			final var path = Paths.get(folderPath);
 			FolderConfigs.LanguageServerConfigReceived.add(path);
+
+			// Also populate FolderConfigSettings so both old and new systems are in sync
+			LspFolderConfig lspConfig = convertToLspFolderConfig(folderConfig);
+			folderConfigSettings.addFolderConfig(lspConfig);
+
 			if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
 				this.triggerScan(path);
 			}
@@ -423,6 +429,52 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (this.toolView != null) {
 			this.toolView.refreshDeltaReference();
 		}
+	}
+
+	private LspFolderConfig convertToLspFolderConfig(FolderConfig folderConfig) {
+		String folderPath = folderConfig.getFolderPath();
+
+		com.google.gson.JsonObject jsonObj = new com.google.gson.JsonObject();
+		jsonObj.addProperty("folder_path", folderPath);
+		jsonObj.add("settings", new com.google.gson.JsonObject());
+		LspFolderConfig config = new com.google.gson.Gson().fromJson(jsonObj, LspFolderConfig.class);
+
+		if (folderConfig.getBaseBranch() != null && !folderConfig.getBaseBranch().isEmpty()) {
+			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.BASE_BRANCH,
+					folderConfig.getBaseBranch(), false);
+		}
+		if (folderConfig.getPreferredOrg() != null) {
+			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.PREFERRED_ORG,
+					folderConfig.getPreferredOrg(), false);
+		}
+		if (folderConfig.getLocalBranches() != null && !folderConfig.getLocalBranches().isEmpty()) {
+			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.LOCAL_BRANCHES,
+					folderConfig.getLocalBranches(), false);
+		}
+		if (folderConfig.getAdditionalParameters() != null && !folderConfig.getAdditionalParameters().isEmpty()) {
+			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.ADDITIONAL_PARAMETERS,
+					String.join(" ", folderConfig.getAdditionalParameters()), false);
+		}
+		if (folderConfig.getAdditionalEnv() != null && !folderConfig.getAdditionalEnv().isEmpty()) {
+			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.ADDITIONAL_ENV,
+					folderConfig.getAdditionalEnv(), false);
+		}
+		if (folderConfig.getReferenceFolderPath() != null && !folderConfig.getReferenceFolderPath().isEmpty()) {
+			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.REFERENCE_FOLDER_PATH,
+					folderConfig.getReferenceFolderPath(), false);
+		}
+		config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.ORG_SET_BY_USER,
+				folderConfig.isOrgSetByUser(), false);
+		if (folderConfig.getAutoDeterminedOrg() != null) {
+			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.AUTO_DETERMINED_ORG,
+					folderConfig.getAutoDeterminedOrg(), false);
+		}
+		if (folderConfig.getScanCommandConfig() != null && !folderConfig.getScanCommandConfig().isEmpty()) {
+			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.SCAN_COMMAND_CONFIG,
+					folderConfig.getScanCommandConfig(), false);
+		}
+
+		return config;
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_CONFIGURATION)

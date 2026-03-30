@@ -50,18 +50,43 @@ public class FolderConfigSettings {
 
 	public synchronized LspFolderConfig getFolderConfig(String folderPath) {
 		if (folderPath == null) {
-			return new LspFolderConfig();
+			return createEmptyConfig(null);
 		}
 		String key = normalizePath(folderPath);
 		LspFolderConfig config = configs.get(key);
 		if (config == null) {
-			return new LspFolderConfig();
+			return createEmptyConfig(folderPath);
 		}
 		return config;
 	}
 
+	private LspFolderConfig createEmptyConfig(String folderPath) {
+		com.google.gson.JsonObject jsonObj = new com.google.gson.JsonObject();
+		if (folderPath != null) {
+			jsonObj.addProperty("folder_path", folderPath);
+		}
+		jsonObj.add("settings", new com.google.gson.JsonObject());
+		return new com.google.gson.Gson().fromJson(jsonObj, LspFolderConfig.class);
+	}
+
 	public synchronized List<LspFolderConfig> getAll() {
 		return new ArrayList<>(configs.values());
+	}
+
+	public synchronized boolean isConfigured(String folderPath) {
+		if (folderPath == null) {
+			return false;
+		}
+		String key = normalizePath(folderPath);
+		return configs.containsKey(key);
+	}
+
+	public synchronized void updateFolderConfig(String folderPath, LspFolderConfig config) {
+		if (folderPath == null) {
+			return;
+		}
+		String key = normalizePath(folderPath);
+		configs.put(key, config);
 	}
 
 	public String getBaseBranch(String path) {
@@ -72,15 +97,18 @@ public class FolderConfigSettings {
 		return getStringSettingValue(path, LsFolderSettingsKeys.PREFERRED_ORG);
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<String> getLocalBranches(String path) {
 		ConfigSetting setting = getSetting(path, LsFolderSettingsKeys.LOCAL_BRANCHES);
 		if (setting == null || setting.getValue() == null) {
 			return Collections.emptyList();
 		}
 		Object value = setting.getValue();
-		if (value instanceof List<?>) {
-			return (List<String>) value;
+		if (value instanceof List<?> rawList) {
+			List<String> result = new ArrayList<>();
+			for (Object item : rawList) {
+				result.add(String.valueOf(item));
+			}
+			return result;
 		}
 		return Collections.emptyList();
 	}
@@ -91,6 +119,22 @@ public class FolderConfigSettings {
 
 	public String getReferenceFolderPath(String path) {
 		return getStringSettingValue(path, LsFolderSettingsKeys.REFERENCE_FOLDER_PATH);
+	}
+
+	public boolean isOrgSetByUser(String path) {
+		ConfigSetting setting = getSetting(path, LsFolderSettingsKeys.ORG_SET_BY_USER);
+		if (setting == null || setting.getValue() == null) {
+			return false;
+		}
+		Object value = setting.getValue();
+		if (value instanceof Boolean) {
+			return (Boolean) value;
+		}
+		return Boolean.parseBoolean(String.valueOf(value));
+	}
+
+	public String getAutoDeterminedOrg(String path) {
+		return getStringSettingValue(path, LsFolderSettingsKeys.AUTO_DETERMINED_ORG);
 	}
 
 	private ConfigSetting getSetting(String path, String key) {

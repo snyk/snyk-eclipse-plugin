@@ -12,7 +12,7 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.languageserver.protocolextension.messageObjects.Settings;
+import io.snyk.languageserver.protocolextension.messageObjects.LspConfigurationParam;
 
 class SnykLanguageServerTest extends LsBaseTest {
 
@@ -24,7 +24,7 @@ class SnykLanguageServerTest extends LsBaseTest {
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);
 
-    assertInstanceOf(Settings.class, output);
+    assertInstanceOf(LspConfigurationParam.class, output);
   }
 
   @Test
@@ -35,10 +35,15 @@ class SnykLanguageServerTest extends LsBaseTest {
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);
 
-    assertInstanceOf(Settings.class, output);
-    Settings settings = (Settings) output;
-    assertEquals("a", settings.getTrustedFolders()[0]);
-    assertEquals("b/c", settings.getTrustedFolders()[1]);
+    assertInstanceOf(LspConfigurationParam.class, output);
+    LspConfigurationParam param = (LspConfigurationParam) output;
+    var trustedFoldersSetting = param.getSettings().get(LsSettingsKeys.TRUSTED_FOLDERS);
+    assertNotNull(trustedFoldersSetting);
+    Object value = trustedFoldersSetting.getValue();
+    assertInstanceOf(String[].class, value);
+    String[] folders = (String[]) value;
+    assertEquals("a", folders[0]);
+    assertEquals("b/c", folders[1]);
   }
 
   @Test
@@ -47,10 +52,13 @@ class SnykLanguageServerTest extends LsBaseTest {
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);
 
-    assertInstanceOf(Settings.class, output);
-    Settings settings = (Settings) output;
-    assertNotNull(settings.getTrustedFolders());
-    assertEquals(0, settings.getTrustedFolders().length);
+    assertInstanceOf(LspConfigurationParam.class, output);
+    LspConfigurationParam param = (LspConfigurationParam) output;
+    var trustedFoldersSetting = param.getSettings().get(LsSettingsKeys.TRUSTED_FOLDERS);
+    assertNotNull(trustedFoldersSetting);
+    Object value = trustedFoldersSetting.getValue();
+    assertInstanceOf(String[].class, value);
+    assertEquals(0, ((String[]) value).length);
   }
 
   @Test
