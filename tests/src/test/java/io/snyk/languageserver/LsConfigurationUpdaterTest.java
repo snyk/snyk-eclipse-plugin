@@ -72,6 +72,28 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
+	void testBuildConfigurationParam_tokenChangedFlagFromExplicitChanges() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.AUTH_TOKEN_KEY)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting tokenSetting = param.getSettings().get(LsSettingsKeys.TOKEN);
+
+		assertTrue(tokenSetting.getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_tokenUnchangedWhenNotExplicitlyChanged() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.AUTH_TOKEN_KEY)).thenReturn(false);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting tokenSetting = param.getSettings().get(LsSettingsKeys.TOKEN);
+
+		assertFalse(tokenSetting.getChanged());
+	}
+
+	@Test
 	void testBuildConfigurationParam_outboundHasNoLockMetadata() {
 		setupPreferenceMock();
 		var param = new LsConfigurationUpdater().buildConfigurationParam();

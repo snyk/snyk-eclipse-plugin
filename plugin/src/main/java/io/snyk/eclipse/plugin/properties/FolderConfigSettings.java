@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsFolderSettingsKeys;
@@ -89,6 +90,18 @@ public class FolderConfigSettings {
 		configs.put(key, config);
 	}
 
+	public synchronized void computeFolderConfig(String folderPath, Function<LspFolderConfig, LspFolderConfig> updater) {
+		if (folderPath == null) {
+			return;
+		}
+		String key = normalizePath(folderPath);
+		LspFolderConfig existing = configs.get(key);
+		if (existing == null) {
+			existing = createEmptyConfig(folderPath);
+		}
+		configs.put(key, updater.apply(existing));
+	}
+
 	public String getBaseBranch(String path) {
 		return getStringSettingValue(path, LsFolderSettingsKeys.BASE_BRANCH);
 	}
@@ -113,8 +126,23 @@ public class FolderConfigSettings {
 		return Collections.emptyList();
 	}
 
-	public String getAdditionalParameters(String path) {
-		return getStringSettingValue(path, LsFolderSettingsKeys.ADDITIONAL_PARAMETERS);
+	public List<String> getAdditionalParameters(String path) {
+		ConfigSetting setting = getSetting(path, LsFolderSettingsKeys.ADDITIONAL_PARAMETERS);
+		if (setting == null || setting.getValue() == null) {
+			return Collections.emptyList();
+		}
+		Object value = setting.getValue();
+		if (value instanceof List<?> rawList) {
+			List<String> result = new ArrayList<>();
+			for (Object item : rawList) {
+				result.add(String.valueOf(item));
+			}
+			return result;
+		}
+		if (value instanceof String str && !str.isEmpty()) {
+			return List.of(str);
+		}
+		return Collections.emptyList();
 	}
 
 	public String getReferenceFolderPath(String path) {

@@ -70,7 +70,6 @@ import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.preferences.HTMLSettingsPreferencePage;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
-import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
@@ -93,10 +92,7 @@ import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
 import io.snyk.languageserver.protocolextension.messageObjects.ConfigSetting;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
 import io.snyk.languageserver.protocolextension.messageObjects.LspConfigurationParam;
-import io.snyk.languageserver.protocolextension.messageObjects.LspFolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.LsSdk;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
@@ -204,17 +200,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (!Preferences.getInstance().isAuthenticated()) {
 				SnykWizard.createAndLaunch();
 			} else {
-				final var languageServerConfigReceived = FolderConfigs.LanguageServerConfigReceived;
+				var folderConfigSettings = FolderConfigSettings.getInstance();
 				updateConfiguration();
 				openToolView();
 				try {
 					if (projectPath != null) {
-						if (languageServerConfigReceived.contains(projectPath)) {
+						if (folderConfigSettings.isConfigured(projectPath.toString())) {
 							executeCommand(LsConstants.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath.toString()));
 						}
 						return;
 					}
-					if (!languageServerConfigReceived.isEmpty()) {
+					if (!folderConfigSettings.getAll().isEmpty()) {
 						executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 					}
 				} catch (Exception e) {
@@ -405,76 +401,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 		setNodeState(param.getStatus(), productTreeNode, issueCache);
 		this.toolView.refreshBrowser(param.getStatus());
-	}
-
-	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
-	public void folderConfig(FolderConfigsParam folderConfigParam) {
-		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
-		var fcs = FolderConfigs.getInstance();
-		var folderConfigSettings = FolderConfigSettings.getInstance();
-		for (FolderConfig folderConfig : folderConfigs) {
-			fcs.addFolderConfig(folderConfig);
-			final var folderPath = folderConfig.getFolderPath();
-			final var path = Paths.get(folderPath);
-			FolderConfigs.LanguageServerConfigReceived.add(path);
-
-			// Also populate FolderConfigSettings so both old and new systems are in sync
-			LspFolderConfig lspConfig = convertToLspFolderConfig(folderConfig);
-			folderConfigSettings.addFolderConfig(lspConfig);
-
-			if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
-				this.triggerScan(path);
-			}
-		}
-		if (this.toolView != null) {
-			this.toolView.refreshDeltaReference();
-		}
-	}
-
-	private LspFolderConfig convertToLspFolderConfig(FolderConfig folderConfig) {
-		String folderPath = folderConfig.getFolderPath();
-
-		com.google.gson.JsonObject jsonObj = new com.google.gson.JsonObject();
-		jsonObj.addProperty("folder_path", folderPath);
-		jsonObj.add("settings", new com.google.gson.JsonObject());
-		LspFolderConfig config = new com.google.gson.Gson().fromJson(jsonObj, LspFolderConfig.class);
-
-		if (folderConfig.getBaseBranch() != null && !folderConfig.getBaseBranch().isEmpty()) {
-			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.BASE_BRANCH,
-					folderConfig.getBaseBranch(), false);
-		}
-		if (folderConfig.getPreferredOrg() != null) {
-			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.PREFERRED_ORG,
-					folderConfig.getPreferredOrg(), false);
-		}
-		if (folderConfig.getLocalBranches() != null && !folderConfig.getLocalBranches().isEmpty()) {
-			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.LOCAL_BRANCHES,
-					folderConfig.getLocalBranches(), false);
-		}
-		if (folderConfig.getAdditionalParameters() != null && !folderConfig.getAdditionalParameters().isEmpty()) {
-			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.ADDITIONAL_PARAMETERS,
-					String.join(" ", folderConfig.getAdditionalParameters()), false);
-		}
-		if (folderConfig.getAdditionalEnv() != null && !folderConfig.getAdditionalEnv().isEmpty()) {
-			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.ADDITIONAL_ENV,
-					folderConfig.getAdditionalEnv(), false);
-		}
-		if (folderConfig.getReferenceFolderPath() != null && !folderConfig.getReferenceFolderPath().isEmpty()) {
-			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.REFERENCE_FOLDER_PATH,
-					folderConfig.getReferenceFolderPath(), false);
-		}
-		config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.ORG_SET_BY_USER,
-				folderConfig.isOrgSetByUser(), false);
-		if (folderConfig.getAutoDeterminedOrg() != null) {
-			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.AUTO_DETERMINED_ORG,
-					folderConfig.getAutoDeterminedOrg(), false);
-		}
-		if (folderConfig.getScanCommandConfig() != null && !folderConfig.getScanCommandConfig().isEmpty()) {
-			config = config.withSetting(io.snyk.languageserver.LsFolderSettingsKeys.SCAN_COMMAND_CONFIG,
-					folderConfig.getScanCommandConfig(), false);
-		}
-
-		return config;
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_CONFIGURATION)

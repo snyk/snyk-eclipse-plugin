@@ -772,30 +772,4 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykConfiguration(null);
 	}
 
-	@Test
-	void folderConfigPopulatesFolderConfigSettings() {
-		cut = new SnykExtendedLanguageClient();
-		cut.setToolWindow(toolWindowMock);
-		pref.store(Preferences.SCANNING_MODE_AUTOMATIC, "false");
-
-		var folderConfig = new io.snyk.languageserver.protocolextension.messageObjects.FolderConfig("/test/project");
-		folderConfig.setBaseBranch("main");
-		folderConfig.setPreferredOrg("my-org");
-		folderConfig.setReferenceFolderPath("/ref/path");
-		folderConfig.setOrgSetByUser(true);
-		folderConfig.setAutoDeterminedOrg("auto-org");
-		folderConfig.setLocalBranches(List.of("main", "develop"));
-
-		var param = new io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam(List.of(folderConfig));
-
-		cut.folderConfig(param);
-
-		FolderConfigSettings settings = FolderConfigSettings.getInstance();
-		assertEquals("main", settings.getBaseBranch("/test/project"));
-		assertEquals("my-org", settings.getPreferredOrg("/test/project"));
-		assertEquals("/ref/path", settings.getReferenceFolderPath("/test/project"));
-		assertEquals(true, settings.isOrgSetByUser("/test/project"));
-		assertEquals("auto-org", settings.getAutoDeterminedOrg("/test/project"));
-		assertEquals(List.of("main", "develop"), settings.getLocalBranches("/test/project"));
-	}
 }

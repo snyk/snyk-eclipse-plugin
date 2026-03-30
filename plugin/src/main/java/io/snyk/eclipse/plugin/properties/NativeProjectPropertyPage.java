@@ -1,6 +1,8 @@
 package io.snyk.eclipse.plugin.properties;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.core.resources.IProject;
@@ -26,7 +28,6 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.LspFolderConfig;
 
 /**
  * Native project-specific settings page for Snyk (used when HTML settings are disabled)
@@ -55,16 +56,16 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 			String pathStr = projectPath.toString();
 			FolderConfigSettings configSettings = FolderConfigSettings.getInstance();
 			if (configSettings.isConfigured(pathStr)) {
-				LspFolderConfig config = configSettings.getFolderConfig(pathStr);
-				config = config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, !newValue, true);
 				projectOrg.setEnabled(!newValue, getFieldEditorParent());
 
 				if (newValue) {
-					config = config.withSetting(LsFolderSettingsKeys.PREFERRED_ORG, "", true);
-					configSettings.updateFolderConfig(pathStr, config);
+					configSettings.computeFolderConfig(pathStr, config ->
+							config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, !newValue, true)
+									.withSetting(LsFolderSettingsKeys.PREFERRED_ORG, "", true));
 					updateProjectOrg(pathStr);
 				} else {
-					configSettings.updateFolderConfig(pathStr, config);
+					configSettings.computeFolderConfig(pathStr, config ->
+							config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, !newValue, true));
 					projectOrg.setStringValue("");
 				}
 			}
@@ -175,7 +176,8 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 		} else {
 			additionalParamsEditor.setEnabled(true, parent);
 
-			final var addParams = configSettings.getAdditionalParameters(pathStr);
+			final var addParamsList = configSettings.getAdditionalParameters(pathStr);
+			final var addParams = String.join(" ", addParamsList);
 			preferenceStore.setDefault(SNYK_ADDITIONAL_PARAMETERS, addParams);
 			preferenceStore.setValue(SNYK_ADDITIONAL_PARAMETERS, addParams);
 			additionalParamsEditor.setStringValue(addParams);
@@ -250,23 +252,27 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 			return retValue;
 		}
 
-		final var addParams = this.additionalParamsEditor.getStringValue() != null
+		final var addParamsStr = this.additionalParamsEditor.getStringValue() != null
 				? this.additionalParamsEditor.getStringValue()
 				: "";
+		final List<String> addParams = addParamsStr.isEmpty()
+				? List.of()
+				: Arrays.asList(addParamsStr.split("\\s+"));
 
-		LspFolderConfig config = configSettings.getFolderConfig(pathStr);
-		config = config.withSetting(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, addParams, true);
+		configSettings.computeFolderConfig(pathStr, config -> {
+			config = config.withSetting(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, addParams, true);
 
-		if (autoDetect) {
-			config = config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, false, true);
-		} else {
-			config = config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, true, true);
-			String projectOrgValue = this.projectOrg.getStringValue();
-			config = config.withSetting(LsFolderSettingsKeys.PREFERRED_ORG,
-					projectOrgValue != null ? projectOrgValue.trim() : "", true);
-		}
+			if (autoDetect) {
+				config = config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, false, true);
+			} else {
+				config = config.withSetting(LsFolderSettingsKeys.ORG_SET_BY_USER, true, true);
+				String projectOrgValue = this.projectOrg.getStringValue();
+				config = config.withSetting(LsFolderSettingsKeys.PREFERRED_ORG,
+						projectOrgValue != null ? projectOrgValue.trim() : "", true);
+			}
 
-		configSettings.updateFolderConfig(pathStr, config);
+			return config;
+		});
 		updateProjectOrg(pathStr);
 
 		CompletableFuture.runAsync(() -> {

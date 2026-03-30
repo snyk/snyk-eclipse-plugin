@@ -9,12 +9,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
 
+import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.protocolextension.messageObjects.ConfigSetting;
 import io.snyk.languageserver.protocolextension.messageObjects.LspFolderConfig;
 
@@ -52,7 +54,8 @@ class FolderConfigSettingsTest {
 		LspFolderConfig result = settings.getFolderConfig("/nonexistent");
 
 		assertNotNull(result);
-		assertNull(result.getSettings());
+		assertNotNull(result.getSettings());
+		assertTrue(result.getSettings().isEmpty());
 	}
 
 	@Test
@@ -64,8 +67,7 @@ class FolderConfigSettingsTest {
 		settings.addAll(List.of(config2));
 
 		// project1 should be gone (addAll clears and replaces)
-		LspFolderConfig result1 = settings.getFolderConfig("/project1");
-		assertNull(result1.getSettings());
+		assertFalse(settings.isConfigured("/project1"));
 
 		// project2 should be present
 		LspFolderConfig result2 = settings.getFolderConfig("/project2");
@@ -162,7 +164,35 @@ class FolderConfigSettingsTest {
 	}
 
 	@Test
-	void getAdditionalParametersReturnsValue() {
+	void getAdditionalParametersReturnsListValue() {
+		String json = """
+				{
+					"folder_path": "/project",
+					"settings": {
+						"additional_parameters": {
+							"value": ["--all-projects", "--debug"]
+						}
+					}
+				}
+				""";
+		LspFolderConfig config = gson.fromJson(json, LspFolderConfig.class);
+		settings.addFolderConfig(config);
+
+		List<String> result = settings.getAdditionalParameters("/project");
+		assertEquals(2, result.size());
+		assertTrue(result.contains("--all-projects"));
+		assertTrue(result.contains("--debug"));
+	}
+
+	@Test
+	void getAdditionalParametersReturnsEmptyListForMissing() {
+		List<String> result = settings.getAdditionalParameters("/nonexistent");
+		assertNotNull(result);
+		assertTrue(result.isEmpty());
+	}
+
+	@Test
+	void getAdditionalParametersHandlesStringValue() {
 		String json = """
 				{
 					"folder_path": "/project",
@@ -176,12 +206,9 @@ class FolderConfigSettingsTest {
 		LspFolderConfig config = gson.fromJson(json, LspFolderConfig.class);
 		settings.addFolderConfig(config);
 
-		assertEquals("--all-projects", settings.getAdditionalParameters("/project"));
-	}
-
-	@Test
-	void getAdditionalParametersReturnsEmptyForMissing() {
-		assertEquals("", settings.getAdditionalParameters("/nonexistent"));
+		List<String> result = settings.getAdditionalParameters("/project");
+		assertEquals(1, result.size());
+		assertEquals("--all-projects", result.get(0));
 	}
 
 	@Test
@@ -353,6 +380,45 @@ class FolderConfigSettingsTest {
 		settings.addFolderConfig(updated);
 
 		assertEquals("develop", settings.getBaseBranch("/project"));
+	}
+
+	@Test
+	void computeFolderConfigAppliesUpdateAtomically() {
+		LspFolderConfig config = createFolderConfig("/project", "main");
+		settings.addFolderConfig(config);
+
+		settings.computeFolderConfig("/project",
+				c -> c.withSetting(LsFolderSettingsKeys.BASE_BRANCH, "develop", true));
+
+		assertEquals("develop", settings.getBaseBranch("/project"));
+	}
+
+	@Test
+	void computeFolderConfigCreatesNewConfigIfMissing() {
+		settings.computeFolderConfig("/new-project",
+				c -> c.withSetting(LsFolderSettingsKeys.BASE_BRANCH, "feature", true));
+
+		assertTrue(settings.isConfigured("/new-project"));
+		assertEquals("feature", settings.getBaseBranch("/new-project"));
+	}
+
+	@Test
+	void computeFolderConfigNormalizesPath() {
+		LspFolderConfig config = createFolderConfig("/home/user/project", "main");
+		settings.addFolderConfig(config);
+
+		settings.computeFolderConfig("/home/user/./project",
+				c -> c.withSetting(LsFolderSettingsKeys.BASE_BRANCH, "develop", true));
+
+		assertEquals("develop", settings.getBaseBranch("/home/user/project"));
+	}
+
+	@Test
+	void computeFolderConfigIgnoresNullPath() {
+		settings.computeFolderConfig(null,
+				c -> c.withSetting(LsFolderSettingsKeys.BASE_BRANCH, "develop", true));
+
+		assertTrue(settings.getAll().isEmpty());
 	}
 
 	private LspFolderConfig createFolderConfig(String path, String baseBranch) {

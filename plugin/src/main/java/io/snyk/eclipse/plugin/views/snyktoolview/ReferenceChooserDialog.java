@@ -22,7 +22,6 @@ import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.wizards.SWTWidgetHelper;
 import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.LspFolderConfig;
 
 public class ReferenceChooserDialog extends TitleAreaDialog {
 	private Path projectPath;
@@ -101,11 +100,9 @@ public class ReferenceChooserDialog extends TitleAreaDialog {
 		final var referenceFolder = folderText.getText();
 
 		String pathStr = projectPath.toString();
-		FolderConfigSettings configSettings = FolderConfigSettings.getInstance();
-		LspFolderConfig config = configSettings.getFolderConfig(pathStr);
-		config = config.withSetting(LsFolderSettingsKeys.BASE_BRANCH, referenceBranch, true);
-		config = config.withSetting(LsFolderSettingsKeys.REFERENCE_FOLDER_PATH, referenceFolder, true);
-		configSettings.updateFolderConfig(pathStr, config);
+		FolderConfigSettings.getInstance().computeFolderConfig(pathStr, config ->
+				config.withSetting(LsFolderSettingsKeys.BASE_BRANCH, referenceBranch, true)
+						.withSetting(LsFolderSettingsKeys.REFERENCE_FOLDER_PATH, referenceFolder, true));
 
 		CompletableFuture.runAsync(() -> {
 			final var lc = SnykExtendedLanguageClient.getInstance();

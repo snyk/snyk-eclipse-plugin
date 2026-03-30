@@ -66,7 +66,8 @@ public class LsConfigurationUpdater {
 				preferences.isExplicitlyChanged(Preferences.SCANNING_MODE_AUTOMATIC)));
 
 		settings.put(LsSettingsKeys.TOKEN, ConfigSetting.outbound(
-				preferences.getPref(Preferences.AUTH_TOKEN_KEY, ""), false));
+				preferences.getPref(Preferences.AUTH_TOKEN_KEY, ""),
+				preferences.isExplicitlyChanged(Preferences.AUTH_TOKEN_KEY)));
 
 		settings.put(LsSettingsKeys.ADDITIONAL_ENV, ConfigSetting.outbound(
 				preferences.getPref(Preferences.ADDITIONAL_ENVIRONMENT, ""), false));
