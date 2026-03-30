@@ -84,6 +84,7 @@ public class Preferences {
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
 	public static final String USE_LS_HTML_CONFIG_DIALOG = "useLsHtmlConfigDialog";
+	public static final String EXPLICIT_CHANGES_KEY = "explicitChanges";
 
 	private static final Set<String> encryptedPreferenceKeys = Set.of(AUTH_TOKEN_KEY);
 	private final IEclipsePreferences insecurePreferences;
@@ -92,6 +93,7 @@ public class Preferences {
 	private IPreferenceStore secureStore;
 	private boolean secureStorageReady;
 	private Map<String, String> prefSaveMap = new ConcurrentHashMap<>();
+	private final Set<String> explicitChanges = ConcurrentHashMap.newKeySet();
 	private static Function<String, String> envProvider = System::getenv;
 
 	public static synchronized Preferences getInstance() {
@@ -147,6 +149,16 @@ public class Preferences {
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 		insecureStore.setDefault(ENDPOINT_KEY, DEFAULT_ENDPOINT);
 		insecureStore.setDefault(ORGANIZATION_KEY, "");
+
+		String savedExplicitChanges = insecure.get(EXPLICIT_CHANGES_KEY, "");
+		if (savedExplicitChanges != null && !savedExplicitChanges.isEmpty()) {
+			for (String key : savedExplicitChanges.split(",")) {
+				String trimmed = key.trim();
+				if (!trimmed.isEmpty()) {
+					explicitChanges.add(trimmed);
+				}
+			}
+		}
 
 		var endpoint = getEnvironmentVariable(ENV_SNYK_API, "");
 		if (endpoint != null && !endpoint.isBlank()) {
@@ -373,5 +385,37 @@ public class Preferences {
 			return false;
 		}
 		return true;
+	}
+
+	public void markExplicitlyChanged(String key) {
+		if (key == null) {
+			return;
+		}
+		explicitChanges.add(key);
+		persistExplicitChanges();
+	}
+
+	public boolean isExplicitlyChanged(String key) {
+		if (key == null) {
+			return false;
+		}
+		return explicitChanges.contains(key);
+	}
+
+	public void clearExplicitlyChanged(String key) {
+		if (key == null) {
+			return;
+		}
+		explicitChanges.remove(key);
+		persistExplicitChanges();
+	}
+
+	private void persistExplicitChanges() {
+		insecurePreferences.put(EXPLICIT_CHANGES_KEY, String.join(",", explicitChanges));
+		try {
+			insecurePreferences.flush();
+		} catch (org.osgi.service.prefs.BackingStoreException e) {
+			SnykLogger.logError(e);
+		}
 	}
 }

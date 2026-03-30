@@ -12,6 +12,14 @@ public class LspConfigurationParam {
 	@SerializedName("folder_configs")
 	private List<LspFolderConfig> folderConfigs;
 
+	public LspConfigurationParam() {
+	}
+
+	public LspConfigurationParam(Map<String, ConfigSetting> settings, List<LspFolderConfig> folderConfigs) {
+		this.settings = settings;
+		this.folderConfigs = folderConfigs;
+	}
+
 	public Map<String, ConfigSetting> getSettings() {
 		return settings;
 	}

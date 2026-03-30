@@ -36,6 +36,13 @@ public class ConfigSetting {
 		return isLocked;
 	}
 
+	public static ConfigSetting outbound(Object value, boolean changed) {
+		ConfigSetting setting = new ConfigSetting();
+		setting.value = value;
+		setting.changed = changed;
+		return setting;
+	}
+
 	void setValue(Object value) {
 		this.value = value;
 	}

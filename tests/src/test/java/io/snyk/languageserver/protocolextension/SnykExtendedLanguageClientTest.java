@@ -696,6 +696,66 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
+	void snykConfigurationConvertsScanningModeAutomaticToBoolean() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"scanningMode": {
+							"value": "automatic"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		assertEquals("true", pref.getPref(Preferences.SCANNING_MODE_AUTOMATIC));
+	}
+
+	@Test
+	void snykConfigurationConvertsScanningModeManualToBoolean() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"scanningMode": {
+							"value": "manual"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		assertEquals("false", pref.getPref(Preferences.SCANNING_MODE_AUTOMATIC));
+	}
+
+	@Test
+	void snykConfigurationConvertsJsonBooleanToString() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"activateSnykCode": {
+							"value": true
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		assertEquals("true", pref.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
+	}
+
+	@Test
 	void snykConfigurationHandlesEmptyPayload() {
 		var gson = new com.google.gson.Gson();
 		LspConfigurationParam param = gson.fromJson("{}", LspConfigurationParam.class);

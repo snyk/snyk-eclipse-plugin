@@ -209,4 +209,64 @@ class PreferencesTest {
 		assertFalse(Preferences.isNewConfigDialogEnabled());
 	}
 
+	@Test
+	public void testMarkExplicitlyChanged_addsKeyToSet() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		assertFalse(prefs.isExplicitlyChanged("endpoint"));
+		prefs.markExplicitlyChanged("endpoint");
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+	}
+
+	@Test
+	public void testIsExplicitlyChanged_returnsFalseForUnchangedKey() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		assertFalse(prefs.isExplicitlyChanged("organization"));
+	}
+
+	@Test
+	public void testClearExplicitlyChanged_removesKeyFromSet() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.markExplicitlyChanged("endpoint");
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+		prefs.clearExplicitlyChanged("endpoint");
+		assertFalse(prefs.isExplicitlyChanged("endpoint"));
+	}
+
+	@Test
+	public void testExplicitChanges_multipleKeys() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.markExplicitlyChanged("endpoint");
+		prefs.markExplicitlyChanged("organization");
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+		assertTrue(prefs.isExplicitlyChanged("organization"));
+		assertFalse(prefs.isExplicitlyChanged("path"));
+	}
+
+	@Test
+	public void testExplicitChanges_persistedAsCommaSeparatedString() {
+		InMemoryPreferenceStore store = new InMemoryPreferenceStore();
+		Preferences prefs = Preferences.getTestInstance(store, new InMemorySecurePreferenceStore());
+		prefs.markExplicitlyChanged("endpoint");
+		prefs.markExplicitlyChanged("organization");
+
+		String persisted = store.get(Preferences.EXPLICIT_CHANGES_KEY, "");
+		assertTrue(persisted.contains("endpoint"));
+		assertTrue(persisted.contains("organization"));
+	}
+
+	@Test
+	public void testExplicitChanges_restoredFromPreferenceStoreOnConstruction() {
+		InMemoryPreferenceStore store = new InMemoryPreferenceStore();
+		store.put(Preferences.EXPLICIT_CHANGES_KEY, "endpoint,organization");
+
+		Preferences prefs = Preferences.getTestInstance(store, new InMemorySecurePreferenceStore());
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+		assertTrue(prefs.isExplicitlyChanged("organization"));
+		assertFalse(prefs.isExplicitlyChanged("path"));
+	}
+
 }

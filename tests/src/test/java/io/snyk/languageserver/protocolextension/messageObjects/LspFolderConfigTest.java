@@ -158,6 +158,33 @@ class LspFolderConfigTest {
 	}
 
 	@Test
+	void withSettingNullValueForResetToDefault() {
+		String json = """
+				{
+					"folder_path": "/project",
+					"settings": {
+						"base_branch": {
+							"value": "main",
+							"changed": false,
+							"source": "cli",
+							"origin_scope": "folder",
+							"is_locked": false
+						}
+					}
+				}
+				""";
+
+		LspFolderConfig original = gson.fromJson(json, LspFolderConfig.class);
+		LspFolderConfig reset = original.withSetting("base_branch", null, true);
+
+		ConfigSetting setting = reset.getSettings().get("base_branch");
+		assertNull(setting.getValue());
+		assertTrue(setting.getChanged());
+		assertEquals("cli", setting.getSource());
+		assertEquals("folder", setting.getOriginScope());
+	}
+
+	@Test
 	void withSettingHandlesNullSettings() {
 		String json = """
 				{

@@ -25,7 +25,7 @@ public class FolderConfigSettings {
 		return instance;
 	}
 
-	public static void setInstance(FolderConfigSettings i) {
+	public static synchronized void setInstance(FolderConfigSettings i) {
 		instance = i;
 	}
 

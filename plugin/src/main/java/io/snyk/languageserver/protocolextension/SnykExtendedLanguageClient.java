@@ -466,12 +466,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				}
 				var setting = entry.getValue();
 				if (setting.getValue() != null) {
-					prefs.store(prefKey, toStringValue(setting.getValue()));
+					prefs.store(prefKey, convertInboundValue(entry.getKey(), setting.getValue()));
 				}
 			} catch (Exception e) {
 				SnykLogger.logError(e);
 			}
 		}
+	}
+
+	private String convertInboundValue(String lsKey, Object value) {
+		if (LsSettingsKeys.SCANNING_MODE.equals(lsKey)) {
+			return String.valueOf("automatic".equals(String.valueOf(value)));
+		}
+		return toStringValue(value);
 	}
 
 	private String toStringValue(Object value) {

@@ -127,4 +127,23 @@ class ConfigSettingTest {
 
 		assertTrue(setting.getValue() instanceof java.util.Map);
 	}
+
+	@Test
+	void outboundFactoryCreatesSettingWithValueAndChanged() {
+		ConfigSetting setting = ConfigSetting.outbound("endpoint-value", true);
+
+		assertEquals("endpoint-value", setting.getValue());
+		assertTrue(setting.getChanged());
+		assertNull(setting.getSource());
+		assertNull(setting.getOriginScope());
+		assertNull(setting.getIsLocked());
+	}
+
+	@Test
+	void outboundFactorySupportsNullValueForReset() {
+		ConfigSetting setting = ConfigSetting.outbound(null, true);
+
+		assertNull(setting.getValue());
+		assertTrue(setting.getChanged());
+	}
 }
