@@ -305,6 +305,33 @@ class PreferencesTest {
 	}
 
 	@Test
+	public void testStoreAndTrackChange_doesNotFalsePositiveWhenValueMatchesRegisteredDefault() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		// ACTIVATE_SNYK_OPEN_SOURCE has a registered default of "true".
+		// storeAndTrackChange should compare against the registered default, not "".
+		prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true");
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE),
+				"Should not mark as changed when value matches registered default");
+	}
+
+	@Test
+	public void testStoreAndTrackChange_doesNotFalsePositiveForBooleanDefaults() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_IAC, "true");
+		prefs.storeAndTrackChange(Preferences.FILTER_SHOW_CRITICAL, "true");
+		prefs.storeAndTrackChange(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true");
+		prefs.storeAndTrackChange(Preferences.SCANNING_MODE_AUTOMATIC, "true");
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_IAC));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.FILTER_SHOW_CRITICAL));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.SCANNING_MODE_AUTOMATIC));
+	}
+
+	@Test
 	public void testStoreAndTrackChange_handlesNullKeyGracefully() {
 		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
 				new InMemorySecurePreferenceStore());
@@ -318,6 +345,37 @@ class PreferencesTest {
 				new InMemorySecurePreferenceStore());
 		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, null);
 		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testClearExplicitlyChanged_resetFlowClearsOverride() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		// User sets a value
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://user-override.snyk.io");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		// User resets the value (LS form sends null)
+		prefs.clearExplicitlyChanged(Preferences.ENDPOINT_KEY);
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		// Value is still stored (clearing override doesn't erase the value)
+		assertEquals("https://user-override.snyk.io", prefs.getPref(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testClearExplicitlyChanged_onlyAffectsSpecifiedKey() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://custom.snyk.io");
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "my-org");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+
+		prefs.clearExplicitlyChanged(Preferences.ENDPOINT_KEY);
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
 	}
 
 }

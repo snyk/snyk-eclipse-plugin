@@ -177,68 +177,59 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       boolean isFallback = Boolean.TRUE.equals(config.isFallbackForm());
 
       // CLI Settings - always persist for both fallback and full forms
-      prefs.storeAndTrackChange(Preferences.CLI_PATH, String.valueOf(config.cliPath()));
-      prefs.storeAndTrackChange(
-          Preferences.MANAGE_BINARIES_AUTOMATICALLY,
-          String.valueOf(config.manageBinariesAutomatically()));
-      prefs.storeAndTrackChange(Preferences.CLI_BASE_URL, String.valueOf(config.cliBaseDownloadURL()));
-      prefs.storeAndTrackChange(Preferences.RELEASE_CHANNEL, String.valueOf(config.cliReleaseChannel()));
-      prefs.storeAndTrackChange(Preferences.INSECURE_KEY, String.valueOf(config.insecure()));
+      applyFormValue(prefs, Preferences.CLI_PATH, config.cliPath());
+      applyFormValue(prefs, Preferences.MANAGE_BINARIES_AUTOMATICALLY, config.manageBinariesAutomatically());
+      applyFormValue(prefs, Preferences.CLI_BASE_URL, config.cliBaseDownloadURL());
+      applyFormValue(prefs, Preferences.RELEASE_CHANNEL, config.cliReleaseChannel());
+      applyFormValue(prefs, Preferences.INSECURE_KEY, config.insecure());
 
       // Only persist non-CLI fields if not fallback form
       if (!isFallback) {
         // Scan Settings
-        prefs.storeAndTrackChange(
-            Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
-            String.valueOf(config.activateSnykOpenSource()));
-        prefs.storeAndTrackChange(
-            Preferences.ACTIVATE_SNYK_CODE_SECURITY, String.valueOf(config.activateSnykCode()));
-        prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_IAC, String.valueOf(config.activateSnykIac()));
+        applyFormValue(prefs, Preferences.ACTIVATE_SNYK_OPEN_SOURCE, config.activateSnykOpenSource());
+        applyFormValue(prefs, Preferences.ACTIVATE_SNYK_CODE_SECURITY, config.activateSnykCode());
+        applyFormValue(prefs, Preferences.ACTIVATE_SNYK_IAC, config.activateSnykIac());
 
         if (config.scanningMode() != null) {
           boolean isAutomatic = "auto".equals(config.scanningMode());
           prefs.storeAndTrackChange(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
+        } else {
+          prefs.clearExplicitlyChanged(Preferences.SCANNING_MODE_AUTOMATIC);
         }
 
         // Issue View Settings
         if (config.issueViewOptions() != null) {
           IdeConfigData.IssueViewOptions options = config.issueViewOptions();
-          prefs.storeAndTrackChange(
-              Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, String.valueOf(options.openIssues()));
-          prefs.storeAndTrackChange(
-              Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES,
-              String.valueOf(options.ignoredIssues()));
+          applyFormValue(prefs, Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, options.openIssues());
+          applyFormValue(prefs, Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, options.ignoredIssues());
         }
-        prefs.storeAndTrackChange(Preferences.ENABLE_DELTA, String.valueOf(config.enableDeltaFindings()));
+        applyFormValue(prefs, Preferences.ENABLE_DELTA, config.enableDeltaFindings());
 
         // Authentication Settings
-        if (config.authenticationMethod() != null) {
-          prefs.storeAndTrackChange(Preferences.AUTHENTICATION_METHOD, config.authenticationMethod());
-        }
+        applyFormValue(prefs, Preferences.AUTHENTICATION_METHOD, config.authenticationMethod());
 
         // Connection Settings
-        prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, String.valueOf(config.endpoint()));
-        prefs.storeAndTrackChange(Preferences.AUTH_TOKEN_KEY, String.valueOf(config.token()));
-        if (config.organization() != null) {
-          prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, String.valueOf(config.organization()));
-        }
+        applyFormValue(prefs, Preferences.ENDPOINT_KEY, config.endpoint());
+        applyFormValue(prefs, Preferences.AUTH_TOKEN_KEY, config.token());
+        applyFormValue(prefs, Preferences.ORGANIZATION_KEY, config.organization());
 
         // Trusted Folders
         if (config.trustedFolders() != null) {
           String trustedFoldersString = String.join(File.pathSeparator, config.trustedFolders());
           prefs.storeAndTrackChange(Preferences.TRUSTED_FOLDERS, trustedFoldersString);
+        } else {
+          prefs.clearExplicitlyChanged(Preferences.TRUSTED_FOLDERS);
         }
 
         // Filter Settings
         if (config.filterSeverity() != null) {
           IdeConfigData.FilterSeverity severity = config.filterSeverity();
-          prefs.storeAndTrackChange(Preferences.FILTER_SHOW_CRITICAL, String.valueOf(severity.critical()));
-          prefs.storeAndTrackChange(Preferences.FILTER_SHOW_HIGH, String.valueOf(severity.high()));
-          prefs.storeAndTrackChange(Preferences.FILTER_SHOW_MEDIUM, String.valueOf(severity.medium()));
-          prefs.storeAndTrackChange(Preferences.FILTER_SHOW_LOW, String.valueOf(severity.low()));
+          applyFormValue(prefs, Preferences.FILTER_SHOW_CRITICAL, severity.critical());
+          applyFormValue(prefs, Preferences.FILTER_SHOW_HIGH, severity.high());
+          applyFormValue(prefs, Preferences.FILTER_SHOW_MEDIUM, severity.medium());
+          applyFormValue(prefs, Preferences.FILTER_SHOW_LOW, severity.low());
         }
-        prefs.storeAndTrackChange(
-            Preferences.RISK_SCORE_THRESHOLD, String.valueOf(config.riskScoreThreshold()));
+        applyFormValue(prefs, Preferences.RISK_SCORE_THRESHOLD, config.riskScoreThreshold());
 
         // Folder Configs
         if (config.folderConfigs() != null && !config.folderConfigs().isEmpty()) {
@@ -252,6 +243,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       refreshToolbarUI();
     } catch (JsonProcessingException e) {
       SnykLogger.logError(e);
+    }
+  }
+
+  private void applyFormValue(Preferences prefs, String key, Object value) {
+    if (value == null) {
+      prefs.clearExplicitlyChanged(key);
+    } else {
+      prefs.storeAndTrackChange(key, String.valueOf(value));
     }
   }
 

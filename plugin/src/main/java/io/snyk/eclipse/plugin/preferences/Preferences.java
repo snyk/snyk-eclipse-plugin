@@ -392,7 +392,7 @@ public class Preferences {
 		if (key == null || value == null) {
 			return;
 		}
-		String oldValue = getPref(key, "");
+		String oldValue = getPref(key);
 		store(key, value);
 		if (!Objects.equals(oldValue, value)) {
 			markExplicitlyChanged(key);
