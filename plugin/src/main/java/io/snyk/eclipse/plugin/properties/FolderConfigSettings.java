@@ -17,7 +17,7 @@ public class FolderConfigSettings {
 
 	private static FolderConfigSettings instance;
 
-	private final ConcurrentHashMap<String, LspFolderConfig> configs = new ConcurrentHashMap<>();
+	private final Map<String, LspFolderConfig> configs = new ConcurrentHashMap<>();
 
 	public static synchronized FolderConfigSettings getInstance() {
 		if (instance == null) {
@@ -43,7 +43,7 @@ public class FolderConfigSettings {
 		for (LspFolderConfig config : folderConfigs) {
 			try {
 				addFolderConfig(config);
-			} catch (Exception e) {
+			} catch (IllegalArgumentException e) {
 				SnykLogger.logError(e);
 			}
 		}
