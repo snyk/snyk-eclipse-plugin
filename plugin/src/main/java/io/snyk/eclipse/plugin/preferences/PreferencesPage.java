@@ -1,6 +1,9 @@
 package io.snyk.eclipse.plugin.preferences;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -222,7 +225,33 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 
 	@Override
 	public boolean performOk() {
+		Preferences preferences = Preferences.getInstance();
+		// Snapshot old values before field editors store directly to IPreferenceStore
+		String[] trackedKeys = {
+			Preferences.ENDPOINT_KEY, Preferences.INSECURE_KEY, Preferences.AUTHENTICATION_METHOD,
+			Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.ACTIVATE_SNYK_CODE_SECURITY,
+			Preferences.ACTIVATE_SNYK_IAC, Preferences.SCANNING_MODE_AUTOMATIC,
+			Preferences.ORGANIZATION_KEY, Preferences.ADDITIONAL_PARAMETERS,
+			Preferences.ADDITIONAL_ENVIRONMENT, Preferences.PATH_KEY,
+			Preferences.MANAGE_BINARIES_AUTOMATICALLY, Preferences.CLI_BASE_URL,
+			Preferences.CLI_PATH, Preferences.RELEASE_CHANNEL,
+			Preferences.SEND_ERROR_REPORTS, Preferences.ENABLE_TELEMETRY,
+			Preferences.TRUSTED_FOLDERS
+		};
+		Map<String, String> oldValues = new HashMap<>();
+		for (String key : trackedKeys) {
+			oldValues.put(key, preferences.getPref(key, ""));
+		}
+
 		boolean superOK = super.performOk();
+
+		for (String key : trackedKeys) {
+			String newValue = preferences.getPref(key, "");
+			if (!Objects.equals(oldValues.get(key), newValue)) {
+				preferences.markExplicitlyChanged(key);
+			}
+		}
+
 		CompletableFuture.runAsync(() -> {
 			SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 			lc.updateConfiguration();

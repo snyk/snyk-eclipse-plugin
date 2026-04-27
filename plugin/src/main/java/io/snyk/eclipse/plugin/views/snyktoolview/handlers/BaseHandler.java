@@ -40,7 +40,7 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater, IHa
 		String commandId = event.getCommand().getId();
 
 		// Update the application state for the preference.
-		Preferences.getInstance().store(preferenceKey,
+		Preferences.getInstance().storeAndTrackChange(preferenceKey,
 				Boolean.toString(!Preferences.getInstance().getBooleanPref(preferenceKey)));
 
 		updateUIForCommand(commandId);
@@ -102,7 +102,7 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater, IHa
 		}
 	
 		for (String p : prefs) {			
-			preferences.store(p, Boolean.toString(!allEnabled));
+			preferences.storeAndTrackChange(p, Boolean.toString(!allEnabled));
 			updateUIForCommand(getCommandByPref(p));
 
 		}

@@ -45,7 +45,7 @@ import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.properties.FolderConfigs;
+import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.providers.TreeContentProvider;
@@ -460,9 +460,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	private void setReferenceText(ContentRootNode contentNode) {
-		var folderConfig = FolderConfigs.getInstance().getFolderConfig(contentNode.getPath());
-		String referenceFolder = folderConfig.getReferenceFolderPath();
-		String baseBranch = folderConfig.getBaseBranch();
+		String pathStr = contentNode.getPath().toString();
+		FolderConfigSettings configSettings = FolderConfigSettings.getInstance();
+		String referenceFolder = configSettings.getReferenceFolderPath(pathStr);
+		String baseBranch = configSettings.getBaseBranch(pathStr);
 		var reference = referenceFolder;
 		if (reference.isBlank()) {
 			reference = baseBranch;

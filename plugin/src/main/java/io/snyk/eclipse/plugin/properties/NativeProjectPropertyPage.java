@@ -2,6 +2,7 @@ package io.snyk.eclipse.plugin.properties;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.core.resources.IProject;
@@ -25,8 +26,8 @@ import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.preferences.LabelFieldEditor;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
+import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
 /**
  * Native project-specific settings page for Snyk (used when HTML settings are disabled)
@@ -52,15 +53,19 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 		@Override
 		protected void valueChanged(boolean oldValue, boolean newValue) {
 			super.valueChanged(oldValue, newValue);
-			var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
-			if (folderConfig != null) {
-				folderConfig.setOrgSetByUser(!newValue);
+			String pathStr = projectPath.toString();
+			FolderConfigSettings configSettings = FolderConfigSettings.getInstance();
+			if (configSettings.isConfigured(pathStr)) {
 				projectOrg.setEnabled(!newValue, getFieldEditorParent());
 
 				if (newValue) {
-					folderConfig.setPreferredOrg("");
-					updateProjectOrg(folderConfig);
+					configSettings.computeFolderConfig(pathStr, config ->
+							config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, !newValue)
+									.withSettingIfChanged(LsFolderSettingsKeys.PREFERRED_ORG, ""));
+					updateProjectOrg(pathStr);
 				} else {
+					configSettings.computeFolderConfig(pathStr, config ->
+							config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, !newValue));
 					projectOrg.setStringValue("");
 				}
 			}
@@ -151,8 +156,10 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 
 	private void populate() {
 		Composite parent = getFieldEditorParent();
+		String pathStr = projectPath.toString();
+		FolderConfigSettings configSettings = FolderConfigSettings.getInstance();
 
-		if (!FolderConfigs.LanguageServerConfigReceived.contains(projectPath)) {
+		if (!configSettings.isConfigured(pathStr)) {
 			additionalParamsEditor.setEnabled(false, parent);
 			autoDetectOrgCheckbox.setEnabled(false, parent);
 			projectOrg.setEnabled(false, parent);
@@ -167,45 +174,42 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 			preferenceStore.setDefault(SNYK_ORGANIZATION, "");
 			preferenceStore.setValue(SNYK_ORGANIZATION, "");
 		} else {
-			var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
 			additionalParamsEditor.setEnabled(true, parent);
 
-			final var addParams = folderConfig.getAdditionalParameters() != null
-					? String.join(" ", folderConfig.getAdditionalParameters())
-					: "";
+			final var addParamsList = configSettings.getAdditionalParameters(pathStr);
+			final var addParams = String.join(" ", addParamsList);
 			preferenceStore.setDefault(SNYK_ADDITIONAL_PARAMETERS, addParams);
 			preferenceStore.setValue(SNYK_ADDITIONAL_PARAMETERS, addParams);
 			additionalParamsEditor.setStringValue(addParams);
 
 			autoDetectOrgCheckbox.setEnabled(true, parent);
-			boolean autoDetect = !folderConfig.isOrgSetByUser();
+			boolean autoDetect = !configSettings.isOrgSetByUser(pathStr);
 			preferenceStore.setDefault(SNYK_AUTO_SELECT_ORG, autoDetect);
 			preferenceStore.setValue(SNYK_AUTO_SELECT_ORG, autoDetect);
 			autoDetectOrgCheckbox.load();
 
-			updateProjectOrg(folderConfig);
+			updateProjectOrg(pathStr);
 		}
 	}
 
-	private void updateProjectOrg(FolderConfig folderConfig) {
+	private void updateProjectOrg(String pathStr) {
 		Composite parent = getFieldEditorParent();
+		FolderConfigSettings configSettings = FolderConfigSettings.getInstance();
 
-		if (folderConfig == null) {
+		if (!configSettings.isConfigured(pathStr)) {
 			projectOrg.setEnabled(false, parent);
 			projectOrg.setStringValue("");
 			return;
 		}
 
-		boolean autoDetect = !folderConfig.isOrgSetByUser();
+		boolean autoDetect = !configSettings.isOrgSetByUser(pathStr);
 
 		String displayOrg;
 		if (autoDetect) {
-			displayOrg = folderConfig.getAutoDeterminedOrg() != null ? folderConfig.getAutoDeterminedOrg() : "";
+			displayOrg = configSettings.getAutoDeterminedOrg(pathStr);
 		} else {
-			displayOrg = folderConfig.getPreferredOrg() != null ? folderConfig.getPreferredOrg() : "";
+			displayOrg = configSettings.getPreferredOrg(pathStr);
 		}
-
-		displayOrg = displayOrg != null ? displayOrg : "";
 
 		preferenceStore.setDefault(SNYK_ORGANIZATION, displayOrg);
 		preferenceStore.setValue(SNYK_ORGANIZATION, displayOrg);
@@ -241,32 +245,36 @@ public class NativeProjectPropertyPage extends FieldEditorPreferencePage impleme
 
 		var retValue = super.performOk();
 
-		if (!FolderConfigs.LanguageServerConfigReceived.contains(projectPath)) {
+		String pathStr = projectPath.toString();
+		FolderConfigSettings configSettings = FolderConfigSettings.getInstance();
+
+		if (!configSettings.isConfigured(pathStr)) {
 			return retValue;
 		}
 
-		final var addParams = this.additionalParamsEditor.getStringValue() != null
-				? this.additionalParamsEditor.getStringValue().split(" ")
-				: new String[0];
+		final var addParamsStr = this.additionalParamsEditor.getStringValue() != null
+				? this.additionalParamsEditor.getStringValue()
+				: "";
+		final List<String> addParams = addParamsStr.isEmpty()
+				? List.of()
+				: Arrays.asList(addParamsStr.split("\\s+"));
 
-		var folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
-		if (folderConfig == null) {
-			return retValue;
-		}
+		configSettings.computeFolderConfig(pathStr, config -> {
+			config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, addParams);
 
-		folderConfig.setAdditionalParameters(Arrays.asList(addParams));
+			if (autoDetect) {
+				config = config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, false);
+			} else {
+				config = config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, true);
+				String projectOrgValue = this.projectOrg.getStringValue();
+				config = config.withSettingIfChanged(LsFolderSettingsKeys.PREFERRED_ORG,
+						projectOrgValue != null ? projectOrgValue.trim() : "");
+			}
 
-		if (autoDetect) {
-			folderConfig.setOrgSetByUser(false);
-		} else {
-			folderConfig.setOrgSetByUser(true);
-			String projectOrgValue = this.projectOrg.getStringValue();
-			folderConfig.setPreferredOrg(projectOrgValue != null ? projectOrgValue.trim() : "");
-		}
+			return config;
+		});
+		updateProjectOrg(pathStr);
 
-		updateProjectOrg(folderConfig);
-
-		FolderConfigs.getInstance().addFolderConfig(folderConfig);
 		CompletableFuture.runAsync(() -> {
 			SnykExtendedLanguageClient.getInstance().updateConfiguration();
 		});

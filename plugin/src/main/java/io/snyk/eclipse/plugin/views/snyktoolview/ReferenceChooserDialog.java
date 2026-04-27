@@ -18,21 +18,19 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.properties.FolderConfigs;
+import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.wizards.SWTWidgetHelper;
+import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 
 public class ReferenceChooserDialog extends TitleAreaDialog {
 	private Path projectPath;
-	private FolderConfig folderConfig;
 	private Combo branches;
 	private Text folderText;
 
 	public ReferenceChooserDialog(Shell parentShell, Path projectPath) {
 		super(parentShell);
 		this.projectPath = projectPath;
-		this.folderConfig = FolderConfigs.getInstance().getFolderConfig(projectPath);
 	}
 
 	@Override
@@ -52,13 +50,16 @@ public class ReferenceChooserDialog extends TitleAreaDialog {
 		gridLayout.marginLeft = 5;
 		gridLayout.marginRight = 5;
 		panel.setLayout(gridLayout);
+		String pathStr = projectPath.toString();
+		FolderConfigSettings configSettings = FolderConfigSettings.getInstance();
+
 		var group = SWTWidgetHelper.createGroup(panel, "Reference branch for " + projectPath.getFileName(), 1,
 				GridData.FILL_HORIZONTAL);
-		final var localBranches = folderConfig.getLocalBranches().toArray(new String[0]);
+		final var localBranches = configSettings.getLocalBranches(pathStr).toArray(new String[0]);
 		branches = new Combo(group, SWT.DROP_DOWN);
 		branches.setItems(localBranches);
 		branches.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		branches.setText(folderConfig.getBaseBranch());
+		branches.setText(configSettings.getBaseBranch(pathStr));
 		branches.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
@@ -70,7 +71,7 @@ public class ReferenceChooserDialog extends TitleAreaDialog {
 				GridData.FILL_HORIZONTAL);
 		folderText = new Text(group, SWT.BORDER);
 		folderText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		folderText.setText(folderConfig.getReferenceFolderPath());
+		folderText.setText(configSettings.getReferenceFolderPath(pathStr));
 		Button browseButton = new Button(group, SWT.PUSH);
 		browseButton.setText("Browse...");
 
@@ -98,9 +99,11 @@ public class ReferenceChooserDialog extends TitleAreaDialog {
 		final var referenceBranch = branches.getText();
 		final var referenceFolder = folderText.getText();
 
-		folderConfig.setBaseBranch(referenceBranch);
-		folderConfig.setReferenceFolderPath(referenceFolder);
-		FolderConfigs.getInstance().addFolderConfig(folderConfig);
+		String pathStr = projectPath.toString();
+		FolderConfigSettings.getInstance().computeFolderConfig(pathStr, config ->
+				config.withSettingIfChanged(LsFolderSettingsKeys.BASE_BRANCH, referenceBranch)
+						.withSettingIfChanged(LsFolderSettingsKeys.REFERENCE_FOLDER_PATH, referenceFolder));
+
 		CompletableFuture.runAsync(() -> {
 			final var lc = SnykExtendedLanguageClient.getInstance();
 			lc.updateConfiguration();

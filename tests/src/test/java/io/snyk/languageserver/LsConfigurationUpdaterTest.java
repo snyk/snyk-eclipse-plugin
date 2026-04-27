@@ -2,89 +2,368 @@ package io.snyk.languageserver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.lang3.SystemUtils;
-import org.eclipse.core.runtime.Platform;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Version;
 
-import io.snyk.eclipse.plugin.Activator;
+import com.google.gson.Gson;
+
 import io.snyk.eclipse.plugin.preferences.AuthConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.properties.FolderConfigs;
+import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
-import io.snyk.languageserver.download.LsBinaries;
+import io.snyk.languageserver.protocolextension.messageObjects.ConfigSetting;
+import io.snyk.languageserver.protocolextension.messageObjects.LspConfigurationParam;
+import io.snyk.languageserver.protocolextension.messageObjects.LspFolderConfig;
 
 class LsConfigurationUpdaterTest {
 	private Preferences preferenceMock;
-	FolderConfigs mockFolderConfigs;
+	private final Gson gson = new Gson();
 
 	@BeforeEach
 	protected void setUp() {
 		preferenceMock = mock(Preferences.class);
 		PreferencesUtils.setPreferences(preferenceMock);
 
-		mockFolderConfigs = mock(FolderConfigs.class);
-		FolderConfigs.setInstance(mockFolderConfigs);
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
 	}
 
 	@Test
-	void testGetSettings() {
+	void testBuildConfigurationParam_returnsLspConfigurationParam() {
+		setupPreferenceMock();
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertNotNull(param);
+		assertNotNull(param.getSettings());
+		assertNotNull(param.getFolderConfigs());
+	}
+
+	@Test
+	void testBuildConfigurationParam_containsMachineSettings() {
+		setupPreferenceMock();
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		Map<String, ConfigSetting> settings = param.getSettings();
+
+		assertNotNull(settings.get(LsSettingsKeys.ENDPOINT));
+		assertEquals("endpoint", settings.get(LsSettingsKeys.ENDPOINT).getValue());
+
+		assertNotNull(settings.get(LsSettingsKeys.ORGANIZATION));
+		assertEquals("organization", settings.get(LsSettingsKeys.ORGANIZATION).getValue());
+	}
+
+	@Test
+	void testBuildConfigurationParam_changedFlagFromExplicitChanges() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(true);
+		when(preferenceMock.isExplicitlyChanged(Preferences.ORGANIZATION_KEY)).thenReturn(false);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		Map<String, ConfigSetting> settings = param.getSettings();
+
+		assertTrue(settings.get(LsSettingsKeys.ENDPOINT).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.ORGANIZATION).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_tokenChangedFlagFromExplicitChanges() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.AUTH_TOKEN_KEY)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting tokenSetting = param.getSettings().get(LsSettingsKeys.TOKEN);
+
+		assertTrue(tokenSetting.getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_tokenUnchangedWhenNotExplicitlyChanged() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.AUTH_TOKEN_KEY)).thenReturn(false);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting tokenSetting = param.getSettings().get(LsSettingsKeys.TOKEN);
+
+		assertFalse(tokenSetting.getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_outboundHasNoLockMetadata() {
+		setupPreferenceMock();
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		Map<String, ConfigSetting> settings = param.getSettings();
+
+		for (ConfigSetting setting : settings.values()) {
+			assertNull(setting.getSource());
+			assertNull(setting.getOriginScope());
+			assertNull(setting.getIsLocked());
+		}
+	}
+
+	@Test
+	void testBuildConfigurationParam_fullStateSemanticsAllSettingsIncluded() {
+		setupPreferenceMock();
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		Map<String, ConfigSetting> settings = param.getSettings();
+
+		assertTrue(settings.containsKey(LsSettingsKeys.ENDPOINT));
+		assertTrue(settings.containsKey(LsSettingsKeys.ORGANIZATION));
+		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_CODE));
+		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_OPEN_SOURCE));
+		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_IAC));
+		assertTrue(settings.containsKey(LsSettingsKeys.INSECURE));
+		assertTrue(settings.containsKey(LsSettingsKeys.ADDITIONAL_PARAMS));
+		assertTrue(settings.containsKey(LsSettingsKeys.PATH));
+		assertTrue(settings.containsKey(LsSettingsKeys.SCANNING_MODE));
+	}
+
+	@Test
+	void testBuildConfigurationParam_resetToDefault_sendsNullValueWithChangedTrue() {
+		setupPreferenceMock();
+		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn(null);
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting endpointSetting = param.getSettings().get(LsSettingsKeys.ENDPOINT);
+
+		assertNull(endpointSetting.getValue());
+		assertTrue(endpointSetting.getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_unchangedSettingHasChangedFalse() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(false);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting endpointSetting = param.getSettings().get(LsSettingsKeys.ENDPOINT);
+
+		assertNotNull(endpointSetting.getValue());
+		assertFalse(endpointSetting.getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_folderConfigsFromFolderConfigSettings() {
 		setupPreferenceMock();
 
-		try (MockedStatic<Platform> platformMockedStatic = Mockito.mockStatic(Platform.class)) {
-			var bundleMock = mock(Bundle.class);
-			when(bundleMock.getVersion()).thenReturn(new Version("1.2.3"));
-			platformMockedStatic.when(() -> Platform.getBundle(Activator.PLUGIN_ID)).thenReturn(bundleMock);
-			var settings = new LsConfigurationUpdater().getCurrentSettings();
+		String folderJson = """
+				{
+					"folder_path": "/test/project",
+					"settings": {
+						"base_branch": {"value": "main", "changed": false}
+					}
+				}
+				""";
+		LspFolderConfig folderConfig = gson.fromJson(folderJson, LspFolderConfig.class);
+		FolderConfigSettings folderConfigSettings = new FolderConfigSettings();
+		folderConfigSettings.addFolderConfig(folderConfig);
+		FolderConfigSettings.setInstance(folderConfigSettings);
 
-			assertEquals("iac", settings.getActivateSnykIac());
-			assertEquals("code", settings.getActivateSnykCodeSecurity());
-			assertEquals("oss", settings.getActivateSnykOpenSource());
-			assertEquals("true", settings.getInsecure());
-			assertEquals("endpoint", settings.getEndpoint());
-			assertEquals("addParams", settings.getAdditionalParams());
-			assertEquals("a=b;c=d", settings.getAdditionalEnv());
-			assertEquals("path", settings.getPath());
-			assertEquals("true", settings.getSendErrorReports());
-			assertEquals("organization", settings.getOrganization());
-			assertEquals("true", settings.getEnableTelemetry());
-			assertEquals("true", settings.getManageBinariesAutomatically());
-			assertEquals("/usr/local/bin/snyk", settings.getCliPath());
-			assertEquals("ECLIPSE", settings.getIntegrationName());
-			assertEquals(Activator.PLUGIN_VERSION, settings.getIntegrationVersion());
-			assertEquals("false", settings.getAutomaticAuthentication());
-			assertEquals(SystemUtils.JAVA_RUNTIME_NAME, settings.getRuntimeName());
-			assertEquals(SystemUtils.JAVA_RUNTIME_VERSION, settings.getRuntimeVersion());
-			assertEquals(SystemUtils.OS_ARCH, settings.getOsArch());
-			assertEquals(SystemUtils.OS_NAME, settings.getOsPlatform());
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		List<LspFolderConfig> folderConfigs = param.getFolderConfigs();
 
-			// Additional assertions based on setupPreferenceMock
-			assertEquals("/usr/local/bin/snyk", settings.getCliPath());
-			assertEquals("my-token", settings.getToken());
-			assertEquals("automatic", settings.getScanningMode());
-			assertEquals(AuthConstants.AUTH_OAUTH2, settings.getAuthenticationMethod());
-			assertEquals(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION, settings.getRequiredProtocolVersion());
+		assertEquals(1, folderConfigs.size());
+	}
 
-			// Verify risk score threshold is included
-			assertEquals(Integer.valueOf(200), settings.getRiskScoreThreshold());
+	@Test
+	void testRoundTrip_userChangeProducesCorrectPayload() {
+		setupPreferenceMock();
+		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn("https://custom.api.snyk.io");
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(true);
+		when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("my-org");
+		when(preferenceMock.isExplicitlyChanged(Preferences.ORGANIZATION_KEY)).thenReturn(true);
 
-			// Verify filter severity is included
-			assertNotNull(settings.getFilterSeverity());
-			assertTrue(settings.getFilterSeverity().isCritical());
-			assertFalse(settings.getFilterSeverity().isHigh());
-			assertTrue(settings.getFilterSeverity().isMedium());
-			assertFalse(settings.getFilterSeverity().isLow());
-		}
+		String folderJson = """
+				{
+					"folder_path": "/workspace/project-a",
+					"settings": {
+						"base_branch": {"value": "develop", "changed": false, "source": "cli", "origin_scope": "folder"}
+					}
+				}
+				""";
+		LspFolderConfig folderConfig = gson.fromJson(folderJson, LspFolderConfig.class);
+		LspFolderConfig updatedFolder = folderConfig.withSetting("base_branch", "main", true);
+		FolderConfigSettings folderConfigSettings = new FolderConfigSettings();
+		folderConfigSettings.addFolderConfig(updatedFolder);
+		FolderConfigSettings.setInstance(folderConfigSettings);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+
+		// Machine-scope settings with changed=true
+		assertTrue(param.getSettings().get(LsSettingsKeys.ENDPOINT).getChanged());
+		assertEquals("https://custom.api.snyk.io", param.getSettings().get(LsSettingsKeys.ENDPOINT).getValue());
+		assertTrue(param.getSettings().get(LsSettingsKeys.ORGANIZATION).getChanged());
+		assertEquals("my-org", param.getSettings().get(LsSettingsKeys.ORGANIZATION).getValue());
+
+		// Folder config with user override
+		assertEquals(1, param.getFolderConfigs().size());
+		LspFolderConfig fc = param.getFolderConfigs().get(0);
+		ConfigSetting baseBranch = fc.getSettings().get("base_branch");
+		assertEquals("main", baseBranch.getValue());
+		assertTrue(baseBranch.getChanged());
+		assertEquals("cli", baseBranch.getSource());
+		assertEquals("folder", baseBranch.getOriginScope());
+
+		// Unchanged settings have changed=false
+		assertFalse(param.getSettings().get(LsSettingsKeys.INSECURE).getChanged());
+
+		// No lock metadata on machine-scope settings
+		assertNull(param.getSettings().get(LsSettingsKeys.ENDPOINT).getSource());
+		assertNull(param.getSettings().get(LsSettingsKeys.ENDPOINT).getIsLocked());
+
+		// Serialize to verify it's valid JSON structure
+		String json = gson.toJson(param);
+		LspConfigurationParam deserialized = gson.fromJson(json, LspConfigurationParam.class);
+		assertNotNull(deserialized.getSettings());
+		assertNotNull(deserialized.getFolderConfigs());
+	}
+
+	@Test
+	void testBuildConfigurationParam_additionalEnvChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ADDITIONAL_ENVIRONMENT)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.ADDITIONAL_ENV).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_sendErrorReportsChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.SEND_ERROR_REPORTS)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.SEND_ERROR_REPORTS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_enableTelemetryChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENABLE_TELEMETRY)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.ENABLE_TELEMETRY).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_manageBinariesChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.MANAGE_BINARIES_AUTOMATICALLY)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.MANAGE_BINARIES_AUTOMATICALLY).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_cliPathChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.CLI_PATH)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.CLI_PATH).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_cliBaseDownloadUrlChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.CLI_BASE_URL)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.CLI_BASE_DOWNLOAD_URL).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_authenticationMethodChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.AUTHENTICATION_METHOD)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.AUTHENTICATION_METHOD).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_enableDeltaChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENABLE_DELTA)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.ENABLE_DELTA_FINDINGS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_riskScoreThresholdChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.RISK_SCORE_THRESHOLD).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_trustedFoldersChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.TRUSTED_FOLDERS)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.TRUSTED_FOLDERS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_issueViewOptionsChangedWhenOneConstituentChanged() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_OPTIONS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_issueViewOptionsUnchangedWhenNoConstituentChanged() {
+		setupPreferenceMock();
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertFalse(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_OPTIONS).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_filterSeverityChangedWhenOneConstituentChanged() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_SHOW_MEDIUM)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsSettingsKeys.FILTER_SEVERITY).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_filterSeverityUnchangedWhenNoConstituentChanged() {
+		setupPreferenceMock();
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertFalse(param.getSettings().get(LsSettingsKeys.FILTER_SEVERITY).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_systemConstantsAlwaysUnchanged() {
+		setupPreferenceMock();
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		Map<String, ConfigSetting> settings = param.getSettings();
+
+		assertFalse(settings.get(LsSettingsKeys.INTEGRATION_NAME).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.INTEGRATION_VERSION).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.AUTOMATIC_AUTHENTICATION).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.REQUIRED_PROTOCOL_VERSION).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.RUNTIME_NAME).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.RUNTIME_VERSION).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.OS_ARCH).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.OS_PLATFORM).getChanged());
+		assertFalse(settings.get(LsSettingsKeys.ENABLE_TRUSTED_FOLDERS_FEATURE).getChanged());
 	}
 
 	private void setupPreferenceMock() {

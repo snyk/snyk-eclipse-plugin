@@ -4,17 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
-import io.snyk.eclipse.plugin.properties.FolderConfigs;
+import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
+import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,68 +177,59 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       boolean isFallback = Boolean.TRUE.equals(config.isFallbackForm());
 
       // CLI Settings - always persist for both fallback and full forms
-      prefs.store(Preferences.CLI_PATH, String.valueOf(config.cliPath()));
-      prefs.store(
-          Preferences.MANAGE_BINARIES_AUTOMATICALLY,
-          String.valueOf(config.manageBinariesAutomatically()));
-      prefs.store(Preferences.CLI_BASE_URL, String.valueOf(config.cliBaseDownloadURL()));
-      prefs.store(Preferences.RELEASE_CHANNEL, String.valueOf(config.cliReleaseChannel()));
-      prefs.store(Preferences.INSECURE_KEY, String.valueOf(config.insecure()));
+      applyFormValue(prefs, Preferences.CLI_PATH, config.cliPath());
+      applyFormValue(prefs, Preferences.MANAGE_BINARIES_AUTOMATICALLY, config.manageBinariesAutomatically());
+      applyFormValue(prefs, Preferences.CLI_BASE_URL, config.cliBaseDownloadURL());
+      applyFormValue(prefs, Preferences.RELEASE_CHANNEL, config.cliReleaseChannel());
+      applyFormValue(prefs, Preferences.INSECURE_KEY, config.insecure());
 
       // Only persist non-CLI fields if not fallback form
       if (!isFallback) {
         // Scan Settings
-        prefs.store(
-            Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
-            String.valueOf(config.activateSnykOpenSource()));
-        prefs.store(
-            Preferences.ACTIVATE_SNYK_CODE_SECURITY, String.valueOf(config.activateSnykCode()));
-        prefs.store(Preferences.ACTIVATE_SNYK_IAC, String.valueOf(config.activateSnykIac()));
+        applyFormValue(prefs, Preferences.ACTIVATE_SNYK_OPEN_SOURCE, config.activateSnykOpenSource());
+        applyFormValue(prefs, Preferences.ACTIVATE_SNYK_CODE_SECURITY, config.activateSnykCode());
+        applyFormValue(prefs, Preferences.ACTIVATE_SNYK_IAC, config.activateSnykIac());
 
         if (config.scanningMode() != null) {
           boolean isAutomatic = "auto".equals(config.scanningMode());
-          prefs.store(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
+          prefs.storeAndTrackChange(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
+        } else {
+          prefs.clearExplicitlyChanged(Preferences.SCANNING_MODE_AUTOMATIC);
         }
 
         // Issue View Settings
         if (config.issueViewOptions() != null) {
           IdeConfigData.IssueViewOptions options = config.issueViewOptions();
-          prefs.store(
-              Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, String.valueOf(options.openIssues()));
-          prefs.store(
-              Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES,
-              String.valueOf(options.ignoredIssues()));
+          applyFormValue(prefs, Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, options.openIssues());
+          applyFormValue(prefs, Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, options.ignoredIssues());
         }
-        prefs.store(Preferences.ENABLE_DELTA, String.valueOf(config.enableDeltaFindings()));
+        applyFormValue(prefs, Preferences.ENABLE_DELTA, config.enableDeltaFindings());
 
         // Authentication Settings
-        if (config.authenticationMethod() != null) {
-          prefs.store(Preferences.AUTHENTICATION_METHOD, config.authenticationMethod());
-        }
+        applyFormValue(prefs, Preferences.AUTHENTICATION_METHOD, config.authenticationMethod());
 
         // Connection Settings
-        prefs.store(Preferences.ENDPOINT_KEY, String.valueOf(config.endpoint()));
-        prefs.store(Preferences.AUTH_TOKEN_KEY, String.valueOf(config.token()));
-        if (config.organization() != null) {
-          prefs.store(Preferences.ORGANIZATION_KEY, String.valueOf(config.organization()));
-        }
+        applyFormValue(prefs, Preferences.ENDPOINT_KEY, config.endpoint());
+        applyFormValue(prefs, Preferences.AUTH_TOKEN_KEY, config.token());
+        applyFormValue(prefs, Preferences.ORGANIZATION_KEY, config.organization());
 
         // Trusted Folders
         if (config.trustedFolders() != null) {
           String trustedFoldersString = String.join(File.pathSeparator, config.trustedFolders());
-          prefs.store(Preferences.TRUSTED_FOLDERS, trustedFoldersString);
+          prefs.storeAndTrackChange(Preferences.TRUSTED_FOLDERS, trustedFoldersString);
+        } else {
+          prefs.clearExplicitlyChanged(Preferences.TRUSTED_FOLDERS);
         }
 
         // Filter Settings
         if (config.filterSeverity() != null) {
           IdeConfigData.FilterSeverity severity = config.filterSeverity();
-          prefs.store(Preferences.FILTER_SHOW_CRITICAL, String.valueOf(severity.critical()));
-          prefs.store(Preferences.FILTER_SHOW_HIGH, String.valueOf(severity.high()));
-          prefs.store(Preferences.FILTER_SHOW_MEDIUM, String.valueOf(severity.medium()));
-          prefs.store(Preferences.FILTER_SHOW_LOW, String.valueOf(severity.low()));
+          applyFormValue(prefs, Preferences.FILTER_SHOW_CRITICAL, severity.critical());
+          applyFormValue(prefs, Preferences.FILTER_SHOW_HIGH, severity.high());
+          applyFormValue(prefs, Preferences.FILTER_SHOW_MEDIUM, severity.medium());
+          applyFormValue(prefs, Preferences.FILTER_SHOW_LOW, severity.low());
         }
-        prefs.store(
-            Preferences.RISK_SCORE_THRESHOLD, String.valueOf(config.riskScoreThreshold()));
+        applyFormValue(prefs, Preferences.RISK_SCORE_THRESHOLD, config.riskScoreThreshold());
 
         // Folder Configs
         if (config.folderConfigs() != null && !config.folderConfigs().isEmpty()) {
@@ -256,34 +246,43 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     }
   }
 
+  private void applyFormValue(Preferences prefs, String key, Object value) {
+    if (value == null) {
+      prefs.clearExplicitlyChanged(key);
+    } else {
+      prefs.storeAndTrackChange(key, String.valueOf(value));
+    }
+  }
+
   private void processFolderConfig(IdeConfigData.FolderConfigData folderConfigData) {
     if (folderConfigData.folderPath() == null) {
       return;
     }
 
-    FolderConfig folderConfig =
-        FolderConfigs.getInstance().getFolderConfig(Paths.get(folderConfigData.folderPath()));
-
-    if (folderConfigData.preferredOrg() != null) {
-      folderConfig.setPreferredOrg(folderConfigData.preferredOrg());
-    }
-    if (folderConfigData.autoDeterminedOrg() != null) {
-      folderConfig.setAutoDeterminedOrg(folderConfigData.autoDeterminedOrg());
-    }
-    if (folderConfigData.orgSetByUser() != null) {
-      folderConfig.setOrgSetByUser(folderConfigData.orgSetByUser());
-    }
-    if (folderConfigData.additionalEnv() != null) {
-      folderConfig.setAdditionalEnv(folderConfigData.additionalEnv());
-    }
-    if (folderConfigData.additionalParameters() != null) {
-      folderConfig.setAdditionalParameters(folderConfigData.additionalParameters());
-    }
-    if (folderConfigData.scanCommandConfig() != null) {
-      Map<String, ScanCommandConfig> targetConfigMap =
-          convertScanCommandConfig(folderConfigData.scanCommandConfig());
-      folderConfig.setScanCommandConfig(targetConfigMap);
-    }
+    String pathStr = folderConfigData.folderPath();
+    FolderConfigSettings.getInstance().computeFolderConfig(pathStr, config -> {
+      if (folderConfigData.preferredOrg() != null) {
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.PREFERRED_ORG, folderConfigData.preferredOrg());
+      }
+      if (folderConfigData.autoDeterminedOrg() != null) {
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.AUTO_DETERMINED_ORG, folderConfigData.autoDeterminedOrg());
+      }
+      if (folderConfigData.orgSetByUser() != null) {
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, folderConfigData.orgSetByUser());
+      }
+      if (folderConfigData.additionalEnv() != null) {
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_ENV, folderConfigData.additionalEnv());
+      }
+      if (folderConfigData.additionalParameters() != null) {
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, folderConfigData.additionalParameters());
+      }
+      if (folderConfigData.scanCommandConfig() != null) {
+        Map<String, ScanCommandConfig> targetConfigMap =
+            convertScanCommandConfig(folderConfigData.scanCommandConfig());
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.SCAN_COMMAND_CONFIG, targetConfigMap);
+      }
+      return config;
+    });
   }
 
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")

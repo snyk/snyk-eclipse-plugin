@@ -226,6 +226,58 @@ class HTMLSettingsPreferencePageTest {
 		// Should not throw, preferences should remain unchanged
 	}
 
+	@Test
+	void parseAndSaveConfig_nullEndpointClearsExplicitOverride() throws Exception {
+		// User previously set endpoint
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://user-override.snyk.io");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		// LS form sends null for endpoint (user reset it)
+		String json = "{\"endpoint\": null}";
+		invokeParseAndSaveConfig(json);
+
+		// Override should be cleared
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	void parseAndSaveConfig_nullOrganizationClearsExplicitOverride() throws Exception {
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "my-org");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+
+		String json = "{\"organization\": null}";
+		invokeParseAndSaveConfig(json);
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+	}
+
+	@Test
+	void parseAndSaveConfig_nullCliPathClearsExplicitOverride() throws Exception {
+		prefs.storeAndTrackChange(Preferences.CLI_PATH, "/custom/cli");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.CLI_PATH));
+
+		String json = "{\"cliPath\": null}";
+		invokeParseAndSaveConfig(json);
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.CLI_PATH));
+	}
+
+	@Test
+	void parseAndSaveConfig_mixedNullAndValueFields() throws Exception {
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://custom.snyk.io");
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "old-org");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+
+		// Endpoint reset (null), organization changed to new value
+		String json = "{\"endpoint\": null, \"organization\": \"new-org\"}";
+		invokeParseAndSaveConfig(json);
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+		assertEquals("new-org", prefs.getPref(Preferences.ORGANIZATION_KEY));
+	}
+
 	private void invokeParseAndSaveConfig(String json) throws Exception {
 		Method method = HTMLSettingsPreferencePage.class.getDeclaredMethod("parseAndSaveConfig", String.class);
 		method.setAccessible(true);

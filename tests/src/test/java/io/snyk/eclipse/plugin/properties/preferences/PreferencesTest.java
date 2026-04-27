@@ -209,4 +209,173 @@ class PreferencesTest {
 		assertFalse(Preferences.isNewConfigDialogEnabled());
 	}
 
+	@Test
+	public void testMarkExplicitlyChanged_addsKeyToSet() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		assertFalse(prefs.isExplicitlyChanged("endpoint"));
+		prefs.markExplicitlyChanged("endpoint");
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+	}
+
+	@Test
+	public void testIsExplicitlyChanged_returnsFalseForUnchangedKey() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		assertFalse(prefs.isExplicitlyChanged("organization"));
+	}
+
+	@Test
+	public void testClearExplicitlyChanged_removesKeyFromSet() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.markExplicitlyChanged("endpoint");
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+		prefs.clearExplicitlyChanged("endpoint");
+		assertFalse(prefs.isExplicitlyChanged("endpoint"));
+	}
+
+	@Test
+	public void testExplicitChanges_multipleKeys() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.markExplicitlyChanged("endpoint");
+		prefs.markExplicitlyChanged("organization");
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+		assertTrue(prefs.isExplicitlyChanged("organization"));
+		assertFalse(prefs.isExplicitlyChanged("path"));
+	}
+
+	@Test
+	public void testExplicitChanges_persistedAsCommaSeparatedString() {
+		InMemoryPreferenceStore store = new InMemoryPreferenceStore();
+		Preferences prefs = Preferences.getTestInstance(store, new InMemorySecurePreferenceStore());
+		prefs.markExplicitlyChanged("endpoint");
+		prefs.markExplicitlyChanged("organization");
+
+		String persisted = store.get(Preferences.EXPLICIT_CHANGES_KEY, "");
+		assertTrue(persisted.contains("endpoint"));
+		assertTrue(persisted.contains("organization"));
+	}
+
+	@Test
+	public void testExplicitChanges_restoredFromPreferenceStoreOnConstruction() {
+		InMemoryPreferenceStore store = new InMemoryPreferenceStore();
+		store.put(Preferences.EXPLICIT_CHANGES_KEY, "endpoint,organization");
+
+		Preferences prefs = Preferences.getTestInstance(store, new InMemorySecurePreferenceStore());
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+		assertTrue(prefs.isExplicitlyChanged("organization"));
+		assertFalse(prefs.isExplicitlyChanged("path"));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_marksChangedWhenValueDiffers() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.store(Preferences.ENDPOINT_KEY, "https://old.endpoint.io");
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://new.endpoint.io");
+
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertEquals("https://new.endpoint.io", prefs.getPref(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_doesNotMarkChangedWhenValueSame() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.store(Preferences.ENDPOINT_KEY, "https://same.endpoint.io");
+
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://same.endpoint.io");
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_marksChangedOnFirstWrite() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "my-org");
+
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+		assertEquals("my-org", prefs.getPref(Preferences.ORGANIZATION_KEY));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_doesNotFalsePositiveWhenValueMatchesRegisteredDefault() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		// ACTIVATE_SNYK_OPEN_SOURCE has a registered default of "true".
+		// storeAndTrackChange should compare against the registered default, not "".
+		prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true");
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE),
+				"Should not mark as changed when value matches registered default");
+	}
+
+	@Test
+	public void testStoreAndTrackChange_doesNotFalsePositiveForBooleanDefaults() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_IAC, "true");
+		prefs.storeAndTrackChange(Preferences.FILTER_SHOW_CRITICAL, "true");
+		prefs.storeAndTrackChange(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true");
+		prefs.storeAndTrackChange(Preferences.SCANNING_MODE_AUTOMATIC, "true");
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_IAC));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.FILTER_SHOW_CRITICAL));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.SCANNING_MODE_AUTOMATIC));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_handlesNullKeyGracefully() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(null, "value");
+		// should not throw
+	}
+
+	@Test
+	public void testStoreAndTrackChange_handlesNullValueGracefully() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, null);
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testClearExplicitlyChanged_resetFlowClearsOverride() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		// User sets a value
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://user-override.snyk.io");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		// User resets the value (LS form sends null)
+		prefs.clearExplicitlyChanged(Preferences.ENDPOINT_KEY);
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		// Value is still stored (clearing override doesn't erase the value)
+		assertEquals("https://user-override.snyk.io", prefs.getPref(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testClearExplicitlyChanged_onlyAffectsSpecifiedKey() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://custom.snyk.io");
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "my-org");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+
+		prefs.clearExplicitlyChanged(Preferences.ENDPOINT_KEY);
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+	}
+
 }
