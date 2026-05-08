@@ -135,10 +135,5 @@ public interface ISnykToolView {
 
 	abstract void selectTreeNode(Issue issue, String product);
 
-	/**
-	 * Updates the tree view browser with HTML content pushed by the LS.
-	 *
-	 * @param html the full HTML string from the $/snyk.treeView notification
-	 */
 	abstract void updateTreeViewHtml(String html);
 }

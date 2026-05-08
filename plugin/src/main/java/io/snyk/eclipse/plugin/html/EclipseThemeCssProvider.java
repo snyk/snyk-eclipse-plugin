@@ -12,8 +12,7 @@ public class EclipseThemeCssProvider {
 	}
 
 	static String toRgba(Color color, double alpha) {
-		return String.format("rgba(%d,%d,%d,%.2f)", color.getRed(), color.getGreen(), color.getBlue(), alpha)
-				.replaceAll(",0+(\\d)", ",$1");
+		return String.format("rgba(%d,%d,%d,%.2f)", color.getRed(), color.getGreen(), color.getBlue(), alpha);
 	}
 
 	static String quoteFontFamily(String name) {
