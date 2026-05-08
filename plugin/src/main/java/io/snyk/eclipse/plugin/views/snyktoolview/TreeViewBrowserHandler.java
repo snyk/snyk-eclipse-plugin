@@ -1,5 +1,9 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Display;
 
@@ -50,13 +54,16 @@ public class TreeViewBrowserHandler {
 		if (html == null) {
 			return null;
 		}
-		String styleBlock = EclipseThemeCssProvider.buildStyleBlock(display);
-		if (html.contains("${ideStyle}")) {
-			return html.replace("${ideStyle}", styleBlock);
+		Map<String, String> vars = EclipseThemeCssProvider.buildVariableMap(display);
+		Pattern p = Pattern.compile("var\\(\\s*(--vscode-[^,)\\s]+)\\s*(?:,[^)]*)?\\)");
+		Matcher m = p.matcher(html);
+		StringBuffer sb = new StringBuffer();
+		while (m.find()) {
+			String varName = m.group(1);
+			String replacement = vars.getOrDefault(varName, m.group(0));
+			m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
 		}
-		if (html.contains("</head>")) {
-			return html.replaceFirst("(?i)</head>", styleBlock + "</head>");
-		}
-		return styleBlock + html;
+		m.appendTail(sb);
+		return sb.toString().replace("${ideStyle}", "").replace("${ideScript}", "");
 	}
 }

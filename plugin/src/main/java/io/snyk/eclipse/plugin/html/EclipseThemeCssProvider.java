@@ -1,6 +1,8 @@
 package io.snyk.eclipse.plugin.html;
 
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -24,41 +26,50 @@ public class EclipseThemeCssProvider {
 		return name;
 	}
 
-	public static String buildStyleBlock(Display display) {
-		String foreground = resolveColor(display, SWT.COLOR_LIST_FOREGROUND, "#000000");
-		String descriptionFg = resolveColor(display, SWT.COLOR_WIDGET_FOREGROUND, "#444444");
-		String errorFg = resolveColor(display, SWT.COLOR_RED, "#f44747");
-		String sidebarBg = resolveColor(display, SWT.COLOR_LIST_BACKGROUND, "#ffffff");
-		String panelBorder = resolveColor(display, SWT.COLOR_WIDGET_BORDER, "#cccccc");
-		String widgetShadow = resolveColorRgba(display, SWT.COLOR_WIDGET_DARK_SHADOW, 0.15, "rgba(0,0,0,0.15)");
-		String focusBorder = resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc");
-		String listHoverBg = resolveColorRgba(display, SWT.COLOR_LIST_SELECTION, 0.12, "rgba(0,102,204,0.12)");
-		String listSelectionBg = resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc");
-		String listSelectionFg = resolveColor(display, SWT.COLOR_LIST_SELECTION_TEXT, "#ffffff");
-		String inputBg = resolveColor(display, SWT.COLOR_WIDGET_BACKGROUND, "#f3f3f3");
-		String dropdownBg = resolveColor(display, SWT.COLOR_WIDGET_BACKGROUND, "#f3f3f3");
-		String buttonBg = resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc");
+	public static Map<String, String> buildVariableMap(Display display) {
 		FontData fontData = resolveFontData(display);
 		String fontFamily = fontData != null ? quoteFontFamily(fontData.getName()) : "system-ui,sans-serif";
 		String fontSize = fontData != null ? fontData.getHeight() + "pt" : "13pt";
 
-		return "<style>:root {"
-				+ "--vscode-font-family:" + fontFamily + ";"
-				+ "--vscode-font-size:" + fontSize + ";"
-				+ "--vscode-foreground:" + foreground + ";"
-				+ "--vscode-descriptionForeground:" + descriptionFg + ";"
-				+ "--vscode-errorForeground:" + errorFg + ";"
-				+ "--vscode-sideBar-background:" + sidebarBg + ";"
-				+ "--vscode-panel-border:" + panelBorder + ";"
-				+ "--vscode-widget-shadow:" + widgetShadow + ";"
-				+ "--vscode-focusBorder:" + focusBorder + ";"
-				+ "--vscode-list-hoverBackground:" + listHoverBg + ";"
-				+ "--vscode-list-activeSelectionBackground:" + listSelectionBg + ";"
-				+ "--vscode-list-activeSelectionForeground:" + listSelectionFg + ";"
-				+ "--vscode-input-background:" + inputBg + ";"
-				+ "--vscode-dropdown-background:" + dropdownBg + ";"
-				+ "--vscode-button-background:" + buttonBg + ";"
-				+ "}</style>";
+		Map<String, String> vars = new LinkedHashMap<>();
+		vars.put("--vscode-font-family", fontFamily);
+		vars.put("--vscode-font-size", fontSize);
+		vars.put("--vscode-editor-font-family", "monospace");
+		vars.put("--vscode-editor-font-size", "12pt");
+		vars.put("--vscode-foreground", resolveColor(display, SWT.COLOR_LIST_FOREGROUND, "#000000"));
+		vars.put("--vscode-descriptionForeground", resolveColor(display, SWT.COLOR_WIDGET_FOREGROUND, "#888888"));
+		vars.put("--vscode-errorForeground", resolveColor(display, SWT.COLOR_RED, "#f44747"));
+		vars.put("--vscode-sideBar-background", resolveColor(display, SWT.COLOR_LIST_BACKGROUND, "#ffffff"));
+		vars.put("--vscode-panel-border", resolveColor(display, SWT.COLOR_WIDGET_BORDER, "#cccccc"));
+		vars.put("--vscode-widget-shadow", resolveColorRgba(display, SWT.COLOR_WIDGET_DARK_SHADOW, 0.15, "rgba(0,0,0,0.15)"));
+		vars.put("--vscode-focusBorder", resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc"));
+		vars.put("--vscode-list-hoverBackground", resolveColorRgba(display, SWT.COLOR_LIST_SELECTION, 0.12, "rgba(0,102,204,0.12)"));
+		vars.put("--vscode-list-activeSelectionBackground", resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc"));
+		vars.put("--vscode-list-activeSelectionForeground", resolveColor(display, SWT.COLOR_LIST_SELECTION_TEXT, "#ffffff"));
+		vars.put("--vscode-tree-indentGuidesStroke", resolveColorRgba(display, SWT.COLOR_WIDGET_BORDER, 0.60, "rgba(128,128,128,0.60)"));
+		vars.put("--vscode-input-background", resolveColor(display, SWT.COLOR_WIDGET_BACKGROUND, "#f3f3f3"));
+		vars.put("--vscode-input-foreground", resolveColor(display, SWT.COLOR_LIST_FOREGROUND, "#000000"));
+		vars.put("--vscode-input-border", resolveColor(display, SWT.COLOR_WIDGET_BORDER, "#cccccc"));
+		vars.put("--vscode-dropdown-background", resolveColor(display, SWT.COLOR_WIDGET_BACKGROUND, "#f3f3f3"));
+		vars.put("--vscode-dropdown-border", resolveColor(display, SWT.COLOR_WIDGET_BORDER, "#cccccc"));
+		vars.put("--vscode-dropdown-foreground", resolveColor(display, SWT.COLOR_LIST_FOREGROUND, "#000000"));
+		vars.put("--vscode-button-background", resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc"));
+		vars.put("--vscode-button-foreground", resolveColor(display, SWT.COLOR_LIST_SELECTION_TEXT, "#ffffff"));
+		vars.put("--vscode-button-hoverBackground", resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0055aa"));
+		vars.put("--vscode-activityWarningBadge-background", "#CCA700");
+		vars.put("--vscode-activityWarningBadge-foreground", "#15202B");
+		vars.put("--vscode-inputValidation-infoBackground", "#e6f3ff");
+		return vars;
+	}
+
+	public static String buildStyleBlock(Display display) {
+		Map<String, String> vars = buildVariableMap(display);
+		StringBuilder sb = new StringBuilder("<style>:root {");
+		for (Map.Entry<String, String> entry : vars.entrySet()) {
+			sb.append(entry.getKey()).append(':').append(entry.getValue()).append(';');
+		}
+		sb.append("}</style>");
+		return sb.toString();
 	}
 
 	private static String resolveColor(Display display, int swtColorConstant, String fallback) {

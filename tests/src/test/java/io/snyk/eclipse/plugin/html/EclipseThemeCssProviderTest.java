@@ -3,6 +3,8 @@ package io.snyk.eclipse.plugin.html;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
+
 import org.eclipse.swt.graphics.Color;
 import org.junit.jupiter.api.Test;
 
@@ -105,5 +107,58 @@ class EclipseThemeCssProviderTest extends LsBaseTest {
 	void buildStyleBlock_containsRootSelector() {
 		String style = EclipseThemeCssProvider.buildStyleBlock(null);
 		assertTrue(style.contains(":root"), "Style block must contain :root selector");
+	}
+
+	// buildVariableMap: returns a map with all required --vscode-* variable keys
+	@Test
+	void buildVariableMap_containsAllRequiredKeys() {
+		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
+		assertTrue(map.containsKey("--vscode-foreground"));
+		assertTrue(map.containsKey("--vscode-sideBar-background"));
+		assertTrue(map.containsKey("--vscode-list-hoverBackground"));
+		assertTrue(map.containsKey("--vscode-tree-indentGuidesStroke"));
+		assertTrue(map.containsKey("--vscode-button-foreground"));
+	}
+
+	@Test
+	void buildVariableMap_foregroundFallbackIsBlack() {
+		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
+		assertEquals("#000000", map.get("--vscode-foreground"));
+	}
+
+	@Test
+	void buildVariableMap_sideBarBackgroundFallbackIsWhite() {
+		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
+		assertEquals("#ffffff", map.get("--vscode-sideBar-background"));
+	}
+
+	@Test
+	void buildVariableMap_listHoverBackgroundFallbackUsesRgba() {
+		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
+		assertTrue(map.get("--vscode-list-hoverBackground").startsWith("rgba("));
+	}
+
+	@Test
+	void buildVariableMap_treeIndentGuidesFallbackUsesRgba() {
+		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
+		assertTrue(map.get("--vscode-tree-indentGuidesStroke").startsWith("rgba("));
+	}
+
+	@Test
+	void buildVariableMap_buttonForegroundFallbackIsWhite() {
+		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
+		assertEquals("#ffffff", map.get("--vscode-button-foreground"));
+	}
+
+	@Test
+	void buildVariableMap_hardcodedWarningBadgeBackground() {
+		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
+		assertEquals("#CCA700", map.get("--vscode-activityWarningBadge-background"));
+	}
+
+	@Test
+	void buildVariableMap_fontSizeFallbackIsPt() {
+		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
+		assertTrue(map.get("--vscode-font-size").endsWith("pt"));
 	}
 }

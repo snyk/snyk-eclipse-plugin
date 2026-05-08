@@ -65,35 +65,42 @@ class TreeViewBrowserHandlerTest extends LsBaseTest {
 		assertTrue(escaped.contains("\\\\"), "escaped string must escape backslashes");
 	}
 
-	// T-U-003: injectThemeCss replaces ${ideStyle} placeholder with theme style block
+	// T-U-003: injectThemeCss replaces ${ideStyle} placeholder — now removed entirely
 	@Test
 	void injectThemeCss_replacesIdeStylePlaceholder() {
 		String html = "<html><head>${ideStyle}</head><body></body></html>";
 		String result = TreeViewBrowserHandler.injectThemeCss(html, null);
-		assertTrue(result.contains("--vscode-foreground:"),
-				"Injected HTML must contain --vscode-foreground:");
-	}
-
-	@Test
-	void injectThemeCss_insertsBeforeHeadCloseWhenNoPlaceholder() {
-		String html = "<html><head></head><body></body></html>";
-		String result = TreeViewBrowserHandler.injectThemeCss(html, null);
-		assertTrue(result.contains("--vscode-foreground:"),
-				"Injected HTML must contain --vscode-foreground:");
-		assertTrue(result.contains("</head>"), "Result must still contain </head>");
-	}
-
-	@Test
-	void injectThemeCss_prependsStyleWhenNoHeadTag() {
-		String html = "<html><body></body></html>";
-		String result = TreeViewBrowserHandler.injectThemeCss(html, null);
-		assertTrue(result.contains("--vscode-foreground:"),
-				"Injected HTML must contain --vscode-foreground:");
+		assertFalse(result.contains("${ideStyle}"),
+				"ideStyle placeholder must be removed");
 	}
 
 	@Test
 	void injectThemeCss_withNullHtml_returnsNull() {
 		String result = TreeViewBrowserHandler.injectThemeCss(null, null);
 		assertTrue(result == null, "injectThemeCss with null html must return null");
+	}
+
+	// New tests for direct var() replacement
+	@Test
+	void injectThemeCss_replacesVarExpressions() {
+		String css = "<style>color: var(--vscode-foreground, inherit); background: var(--vscode-sideBar-background, #fff);</style>";
+		String result = TreeViewBrowserHandler.injectThemeCss(css, null);
+		assertFalse(result.contains("var(--vscode-foreground"), "var(--vscode-foreground) should be replaced");
+		assertFalse(result.contains("var(--vscode-sideBar-background"), "var(--vscode-sideBar-background) should be replaced");
+	}
+
+	@Test
+	void injectThemeCss_removesIdeStyleAndIdeScriptPlaceholders() {
+		String html = "<html><head>${ideStyle}</head><body>${ideScript}</body></html>";
+		String result = TreeViewBrowserHandler.injectThemeCss(html, null);
+		assertFalse(result.contains("${ideStyle}"), "ideStyle placeholder must be removed");
+		assertFalse(result.contains("${ideScript}"), "ideScript placeholder must be removed");
+	}
+
+	@Test
+	void injectThemeCss_keepsUnknownVarExpressions() {
+		String css = "color: var(--some-unknown-var, #fff);";
+		String result = TreeViewBrowserHandler.injectThemeCss(css, null);
+		assertTrue(result.contains("var(--some-unknown-var, #fff)"), "unknown vars must be kept as-is");
 	}
 }
