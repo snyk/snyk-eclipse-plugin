@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -71,7 +72,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private Browser treeBrowser;
 	private volatile TreeViewBrowserHandler treeBrowserHandler;
 	private TreeNode selectedNode;
-	private volatile String pendingHtml;
+	private final AtomicReference<String> pendingHtml = new AtomicReference<>();
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -110,10 +111,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		treeBrowserHandler = new TreeViewBrowserHandler(treeBrowser);
 		treeBrowserHandler.initialize();
 
-		if (pendingHtml != null) {
-			String html = pendingHtml;
-			pendingHtml = null;
-			treeBrowserHandler.setBrowserText(html);
+		String buffered = pendingHtml.getAndSet(null);
+		if (buffered != null) {
+			treeBrowserHandler.setBrowserText(buffered);
 		}
 
 		boolean useHtmlTreeView = Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW);
@@ -561,7 +561,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void updateTreeViewHtml(String html) {
 		if (treeBrowserHandler == null) {
-			pendingHtml = html;
+			pendingHtml.set(html);
 			return;
 		}
 		Display.getDefault().asyncExec(() -> treeBrowserHandler.setBrowserText(html));
