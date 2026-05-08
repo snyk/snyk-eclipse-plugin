@@ -466,6 +466,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		SnykShowFixUriDetails uriDetails = SnykShowFixUriDetails.fromURI(uri);
 
+		if ("snyk".equals(uriDetails.scheme()) && !uriDetails.isValid()) {
+			SnykLogger.logInfo(String.format("Unsupported snyk URI: action=%s, product=%s",
+					uriDetails.action(), uriDetails.product()));
+			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
+		}
+
 		Issue issue;
 		if (uriDetails.isValid()) {
 			issue = getIssueFromCache(uriDetails.product(), uriDetails.issueId());

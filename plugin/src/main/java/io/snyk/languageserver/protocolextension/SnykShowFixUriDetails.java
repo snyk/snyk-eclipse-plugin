@@ -4,8 +4,6 @@ import java.net.URI;
 
 import io.snyk.eclipse.plugin.utils.UriUtils;
 
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
-
 public record SnykShowFixUriDetails(String scheme, String filePath, String product,
 		String action, String issueId) {
 	public static SnykShowFixUriDetails fromURI(URI uri) {
@@ -16,8 +14,9 @@ public record SnykShowFixUriDetails(String scheme, String filePath, String produ
 	}
 
 	public boolean isValid() {
-		return ("snyk".equals(this.scheme())
-				&& DIAGNOSTIC_SOURCE_SNYK_CODE.equals(this.product())
-				&& "showInDetailPanel".equals(this.action()));
+		return "snyk".equals(this.scheme())
+				&& this.product() != null
+				&& !this.product().isEmpty()
+				&& "showInDetailPanel".equals(this.action());
 	}
 }
