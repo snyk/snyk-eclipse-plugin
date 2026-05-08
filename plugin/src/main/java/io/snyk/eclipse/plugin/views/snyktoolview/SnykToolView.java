@@ -15,6 +15,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -44,6 +45,7 @@ import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.part.ViewPart;
 
+import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigs;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
@@ -68,6 +70,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private BrowserHandler browserHandler;
 	private Browser summaryBrowser;
 	private SummaryBrowserHandler summaryBrowserHandler;
+	private Browser treeBrowser;
+	private TreeViewBrowserHandler treeBrowserHandler;
 	private TreeNode selectedNode;
 
 	@Override
@@ -102,7 +106,28 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		registerTreeContextMenu(treeViewer.getControl());
 
-		verticalSashForm.setWeights(1, 3);
+		// Create treeBrowser below the legacy TreeViewer, shown only when USE_HTML_TREE_VIEW is true
+		treeBrowser = new Browser(verticalSashForm, SWT.EDGE);
+		treeBrowserHandler = new TreeViewBrowserHandler(treeBrowser);
+		treeBrowserHandler.initialize();
+
+		boolean useHtmlTreeView = Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW);
+		treeViewer.getControl().setVisible(!useHtmlTreeView);
+		treeBrowser.setVisible(useHtmlTreeView);
+
+		verticalSashForm.setWeights(1, 3, useHtmlTreeView ? 3 : 0);
+
+		InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(event -> {
+			if (Preferences.USE_HTML_TREE_VIEW.equals(event.getKey())) {
+				boolean htmlEnabled = Boolean.parseBoolean((String) event.getNewValue());
+				Display.getDefault().asyncExec(() -> {
+					treeViewer.getControl().setVisible(!htmlEnabled);
+					treeBrowser.setVisible(htmlEnabled);
+					verticalSashForm.setWeights(1, htmlEnabled ? 0 : 3, htmlEnabled ? 3 : 0);
+					verticalSashForm.layout();
+				});
+			}
+		});
 
 		// Create Browser
 		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
@@ -535,6 +560,13 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		Display.getDefault().asyncExec(() -> {
 			IStructuredSelection selection = new StructuredSelection(issueTreeNode);
 			treeViewer.setSelection(selection, true);
+		});
+	}
+
+	@Override
+	public void updateTreeViewHtml(String html) {
+		Display.getDefault().asyncExec(() -> {
+			this.treeBrowserHandler.setBrowserText(html);
 		});
 	}
 }

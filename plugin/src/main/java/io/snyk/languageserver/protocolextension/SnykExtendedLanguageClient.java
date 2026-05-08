@@ -100,6 +100,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCl
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SummaryPanelParams;
+import io.snyk.languageserver.protocolextension.messageObjects.TreeViewParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 @SuppressWarnings({"restriction", "PMD.AvoidCatchingGenericException"})
@@ -433,6 +434,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			openToolView();
 			if (this.toolView != null) {
 				this.toolView.updateSummary(summary.getSummary());
+			}
+		});
+	}
+
+	@JsonNotification(value = LsConstants.SNYK_TREE_VIEW)
+	public void snykTreeView(TreeViewParams params) {
+		CompletableFuture.runAsync(() -> {
+			openToolView();
+			if (this.toolView != null) {
+				this.toolView.updateTreeViewHtml(params.getTreeViewHtml());
 			}
 		});
 	}
