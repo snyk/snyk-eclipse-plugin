@@ -81,11 +81,7 @@ public class EclipseThemeCssProvider {
 		if (display == null || display.isDisposed()) {
 			return null;
 		}
-		try {
-			FontData[] data = display.getSystemFont().getFontData();
-			return (data != null && data.length > 0) ? data[0] : null;
-		} catch (Exception e) {
-			return null;
-		}
+		FontData[] data = display.getSystemFont().getFontData();
+		return (data != null && data.length > 0) ? data[0] : null;
 	}
 }
