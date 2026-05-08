@@ -17,6 +17,9 @@ public class TreeViewBrowserHandler {
 	}
 
 	public void setBrowserText(String html) {
+		if (browser == null || browser.isDisposed()) {
+			return;
+		}
 		browser.setText(html);
 	}
 }

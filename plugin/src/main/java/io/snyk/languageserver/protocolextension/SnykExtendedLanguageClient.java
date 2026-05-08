@@ -440,6 +440,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@JsonNotification(value = LsConstants.SNYK_TREE_VIEW)
 	public void snykTreeView(TreeViewParams params) {
+		if (params == null || params.getTreeViewHtml() == null) {
+			return;
+		}
+		if (!Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW)) {
+			return;
+		}
 		CompletableFuture.runAsync(() -> {
 			openToolView();
 			if (this.toolView != null) {

@@ -1,6 +1,9 @@
 package io.snyk.languageserver.protocolextension;
 
+import static org.mockito.Mockito.after;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -33,28 +36,61 @@ class TreeViewNotificationTest extends LsBaseTest {
 		super.tearDown();
 	}
 
-	// T-S-001: TreeViewParams DTO carries treeViewHtml and totalIssues
+	// T-S-001: TreeViewParams DTO carries treeViewHtml
 	@Test
-	void testTreeViewParamsHoldsHtmlAndTotalIssues() {
+	void testTreeViewParamsHoldsHtml() {
 		TreeViewParams params = new TreeViewParams();
 		params.setTreeViewHtml("<html>test</html>");
-		params.setTotalIssues(5);
 
 		org.junit.jupiter.api.Assertions.assertEquals("<html>test</html>", params.getTreeViewHtml());
-		org.junit.jupiter.api.Assertions.assertEquals(5, params.getTotalIssues());
 	}
 
 	// T-I-001: snykTreeView notification dispatches html to ISnykToolView.updateTreeViewHtml
 	@Test
 	void testSnykTreeViewDispatchesHtmlToToolView() {
+		Preferences.getInstance().store(Preferences.USE_HTML_TREE_VIEW, "true");
 		TreeViewParams params = new TreeViewParams();
 		params.setTreeViewHtml("<html>issues</html>");
-		params.setTotalIssues(3);
 
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 		cut.snykTreeView(params);
 
 		verify(toolWindowMock, timeout(5000).times(1)).updateTreeViewHtml("<html>issues</html>");
+	}
+
+	// Null params must not throw or call toolView
+	@Test
+	void testSnykTreeViewWithNullParamsIsNoOp() {
+		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
+		cut.snykTreeView(null);
+
+		verify(toolWindowMock, after(500).never()).updateTreeViewHtml(any());
+	}
+
+	// Null html in params must not call toolView
+	@Test
+	void testSnykTreeViewWithNullHtmlIsNoOp() {
+		Preferences.getInstance().store(Preferences.USE_HTML_TREE_VIEW, "true");
+		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
+		cut.snykTreeView(new TreeViewParams());
+
+		verify(toolWindowMock, after(500).never()).updateTreeViewHtml(any());
+	}
+
+	// Preference disabled: notification must be silently dropped
+	@Test
+	void testSnykTreeViewSkipsWhenPreferenceDisabled() {
+		Preferences.getInstance().store(Preferences.USE_HTML_TREE_VIEW, "false");
+		TreeViewParams params = new TreeViewParams();
+		params.setTreeViewHtml("<html>issues</html>");
+
+		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
+		cut.snykTreeView(params);
+
+		verify(toolWindowMock, after(500).never()).updateTreeViewHtml(any());
 	}
 }
