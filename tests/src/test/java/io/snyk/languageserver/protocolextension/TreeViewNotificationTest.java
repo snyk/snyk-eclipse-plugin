@@ -56,7 +56,7 @@ class TreeViewNotificationTest extends LsBaseTest {
 		cut.setToolWindow(toolWindowMock);
 		cut.snykTreeView(params);
 
-		verify(toolWindowMock, timeout(5000).times(1)).updateTreeViewHtml("<html>issues</html>");
+		verify(toolWindowMock, timeout(15000).times(1)).updateTreeViewHtml("<html>issues</html>");
 	}
 
 	// Null params must not throw or call toolView

@@ -461,7 +461,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			uri = new URI(params.getUri());
 		} catch (URISyntaxException e) {
 			SnykLogger.logError(e);
-			return null;
+			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
 		}
 
 		SnykShowFixUriDetails uriDetails = SnykShowFixUriDetails.fromURI(uri);
@@ -483,7 +483,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		if (issue == null) {
 			SnykLogger.logInfo(String.format("Issue not found in the issueCache; issueId: %s", uriDetails.issueId()));
-			return null;
+			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
 		}
 
 		return CompletableFuture.supplyAsync(() -> {
