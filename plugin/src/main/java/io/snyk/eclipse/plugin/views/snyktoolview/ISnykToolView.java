@@ -135,12 +135,5 @@ public interface ISnykToolView {
 
 	abstract void selectTreeNode(Issue issue, String product);
 
-	/**
-	 * Selects the node with the given issue ID in the HTML tree view.
-	 *
-	 * @param issueId the issue ID to select
-	 */
-	abstract void selectTreeNode(String issueId);
-
 	abstract void updateTreeViewHtml(String html);
 }

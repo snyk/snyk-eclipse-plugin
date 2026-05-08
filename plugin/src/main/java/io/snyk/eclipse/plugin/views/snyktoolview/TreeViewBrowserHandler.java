@@ -34,8 +34,16 @@ public class TreeViewBrowserHandler {
 		if (browser == null || browser.isDisposed() || issueId == null || issueId.isEmpty()) {
 			return;
 		}
-		String escaped = issueId.replace("\\", "\\\\").replace("'", "\\'");
-		browser.evaluate("if(window.__selectTreeNode__){window.__selectTreeNode__('" + escaped + "');}");
+		browser.evaluate("if(window.__selectTreeNode__){window.__selectTreeNode__('" + escapeJsSingleQuotedString(issueId) + "');}");
+	}
+
+	static String escapeJsSingleQuotedString(String s) {
+		return s.replace("\\", "\\\\")
+				.replace("'", "\\'")
+				.replace("\n", "\\n")
+				.replace("\r", "\\r")
+				.replace(" ", "\\u2028")
+				.replace(" ", "\\u2029");
 	}
 
 	public static String injectThemeCss(String html, Display display) {

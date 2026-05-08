@@ -69,7 +69,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private Browser summaryBrowser;
 	private SummaryBrowserHandler summaryBrowserHandler;
 	private Browser treeBrowser;
-	private TreeViewBrowserHandler treeBrowserHandler;
+	private volatile TreeViewBrowserHandler treeBrowserHandler;
 	private TreeNode selectedNode;
 	private volatile String pendingHtml;
 
@@ -113,7 +113,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		if (pendingHtml != null) {
 			String html = pendingHtml;
 			pendingHtml = null;
-			Display.getDefault().asyncExec(() -> treeBrowserHandler.setBrowserText(html));
+			treeBrowserHandler.setBrowserText(html);
 		}
 
 		boolean useHtmlTreeView = Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW);
@@ -534,9 +534,6 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void selectTreeNode(Issue issue, String product) {
 		ProductTreeNode productNode = getProductNode(product, issue.filePath());
 		selectTreenodeForIssue((TreeNode) productNode, issue);
-		if (treeBrowserHandler != null) {
-			Display.getDefault().asyncExec(() -> treeBrowserHandler.selectNode(issue.id()));
-		}
 	}
 
 	private void selectTreenodeForIssue(TreeNode currentParent, Issue issue) {
@@ -570,10 +567,4 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		Display.getDefault().asyncExec(() -> treeBrowserHandler.setBrowserText(html));
 	}
 
-	@Override
-	public void selectTreeNode(String issueId) {
-		if (treeBrowserHandler != null) {
-			Display.getDefault().asyncExec(() -> treeBrowserHandler.selectNode(issueId));
-		}
-	}
 }
