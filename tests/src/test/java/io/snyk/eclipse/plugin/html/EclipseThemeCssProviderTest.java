@@ -35,6 +35,51 @@ class EclipseThemeCssProviderTest extends LsBaseTest {
 		assertEquals("#102030", EclipseThemeCssProvider.toHex(color));
 	}
 
+	// toRgba: converts color + alpha to CSS rgba() string
+	@Test
+	void toRgba_blackWithAlpha() {
+		Color black = new Color(0, 0, 0);
+		assertEquals("rgba(0,0,0,0.12)", EclipseThemeCssProvider.toRgba(black, 0.12));
+	}
+
+	@Test
+	void toRgba_colorWithAlpha() {
+		Color color = new Color(0, 102, 204);
+		assertEquals("rgba(0,102,204,0.15)", EclipseThemeCssProvider.toRgba(color, 0.15));
+	}
+
+	// quoteFontFamily: wraps multi-word names in quotes, leaves single-word alone
+	@Test
+	void quoteFontFamily_multiWordName_isQuoted() {
+		assertEquals("\"Segoe UI\"", EclipseThemeCssProvider.quoteFontFamily("Segoe UI"));
+	}
+
+	@Test
+	void quoteFontFamily_singleWordName_isUnchanged() {
+		assertEquals("Ubuntu", EclipseThemeCssProvider.quoteFontFamily("Ubuntu"));
+	}
+
+	// Font size fallback must use pt unit
+	@Test
+	void buildStyleBlock_fontSizeFallback_usesPt() {
+		String style = EclipseThemeCssProvider.buildStyleBlock(null);
+		assertTrue(style.contains("--vscode-font-size:13pt"), "font-size fallback must be 13pt not 13px");
+	}
+
+	// Hover background fallback must use rgba (preserving transparency intent)
+	@Test
+	void buildStyleBlock_hoverBackground_fallbackUsesRgba() {
+		String style = EclipseThemeCssProvider.buildStyleBlock(null);
+		assertTrue(style.contains("--vscode-list-hoverBackground:rgba("), "hover bg must use rgba()");
+	}
+
+	// Widget shadow fallback must use rgba
+	@Test
+	void buildStyleBlock_widgetShadow_fallbackUsesRgba() {
+		String style = EclipseThemeCssProvider.buildStyleBlock(null);
+		assertTrue(style.contains("--vscode-widget-shadow:rgba("), "widget shadow must use rgba()");
+	}
+
 	// T-U-002: buildStyleBlock returns a <style> block with the required --vscode-* variables
 	@Test
 	void buildStyleBlock_containsForegroundVariable() {

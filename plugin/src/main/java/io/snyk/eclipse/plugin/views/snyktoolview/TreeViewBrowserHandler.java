@@ -39,7 +39,7 @@ public class TreeViewBrowserHandler {
 			return html.replace("${ideStyle}", styleBlock);
 		}
 		if (html.contains("</head>")) {
-			return html.replace("</head>", styleBlock + "</head>");
+			return html.replaceFirst("(?i)</head>", styleBlock + "</head>");
 		}
 		return styleBlock + html;
 	}
