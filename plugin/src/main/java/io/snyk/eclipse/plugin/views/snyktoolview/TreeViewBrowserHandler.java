@@ -1,7 +1,9 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.widgets.Display;
 
+import io.snyk.eclipse.plugin.html.EclipseThemeCssProvider;
 import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
 
 public class TreeViewBrowserHandler {
@@ -20,6 +22,25 @@ public class TreeViewBrowserHandler {
 		if (browser == null || browser.isDisposed()) {
 			return;
 		}
-		browser.setText(html);
+		if (html == null) {
+			return;
+		}
+		Display display = browser.getDisplay();
+		String themed = injectThemeCss(html, display);
+		browser.setText(themed);
+	}
+
+	public static String injectThemeCss(String html, Display display) {
+		if (html == null) {
+			return null;
+		}
+		String styleBlock = EclipseThemeCssProvider.buildStyleBlock(display);
+		if (html.contains("${ideStyle}")) {
+			return html.replace("${ideStyle}", styleBlock);
+		}
+		if (html.contains("</head>")) {
+			return html.replace("</head>", styleBlock + "</head>");
+		}
+		return styleBlock + html;
 	}
 }
