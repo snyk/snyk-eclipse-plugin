@@ -71,6 +71,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private Browser treeBrowser;
 	private TreeViewBrowserHandler treeBrowserHandler;
 	private TreeNode selectedNode;
+	private volatile String pendingHtml;
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -109,6 +110,12 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		treeBrowserHandler = new TreeViewBrowserHandler(treeBrowser);
 		treeBrowserHandler.initialize();
 
+		if (pendingHtml != null) {
+			String html = pendingHtml;
+			pendingHtml = null;
+			Display.getDefault().asyncExec(() -> treeBrowserHandler.setBrowserText(html));
+		}
+
 		boolean useHtmlTreeView = Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW);
 		treeViewer.getControl().setVisible(!useHtmlTreeView);
 		treeBrowser.setVisible(useHtmlTreeView);
@@ -138,6 +145,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						FileTreeNode fileNode = (FileTreeNode) issueTreeNode.getParent();
 						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(),
 								issueTreeNode.getIssue().getLSP4JRange());
+						if (treeBrowserHandler != null) {
+							treeBrowserHandler.selectNode(issueTreeNode.getIssue().id());
+						}
 					}
 					boolean deltaEnabled = Preferences.isDeltaEnabled();
 					if (selectedNode instanceof ContentRootNode && deltaEnabled) {
@@ -524,6 +534,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	public void selectTreeNode(Issue issue, String product) {
 		ProductTreeNode productNode = getProductNode(product, issue.filePath());
 		selectTreenodeForIssue((TreeNode) productNode, issue);
+		if (treeBrowserHandler != null) {
+			Display.getDefault().asyncExec(() -> treeBrowserHandler.selectNode(issue.id()));
+		}
 	}
 
 	private void selectTreenodeForIssue(TreeNode currentParent, Issue issue) {
@@ -551,8 +564,16 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void updateTreeViewHtml(String html) {
 		if (treeBrowserHandler == null) {
+			pendingHtml = html;
 			return;
 		}
 		Display.getDefault().asyncExec(() -> treeBrowserHandler.setBrowserText(html));
+	}
+
+	@Override
+	public void selectTreeNode(String issueId) {
+		if (treeBrowserHandler != null) {
+			Display.getDefault().asyncExec(() -> treeBrowserHandler.selectNode(issueId));
+		}
 	}
 }

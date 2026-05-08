@@ -30,6 +30,14 @@ public class TreeViewBrowserHandler {
 		browser.setText(themed);
 	}
 
+	public void selectNode(String issueId) {
+		if (browser == null || browser.isDisposed() || issueId == null || issueId.isEmpty()) {
+			return;
+		}
+		String escaped = issueId.replace("\\", "\\\\").replace("'", "\\'");
+		browser.evaluate("if(window.__selectTreeNode__){window.__selectTreeNode__('" + escaped + "');}");
+	}
+
 	public static String injectThemeCss(String html, Display display) {
 		if (html == null) {
 			return null;

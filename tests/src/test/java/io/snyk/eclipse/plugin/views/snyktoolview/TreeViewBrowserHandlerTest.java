@@ -16,6 +16,27 @@ class TreeViewBrowserHandlerTest extends LsBaseTest {
 		handler.setBrowserText(null);
 	}
 
+	// T-U-003a: selectNode with null browser is a no-op (must not throw)
+	@Test
+	void selectNode_withNullBrowser_isNoOp() {
+		TreeViewBrowserHandler handler = new TreeViewBrowserHandler(null);
+		handler.selectNode("issue-id-with-'quote"); // must not throw
+	}
+
+	// T-U-003b: selectNode with null issueId is a no-op (must not throw)
+	@Test
+	void selectNode_withNullIssueId_isNoOp() {
+		TreeViewBrowserHandler handler = new TreeViewBrowserHandler(null);
+		handler.selectNode(null); // must not throw
+	}
+
+	// T-U-003c: selectNode with empty issueId is a no-op (must not throw)
+	@Test
+	void selectNode_withEmptyIssueId_isNoOp() {
+		TreeViewBrowserHandler handler = new TreeViewBrowserHandler(null);
+		handler.selectNode(""); // must not throw
+	}
+
 	// T-U-003: injectThemeCss replaces ${ideStyle} placeholder with theme style block
 	@Test
 	void injectThemeCss_replacesIdeStylePlaceholder() {
