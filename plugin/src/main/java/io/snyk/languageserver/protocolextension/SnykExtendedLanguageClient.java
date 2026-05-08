@@ -446,10 +446,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (!Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW)) {
 			return;
 		}
+		String html = params.getTreeViewHtml();
+		if (this.toolView != null) {
+			this.toolView.updateTreeViewHtml(html);
+			return;
+		}
 		CompletableFuture.runAsync(() -> {
 			openToolView();
 			if (this.toolView != null) {
-				this.toolView.updateTreeViewHtml(params.getTreeViewHtml());
+				this.toolView.updateTreeViewHtml(html);
 			}
 		});
 	}

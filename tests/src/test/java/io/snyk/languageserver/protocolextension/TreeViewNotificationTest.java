@@ -5,7 +5,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.AfterEach;
@@ -56,7 +56,7 @@ class TreeViewNotificationTest extends LsBaseTest {
 		cut.setToolWindow(toolWindowMock);
 		cut.snykTreeView(params);
 
-		verify(toolWindowMock, timeout(15000).times(1)).updateTreeViewHtml("<html>issues</html>");
+		verify(toolWindowMock, times(1)).updateTreeViewHtml("<html>issues</html>");
 	}
 
 	// Null params must not throw or call toolView
