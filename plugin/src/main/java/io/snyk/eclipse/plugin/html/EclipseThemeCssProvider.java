@@ -1,5 +1,7 @@
 package io.snyk.eclipse.plugin.html;
 
+import java.util.Locale;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.FontData;
@@ -12,7 +14,7 @@ public class EclipseThemeCssProvider {
 	}
 
 	static String toRgba(Color color, double alpha) {
-		return String.format("rgba(%d,%d,%d,%.2f)", color.getRed(), color.getGreen(), color.getBlue(), alpha);
+		return String.format(Locale.ROOT, "rgba(%d,%d,%d,%.2f)", color.getRed(), color.getGreen(), color.getBlue(), alpha);
 	}
 
 	static String quoteFontFamily(String name) {
