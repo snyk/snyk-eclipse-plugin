@@ -4,6 +4,7 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_S
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_TYPE_TO_DISPLAY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_IAC;
@@ -496,7 +497,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		return CompletableFuture.supplyAsync(() -> {
 			openToolView();
-			String displayProduct = SCAN_PARAMS_TO_DISPLAYED.getOrDefault(issue.filterableIssueType(),
+			String displayProduct = FILTERABLE_ISSUE_TYPE_TO_DISPLAY.getOrDefault(issue.filterableIssueType(),
 					issue.filterableIssueType());
 			this.toolView.selectTreeNode(issue, displayProduct);
 			return new ShowDocumentResult(true);

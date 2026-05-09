@@ -3,6 +3,13 @@ package io.snyk.languageserver.protocolextension;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_IAC;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_TYPE_TO_DISPLAY;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_CODE_SECURITY;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_OPEN_SOURCE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -82,5 +89,22 @@ public class SnykShowFixUriDetailsTest {
 	@Test
 	void normalizeProductCodename_nullReturnsNull() {
 		assertNull(SnykExtendedLanguageClient.normalizeProductCodename(null));
+	}
+
+	// FILTERABLE_ISSUE_TYPE_TO_DISPLAY maps filterableIssueType() to the DISPLAYED_* format
+	// that ContentRootNode.getProductNode() expects
+	@Test
+	void filterableIssueTypeToDisplay_oss() {
+		assertEquals(DISPLAYED_OSS, FILTERABLE_ISSUE_TYPE_TO_DISPLAY.get(FILTERABLE_ISSUE_OPEN_SOURCE));
+	}
+
+	@Test
+	void filterableIssueTypeToDisplay_code() {
+		assertEquals(DISPLAYED_CODE_SECURITY, FILTERABLE_ISSUE_TYPE_TO_DISPLAY.get(FILTERABLE_ISSUE_CODE_SECURITY));
+	}
+
+	@Test
+	void filterableIssueTypeToDisplay_iac() {
+		assertEquals(DISPLAYED_IAC, FILTERABLE_ISSUE_TYPE_TO_DISPLAY.get(FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE));
 	}
 }
