@@ -61,11 +61,20 @@ class EclipseThemeCssProviderTest extends LsBaseTest {
 		assertEquals("Ubuntu", EclipseThemeCssProvider.quoteFontFamily("Ubuntu"));
 	}
 
-	// Font size fallback must use pt unit
+	// Font size fallback must use px unit (matching IntelliJ)
 	@Test
-	void buildStyleBlock_fontSizeFallback_usesPt() {
+	void buildStyleBlock_fontSizeFallback_usesPx() {
 		String style = EclipseThemeCssProvider.buildStyleBlock(null);
-		assertTrue(style.contains("--vscode-font-size:13pt"), "font-size fallback must be 13pt not 13px");
+		assertTrue(style.contains("--vscode-font-size:13px"), "font-size fallback must be 13px");
+	}
+
+	// Font family fallback must include system-ui fallback chain
+	@Test
+	void buildVariableMap_fontFamilyFallback_includesSystemUi() {
+		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
+		String family = map.get("--vscode-font-family");
+		assertTrue(family.contains("system-ui"), "font-family must include system-ui fallback");
+		assertTrue(family.contains("-apple-system"), "font-family must include -apple-system fallback");
 	}
 
 	// Hover background fallback must use rgba (preserving transparency intent)
@@ -157,8 +166,8 @@ class EclipseThemeCssProviderTest extends LsBaseTest {
 	}
 
 	@Test
-	void buildVariableMap_fontSizeFallbackIsPt() {
+	void buildVariableMap_fontSizeFallbackIsPx() {
 		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
-		assertTrue(map.get("--vscode-font-size").endsWith("pt"));
+		assertTrue(map.get("--vscode-font-size").endsWith("px"));
 	}
 }

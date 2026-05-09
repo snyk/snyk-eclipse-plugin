@@ -1,5 +1,8 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
@@ -502,13 +505,31 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		Issue issue = null;
 		IssueCacheHolder issueCacheHolder = IssueCacheHolder.getInstance();
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
+		String normalizedProduct = normalizeProductCodename(product);
 		for (IProject iProject : openProjects) {
-			issue = issueCacheHolder.getCacheInstance(iProject).getIssueByDiagnosticProductAndKey(product, issueId);
+			issue = issueCacheHolder.getCacheInstance(iProject).getIssueByDiagnosticProductAndKey(normalizedProduct,
+					issueId);
 			if (issue != null) {
 				return issue;
 			}
 		}
 		return issue;
+	}
+
+	static String normalizeProductCodename(String product) {
+		if (product == null) {
+			return null;
+		}
+		switch (product) {
+		case "oss":
+			return DIAGNOSTIC_SOURCE_SNYK_OSS;
+		case "code":
+			return DIAGNOSTIC_SOURCE_SNYK_CODE;
+		case "iac":
+			return DIAGNOSTIC_SOURCE_SNYK_IAC;
+		default:
+			return product;
+		}
 	}
 
 	private ISnykToolView openToolView() {

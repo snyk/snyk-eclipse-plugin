@@ -1,6 +1,11 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -50,5 +55,32 @@ public class SnykShowFixUriDetailsTest {
 	void isValid_rejectsEmptyProduct() throws URISyntaxException {
 		URI uri = new URI("snyk:///file?product=&action=showInDetailPanel&issueId=abc");
 		assertFalse(SnykShowFixUriDetails.fromURI(uri).isValid());
+	}
+
+	// normalizeProductCodename maps LS short codenames to Eclipse display names
+	@Test
+	void normalizeProductCodename_oss() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_OSS, SnykExtendedLanguageClient.normalizeProductCodename("oss"));
+	}
+
+	@Test
+	void normalizeProductCodename_code() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_CODE, SnykExtendedLanguageClient.normalizeProductCodename("code"));
+	}
+
+	@Test
+	void normalizeProductCodename_iac() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_IAC, SnykExtendedLanguageClient.normalizeProductCodename("iac"));
+	}
+
+	@Test
+	void normalizeProductCodename_longFormPassthrough() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_OSS,
+				SnykExtendedLanguageClient.normalizeProductCodename(DIAGNOSTIC_SOURCE_SNYK_OSS));
+	}
+
+	@Test
+	void normalizeProductCodename_nullReturnsNull() {
+		assertNull(SnykExtendedLanguageClient.normalizeProductCodename(null));
 	}
 }

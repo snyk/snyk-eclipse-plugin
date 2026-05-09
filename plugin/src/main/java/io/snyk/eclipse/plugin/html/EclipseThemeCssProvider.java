@@ -28,14 +28,16 @@ public class EclipseThemeCssProvider {
 
 	public static Map<String, String> buildVariableMap(Display display) {
 		FontData fontData = resolveFontData(display);
-		String fontFamily = fontData != null ? quoteFontFamily(fontData.getName()) : "system-ui,sans-serif";
-		String fontSize = fontData != null ? fontData.getHeight() + "pt" : "13pt";
+		String fontFamily = fontData != null
+				? quoteFontFamily(fontData.getName()) + ", system-ui, -apple-system, sans-serif"
+				: "system-ui, -apple-system, sans-serif";
+		String fontSize = fontData != null ? fontData.getHeight() + "px" : "13px";
 
 		Map<String, String> vars = new LinkedHashMap<>();
 		vars.put("--vscode-font-family", fontFamily);
 		vars.put("--vscode-font-size", fontSize);
 		vars.put("--vscode-editor-font-family", "monospace");
-		vars.put("--vscode-editor-font-size", "12pt");
+		vars.put("--vscode-editor-font-size", "12px");
 		vars.put("--vscode-foreground", resolveColor(display, SWT.COLOR_LIST_FOREGROUND, "#000000"));
 		vars.put("--vscode-descriptionForeground", resolveColor(display, SWT.COLOR_WIDGET_FOREGROUND, "#888888"));
 		vars.put("--vscode-errorForeground", resolveColor(display, SWT.COLOR_RED, "#f44747"));
