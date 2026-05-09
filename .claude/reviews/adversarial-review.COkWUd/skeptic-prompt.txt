@@ -1,0 +1,185 @@
+You are an adversarial reviewer operating under the Skeptic lens.
+
+Intent: Inject Eclipse SWT theme colors into LS-provided tree view HTML via CSS custom properties (--vscode-* variables), mapping SWT system colors and font metrics to the CSS variable names that the tree HTML already consumes. The goal is that the embedded browser renders the tree view HTML in the correct Eclipse theme colors instead of VS Code defaults.
+
+Your lens:
+## Skeptic
+Challenge correctness and completeness. Ask:
+- What inputs, states, or sequences will break this?
+- What error paths are unhandled or silently swallowed?
+- What race conditions or ordering dependencies exist?
+- What does the author believe is true that isn't proven?
+- Where is "it works on my machine" masquerading as verification?
+
+Map findings to: prove-it-works, fix-root-causes, serialize-shared-state-mutations.
+
+Relevant principles:
+
+### prove-it-works
+Verify directly. After completing any task, ask: "How do I prove this actually works?"
+- Verify reality, not proxies. Check actual system state.
+- For delegated work, inspect artifacts.
+- When testing fails, question your observation method first.
+
+### fix-root-causes
+Fix root causes, not symptoms. Workarounds compound over time.
+
+### serialize-shared-state-mutations
+Before sharing state between actors, ask: "What happens if another actor modifies this concurrently?" If the answer isn't "nothing", isolate.
+
+Code / diff to review:
+
+=== EclipseThemeCssProvider.java (new, 81 lines) ===
+package io.snyk.eclipse.plugin.html;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.Display;
+
+public class EclipseThemeCssProvider {
+
+	static String toHex(Color color) {
+		return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+	}
+
+	public static String buildStyleBlock(Display display) {
+		String foreground = resolveColor(display, SWT.COLOR_LIST_FOREGROUND, "#000000");
+		String descriptionFg = resolveColor(display, SWT.COLOR_WIDGET_FOREGROUND, "#444444");
+		String errorFg = resolveColor(display, SWT.COLOR_RED, "#f44747");
+		String sidebarBg = resolveColor(display, SWT.COLOR_LIST_BACKGROUND, "#ffffff");
+		String panelBorder = resolveColor(display, SWT.COLOR_WIDGET_BORDER, "#cccccc");
+		String widgetShadow = resolveColor(display, SWT.COLOR_WIDGET_DARK_SHADOW, "#00000026");
+		String focusBorder = resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc");
+		String listHoverBg = resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc1f");
+		String listSelectionBg = resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc");
+		String listSelectionFg = resolveColor(display, SWT.COLOR_LIST_SELECTION_TEXT, "#ffffff");
+		String inputBg = resolveColor(display, SWT.COLOR_WIDGET_BACKGROUND, "#f3f3f3");
+		String dropdownBg = resolveColor(display, SWT.COLOR_WIDGET_BACKGROUND, "#f3f3f3");
+		String buttonBg = resolveColor(display, SWT.COLOR_LIST_SELECTION, "#0066cc");
+		String fontFamily = resolveFontFamily(display);
+		String fontSize = resolveFontSize(display);
+
+		return "<style>:root {"
+				+ "--vscode-font-family:" + fontFamily + ";"
+				+ "--vscode-font-size:" + fontSize + ";"
+				+ "--vscode-foreground:" + foreground + ";"
+				+ "--vscode-descriptionForeground:" + descriptionFg + ";"
+				+ "--vscode-errorForeground:" + errorFg + ";"
+				+ "--vscode-sideBar-background:" + sidebarBg + ";"
+				+ "--vscode-panel-border:" + panelBorder + ";"
+				+ "--vscode-widget-shadow:" + widgetShadow + ";"
+				+ "--vscode-focusBorder:" + focusBorder + ";"
+				+ "--vscode-list-hoverBackground:" + listHoverBg + ";"
+				+ "--vscode-list-activeSelectionBackground:" + listSelectionBg + ";"
+				+ "--vscode-list-activeSelectionForeground:" + listSelectionFg + ";"
+				+ "--vscode-input-background:" + inputBg + ";"
+				+ "--vscode-dropdown-background:" + dropdownBg + ";"
+				+ "--vscode-button-background:" + buttonBg + ";"
+				+ "}</style>";
+	}
+
+	private static String resolveColor(Display display, int swtColorConstant, String fallback) {
+		if (display == null || display.isDisposed()) {
+			return fallback;
+		}
+		Color color = display.getSystemColor(swtColorConstant);
+		if (color == null) {
+			return fallback;
+		}
+		return toHex(color);
+	}
+
+	private static String resolveFontFamily(Display display) {
+		if (display == null || display.isDisposed()) {
+			return "system-ui,sans-serif";
+		}
+		try {
+			return display.getSystemFont().getFontData()[0].getName();
+		} catch (Exception e) {
+			return "system-ui,sans-serif";
+		}
+	}
+
+	private static String resolveFontSize(Display display) {
+		if (display == null || display.isDisposed()) {
+			return "13px";
+		}
+		try {
+			return display.getSystemFont().getFontData()[0].getHeight() + "px";
+		} catch (Exception e) {
+			return "13px";
+		}
+	}
+}
+
+=== TreeViewBrowserHandler.java (modified, +23 lines) ===
+package io.snyk.eclipse.plugin.views.snyktoolview;
+
+import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.widgets.Display;
+
+import io.snyk.eclipse.plugin.html.EclipseThemeCssProvider;
+import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
+
+public class TreeViewBrowserHandler {
+	private Browser browser;
+
+	public TreeViewBrowserHandler(Browser browser) {
+		this.browser = browser;
+	}
+
+	public void initialize() {
+		ExecuteCommandBridge.install(browser);
+		browser.setText("<html><body></body></html>");
+	}
+
+	public void setBrowserText(String html) {
+		if (browser == null || browser.isDisposed()) {
+			return;
+		}
+		if (html == null) {
+			return;
+		}
+		Display display = browser.getDisplay();
+		String themed = injectThemeCss(html, display);
+		browser.setText(themed);
+	}
+
+	public static String injectThemeCss(String html, Display display) {
+		if (html == null) {
+			return null;
+		}
+		String styleBlock = EclipseThemeCssProvider.buildStyleBlock(display);
+		if (html.contains("${ideStyle}")) {
+			return html.replace("${ideStyle}", styleBlock);
+		}
+		if (html.contains("</head>")) {
+			return html.replace("</head>", styleBlock + "</head>");
+		}
+		return styleBlock + html;
+	}
+}
+
+=== EclipseThemeCssProviderTest.java (new, 64 lines) ===
+All tests pass null as the Display argument. Four tests check toHex conversion for black/white/red/arbitrary colors. Four tests check buildStyleBlock(null) contains expected CSS variable names, wraps in <style>, contains :root.
+
+=== TreeViewBrowserHandlerTest.java (new, 50 lines) ===
+Tests: setBrowserText(null) no-op, injectThemeCss with ${ideStyle} placeholder replaced, injectThemeCss inserts before </head> when no placeholder, injectThemeCss prepends when no head tag, injectThemeCss(null, null) returns null.
+
+Key facts from codebase analysis:
+- SnykToolView.updateTreeViewHtml calls Display.getDefault().asyncExec(() -> treeBrowserHandler.setBrowserText(html)) — always on UI thread
+- The LS tree.html template has exactly ONE ${ideStyle} placeholder (line 27) followed by </head> (line 28)
+- FontData.getHeight() is documented to return size in POINTS (not pixels)
+- toHex() produces 6-char #rrggbb (no alpha channel)
+- Fallback for --vscode-widget-shadow is "#00000026" (8-char RGBA with alpha)
+- Fallback for --vscode-list-hoverBackground is "#0066cc1f" (8-char RGBA with alpha)
+- focusBorder, listHoverBg, listSelectionBg, and buttonBg all use SWT.COLOR_LIST_SELECTION
+- String.replace() replaces ALL occurrences (not just the first)
+- BaseHtmlProvider explicitly converts pt to rem using pxToPtMultiplier = 72.0/96.0
+
+Your job is to find real problems, not validate the work. Be specific — cite files, lines, and concrete failure scenarios. Rate each finding:
+- high: blocks ship
+- medium: should fix
+- low: worth noting
+
+Write findings as a numbered markdown list. Do not summarize or conclude — only findings.

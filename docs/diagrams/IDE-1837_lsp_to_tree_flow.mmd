@@ -1,0 +1,17 @@
+sequenceDiagram
+    autonumber
+    participant LS as Language Server (snyk-ls)
+    participant LC as SnykExtendedLanguageClient<br/>(@JsonNotification "$/snyk.treeView")
+    participant TV as SnykToolView (ViewPart)
+    participant TBH as TreeViewBrowserHandler
+    participant B as SWT Browser
+    participant JS as tree.js (in Browser)
+
+    Note over LS: Scan completes →<br/>TreeBuilder renders HTML →<br/>TreeScanStateEmitter sends notification
+    LS->>LC: $/snyk.treeView { treeViewHtml, totalIssues }
+    LC->>TV: updateTreeViewHtml(html)  [SWT thread via Display.asyncExec]
+    TV->>TBH: setHtml(html)
+    TBH->>TBH: prepend EclipseThemeCssProvider.css(display)
+    TBH->>B: browser.setText(themedHtml)
+    B->>JS: parse, init UI
+    Note over JS: ExecuteCommandBridge already injected:<br/>window.__ideExecuteCommand__ available

@@ -1,0 +1,99 @@
+{
+  "ticket": "IDE-1837",
+  "description": "Show Snyk results in HTML tree view sent from Language Server",
+  "lastUpdated": "2026-05-08",
+  "lastSession": {
+    "date": "2026-05-08",
+    "sessionNumber": 1,
+    "completedSteps": ["1.1 Requirements", "1.2 Schema", "1.3 Diagrams"],
+    "currentStep": "Awaiting plan approval",
+    "nextStep": "2.1 LSP wire-up — write smoke test T-S-001 first"
+  },
+  "testSuites": {
+    "smoke": {
+      "scenarios": [
+        {
+          "id": "T-S-001",
+          "name": "TreeViewSmokeTest.snykTreeViewNotificationUpdatesBrowser",
+          "step": "2.1",
+          "description": "Drive SnykExtendedLanguageClient with a real $/snyk.treeView payload; assert the SWT Browser text equals the payload's treeViewHtml.",
+          "status": "pending"
+        },
+        {
+          "id": "T-R-001",
+          "name": "Regression: $/snyk.scan still populates legacy TreeViewer",
+          "step": "2.3",
+          "description": "Existing scan-result flow must remain intact while HTML tree is added.",
+          "status": "pending"
+        }
+      ]
+    },
+    "integration": {
+      "scenarios": [
+        {
+          "id": "T-I-001",
+          "name": "SnykExtendedLanguageClient_TreeViewTest.handlerInvokesToolViewOnUiThread",
+          "step": "2.1",
+          "description": "Mock ISnykToolView; verify handler unpacks TreeViewParams and calls toolView.updateTreeViewHtml on SWT thread.",
+          "status": "pending"
+        },
+        {
+          "id": "T-I-002",
+          "name": "TreeViewBridgeTest.navigateToRangeReachesCommandHandler",
+          "step": "2.2",
+          "description": "Fixture HTML calls window.__ideExecuteCommand__('snyk.navigateToRange', [...]); CommandHandler.executeCommand invoked with correct args.",
+          "status": "pending"
+        },
+        {
+          "id": "T-I-003",
+          "name": "TreeViewBridgeTest.setNodeExpandedBatchPayloadShape",
+          "step": "2.2",
+          "description": "Batch expand args [[id1,true],[id2,false]] dispatched as JSON-correct workspace/executeCommand call.",
+          "status": "pending"
+        },
+        {
+          "id": "T-I-004",
+          "name": "TreeViewSelectionSyncTest.editorSelectionInvokesSelectTreeNode",
+          "step": "2.3",
+          "description": "When editor selection changes to a Snyk-marked range, browser.evaluate calls window.__selectTreeNode__('issueId').",
+          "status": "pending"
+        }
+      ]
+    },
+    "unit": {
+      "scenarios": [
+        {
+          "id": "T-U-001",
+          "name": "EclipseThemeCssProviderTest.emitsAllVscodeVariables",
+          "step": "2.2",
+          "description": "Given mocked Display color provider, generated CSS includes --vscode-foreground, --vscode-sideBar-background, etc.",
+          "status": "pending"
+        },
+        {
+          "id": "T-U-002",
+          "name": "TreeViewBrowserHandlerTest.setHtmlInjectsThemeCss",
+          "step": "2.2",
+          "description": "setHtml(html) prefixes the payload with the theme <style> block; setHtml(null) is a no-op.",
+          "status": "pending"
+        },
+        {
+          "id": "T-U-003",
+          "name": "TreeViewBrowserHandlerTest.selectNodeEscapesIssueIdForJs",
+          "step": "2.3",
+          "description": "selectNode handles single-quote and backslash in issueId without breaking JS literal.",
+          "status": "pending"
+        },
+        {
+          "id": "T-U-004",
+          "name": "TreeViewBrowserHandlerTest.setHtmlOnDisposedBrowserIsNoOp",
+          "step": "2.3",
+          "description": "If browser.isDisposed() is true, setHtml does nothing and does not throw.",
+          "status": "pending"
+        }
+      ]
+    },
+    "regression": {
+      "scenarios": []
+    }
+  }
+}
