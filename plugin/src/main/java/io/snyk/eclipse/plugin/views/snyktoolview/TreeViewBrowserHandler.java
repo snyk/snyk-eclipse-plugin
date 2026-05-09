@@ -11,6 +11,11 @@ import io.snyk.eclipse.plugin.html.EclipseThemeCssProvider;
 import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
 
 public class TreeViewBrowserHandler {
+	// Matches IntelliJ's ThemeBasedStylingGenerator.CSS_PATTERN:
+	// group 1 = var name from var(--name...); group 3 = name from --name: declaration
+	private static final Pattern CSS_PATTERN = Pattern
+			.compile("var\\(--([a-zA-Z0-9_-]+)([^)]*)?\\)|--([a-zA-Z0-9_-]+):\\s");
+
 	private Browser browser;
 
 	public TreeViewBrowserHandler(Browser browser) {
@@ -55,12 +60,20 @@ public class TreeViewBrowserHandler {
 			return null;
 		}
 		Map<String, String> vars = EclipseThemeCssProvider.buildVariableMap(display);
-		Pattern p = Pattern.compile("var\\(\\s*(--vscode-[^,)\\s]+)\\s*(?:,[^)]*)?\\)");
-		Matcher m = p.matcher(html);
+		Matcher m = CSS_PATTERN.matcher(html);
 		StringBuffer sb = new StringBuffer();
 		while (m.find()) {
-			String varName = m.group(1);
-			String replacement = vars.getOrDefault(varName, m.group(0));
+			String varUsageName = m.group(1);
+			String declName = m.group(3);
+			String replacement;
+			if (varUsageName != null && !varUsageName.isEmpty()) {
+				replacement = vars.getOrDefault("--" + varUsageName, m.group(0));
+			} else if (declName != null && !declName.isEmpty()) {
+				String value = vars.get("--" + declName);
+				replacement = value != null ? "--" + declName + ": " + value + "; " : m.group(0);
+			} else {
+				replacement = m.group(0);
+			}
 			m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
 		}
 		m.appendTail(sb);
