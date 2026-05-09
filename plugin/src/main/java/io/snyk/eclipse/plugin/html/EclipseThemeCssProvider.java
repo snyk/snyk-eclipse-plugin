@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.eclipse.jface.resource.JFaceResources;
+import io.snyk.eclipse.plugin.utils.SnykLogger;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.FontData;
@@ -27,11 +29,9 @@ public class EclipseThemeCssProvider {
 	}
 
 	public static Map<String, String> buildVariableMap(Display display) {
-		FontData fontData = resolveFontData(display);
-		String fontFamily = fontData != null
-				? quoteFontFamily(fontData.getName()) + ", system-ui, -apple-system, sans-serif"
-				: "system-ui, -apple-system, sans-serif";
-		String fontSize = fontData != null ? fontData.getHeight() + "px" : "13px";
+		String fontFamily = resolveThemeFontFamily();
+		String fontSize = resolveThemeFontSize();
+
 
 		Map<String, String> vars = new LinkedHashMap<>();
 		vars.put("--vscode-font-family", fontFamily);
@@ -90,11 +90,27 @@ public class EclipseThemeCssProvider {
 		return color != null ? toRgba(color, alpha) : fallback;
 	}
 
-	private static FontData resolveFontData(Display display) {
-		if (display == null || display.isDisposed()) {
-			return null;
+	static String resolveThemeFontFamily() {
+		try {
+			FontData[] data = JFaceResources.getFontRegistry().getFontData(JFaceResources.DEFAULT_FONT);
+			if (data != null && data.length > 0) {
+				return quoteFontFamily(data[0].getName()) + ", system-ui, -apple-system, sans-serif";
+			}
+		} catch (Exception e) {
+			SnykLogger.logInfo("Cannot resolve theme font family, using system-ui fallback");
 		}
-		FontData[] data = display.getSystemFont().getFontData();
-		return (data != null && data.length > 0) ? data[0] : null;
+		return "system-ui, -apple-system, sans-serif";
+	}
+
+	static String resolveThemeFontSize() {
+		try {
+			FontData[] data = JFaceResources.getFontRegistry().getFontData(JFaceResources.DEFAULT_FONT);
+			if (data != null && data.length > 0) {
+				return data[0].getHeight() + "px";
+			}
+		} catch (Exception e) {
+			SnykLogger.logInfo("Cannot resolve theme font size, using 13px fallback");
+		}
+		return "13px";
 	}
 }

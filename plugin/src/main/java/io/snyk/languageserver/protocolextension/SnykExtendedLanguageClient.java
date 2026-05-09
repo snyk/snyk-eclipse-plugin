@@ -496,7 +496,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		return CompletableFuture.supplyAsync(() -> {
 			openToolView();
-			this.toolView.selectTreeNode(issue, issue.filterableIssueType());
+			String displayProduct = SCAN_PARAMS_TO_DISPLAYED.getOrDefault(issue.filterableIssueType(),
+					issue.filterableIssueType());
+			this.toolView.selectTreeNode(issue, displayProduct);
 			return new ShowDocumentResult(true);
 		});
 	}

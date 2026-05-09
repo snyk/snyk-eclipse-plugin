@@ -61,18 +61,17 @@ class EclipseThemeCssProviderTest extends LsBaseTest {
 		assertEquals("Ubuntu", EclipseThemeCssProvider.quoteFontFamily("Ubuntu"));
 	}
 
-	// Font size fallback must use px unit (matching IntelliJ)
+	// Font size comes from JFace theme — must end with px
 	@Test
-	void buildStyleBlock_fontSizeFallback_usesPx() {
-		String style = EclipseThemeCssProvider.buildStyleBlock(null);
-		assertTrue(style.contains("--vscode-font-size:13px"), "font-size fallback must be 13px");
+	void resolveThemeFontSize_endsWith_px() {
+		String size = EclipseThemeCssProvider.resolveThemeFontSize();
+		assertTrue(size.endsWith("px"), "font-size must end with px, got: " + size);
 	}
 
-	// Font family fallback must include system-ui fallback chain
+	// Font family comes from JFace theme — must include system-ui fallback
 	@Test
-	void buildVariableMap_fontFamilyFallback_includesSystemUi() {
-		Map<String, String> map = EclipseThemeCssProvider.buildVariableMap(null);
-		String family = map.get("--vscode-font-family");
+	void resolveThemeFontFamily_includesSystemUi() {
+		String family = EclipseThemeCssProvider.resolveThemeFontFamily();
 		assertTrue(family.contains("system-ui"), "font-family must include system-ui fallback");
 		assertTrue(family.contains("-apple-system"), "font-family must include -apple-system fallback");
 	}
