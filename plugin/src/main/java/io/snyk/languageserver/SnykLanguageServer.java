@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.lsp4e.LanguageServersRegistry;
@@ -11,6 +12,8 @@ import org.eclipse.lsp4e.LanguageServersRegistry.LanguageServerDefinition;
 import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
+
+import com.google.gson.Gson;
 
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.preferences.Preferences;
@@ -33,6 +36,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		waitForInit();
 
 		String cliPath = getCliPathOrThrow(prefs);
+		verifyCliProtocolVersion(cliPath);
 
 		List<String> commands = Lists.of(cliPath, "language-server", "-l", "info");
 		String workingDir = SystemUtils.USER_DIR;
@@ -43,6 +47,26 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		} catch (IOException e) {
 			SnykLogger.logAndShow("Cannot start the Snyk CLI. Please check the CLI path: " + cliPath);
 			throw e;
+		}
+	}
+
+	static void verifyCliProtocolVersion(String cliPath) throws IOException {
+		try {
+			ProcessBuilder pb = new ProcessBuilder(cliPath, "language-server", "--protocolVersion");
+			pb.redirectErrorStream(true);
+			Process proc = pb.start();
+			String output = new String(proc.getInputStream().readAllBytes()).trim();
+			proc.waitFor(5, TimeUnit.SECONDS);
+			int actual = Integer.parseInt(output);
+			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
+			if (actual != expected) {
+				String msg = "Snyk CLI protocol version mismatch: expected " + expected + ", got " + actual
+						+ ". Please update the Snyk CLI.";
+				SnykLogger.logAndShow(msg);
+				throw new IOException(msg);
+			}
+		} catch (NumberFormatException | InterruptedException e) {
+			SnykLogger.logError(e);
 		}
 	}
 
@@ -113,7 +137,11 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		}
 
 		try {
-			return new LsConfigurationUpdater().buildConfigurationParam();
+			var param = new LsConfigurationUpdater().buildConfigurationParam();
+			// Pre-serialize to JsonElement so LSP4J embeds the JSON directly
+			// instead of re-serializing through its own Gson instance, which
+			// can drop fields from custom POJOs like ConfigSetting.
+			return new Gson().toJsonTree(param);
 		} catch (IllegalStateException | IllegalArgumentException e) {
 			// Handle initialization errors gracefully - log and return null to allow LS to start
 			SnykLogger.logError(e);
