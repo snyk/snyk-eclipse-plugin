@@ -47,6 +47,7 @@ public class Preferences {
 	public static final String ACTIVATE_SNYK_CODE_SECURITY = "ACTIVATE_SNYK_CODE_SECURITY";
 	public static final String ACTIVATE_SNYK_OPEN_SOURCE = "ACTIVATE_SNYK_OPEN_SOURCE";
 	public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
+	public static final String ACTIVATE_SNYK_SECRETS = "ACTIVATE_SNYK_SECRETS";
 	public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
 	public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
 	/**

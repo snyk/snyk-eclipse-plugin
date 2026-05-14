@@ -573,12 +573,12 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String json = """
 				{
 					"settings": {
-						"endpoint": {
+						"api_endpoint": {
 							"value": "https://custom.snyk.io",
 							"changed": true,
 							"source": "cli",
-							"origin_scope": "machine",
-							"is_locked": false
+							"originScope": "machine",
+							"isLocked": false
 						}
 					}
 				}
@@ -599,9 +599,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		String json = """
 				{
-					"folder_configs": [
+					"folderConfigs": [
 						{
-							"folder_path": "/tmp/project1",
+							"folderPath": "/tmp/project1",
 							"settings": {
 								"base_branch": {
 									"value": "main"
@@ -628,13 +628,13 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String json = """
 				{
 					"settings": {
-						"endpoint": {
+						"api_endpoint": {
 							"value": "https://both.snyk.io"
 						}
 					},
-					"folder_configs": [
+					"folderConfigs": [
 						{
-							"folder_path": "/tmp/project2",
+							"folderPath": "/tmp/project2",
 							"settings": {
 								"preferred_org": {
 									"value": "my-org"
@@ -662,9 +662,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		// First notification
 		String json1 = """
 				{
-					"folder_configs": [
+					"folderConfigs": [
 						{
-							"folder_path": "/tmp/project1",
+							"folderPath": "/tmp/project1",
 							"settings": { "base_branch": { "value": "main" } }
 						}
 					]
@@ -680,9 +680,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		// Second notification replaces all
 		String json2 = """
 				{
-					"folder_configs": [
+					"folderConfigs": [
 						{
-							"folder_path": "/tmp/project2",
+							"folderPath": "/tmp/project2",
 							"settings": { "base_branch": { "value": "develop" } }
 						}
 					]
@@ -702,7 +702,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String json = """
 				{
 					"settings": {
-						"scanningMode": {
+						"scan_automatic": {
 							"value": "automatic"
 						}
 					}
@@ -722,7 +722,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String json = """
 				{
 					"settings": {
-						"scanningMode": {
+						"scan_automatic": {
 							"value": "manual"
 						}
 					}
@@ -742,7 +742,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String json = """
 				{
 					"settings": {
-						"activateSnykCode": {
+						"snyk_code_enabled": {
 							"value": true
 						}
 					}
@@ -762,15 +762,15 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		String json = """
 				{
 					"settings": {
-						"endpoint": {
+						"api_endpoint": {
 							"value": "https://ls-pushed.snyk.io",
 							"changed": true
 						},
-						"activateSnykOpenSource": {
+						"snyk_oss_enabled": {
 							"value": "true",
 							"changed": false
 						},
-						"insecure": {
+						"cli_insecure": {
 							"value": "false",
 							"changed": false
 						}
@@ -804,6 +804,73 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut = new SnykExtendedLanguageClient();
 		// null param should not throw
 		cut.snykConfiguration(null);
+	}
+
+	@Test
+	void snykConfigurationPersistsSnykSecretsEnabled() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"snyk_secrets_enabled": {
+							"value": true
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		assertEquals("true", pref.getPref(Preferences.ACTIVATE_SNYK_SECRETS));
+	}
+
+	@Test
+	void snykConfigurationPersistsAdditionalRegistryKeys() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"send_error_reports": { "value": "true" },
+						"automatic_download": { "value": "false" },
+						"proxy_insecure": { "value": "true" },
+						"additional_environment": { "value": "FOO=bar" },
+						"authentication_method": { "value": "token" },
+						"scan_net_new": { "value": "true" }
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		assertEquals("true", pref.getPref(Preferences.SEND_ERROR_REPORTS));
+		assertEquals("false", pref.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
+		assertEquals("true", pref.getPref(Preferences.INSECURE_KEY));
+		assertEquals("FOO=bar", pref.getPref(Preferences.ADDITIONAL_ENVIRONMENT));
+		assertEquals("token", pref.getPref(Preferences.AUTHENTICATION_METHOD));
+		assertEquals("true", pref.getPref(Preferences.ENABLE_DELTA));
+	}
+
+	@Test
+	void snykConfigurationSkipsAlwaysFixedEntries() {
+		var gson = new com.google.gson.Gson();
+		// automatic_authentication and trust_enabled are always-fixed — inbound values ignored
+		String json = """
+				{
+					"settings": {
+						"automatic_authentication": { "value": "true" },
+						"trust_enabled": { "value": "false" }
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		// should not throw; fixed entries have no prefKey so are skipped
+		cut.snykConfiguration(param);
 	}
 
 }

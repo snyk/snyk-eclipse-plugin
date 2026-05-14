@@ -117,9 +117,9 @@ class LsConfigurationUpdaterTest {
 		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_CODE));
 		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_OPEN_SOURCE));
 		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_IAC));
+		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_SECRETS));
 		assertTrue(settings.containsKey(LsSettingsKeys.INSECURE));
 		assertTrue(settings.containsKey(LsSettingsKeys.ADDITIONAL_PARAMS));
-		assertTrue(settings.containsKey(LsSettingsKeys.PATH));
 		assertTrue(settings.containsKey(LsSettingsKeys.SCANNING_MODE));
 	}
 
@@ -154,7 +154,7 @@ class LsConfigurationUpdaterTest {
 
 		String folderJson = """
 				{
-					"folder_path": "/test/project",
+					"folderPath": "/test/project",
 					"settings": {
 						"base_branch": {"value": "main", "changed": false}
 					}
@@ -181,9 +181,9 @@ class LsConfigurationUpdaterTest {
 
 		String folderJson = """
 				{
-					"folder_path": "/workspace/project-a",
+					"folderPath": "/workspace/project-a",
 					"settings": {
-						"base_branch": {"value": "develop", "changed": false, "source": "cli", "origin_scope": "folder"}
+						"base_branch": {"value": "develop", "changed": false, "source": "cli", "originScope": "folder"}
 					}
 				}
 				""";
@@ -217,11 +217,28 @@ class LsConfigurationUpdaterTest {
 		assertNull(param.getSettings().get(LsSettingsKeys.ENDPOINT).getSource());
 		assertNull(param.getSettings().get(LsSettingsKeys.ENDPOINT).getIsLocked());
 
+		// Metadata fields are at the top level, not in settings map
+		assertNotNull(param.getIntegrationName());
+		assertNotNull(param.getRequiredProtocolVersion());
+		assertNotNull(param.getTrustedFolders());
+
 		// Serialize to verify it's valid JSON structure
 		String json = gson.toJson(param);
 		LspConfigurationParam deserialized = gson.fromJson(json, LspConfigurationParam.class);
 		assertNotNull(deserialized.getSettings());
 		assertNotNull(deserialized.getFolderConfigs());
+	}
+
+	@Test
+	void testBuildConfigurationParam_snykSecretsEnabledPresentAndChangedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_SECRETS)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting setting = param.getSettings().get(LsSettingsKeys.ACTIVATE_SNYK_SECRETS);
+
+		assertNotNull(setting);
+		assertTrue(setting.getChanged());
 	}
 
 	@Test
@@ -306,64 +323,107 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
-	void testBuildConfigurationParam_trustedFoldersChangedFlag() {
-		setupPreferenceMock();
-		when(preferenceMock.isExplicitlyChanged(Preferences.TRUSTED_FOLDERS)).thenReturn(true);
-
-		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.TRUSTED_FOLDERS).getChanged());
-	}
-
-	@Test
-	void testBuildConfigurationParam_issueViewOptionsChangedWhenOneConstituentChanged() {
+	void testBuildConfigurationParam_issueViewOpenIssuesChangedFlag() {
 		setupPreferenceMock();
 		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_OPTIONS).getChanged());
+		assertTrue(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_OPEN_ISSUES).getChanged());
 	}
 
 	@Test
-	void testBuildConfigurationParam_issueViewOptionsUnchangedWhenNoConstituentChanged() {
+	void testBuildConfigurationParam_issueViewIgnoredIssuesUnchangedWhenNotExplicitlyChanged() {
 		setupPreferenceMock();
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertFalse(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_OPTIONS).getChanged());
+		assertFalse(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_IGNORED_ISSUES).getChanged());
 	}
 
 	@Test
-	void testBuildConfigurationParam_filterSeverityChangedWhenOneConstituentChanged() {
+	void testBuildConfigurationParam_severityFilterSentAsCompositeSetting() {
 		setupPreferenceMock();
-		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_SHOW_MEDIUM)).thenReturn(true);
+		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_SHOW_CRITICAL)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.FILTER_SEVERITY).getChanged());
+		ConfigSetting setting = param.getSettings().get(LsSettingsKeys.ENABLED_SEVERITIES);
+		assertNotNull(setting);
+		assertTrue(setting.getChanged());
+
+		@SuppressWarnings("unchecked")
+		Map<String, Boolean> severityMap = (Map<String, Boolean>) setting.getValue();
+		assertEquals(true, severityMap.get("critical"));
+		assertEquals(false, severityMap.get("high"));
+		assertEquals(true, severityMap.get("medium"));
+		assertEquals(false, severityMap.get("low"));
 	}
 
 	@Test
-	void testBuildConfigurationParam_filterSeverityUnchangedWhenNoConstituentChanged() {
+	void testBuildConfigurationParam_severityFilterChangedWhenAnySeverityChanged() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_SHOW_LOW)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting setting = param.getSettings().get(LsSettingsKeys.ENABLED_SEVERITIES);
+		assertTrue(setting.getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_severityFilterUnchangedWhenNoSeverityChanged() {
 		setupPreferenceMock();
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertFalse(param.getSettings().get(LsSettingsKeys.FILTER_SEVERITY).getChanged());
+		ConfigSetting setting = param.getSettings().get(LsSettingsKeys.ENABLED_SEVERITIES);
+		assertNotNull(setting);
+		assertFalse(setting.getChanged());
 	}
 
 	@Test
-	void testBuildConfigurationParam_systemConstantsAlwaysUnchanged() {
+	void testBuildConfigurationParam_noIndividualSeverityFilterKeys() {
 		setupPreferenceMock();
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 		Map<String, ConfigSetting> settings = param.getSettings();
+		assertFalse(settings.containsKey("severity_filter_critical"));
+		assertFalse(settings.containsKey("severity_filter_high"));
+		assertFalse(settings.containsKey("severity_filter_medium"));
+		assertFalse(settings.containsKey("severity_filter_low"));
+	}
 
-		assertFalse(settings.get(LsSettingsKeys.INTEGRATION_NAME).getChanged());
-		assertFalse(settings.get(LsSettingsKeys.INTEGRATION_VERSION).getChanged());
-		assertFalse(settings.get(LsSettingsKeys.AUTOMATIC_AUTHENTICATION).getChanged());
-		assertFalse(settings.get(LsSettingsKeys.REQUIRED_PROTOCOL_VERSION).getChanged());
-		assertFalse(settings.get(LsSettingsKeys.RUNTIME_NAME).getChanged());
-		assertFalse(settings.get(LsSettingsKeys.RUNTIME_VERSION).getChanged());
-		assertFalse(settings.get(LsSettingsKeys.OS_ARCH).getChanged());
-		assertFalse(settings.get(LsSettingsKeys.OS_PLATFORM).getChanged());
-		assertFalse(settings.get(LsSettingsKeys.ENABLE_TRUSTED_FOLDERS_FEATURE).getChanged());
+	@Test
+	void testBuildConfigurationParam_metadataFieldsAreTopLevel() {
+		setupPreferenceMock();
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+
+		assertNotNull(param.getIntegrationName());
+		assertNotNull(param.getIntegrationVersion());
+		assertNotNull(param.getRequiredProtocolVersion());
+		assertNotNull(param.getRuntimeName());
+		assertNotNull(param.getRuntimeVersion());
+		assertNotNull(param.getOsArch());
+		assertNotNull(param.getOsPlatform());
+		assertNotNull(param.getTrustedFolders());
+	}
+
+	@Test
+	void testBuildConfigurationParam_settingsUseSnakeCaseKeys() {
+		setupPreferenceMock();
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		Map<String, ConfigSetting> settings = param.getSettings();
+
+		// Verify settings keys are snake_case
+		assertTrue(settings.containsKey("api_endpoint"));
+		assertTrue(settings.containsKey("cli_path"));
+		assertTrue(settings.containsKey("proxy_insecure"));
+		assertTrue(settings.containsKey("snyk_code_enabled"));
+		assertTrue(settings.containsKey("snyk_oss_enabled"));
+		assertTrue(settings.containsKey("snyk_iac_enabled"));
+		assertTrue(settings.containsKey("scan_automatic"));
+		assertTrue(settings.containsKey("automatic_download"));
+		assertTrue(settings.containsKey("binary_base_url"));
+		assertTrue(settings.containsKey("scan_net_new"));
+		assertTrue(settings.containsKey("enabled_severities"));
+		assertTrue(settings.containsKey("issue_view_open_issues"));
 	}
 
 	private void setupPreferenceMock() {
@@ -376,6 +436,9 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true")).thenReturn("oss");
 		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "false")).thenReturn("oss");
 		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "")).thenReturn("oss");
+		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_SECRETS, "true")).thenReturn("false");
+		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_SECRETS, "false")).thenReturn("false");
+		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_SECRETS, "")).thenReturn("false");
 		when(preferenceMock.getPref(Preferences.INSECURE_KEY, "")).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.INSECURE_KEY, "true")).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.INSECURE_KEY, "false")).thenReturn("true");
@@ -398,11 +461,19 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.ENABLE_DELTA, Boolean.FALSE.toString())).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.RISK_SCORE_THRESHOLD, "0")).thenReturn("200");
+		when(preferenceMock.getReleaseChannel()).thenReturn("stable");
+		when(preferenceMock.getPref(Preferences.DEVICE_ID, "")).thenReturn("test-device-id");
+		when(preferenceMock.getPref(Preferences.TRUSTED_FOLDERS)).thenReturn("");
+		when(preferenceMock.getPref(Preferences.CLI_BASE_URL, "https://downloads.snyk.io")).thenReturn("https://downloads.snyk.io");
 
 		// Severity filter mocks
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_CRITICAL, true)).thenReturn(true);
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_HIGH, true)).thenReturn(false);
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_MEDIUM, true)).thenReturn(true);
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_LOW, true)).thenReturn(false);
+
+		// Issue view options mocks
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true)).thenReturn(true);
+		when(preferenceMock.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false)).thenReturn(false);
 	}
 }

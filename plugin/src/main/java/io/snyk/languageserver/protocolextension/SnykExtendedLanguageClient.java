@@ -85,7 +85,6 @@ import io.snyk.languageserver.FeatureFlagConstants;
 import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.LsConstants;
-import io.snyk.languageserver.LsSettingsKeys;
 import io.snyk.languageserver.ScanInProgressKey;
 import io.snyk.languageserver.ScanState;
 import io.snyk.languageserver.SnykIssueCache;
@@ -430,50 +429,22 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private static final java.util.Map<String, String> LS_TO_PREF_KEY = java.util.Map.of(
-			LsSettingsKeys.ENDPOINT, Preferences.ENDPOINT_KEY,
-			LsSettingsKeys.ORGANIZATION, Preferences.ORGANIZATION_KEY,
-			LsSettingsKeys.ACTIVATE_SNYK_CODE, Preferences.ACTIVATE_SNYK_CODE_SECURITY,
-			LsSettingsKeys.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.ACTIVATE_SNYK_OPEN_SOURCE,
-			LsSettingsKeys.ACTIVATE_SNYK_IAC, Preferences.ACTIVATE_SNYK_IAC,
-			LsSettingsKeys.INSECURE, Preferences.INSECURE_KEY,
-			LsSettingsKeys.ADDITIONAL_PARAMS, Preferences.ADDITIONAL_PARAMETERS,
-			LsSettingsKeys.PATH, Preferences.PATH_KEY,
-			LsSettingsKeys.SCANNING_MODE, Preferences.SCANNING_MODE_AUTOMATIC);
-
 	private void persistGlobalSettings(java.util.Map<String, ConfigSetting> settings) {
 		var prefs = Preferences.getInstance();
 		for (var entry : settings.entrySet()) {
 			try {
-				String prefKey = LS_TO_PREF_KEY.get(entry.getKey());
-				if (prefKey == null) {
+				var registryEntry = io.snyk.languageserver.LsSettingsRegistry.BY_LS_KEY.get(entry.getKey());
+				if (registryEntry == null || registryEntry.alwaysFixed || registryEntry.prefKey == null) {
 					continue;
 				}
 				var setting = entry.getValue();
 				if (setting.getValue() != null) {
-					prefs.store(prefKey, convertInboundValue(entry.getKey(), setting.getValue()));
+					prefs.store(registryEntry.prefKey, registryEntry.inboundDeserializer.apply(setting.getValue()));
 				}
 			} catch (Exception e) {
 				SnykLogger.logError(e);
 			}
 		}
-	}
-
-	private String convertInboundValue(String lsKey, Object value) {
-		if (LsSettingsKeys.SCANNING_MODE.equals(lsKey)) {
-			return String.valueOf("automatic".equals(String.valueOf(value)));
-		}
-		return toStringValue(value);
-	}
-
-	private String toStringValue(Object value) {
-		if (value instanceof Number) {
-			double d = ((Number) value).doubleValue();
-			if (d == Math.floor(d) && !Double.isInfinite(d)) {
-				return String.valueOf((long) d);
-			}
-		}
-		return String.valueOf(value);
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN_SUMMARY)
