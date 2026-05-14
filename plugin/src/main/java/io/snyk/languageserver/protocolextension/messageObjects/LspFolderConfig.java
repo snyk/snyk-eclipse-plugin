@@ -4,11 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.gson.annotations.SerializedName;
-
 public class LspFolderConfig {
 
-	@SerializedName("folder_path")
 	private String folderPath;
 
 	private Map<String, ConfigSetting> settings;

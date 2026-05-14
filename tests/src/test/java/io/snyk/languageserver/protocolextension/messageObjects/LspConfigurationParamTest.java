@@ -22,8 +22,8 @@ class LspConfigurationParamTest {
 							"value": "https://api.snyk.io",
 							"changed": false,
 							"source": "default",
-							"origin_scope": "machine",
-							"is_locked": false
+							"originScope": "machine",
+							"isLocked": false
 						}
 					}
 				}
@@ -42,9 +42,9 @@ class LspConfigurationParamTest {
 	void deserializesFolderOnly() {
 		String json = """
 				{
-					"folder_configs": [
+					"folderConfigs": [
 						{
-							"folder_path": "/home/user/project",
+							"folderPath": "/home/user/project",
 							"settings": {
 								"base_branch": {
 									"value": "main"
@@ -70,12 +70,12 @@ class LspConfigurationParamTest {
 					"settings": {
 						"token": {
 							"value": "secret",
-							"is_locked": true
+							"isLocked": true
 						}
 					},
-					"folder_configs": [
+					"folderConfigs": [
 						{
-							"folder_path": "/project1",
+							"folderPath": "/project1",
 							"settings": {
 								"preferred_org": {
 									"value": "org1"
@@ -83,7 +83,7 @@ class LspConfigurationParamTest {
 							}
 						},
 						{
-							"folder_path": "/project2",
+							"folderPath": "/project2",
 							"settings": {
 								"preferred_org": {
 									"value": "org2"
@@ -121,7 +121,7 @@ class LspConfigurationParamTest {
 		String json = """
 				{
 					"settings": {},
-					"folder_configs": []
+					"folderConfigs": []
 				}
 				""";
 

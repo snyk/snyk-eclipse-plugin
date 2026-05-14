@@ -20,8 +20,8 @@ class ConfigSettingTest {
 					"value": "https://api.snyk.io",
 					"changed": true,
 					"source": "cli",
-					"origin_scope": "machine",
-					"is_locked": false
+					"originScope": "machine",
+					"isLocked": false
 				}
 				""";
 
@@ -58,8 +58,8 @@ class ConfigSettingTest {
 					"value": true,
 					"changed": false,
 					"source": "default",
-					"origin_scope": "global",
-					"is_locked": true
+					"originScope": "global",
+					"isLocked": true
 				}
 				""";
 
@@ -91,7 +91,7 @@ class ConfigSettingTest {
 				{
 					"value": null,
 					"changed": null,
-					"is_locked": null
+					"isLocked": null
 				}
 				""";
 

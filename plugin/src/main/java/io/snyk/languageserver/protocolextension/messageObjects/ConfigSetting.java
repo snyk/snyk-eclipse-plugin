@@ -1,7 +1,5 @@
 package io.snyk.languageserver.protocolextension.messageObjects;
 
-import com.google.gson.annotations.SerializedName;
-
 public class ConfigSetting {
 
 	private Object value;
@@ -10,10 +8,8 @@ public class ConfigSetting {
 
 	private String source;
 
-	@SerializedName("origin_scope")
 	private String originScope;
 
-	@SerializedName("is_locked")
 	private Boolean isLocked;
 
 	public Object getValue() {

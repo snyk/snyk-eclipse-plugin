@@ -22,7 +22,7 @@ class LspFolderConfigTest {
 	void deserializesFolderPathFromSnakeCase() {
 		String json = """
 				{
-					"folder_path": "/home/user/project",
+					"folderPath": "/home/user/project",
 					"settings": {}
 				}
 				""";
@@ -38,14 +38,14 @@ class LspFolderConfigTest {
 	void deserializesWithSettings() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"base_branch": {
 							"value": "main",
 							"changed": false,
 							"source": "cli",
-							"origin_scope": "folder",
-							"is_locked": true
+							"originScope": "folder",
+							"isLocked": true
 						}
 					}
 				}
@@ -69,7 +69,7 @@ class LspFolderConfigTest {
 	void deserializesWithNullSettings() {
 		String json = """
 				{
-					"folder_path": "/project"
+					"folderPath": "/project"
 				}
 				""";
 
@@ -83,14 +83,14 @@ class LspFolderConfigTest {
 	void withSettingPreservesLockMetadata() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"base_branch": {
 							"value": "main",
 							"changed": false,
 							"source": "cli",
-							"origin_scope": "folder",
-							"is_locked": true
+							"originScope": "folder",
+							"isLocked": true
 						}
 					}
 				}
@@ -120,7 +120,7 @@ class LspFolderConfigTest {
 	void withSettingCreatesSettingForNewKey() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {}
 				}
 				""";
@@ -145,7 +145,7 @@ class LspFolderConfigTest {
 	void withSettingReturnsNewInstance() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"key": { "value": "val" }
 					}
@@ -162,14 +162,14 @@ class LspFolderConfigTest {
 	void withSettingNullValueForResetToDefault() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"base_branch": {
 							"value": "main",
 							"changed": false,
 							"source": "cli",
-							"origin_scope": "folder",
-							"is_locked": false
+							"originScope": "folder",
+							"isLocked": false
 						}
 					}
 				}
@@ -189,14 +189,14 @@ class LspFolderConfigTest {
 	void withSettingIfChangedMarksChangedWhenValueDiffers() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"base_branch": {
 							"value": "main",
 							"changed": false,
 							"source": "cli",
-							"origin_scope": "folder",
-							"is_locked": true
+							"originScope": "folder",
+							"isLocked": true
 						}
 					}
 				}
@@ -217,7 +217,7 @@ class LspFolderConfigTest {
 	void withSettingIfChangedPreservesExistingChangedFlagWhenValueSame() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"base_branch": {
 							"value": "main",
@@ -239,7 +239,7 @@ class LspFolderConfigTest {
 	void withSettingIfChangedPreservesTrueChangedFlagWhenValueSame() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"base_branch": {
 							"value": "develop",
@@ -261,7 +261,7 @@ class LspFolderConfigTest {
 	void withSettingIfChangedMarksChangedForNewKey() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {}
 				}
 				""";
@@ -279,7 +279,7 @@ class LspFolderConfigTest {
 		// Gson deserializes JSON integer 42 as Double 42.0
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"count": {
 							"value": 42,
@@ -301,7 +301,7 @@ class LspFolderConfigTest {
 	void withSettingIfChangedHandlesNullSettings() {
 		String json = """
 				{
-					"folder_path": "/project"
+					"folderPath": "/project"
 				}
 				""";
 
@@ -317,7 +317,7 @@ class LspFolderConfigTest {
 	void withSettingHandlesNullSettings() {
 		String json = """
 				{
-					"folder_path": "/project"
+					"folderPath": "/project"
 				}
 				""";
 
