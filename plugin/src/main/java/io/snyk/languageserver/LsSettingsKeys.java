@@ -27,7 +27,10 @@ public final class LsSettingsKeys {
 	public static final String RISK_SCORE_THRESHOLD = "risk_score_threshold";
 	public static final String TRUSTED_FOLDERS = "trusted_folders";
 	public static final String ENABLE_TRUSTED_FOLDERS_FEATURE = "trust_enabled";
-	public static final String ENABLED_SEVERITIES = "enabled_severities";
+	public static final String SEVERITY_FILTER_CRITICAL = "severity_filter_critical";
+	public static final String SEVERITY_FILTER_HIGH = "severity_filter_high";
+	public static final String SEVERITY_FILTER_MEDIUM = "severity_filter_medium";
+	public static final String SEVERITY_FILTER_LOW = "severity_filter_low";
 	public static final String ISSUE_VIEW_OPEN_ISSUES = "issue_view_open_issues";
 	public static final String ISSUE_VIEW_IGNORED_ISSUES = "issue_view_ignored_issues";
 	public static final String CLI_RELEASE_CHANNEL = "cli_release_channel";

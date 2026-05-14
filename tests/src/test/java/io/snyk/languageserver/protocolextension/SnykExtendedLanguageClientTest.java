@@ -835,7 +835,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 						"send_error_reports": { "value": "true" },
 						"automatic_download": { "value": "false" },
 						"proxy_insecure": { "value": "true" },
-						"additional_environment": { "value": "FOO=bar" },
 						"authentication_method": { "value": "token" },
 						"scan_net_new": { "value": "true" }
 					}
@@ -849,7 +848,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		assertEquals("true", pref.getPref(Preferences.SEND_ERROR_REPORTS));
 		assertEquals("false", pref.getPref(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
 		assertEquals("true", pref.getPref(Preferences.INSECURE_KEY));
-		assertEquals("FOO=bar", pref.getPref(Preferences.ADDITIONAL_ENVIRONMENT));
 		assertEquals("token", pref.getPref(Preferences.AUTHENTICATION_METHOD));
 		assertEquals("true", pref.getPref(Preferences.ENABLE_DELTA));
 	}

@@ -1,5 +1,7 @@
 package io.snyk.languageserver;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,8 +14,15 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
  * Single source of truth binding LS keys to Eclipse pref keys, with serializers for both
  * the outbound (IDE→LS) and inbound (LS→IDE) directions.
  *
- * Special entries (enabled_severities, risk_score_threshold) are excluded from this registry
- * because they require composite or conditional serialization handled inline in their callers.
+ * ENTRIES is the ordered list used for outbound iteration.
+ * BY_LS_KEY also includes inbound-only entries (severity filters) not in ENTRIES,
+ * because their outbound serialization requires cross-key logic (anySeverityChanged).
+ *
+ * Excluded from ENTRIES and handled inline in LsConfigurationUpdater:
+ * - risk_score_threshold: conditional int-or-null
+ * - severity_filter_*: 4 individual keys with shared anySeverityChanged flag
+ * - trusted_folders: always-changed array, also set top-level for InitializationOptions
+ * - additional_environment: folder-scope only (not a global setting)
  */
 public final class LsSettingsRegistry {
 
@@ -23,7 +32,7 @@ public final class LsSettingsRegistry {
         public final String outboundDefault;
         /** Converts pref string value → LS value (outbound). */
         public final Function<String, Object> outboundSerializer;
-        /** Converts LS value (Object) → pref string (inbound). Null means use default toString. */
+        /** Converts LS value (Object) → pref string (inbound). */
         public final Function<Object, String> inboundDeserializer;
         /** If true the entry is always sent with the given outboundDefault regardless of prefs. */
         public final boolean alwaysFixed;
@@ -44,9 +53,11 @@ public final class LsSettingsRegistry {
             return new Entry(lsKey, prefKey, outboundDefault, v -> v, LsSettingsRegistry::defaultToString, false);
         }
 
+        /** Outbound sends Java Boolean (not string). LS GetBool handles both bool and "true"/"false". */
         static Entry bool(String lsKey, String prefKey, boolean outboundDefault) {
             return new Entry(lsKey, prefKey, Boolean.toString(outboundDefault),
-                    v -> v, LsSettingsRegistry::defaultToString, false);
+                    v -> Boolean.parseBoolean(v),
+                    LsSettingsRegistry::defaultToString, false);
         }
 
         static Entry fixed(String lsKey, String fixedValue) {
@@ -54,11 +65,17 @@ public final class LsSettingsRegistry {
         }
     }
 
-    /** All global settings entries. Entries are ordered as sent outbound. */
+    /** Ordered outbound entries. Iterated by LsConfigurationUpdater.buildConfigurationParam(). */
     public static final List<Entry> ENTRIES;
 
+    /**
+     * All entries including inbound-only ones (severity filters).
+     * Used by SnykExtendedLanguageClient.persistGlobalSettings().
+     */
+    public static final Map<String, Entry> BY_LS_KEY;
+
     static {
-        List<Entry> entries = new java.util.ArrayList<>();
+        List<Entry> entries = new ArrayList<>();
 
         entries.add(Entry.simple(LsSettingsKeys.ENDPOINT, Preferences.ENDPOINT_KEY, ""));
         entries.add(new Entry(LsSettingsKeys.TOKEN, Preferences.AUTH_TOKEN_KEY, "",
@@ -71,8 +88,9 @@ public final class LsSettingsRegistry {
         entries.add(Entry.bool(LsSettingsKeys.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.ACTIVATE_SNYK_OPEN_SOURCE, true));
         entries.add(Entry.bool(LsSettingsKeys.ACTIVATE_SNYK_IAC, Preferences.ACTIVATE_SNYK_IAC, true));
         entries.add(Entry.bool(LsSettingsKeys.ACTIVATE_SNYK_SECRETS, Preferences.ACTIVATE_SNYK_SECRETS, false));
+        // scan_automatic: LS expects boolean. "true" = automatic, "false" = manual.
         entries.add(new Entry(LsSettingsKeys.SCANNING_MODE, Preferences.SCANNING_MODE_AUTOMATIC, "false",
-                v -> Boolean.parseBoolean(v) ? "automatic" : "manual",
+                v -> Boolean.parseBoolean(v),
                 value -> String.valueOf("automatic".equals(String.valueOf(value))),
                 false));
         entries.add(Entry.bool(LsSettingsKeys.ENABLE_DELTA_FINDINGS, Preferences.ENABLE_DELTA, false));
@@ -84,28 +102,30 @@ public final class LsSettingsRegistry {
                 "https://downloads.snyk.io"));
         entries.add(Entry.bool(LsSettingsKeys.INSECURE, Preferences.INSECURE_KEY, false));
         entries.add(Entry.simple(LsSettingsKeys.ADDITIONAL_PARAMS, Preferences.ADDITIONAL_PARAMETERS, ""));
-        entries.add(Entry.simple(LsSettingsKeys.ADDITIONAL_ENV, Preferences.ADDITIONAL_ENVIRONMENT, ""));
         entries.add(Entry.fixed(LsSettingsKeys.ENABLE_TRUSTED_FOLDERS_FEATURE, Boolean.TRUE.toString()));
         entries.add(Entry.bool(LsSettingsKeys.ISSUE_VIEW_OPEN_ISSUES,
                 Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true));
         entries.add(Entry.bool(LsSettingsKeys.ISSUE_VIEW_IGNORED_ISSUES,
                 Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false));
         entries.add(Entry.simple(LsSettingsKeys.CLI_RELEASE_CHANNEL, Preferences.RELEASE_CHANNEL, "stable"));
-        entries.add(Entry.simple(LsSettingsKeys.ENABLE_TELEMETRY, Preferences.ENABLE_TELEMETRY,
-                Boolean.FALSE.toString()));
 
-        ENTRIES = java.util.Collections.unmodifiableList(entries);
-    }
+        ENTRIES = Collections.unmodifiableList(entries);
 
-    /** O(1) lookup: lsKey → Entry. Does not include composite entries (severities, risk_score). */
-    public static final Map<String, Entry> BY_LS_KEY;
-
-    static {
+        // Build BY_LS_KEY from ENTRIES plus inbound-only severity entries.
         Map<String, Entry> map = new LinkedHashMap<>();
         for (Entry e : ENTRIES) {
             map.put(e.lsKey, e);
         }
-        BY_LS_KEY = java.util.Collections.unmodifiableMap(map);
+        // Severity filters: inbound-only in this map (outbound uses inline block in LsConfigurationUpdater).
+        map.put(LsSettingsKeys.SEVERITY_FILTER_CRITICAL,
+                Entry.bool(LsSettingsKeys.SEVERITY_FILTER_CRITICAL, Preferences.FILTER_SHOW_CRITICAL, true));
+        map.put(LsSettingsKeys.SEVERITY_FILTER_HIGH,
+                Entry.bool(LsSettingsKeys.SEVERITY_FILTER_HIGH, Preferences.FILTER_SHOW_HIGH, true));
+        map.put(LsSettingsKeys.SEVERITY_FILTER_MEDIUM,
+                Entry.bool(LsSettingsKeys.SEVERITY_FILTER_MEDIUM, Preferences.FILTER_SHOW_MEDIUM, true));
+        map.put(LsSettingsKeys.SEVERITY_FILTER_LOW,
+                Entry.bool(LsSettingsKeys.SEVERITY_FILTER_LOW, Preferences.FILTER_SHOW_LOW, true));
+        BY_LS_KEY = Collections.unmodifiableMap(map);
     }
 
     private LsSettingsRegistry() {

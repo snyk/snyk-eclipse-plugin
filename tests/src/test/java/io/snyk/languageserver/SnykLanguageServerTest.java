@@ -49,7 +49,10 @@ class SnykLanguageServerTest extends LsBaseTest {
         LsSettingsKeys.CLI_PATH, LsSettingsKeys.CLI_BASE_DOWNLOAD_URL,
         LsSettingsKeys.AUTHENTICATION_METHOD,
         LsSettingsKeys.MANAGE_BINARIES_AUTOMATICALLY,
-        LsSettingsKeys.ENABLED_SEVERITIES,
+        LsSettingsKeys.SEVERITY_FILTER_CRITICAL,
+        LsSettingsKeys.SEVERITY_FILTER_HIGH,
+        LsSettingsKeys.SEVERITY_FILTER_MEDIUM,
+        LsSettingsKeys.SEVERITY_FILTER_LOW,
         LsSettingsKeys.ISSUE_VIEW_OPEN_ISSUES, LsSettingsKeys.ISSUE_VIEW_IGNORED_ISSUES
     }) {
       assertTrue(settings.has(field), "settings should contain '" + field + "'");

@@ -242,30 +242,12 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
-	void testBuildConfigurationParam_additionalEnvChangedFlag() {
-		setupPreferenceMock();
-		when(preferenceMock.isExplicitlyChanged(Preferences.ADDITIONAL_ENVIRONMENT)).thenReturn(true);
-
-		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.ADDITIONAL_ENV).getChanged());
-	}
-
-	@Test
 	void testBuildConfigurationParam_sendErrorReportsChangedFlag() {
 		setupPreferenceMock();
 		when(preferenceMock.isExplicitlyChanged(Preferences.SEND_ERROR_REPORTS)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 		assertTrue(param.getSettings().get(LsSettingsKeys.SEND_ERROR_REPORTS).getChanged());
-	}
-
-	@Test
-	void testBuildConfigurationParam_enableTelemetryChangedFlag() {
-		setupPreferenceMock();
-		when(preferenceMock.isExplicitlyChanged(Preferences.ENABLE_TELEMETRY)).thenReturn(true);
-
-		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.ENABLE_TELEMETRY).getChanged());
 	}
 
 	@Test
@@ -340,21 +322,23 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
-	void testBuildConfigurationParam_severityFilterSentAsCompositeSetting() {
+	void testBuildConfigurationParam_severityFilterSentAsIndividualKeys() {
 		setupPreferenceMock();
 		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_SHOW_CRITICAL)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting setting = param.getSettings().get(LsSettingsKeys.ENABLED_SEVERITIES);
-		assertNotNull(setting);
-		assertTrue(setting.getChanged());
+		Map<String, ConfigSetting> settings = param.getSettings();
 
-		@SuppressWarnings("unchecked")
-		Map<String, Boolean> severityMap = (Map<String, Boolean>) setting.getValue();
-		assertEquals(true, severityMap.get("critical"));
-		assertEquals(false, severityMap.get("high"));
-		assertEquals(true, severityMap.get("medium"));
-		assertEquals(false, severityMap.get("low"));
+		// LS expects individual boolean keys, not a composite "enabled_severities" object
+		assertNotNull(settings.get(LsSettingsKeys.SEVERITY_FILTER_CRITICAL));
+		assertNotNull(settings.get(LsSettingsKeys.SEVERITY_FILTER_HIGH));
+		assertNotNull(settings.get(LsSettingsKeys.SEVERITY_FILTER_MEDIUM));
+		assertNotNull(settings.get(LsSettingsKeys.SEVERITY_FILTER_LOW));
+
+		assertEquals(Boolean.TRUE, settings.get(LsSettingsKeys.SEVERITY_FILTER_CRITICAL).getValue());
+		assertEquals(Boolean.FALSE, settings.get(LsSettingsKeys.SEVERITY_FILTER_HIGH).getValue());
+		assertEquals(Boolean.TRUE, settings.get(LsSettingsKeys.SEVERITY_FILTER_MEDIUM).getValue());
+		assertEquals(Boolean.FALSE, settings.get(LsSettingsKeys.SEVERITY_FILTER_LOW).getValue());
 	}
 
 	@Test
@@ -363,8 +347,9 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_SHOW_LOW)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting setting = param.getSettings().get(LsSettingsKeys.ENABLED_SEVERITIES);
-		assertTrue(setting.getChanged());
+		// All 4 severity keys share the anySeverityChanged flag
+		assertTrue(param.getSettings().get(LsSettingsKeys.SEVERITY_FILTER_LOW).getChanged());
+		assertTrue(param.getSettings().get(LsSettingsKeys.SEVERITY_FILTER_CRITICAL).getChanged());
 	}
 
 	@Test
@@ -372,21 +357,18 @@ class LsConfigurationUpdaterTest {
 		setupPreferenceMock();
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting setting = param.getSettings().get(LsSettingsKeys.ENABLED_SEVERITIES);
-		assertNotNull(setting);
-		assertFalse(setting.getChanged());
+		assertFalse(param.getSettings().get(LsSettingsKeys.SEVERITY_FILTER_CRITICAL).getChanged());
+		assertFalse(param.getSettings().get(LsSettingsKeys.SEVERITY_FILTER_HIGH).getChanged());
 	}
 
 	@Test
-	void testBuildConfigurationParam_noIndividualSeverityFilterKeys() {
+	void testBuildConfigurationParam_noCompositeEnabledSeveritiesKey() {
 		setupPreferenceMock();
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 		Map<String, ConfigSetting> settings = param.getSettings();
-		assertFalse(settings.containsKey("severity_filter_critical"));
-		assertFalse(settings.containsKey("severity_filter_high"));
-		assertFalse(settings.containsKey("severity_filter_medium"));
-		assertFalse(settings.containsKey("severity_filter_low"));
+		assertFalse(settings.containsKey("enabled_severities"),
+				"LS has no 'enabled_severities' key; individual severity_filter_* keys required");
 	}
 
 	@Test
@@ -422,7 +404,10 @@ class LsConfigurationUpdaterTest {
 		assertTrue(settings.containsKey("automatic_download"));
 		assertTrue(settings.containsKey("binary_base_url"));
 		assertTrue(settings.containsKey("scan_net_new"));
-		assertTrue(settings.containsKey("enabled_severities"));
+		assertTrue(settings.containsKey("severity_filter_critical"));
+		assertTrue(settings.containsKey("severity_filter_high"));
+		assertTrue(settings.containsKey("severity_filter_medium"));
+		assertTrue(settings.containsKey("severity_filter_low"));
 		assertTrue(settings.containsKey("issue_view_open_issues"));
 	}
 
