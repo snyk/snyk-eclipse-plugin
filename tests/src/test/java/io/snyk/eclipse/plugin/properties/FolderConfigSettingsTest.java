@@ -114,7 +114,7 @@ class FolderConfigSettingsTest {
 	void getPreferredOrgReturnsValue() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"preferred_org": {
 							"value": "my-org"
@@ -137,7 +137,7 @@ class FolderConfigSettingsTest {
 	void getLocalBranchesReturnsValue() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"local_branches": {
 							"value": ["main", "develop", "feature/test"]
@@ -167,7 +167,7 @@ class FolderConfigSettingsTest {
 	void getAdditionalParametersReturnsListValue() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"additional_parameters": {
 							"value": ["--all-projects", "--debug"]
@@ -195,7 +195,7 @@ class FolderConfigSettingsTest {
 	void getAdditionalParametersHandlesStringValue() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"additional_parameters": {
 							"value": "--all-projects"
@@ -215,7 +215,7 @@ class FolderConfigSettingsTest {
 	void getReferenceFolderPathReturnsValue() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"reference_folder_path": {
 							"value": "/ref/path"
@@ -251,7 +251,7 @@ class FolderConfigSettingsTest {
 	void isConfiguredReturnsTrueForEmptySettingsConfig() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {}
 				}
 				""";
@@ -315,7 +315,7 @@ class FolderConfigSettingsTest {
 	void isOrgSetByUserReturnsTrueWhenSet() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"org_set_by_user": {
 							"value": true
@@ -333,7 +333,7 @@ class FolderConfigSettingsTest {
 	void isOrgSetByUserReturnsFalseWhenExplicitlyFalse() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"org_set_by_user": {
 							"value": false
@@ -351,7 +351,7 @@ class FolderConfigSettingsTest {
 	void getAutoDeterminedOrgReturnsValue() {
 		String json = """
 				{
-					"folder_path": "/project",
+					"folderPath": "/project",
 					"settings": {
 						"auto_determined_org": {
 							"value": "determined-org"
@@ -421,17 +421,66 @@ class FolderConfigSettingsTest {
 		assertTrue(settings.getAll().isEmpty());
 	}
 
+	@Test
+	void addAllPreservesUserOverriddenKeys() {
+		// User sets base_branch with changed=true (override in flight)
+		LspFolderConfig userOverridden = createFolderConfig("/project", "user-branch")
+				.withSetting(LsFolderSettingsKeys.BASE_BRANCH, "user-branch", true);
+		settings.addFolderConfig(userOverridden);
+
+		// LS sends new config for same folder with a different base_branch
+		LspFolderConfig incoming = createFolderConfig("/project", "ls-branch");
+		settings.addAll(List.of(incoming));
+
+		// User override must survive
+		assertEquals("user-branch", settings.getBaseBranch("/project"));
+	}
+
+	@Test
+	void addAllDoesNotPreserveUnchangedKeys() {
+		// Existing key has changed=false (not a user override)
+		LspFolderConfig existing = createFolderConfig("/project", "old-branch");
+		settings.addFolderConfig(existing);
+
+		// LS sends new value
+		LspFolderConfig incoming = createFolderConfig("/project", "new-branch");
+		settings.addAll(List.of(incoming));
+
+		// Incoming wins because changed=false
+		assertEquals("new-branch", settings.getBaseBranch("/project"));
+	}
+
+	@Test
+	void addAllRemovesFoldersNoLongerReportedByLs() {
+		settings.addFolderConfig(createFolderConfig("/project1", "main"));
+		settings.addFolderConfig(createFolderConfig("/project2", "develop"));
+
+		// LS only reports project2 now
+		settings.addAll(List.of(createFolderConfig("/project2", "develop")));
+
+		assertEquals("", settings.getBaseBranch("/project1"));
+		assertEquals("develop", settings.getBaseBranch("/project2"));
+	}
+
+	@Test
+	void addAllAddsNewFolderNotPreviouslyKnown() {
+		LspFolderConfig newFolder = createFolderConfig("/new-project", "feature");
+		settings.addAll(List.of(newFolder));
+
+		assertEquals("feature", settings.getBaseBranch("/new-project"));
+	}
+
 	private LspFolderConfig createFolderConfig(String path, String baseBranch) {
 		String json = String.format("""
 				{
-					"folder_path": "%s",
+					"folderPath": "%s",
 					"settings": {
 						"base_branch": {
 							"value": "%s",
 							"changed": false,
 							"source": "cli",
-							"origin_scope": "folder",
-							"is_locked": false
+							"originScope": "folder",
+							"isLocked": false
 						}
 					}
 				}

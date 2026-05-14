@@ -3,8 +3,10 @@ package io.snyk.eclipse.plugin.properties;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -39,14 +41,49 @@ public class FolderConfigSettings {
 	}
 
 	public synchronized void addAll(List<LspFolderConfig> folderConfigs) {
-		configs.clear();
-		for (LspFolderConfig config : folderConfigs) {
-			try {
-				addFolderConfig(config);
-			} catch (IllegalArgumentException e) {
-				SnykLogger.logError(e);
+		// Collect paths present in the incoming list; remove folders no longer reported by LS.
+		Set<String> incomingKeys = new HashSet<>();
+		for (LspFolderConfig incoming : folderConfigs) {
+			if (incoming.getFolderPath() == null) {
+				continue;
+			}
+			String key = normalizePath(incoming.getFolderPath());
+			incomingKeys.add(key);
+			LspFolderConfig existing = configs.get(key);
+			if (existing == null) {
+				configs.put(key, incoming);
+			} else {
+				configs.put(key, mergeConfigs(existing, incoming));
 			}
 		}
+		configs.keySet().retainAll(incomingKeys);
+	}
+
+	/**
+	 * Merges incoming folder config into existing. Incoming wins for every key
+	 * except keys where existing has changed=true (user override in flight).
+	 */
+	private LspFolderConfig mergeConfigs(LspFolderConfig existing, LspFolderConfig incoming) {
+		Map<String, ConfigSetting> existingSettings = existing.getSettings();
+		Map<String, ConfigSetting> incomingSettings = incoming.getSettings();
+
+		if (existingSettings == null || existingSettings.isEmpty()) {
+			return incoming;
+		}
+		if (incomingSettings == null || incomingSettings.isEmpty()) {
+			return existing;
+		}
+
+		// Start from incoming and overlay any user-overridden keys from existing.
+		LspFolderConfig merged = incoming;
+		for (Map.Entry<String, ConfigSetting> entry : existingSettings.entrySet()) {
+			ConfigSetting existingSetting = entry.getValue();
+			if (existingSetting != null && Boolean.TRUE.equals(existingSetting.getChanged())) {
+				// Keep existing value: user changed this key, not yet acknowledged by LS.
+				merged = merged.withSetting(entry.getKey(), existingSetting.getValue(), true);
+			}
+		}
+		return merged;
 	}
 
 	public synchronized LspFolderConfig getFolderConfig(String folderPath) {
@@ -64,7 +101,7 @@ public class FolderConfigSettings {
 	private LspFolderConfig createEmptyConfig(String folderPath) {
 		com.google.gson.JsonObject jsonObj = new com.google.gson.JsonObject();
 		if (folderPath != null) {
-			jsonObj.addProperty("folder_path", folderPath);
+			jsonObj.addProperty("folderPath", folderPath);
 		}
 		jsonObj.add("settings", new com.google.gson.JsonObject());
 		return new com.google.gson.Gson().fromJson(jsonObj, LspFolderConfig.class);
