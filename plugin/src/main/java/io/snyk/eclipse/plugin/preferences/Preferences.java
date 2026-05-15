@@ -145,7 +145,7 @@ public class Preferences {
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
 		insecureStore.setDefault(RELEASE_CHANNEL, "stable");
 		insecureStore.setDefault(USE_LS_HTML_CONFIG_DIALOG, TRUE);
-		insecureStore.setDefault(USE_HTML_TREE_VIEW, TRUE);
+		insecureStore.setDefault(USE_HTML_TREE_VIEW, FALSE);
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 		insecureStore.setDefault(ENDPOINT_KEY, DEFAULT_ENDPOINT);
 		insecureStore.setDefault(ORGANIZATION_KEY, "");
