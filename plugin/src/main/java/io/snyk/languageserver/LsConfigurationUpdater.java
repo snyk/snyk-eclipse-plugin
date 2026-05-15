@@ -31,7 +31,7 @@ public class LsConfigurationUpdater {
 
 		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
 			if (entry.prefKey == null) {
-				settings.put(entry.lsKey.key, ConfigSetting.outbound(entry.outboundDefault, entry.alwaysChanged));
+				settings.put(entry.lsKey.key, ConfigSetting.outbound(entry.outboundDefault, entry.isAlwaysChanged));
 				continue;
 			}
 
@@ -44,7 +44,7 @@ public class LsConfigurationUpdater {
 
 			Object lsValue = entry.outboundSerializer.apply(rawValue);
 
-			boolean changed = entry.alwaysChanged || preferences.isExplicitlyChanged(entry.prefKey);
+			boolean changed = entry.isAlwaysChanged || preferences.isExplicitlyChanged(entry.prefKey);
 			for (String additionalKey : entry.additionalChangedPrefKeys) {
 				if (preferences.isExplicitlyChanged(additionalKey)) {
 					changed = true;

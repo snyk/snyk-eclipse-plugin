@@ -28,8 +28,7 @@ public final class LsSettingsRegistry {
         /** Converts LS value (Object) → pref string (inbound). null for hardcoded entries. */
         public final Function<Object, String> inboundDeserializer;
         /** Always sent with changed=true — value treated as user-set regardless of tracking. */
-        @SuppressWarnings("PMD.AvoidFieldNameMatchingMethodName")
-        public final boolean alwaysChanged;
+        public final boolean isAlwaysChanged;
         /** Included when the fallback HTML settings form is active. */
         public final boolean useInFallbackForm;
         /**
@@ -55,7 +54,7 @@ public final class LsSettingsRegistry {
             this.outboundDefault = outboundDefault;
             this.outboundSerializer = outboundSerializer;
             this.inboundDeserializer = inboundDeserializer;
-            this.alwaysChanged = alwaysChanged;
+            this.isAlwaysChanged = alwaysChanged;
             this.useInFallbackForm = useInFallbackForm;
             this.additionalChangedPrefKeys = additionalChangedPrefKeys;
             this.formDeserializer = formDeserializer;
