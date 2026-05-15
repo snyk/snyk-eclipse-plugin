@@ -454,9 +454,14 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_HIGH, true)).thenReturn(false);
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_MEDIUM, true)).thenReturn(true);
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_SHOW_LOW, true)).thenReturn(false);
+		when(preferenceMock.getPref(Preferences.FILTER_SHOW_CRITICAL, "true")).thenReturn("true");
+		when(preferenceMock.getPref(Preferences.FILTER_SHOW_HIGH, "true")).thenReturn("false");
+		when(preferenceMock.getPref(Preferences.FILTER_SHOW_MEDIUM, "true")).thenReturn("true");
+		when(preferenceMock.getPref(Preferences.FILTER_SHOW_LOW, "true")).thenReturn("false");
 
 		// Issue view options mocks
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true)).thenReturn(true);
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false)).thenReturn(false);
+		when(preferenceMock.getPref(Preferences.SCANNING_MODE_AUTOMATIC, "false")).thenReturn("true");
 	}
 }

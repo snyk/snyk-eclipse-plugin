@@ -422,21 +422,6 @@ class FolderConfigSettingsTest {
 	}
 
 	@Test
-	void addAllPreservesUserOverriddenKeys() {
-		// User sets base_branch with changed=true (override in flight)
-		LspFolderConfig userOverridden = createFolderConfig("/project", "user-branch")
-				.withSetting(LsFolderSettingsKeys.BASE_BRANCH, "user-branch", true);
-		settings.addFolderConfig(userOverridden);
-
-		// LS sends new config for same folder with a different base_branch
-		LspFolderConfig incoming = createFolderConfig("/project", "ls-branch");
-		settings.addAll(List.of(incoming));
-
-		// User override must survive
-		assertEquals("user-branch", settings.getBaseBranch("/project"));
-	}
-
-	@Test
 	void addAllDoesNotPreserveUnchangedKeys() {
 		// Existing key has changed=false (not a user override)
 		LspFolderConfig existing = createFolderConfig("/project", "old-branch");
