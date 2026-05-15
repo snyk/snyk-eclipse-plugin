@@ -30,22 +30,22 @@ public class LsConfigurationUpdater {
 		Preferences preferences = Preferences.getInstance();
 		Map<String, ConfigSetting> settings = new LinkedHashMap<>();
 
-		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES) {
-			if (entry.alwaysFixed) {
-				settings.put(entry.lsKey, ConfigSetting.outbound(entry.outboundDefault, false));
+		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
+			if (entry.prefKey == null) {
+				settings.put(entry.lsKey.key, ConfigSetting.outbound(entry.outboundDefault, entry.alwaysChanged));
 				continue;
 			}
 
 			String rawValue;
-			if (LsSettingsKeys.CLI_PATH.equals(entry.lsKey)) {
+			if (LsKey.CLI_PATH == entry.lsKey) {
 				rawValue = preferences.getCliPath();
 			} else {
 				rawValue = preferences.getPref(entry.prefKey, entry.outboundDefault);
 			}
 
 			Object lsValue = entry.outboundSerializer.apply(rawValue);
-			boolean changed = preferences.isExplicitlyChanged(entry.prefKey);
-			settings.put(entry.lsKey, ConfigSetting.outbound(lsValue, changed));
+			boolean changed = entry.alwaysChanged || preferences.isExplicitlyChanged(entry.prefKey);
+			settings.put(entry.lsKey.key, ConfigSetting.outbound(lsValue, changed));
 		}
 
 		// risk_score_threshold — int or null (null = no threshold)
@@ -58,7 +58,7 @@ public class LsConfigurationUpdater {
 			}
 		} catch (NumberFormatException e) { // NOPMD - invalid values default to null (no threshold)
 		}
-		settings.put(LsSettingsKeys.RISK_SCORE_THRESHOLD, ConfigSetting.outbound(riskScoreThreshold,
+		settings.put(LsKey.RISK_SCORE_THRESHOLD.key, ConfigSetting.outbound(riskScoreThreshold,
 				preferences.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD)));
 
 		// Severity filters — 4 individual boolean keys (LS has no composite "enabled_severities" key)
@@ -66,13 +66,13 @@ public class LsConfigurationUpdater {
 				|| preferences.isExplicitlyChanged(Preferences.FILTER_SHOW_HIGH)
 				|| preferences.isExplicitlyChanged(Preferences.FILTER_SHOW_MEDIUM)
 				|| preferences.isExplicitlyChanged(Preferences.FILTER_SHOW_LOW);
-		settings.put(LsSettingsKeys.SEVERITY_FILTER_CRITICAL, ConfigSetting.outbound(
+		settings.put(LsKey.SEVERITY_FILTER_CRITICAL.key, ConfigSetting.outbound(
 				preferences.getBooleanPref(Preferences.FILTER_SHOW_CRITICAL, true), anySeverityChanged));
-		settings.put(LsSettingsKeys.SEVERITY_FILTER_HIGH, ConfigSetting.outbound(
+		settings.put(LsKey.SEVERITY_FILTER_HIGH.key, ConfigSetting.outbound(
 				preferences.getBooleanPref(Preferences.FILTER_SHOW_HIGH, true), anySeverityChanged));
-		settings.put(LsSettingsKeys.SEVERITY_FILTER_MEDIUM, ConfigSetting.outbound(
+		settings.put(LsKey.SEVERITY_FILTER_MEDIUM.key, ConfigSetting.outbound(
 				preferences.getBooleanPref(Preferences.FILTER_SHOW_MEDIUM, true), anySeverityChanged));
-		settings.put(LsSettingsKeys.SEVERITY_FILTER_LOW, ConfigSetting.outbound(
+		settings.put(LsKey.SEVERITY_FILTER_LOW.key, ConfigSetting.outbound(
 				preferences.getBooleanPref(Preferences.FILTER_SHOW_LOW, true), anySeverityChanged));
 
 		// trusted_folders in settings map (for didChangeConfiguration; also set top-level for InitializationOptions)
@@ -81,7 +81,7 @@ public class LsConfigurationUpdater {
 		if (trustedFoldersString != null && !trustedFoldersString.isBlank()) {
 			trustedFolders = trustedFoldersString.split(File.pathSeparator);
 		}
-		settings.put(LsSettingsKeys.TRUSTED_FOLDERS, ConfigSetting.outbound(trustedFolders, true));
+		settings.put(LsKey.TRUSTED_FOLDERS.key, ConfigSetting.outbound(trustedFolders, true));
 
 		var folderConfigs = FolderConfigSettings.getInstance().getAll();
 
@@ -97,7 +97,6 @@ public class LsConfigurationUpdater {
 		param.setOsPlatform(org.apache.commons.lang3.SystemUtils.OS_NAME);
 		param.setPath(preferences.getPref(Preferences.PATH_KEY, ""));
 		param.setDeviceId(preferences.getPref(Preferences.DEVICE_ID, ""));
-		// also set top-level for InitializationOptions path
 		param.setTrustedFolders(trustedFolders);
 
 		return param;

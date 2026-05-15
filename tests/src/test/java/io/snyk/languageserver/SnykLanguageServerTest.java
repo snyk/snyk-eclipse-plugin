@@ -15,6 +15,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.languageserver.LsKey;
 
 class SnykLanguageServerTest extends LsBaseTest {
 
@@ -37,18 +38,18 @@ class SnykLanguageServerTest extends LsBaseTest {
 
     JsonObject settings = root.getAsJsonObject("settings");
     for (var field : new String[] {
-        LsSettingsKeys.ENDPOINT, LsSettingsKeys.ORGANIZATION, LsSettingsKeys.TOKEN,
-        LsSettingsKeys.ACTIVATE_SNYK_CODE, LsSettingsKeys.ACTIVATE_SNYK_OPEN_SOURCE,
-        LsSettingsKeys.ACTIVATE_SNYK_IAC, LsSettingsKeys.INSECURE,
-        LsSettingsKeys.ADDITIONAL_PARAMS, LsSettingsKeys.SCANNING_MODE,
-        LsSettingsKeys.CLI_PATH, LsSettingsKeys.CLI_BASE_DOWNLOAD_URL,
-        LsSettingsKeys.AUTHENTICATION_METHOD,
-        LsSettingsKeys.MANAGE_BINARIES_AUTOMATICALLY,
-        LsSettingsKeys.SEVERITY_FILTER_CRITICAL,
-        LsSettingsKeys.SEVERITY_FILTER_HIGH,
-        LsSettingsKeys.SEVERITY_FILTER_MEDIUM,
-        LsSettingsKeys.SEVERITY_FILTER_LOW,
-        LsSettingsKeys.ISSUE_VIEW_OPEN_ISSUES, LsSettingsKeys.ISSUE_VIEW_IGNORED_ISSUES
+        LsKey.ENDPOINT.key, LsKey.ORGANIZATION.key, LsKey.TOKEN.key,
+        LsKey.ACTIVATE_SNYK_CODE.key, LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key,
+        LsKey.ACTIVATE_SNYK_IAC.key, LsKey.INSECURE.key,
+        LsKey.ADDITIONAL_PARAMS.key, LsKey.SCANNING_MODE.key,
+        LsKey.CLI_PATH.key, LsKey.CLI_BASE_DOWNLOAD_URL.key,
+        LsKey.AUTHENTICATION_METHOD.key,
+        LsKey.MANAGE_BINARIES_AUTOMATICALLY.key,
+        LsKey.SEVERITY_FILTER_CRITICAL.key,
+        LsKey.SEVERITY_FILTER_HIGH.key,
+        LsKey.SEVERITY_FILTER_MEDIUM.key,
+        LsKey.SEVERITY_FILTER_LOW.key,
+        LsKey.ISSUE_VIEW_OPEN_ISSUES.key, LsKey.ISSUE_VIEW_IGNORED_ISSUES.key
     }) {
       assertTrue(settings.has(field), "settings should contain '" + field + "'");
       assertTrue(settings.getAsJsonObject(field).has("value"),

@@ -51,11 +51,11 @@ class LsConfigurationUpdaterTest {
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 		Map<String, ConfigSetting> settings = param.getSettings();
 
-		assertNotNull(settings.get(LsSettingsKeys.ENDPOINT));
-		assertEquals("endpoint", settings.get(LsSettingsKeys.ENDPOINT).getValue());
+		assertNotNull(settings.get(LsKey.ENDPOINT.key));
+		assertEquals("endpoint", settings.get(LsKey.ENDPOINT.key).getValue());
 
-		assertNotNull(settings.get(LsSettingsKeys.ORGANIZATION));
-		assertEquals("organization", settings.get(LsSettingsKeys.ORGANIZATION).getValue());
+		assertNotNull(settings.get(LsKey.ORGANIZATION.key));
+		assertEquals("organization", settings.get(LsKey.ORGANIZATION.key).getValue());
 	}
 
 	@Test
@@ -67,30 +67,28 @@ class LsConfigurationUpdaterTest {
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 		Map<String, ConfigSetting> settings = param.getSettings();
 
-		assertTrue(settings.get(LsSettingsKeys.ENDPOINT).getChanged());
-		assertFalse(settings.get(LsSettingsKeys.ORGANIZATION).getChanged());
+		assertTrue(settings.get(LsKey.ENDPOINT.key).getChanged());
+		assertFalse(settings.get(LsKey.ORGANIZATION.key).getChanged());
 	}
 
 	@Test
 	void testBuildConfigurationParam_tokenChangedFlagFromExplicitChanges() {
 		setupPreferenceMock();
-		when(preferenceMock.isExplicitlyChanged(Preferences.AUTH_TOKEN_KEY)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting tokenSetting = param.getSettings().get(LsSettingsKeys.TOKEN);
+		ConfigSetting tokenSetting = param.getSettings().get(LsKey.TOKEN.key);
 
 		assertTrue(tokenSetting.getChanged());
 	}
 
 	@Test
-	void testBuildConfigurationParam_tokenUnchangedWhenNotExplicitlyChanged() {
+	void testBuildConfigurationParam_tokenAlwaysChanged() {
 		setupPreferenceMock();
-		when(preferenceMock.isExplicitlyChanged(Preferences.AUTH_TOKEN_KEY)).thenReturn(false);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting tokenSetting = param.getSettings().get(LsSettingsKeys.TOKEN);
+		ConfigSetting tokenSetting = param.getSettings().get(LsKey.TOKEN.key);
 
-		assertFalse(tokenSetting.getChanged());
+		assertTrue(tokenSetting.getChanged());
 	}
 
 	@Test
@@ -112,15 +110,15 @@ class LsConfigurationUpdaterTest {
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 		Map<String, ConfigSetting> settings = param.getSettings();
 
-		assertTrue(settings.containsKey(LsSettingsKeys.ENDPOINT));
-		assertTrue(settings.containsKey(LsSettingsKeys.ORGANIZATION));
-		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_CODE));
-		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_OPEN_SOURCE));
-		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_IAC));
-		assertTrue(settings.containsKey(LsSettingsKeys.ACTIVATE_SNYK_SECRETS));
-		assertTrue(settings.containsKey(LsSettingsKeys.INSECURE));
-		assertTrue(settings.containsKey(LsSettingsKeys.ADDITIONAL_PARAMS));
-		assertTrue(settings.containsKey(LsSettingsKeys.SCANNING_MODE));
+		assertTrue(settings.containsKey(LsKey.ENDPOINT.key));
+		assertTrue(settings.containsKey(LsKey.ORGANIZATION.key));
+		assertTrue(settings.containsKey(LsKey.ACTIVATE_SNYK_CODE.key));
+		assertTrue(settings.containsKey(LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key));
+		assertTrue(settings.containsKey(LsKey.ACTIVATE_SNYK_IAC.key));
+		assertTrue(settings.containsKey(LsKey.ACTIVATE_SNYK_SECRETS.key));
+		assertTrue(settings.containsKey(LsKey.INSECURE.key));
+		assertTrue(settings.containsKey(LsKey.ADDITIONAL_PARAMS.key));
+		assertTrue(settings.containsKey(LsKey.SCANNING_MODE.key));
 	}
 
 	@Test
@@ -130,7 +128,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting endpointSetting = param.getSettings().get(LsSettingsKeys.ENDPOINT);
+		ConfigSetting endpointSetting = param.getSettings().get(LsKey.ENDPOINT.key);
 
 		assertNull(endpointSetting.getValue());
 		assertTrue(endpointSetting.getChanged());
@@ -142,7 +140,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(false);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting endpointSetting = param.getSettings().get(LsSettingsKeys.ENDPOINT);
+		ConfigSetting endpointSetting = param.getSettings().get(LsKey.ENDPOINT.key);
 
 		assertNotNull(endpointSetting.getValue());
 		assertFalse(endpointSetting.getChanged());
@@ -196,10 +194,10 @@ class LsConfigurationUpdaterTest {
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 
 		// Machine-scope settings with changed=true
-		assertTrue(param.getSettings().get(LsSettingsKeys.ENDPOINT).getChanged());
-		assertEquals("https://custom.api.snyk.io", param.getSettings().get(LsSettingsKeys.ENDPOINT).getValue());
-		assertTrue(param.getSettings().get(LsSettingsKeys.ORGANIZATION).getChanged());
-		assertEquals("my-org", param.getSettings().get(LsSettingsKeys.ORGANIZATION).getValue());
+		assertTrue(param.getSettings().get(LsKey.ENDPOINT.key).getChanged());
+		assertEquals("https://custom.api.snyk.io", param.getSettings().get(LsKey.ENDPOINT.key).getValue());
+		assertTrue(param.getSettings().get(LsKey.ORGANIZATION.key).getChanged());
+		assertEquals("my-org", param.getSettings().get(LsKey.ORGANIZATION.key).getValue());
 
 		// Folder config with user override
 		assertEquals(1, param.getFolderConfigs().size());
@@ -211,11 +209,11 @@ class LsConfigurationUpdaterTest {
 		assertEquals("folder", baseBranch.getOriginScope());
 
 		// Unchanged settings have changed=false
-		assertFalse(param.getSettings().get(LsSettingsKeys.INSECURE).getChanged());
+		assertFalse(param.getSettings().get(LsKey.INSECURE.key).getChanged());
 
 		// No lock metadata on machine-scope settings
-		assertNull(param.getSettings().get(LsSettingsKeys.ENDPOINT).getSource());
-		assertNull(param.getSettings().get(LsSettingsKeys.ENDPOINT).getIsLocked());
+		assertNull(param.getSettings().get(LsKey.ENDPOINT.key).getSource());
+		assertNull(param.getSettings().get(LsKey.ENDPOINT.key).getIsLocked());
 
 		// Metadata fields are at the top level, not in settings map
 		assertNotNull(param.getIntegrationName());
@@ -235,7 +233,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_SECRETS)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting setting = param.getSettings().get(LsSettingsKeys.ACTIVATE_SNYK_SECRETS);
+		ConfigSetting setting = param.getSettings().get(LsKey.ACTIVATE_SNYK_SECRETS.key);
 
 		assertNotNull(setting);
 		assertTrue(setting.getChanged());
@@ -247,7 +245,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.SEND_ERROR_REPORTS)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.SEND_ERROR_REPORTS).getChanged());
+		assertTrue(param.getSettings().get(LsKey.SEND_ERROR_REPORTS.key).getChanged());
 	}
 
 	@Test
@@ -256,7 +254,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.MANAGE_BINARIES_AUTOMATICALLY)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.MANAGE_BINARIES_AUTOMATICALLY).getChanged());
+		assertTrue(param.getSettings().get(LsKey.MANAGE_BINARIES_AUTOMATICALLY.key).getChanged());
 	}
 
 	@Test
@@ -265,7 +263,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.CLI_PATH)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.CLI_PATH).getChanged());
+		assertTrue(param.getSettings().get(LsKey.CLI_PATH.key).getChanged());
 	}
 
 	@Test
@@ -274,7 +272,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.CLI_BASE_URL)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.CLI_BASE_DOWNLOAD_URL).getChanged());
+		assertTrue(param.getSettings().get(LsKey.CLI_BASE_DOWNLOAD_URL.key).getChanged());
 	}
 
 	@Test
@@ -283,7 +281,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.AUTHENTICATION_METHOD)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.AUTHENTICATION_METHOD).getChanged());
+		assertTrue(param.getSettings().get(LsKey.AUTHENTICATION_METHOD.key).getChanged());
 	}
 
 	@Test
@@ -292,7 +290,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.ENABLE_DELTA)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.ENABLE_DELTA_FINDINGS).getChanged());
+		assertTrue(param.getSettings().get(LsKey.ENABLE_DELTA_FINDINGS.key).getChanged());
 	}
 
 	@Test
@@ -301,7 +299,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.RISK_SCORE_THRESHOLD).getChanged());
+		assertTrue(param.getSettings().get(LsKey.RISK_SCORE_THRESHOLD.key).getChanged());
 	}
 
 	@Test
@@ -310,7 +308,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.isExplicitlyChanged(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertTrue(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_OPEN_ISSUES).getChanged());
+		assertTrue(param.getSettings().get(LsKey.ISSUE_VIEW_OPEN_ISSUES.key).getChanged());
 	}
 
 	@Test
@@ -318,7 +316,7 @@ class LsConfigurationUpdaterTest {
 		setupPreferenceMock();
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertFalse(param.getSettings().get(LsSettingsKeys.ISSUE_VIEW_IGNORED_ISSUES).getChanged());
+		assertFalse(param.getSettings().get(LsKey.ISSUE_VIEW_IGNORED_ISSUES.key).getChanged());
 	}
 
 	@Test
@@ -330,15 +328,15 @@ class LsConfigurationUpdaterTest {
 		Map<String, ConfigSetting> settings = param.getSettings();
 
 		// LS expects individual boolean keys, not a composite "enabled_severities" object
-		assertNotNull(settings.get(LsSettingsKeys.SEVERITY_FILTER_CRITICAL));
-		assertNotNull(settings.get(LsSettingsKeys.SEVERITY_FILTER_HIGH));
-		assertNotNull(settings.get(LsSettingsKeys.SEVERITY_FILTER_MEDIUM));
-		assertNotNull(settings.get(LsSettingsKeys.SEVERITY_FILTER_LOW));
+		assertNotNull(settings.get(LsKey.SEVERITY_FILTER_CRITICAL.key));
+		assertNotNull(settings.get(LsKey.SEVERITY_FILTER_HIGH.key));
+		assertNotNull(settings.get(LsKey.SEVERITY_FILTER_MEDIUM.key));
+		assertNotNull(settings.get(LsKey.SEVERITY_FILTER_LOW.key));
 
-		assertEquals(Boolean.TRUE, settings.get(LsSettingsKeys.SEVERITY_FILTER_CRITICAL).getValue());
-		assertEquals(Boolean.FALSE, settings.get(LsSettingsKeys.SEVERITY_FILTER_HIGH).getValue());
-		assertEquals(Boolean.TRUE, settings.get(LsSettingsKeys.SEVERITY_FILTER_MEDIUM).getValue());
-		assertEquals(Boolean.FALSE, settings.get(LsSettingsKeys.SEVERITY_FILTER_LOW).getValue());
+		assertEquals(Boolean.TRUE, settings.get(LsKey.SEVERITY_FILTER_CRITICAL.key).getValue());
+		assertEquals(Boolean.FALSE, settings.get(LsKey.SEVERITY_FILTER_HIGH.key).getValue());
+		assertEquals(Boolean.TRUE, settings.get(LsKey.SEVERITY_FILTER_MEDIUM.key).getValue());
+		assertEquals(Boolean.FALSE, settings.get(LsKey.SEVERITY_FILTER_LOW.key).getValue());
 	}
 
 	@Test
@@ -348,8 +346,8 @@ class LsConfigurationUpdaterTest {
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 		// All 4 severity keys share the anySeverityChanged flag
-		assertTrue(param.getSettings().get(LsSettingsKeys.SEVERITY_FILTER_LOW).getChanged());
-		assertTrue(param.getSettings().get(LsSettingsKeys.SEVERITY_FILTER_CRITICAL).getChanged());
+		assertTrue(param.getSettings().get(LsKey.SEVERITY_FILTER_LOW.key).getChanged());
+		assertTrue(param.getSettings().get(LsKey.SEVERITY_FILTER_CRITICAL.key).getChanged());
 	}
 
 	@Test
@@ -357,8 +355,8 @@ class LsConfigurationUpdaterTest {
 		setupPreferenceMock();
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		assertFalse(param.getSettings().get(LsSettingsKeys.SEVERITY_FILTER_CRITICAL).getChanged());
-		assertFalse(param.getSettings().get(LsSettingsKeys.SEVERITY_FILTER_HIGH).getChanged());
+		assertFalse(param.getSettings().get(LsKey.SEVERITY_FILTER_CRITICAL.key).getChanged());
+		assertFalse(param.getSettings().get(LsKey.SEVERITY_FILTER_HIGH.key).getChanged());
 	}
 
 	@Test

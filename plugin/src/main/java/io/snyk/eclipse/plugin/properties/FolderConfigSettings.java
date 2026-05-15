@@ -99,12 +99,10 @@ public class FolderConfigSettings {
 	}
 
 	private LspFolderConfig createEmptyConfig(String folderPath) {
-		com.google.gson.JsonObject jsonObj = new com.google.gson.JsonObject();
-		if (folderPath != null) {
-			jsonObj.addProperty("folderPath", folderPath);
-		}
-		jsonObj.add("settings", new com.google.gson.JsonObject());
-		return new com.google.gson.Gson().fromJson(jsonObj, LspFolderConfig.class);
+		LspFolderConfig config = new LspFolderConfig();
+		config.setFolderPath(folderPath);
+		config.setSettings(new java.util.HashMap<>());
+		return config;
 	}
 
 	public synchronized List<LspFolderConfig> getAll() {

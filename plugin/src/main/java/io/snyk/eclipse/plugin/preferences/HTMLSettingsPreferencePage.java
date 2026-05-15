@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.preferences;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
@@ -8,6 +9,9 @@ import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.languageserver.LsFolderSettingsKeys;
+import io.snyk.languageserver.LsKey;
+import io.snyk.languageserver.LsSettingsRegistry;
+import io.snyk.languageserver.LsSettingsRegistry.Entry;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
 import java.io.File;
@@ -15,8 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
@@ -169,116 +173,156 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     }
   }
 
+  // LS keys always saved regardless of fallback/full form (CLI-related fields).
+  private static final Set<LsKey> FALLBACK_FORM_KEYS = Set.of(
+      LsKey.CLI_PATH,
+      LsKey.MANAGE_BINARIES_AUTOMATICALLY,
+      LsKey.CLI_BASE_DOWNLOAD_URL,
+      LsKey.CLI_RELEASE_CHANNEL,
+      LsKey.INSECURE
+  );
+
   private void parseAndSaveConfig(String jsonString) {
     try {
-      IdeConfigData config = objectMapper.readValue(jsonString, IdeConfigData.class);
+      JsonNode root = objectMapper.readTree(jsonString);
       Preferences prefs = Preferences.getInstance();
 
-      boolean isFallback = Boolean.TRUE.equals(config.isFallbackForm());
+      JsonNode fallbackNode = root.get("isFallbackForm");
+      boolean isFallback = fallbackNode != null && fallbackNode.booleanValue();
 
-      // CLI Settings - always persist for both fallback and full forms
-      applyFormValue(prefs, Preferences.CLI_PATH, config.cliPath());
-      applyFormValue(prefs, Preferences.MANAGE_BINARIES_AUTOMATICALLY, config.manageBinariesAutomatically());
-      applyFormValue(prefs, Preferences.CLI_BASE_URL, config.cliBaseDownloadURL());
-      applyFormValue(prefs, Preferences.RELEASE_CHANNEL, config.cliReleaseChannel());
-      applyFormValue(prefs, Preferences.INSECURE_KEY, config.insecure());
+      // Registry-driven loop over all outbound entries.
+      for (Entry entry : LsSettingsRegistry.ENTRIES.values()) {
+        // Skip hardcoded entries with no pref backing.
+        if (entry.prefKey == null) {
+          continue;
+        }
+        // Skip non-fallback fields when processing the fallback form.
+        if (isFallback && !FALLBACK_FORM_KEYS.contains(entry.lsKey)) {
+          continue;
+        }
 
-      // Only persist non-CLI fields if not fallback form
+        // Special case: scan_automatic — form sends "auto"/"manual", pref stores boolean string.
+        if (LsKey.SCANNING_MODE == entry.lsKey) {
+          JsonNode n = root.get(entry.lsKey.key);
+          if (n == null || n.isNull()) {
+            prefs.clearExplicitlyChanged(entry.prefKey);
+          } else {
+            boolean isAutomatic = "auto".equals(n.asText());
+            prefs.storeAndTrackChange(entry.prefKey, String.valueOf(isAutomatic));
+          }
+          continue;
+        }
+
+        JsonNode n = root.get(entry.lsKey.key);
+        applyFormValue(prefs, entry.prefKey, n);
+      }
+
+      // Fields not in ENTRIES — only applied for the full form.
       if (!isFallback) {
-        // Scan Settings
-        applyFormValue(prefs, Preferences.ACTIVATE_SNYK_OPEN_SOURCE, config.activateSnykOpenSource());
-        applyFormValue(prefs, Preferences.ACTIVATE_SNYK_CODE_SECURITY, config.activateSnykCode());
-        applyFormValue(prefs, Preferences.ACTIVATE_SNYK_IAC, config.activateSnykIac());
+        // Severity filters (inbound-only in BY_LS_KEY, not in ENTRIES).
+        applyFormValue(prefs, Preferences.FILTER_SHOW_CRITICAL,
+            root.get(LsKey.SEVERITY_FILTER_CRITICAL.key));
+        applyFormValue(prefs, Preferences.FILTER_SHOW_HIGH,
+            root.get(LsKey.SEVERITY_FILTER_HIGH.key));
+        applyFormValue(prefs, Preferences.FILTER_SHOW_MEDIUM,
+            root.get(LsKey.SEVERITY_FILTER_MEDIUM.key));
+        applyFormValue(prefs, Preferences.FILTER_SHOW_LOW,
+            root.get(LsKey.SEVERITY_FILTER_LOW.key));
 
-        if (config.scanningMode() != null) {
-          boolean isAutomatic = "auto".equals(config.scanningMode());
-          prefs.storeAndTrackChange(Preferences.SCANNING_MODE_AUTOMATIC, String.valueOf(isAutomatic));
+        // risk_score_threshold — integer or null.
+        JsonNode riskNode = root.get(LsKey.RISK_SCORE_THRESHOLD.key);
+        if (riskNode == null || riskNode.isNull()) {
+          prefs.clearExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD);
         } else {
-          prefs.clearExplicitlyChanged(Preferences.SCANNING_MODE_AUTOMATIC);
+          prefs.storeAndTrackChange(Preferences.RISK_SCORE_THRESHOLD,
+              String.valueOf(riskNode.asInt()));
         }
 
-        // Issue View Settings
-        if (config.issueViewOptions() != null) {
-          IdeConfigData.IssueViewOptions options = config.issueViewOptions();
-          applyFormValue(prefs, Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, options.openIssues());
-          applyFormValue(prefs, Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, options.ignoredIssues());
-        }
-        applyFormValue(prefs, Preferences.ENABLE_DELTA, config.enableDeltaFindings());
-
-        // Authentication Settings
-        applyFormValue(prefs, Preferences.AUTHENTICATION_METHOD, config.authenticationMethod());
-
-        // Connection Settings
-        applyFormValue(prefs, Preferences.ENDPOINT_KEY, config.endpoint());
-        applyFormValue(prefs, Preferences.AUTH_TOKEN_KEY, config.token());
-        applyFormValue(prefs, Preferences.ORGANIZATION_KEY, config.organization());
-
-        // Trusted Folders
-        if (config.trustedFolders() != null) {
-          String trustedFoldersString = String.join(File.pathSeparator, config.trustedFolders());
-          prefs.storeAndTrackChange(Preferences.TRUSTED_FOLDERS, trustedFoldersString);
-        } else {
+        // trusted_folders — array of strings joined with File.pathSeparator.
+        JsonNode trustedNode = root.get(LsKey.TRUSTED_FOLDERS.key);
+        if (trustedNode == null || trustedNode.isNull()) {
           prefs.clearExplicitlyChanged(Preferences.TRUSTED_FOLDERS);
+        } else {
+          StringBuilder sb = new StringBuilder();
+          for (JsonNode element : trustedNode) {
+            if (sb.length() > 0) {
+              sb.append(File.pathSeparator);
+            }
+            sb.append(element.asText());
+          }
+          prefs.storeAndTrackChange(Preferences.TRUSTED_FOLDERS, sb.toString());
         }
 
-        // Filter Settings
-        if (config.filterSeverity() != null) {
-          IdeConfigData.FilterSeverity severity = config.filterSeverity();
-          applyFormValue(prefs, Preferences.FILTER_SHOW_CRITICAL, severity.critical());
-          applyFormValue(prefs, Preferences.FILTER_SHOW_HIGH, severity.high());
-          applyFormValue(prefs, Preferences.FILTER_SHOW_MEDIUM, severity.medium());
-          applyFormValue(prefs, Preferences.FILTER_SHOW_LOW, severity.low());
-        }
-        applyFormValue(prefs, Preferences.RISK_SCORE_THRESHOLD, config.riskScoreThreshold());
-
-        // Folder Configs
-        if (config.folderConfigs() != null && !config.folderConfigs().isEmpty()) {
-          for (IdeConfigData.FolderConfigData folderConfigData : config.folderConfigs()) {
-            processFolderConfig(folderConfigData);
+        // Folder configs.
+        JsonNode folderConfigsNode = root.get("folderConfigs");
+        if (folderConfigsNode != null && folderConfigsNode.isArray()) {
+          for (JsonNode folderNode : folderConfigsNode) {
+            processFolderConfig(folderNode);
           }
         }
       }
 
-      // Refresh toolbar UI to reflect changes made in HTML settings
+      // Refresh toolbar UI to reflect changes made in HTML settings.
       refreshToolbarUI();
     } catch (JsonProcessingException e) {
       SnykLogger.logError(e);
     }
   }
 
-  private void applyFormValue(Preferences prefs, String key, Object value) {
-    if (value == null) {
+  private void applyFormValue(Preferences prefs, String key, JsonNode node) {
+    if (node == null || node.isNull()) {
       prefs.clearExplicitlyChanged(key);
     } else {
-      prefs.storeAndTrackChange(key, String.valueOf(value));
+      prefs.storeAndTrackChange(key, nodeToString(node));
     }
   }
 
-  private void processFolderConfig(IdeConfigData.FolderConfigData folderConfigData) {
-    if (folderConfigData.folderPath() == null) {
+  private static String nodeToString(JsonNode node) {
+    if (node.isBoolean()) {
+      return node.asText(); // "true" or "false"
+    }
+    if (node.isNumber()) {
+      double d = node.asDouble();
+      if (d == Math.floor(d) && !Double.isInfinite(d)) {
+        return String.valueOf((long) d);
+      }
+      return String.valueOf(d);
+    }
+    return node.asText();
+  }
+
+  private void processFolderConfig(JsonNode folderNode) {
+    JsonNode pathNode = folderNode.get("folderPath");
+    if (pathNode == null || pathNode.isNull()) {
       return;
     }
 
-    String pathStr = folderConfigData.folderPath();
+    String pathStr = pathNode.asText();
     FolderConfigSettings.getInstance().computeFolderConfig(pathStr, config -> {
-      if (folderConfigData.preferredOrg() != null) {
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.PREFERRED_ORG, folderConfigData.preferredOrg());
+      JsonNode preferredOrg = folderNode.get(LsFolderSettingsKeys.PREFERRED_ORG);
+      if (preferredOrg != null && !preferredOrg.isNull()) {
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.PREFERRED_ORG, preferredOrg.asText());
       }
-      if (folderConfigData.autoDeterminedOrg() != null) {
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.AUTO_DETERMINED_ORG, folderConfigData.autoDeterminedOrg());
+      JsonNode autoDeterminedOrg = folderNode.get(LsFolderSettingsKeys.AUTO_DETERMINED_ORG);
+      if (autoDeterminedOrg != null && !autoDeterminedOrg.isNull()) {
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.AUTO_DETERMINED_ORG, autoDeterminedOrg.asText());
       }
-      if (folderConfigData.orgSetByUser() != null) {
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, folderConfigData.orgSetByUser());
+      JsonNode orgSetByUser = folderNode.get(LsFolderSettingsKeys.ORG_SET_BY_USER);
+      if (orgSetByUser != null && !orgSetByUser.isNull()) {
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, orgSetByUser.booleanValue());
       }
-      if (folderConfigData.additionalEnv() != null) {
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_ENV, folderConfigData.additionalEnv());
+      JsonNode additionalEnv = folderNode.get(LsFolderSettingsKeys.ADDITIONAL_ENV);
+      if (additionalEnv != null && !additionalEnv.isNull()) {
+        config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_ENV, additionalEnv.asText());
       }
-      if (folderConfigData.additionalParameters() != null) {
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, folderConfigData.additionalParameters());
+      JsonNode additionalParameters = folderNode.get(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS);
+      if (additionalParameters != null && !additionalParameters.isNull()) {
+        config = config.withSettingIfChanged(
+            LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, additionalParameters.asText());
       }
-      if (folderConfigData.scanCommandConfig() != null) {
-        Map<String, ScanCommandConfig> targetConfigMap =
-            convertScanCommandConfig(folderConfigData.scanCommandConfig());
+      JsonNode scanCommandConfig = folderNode.get(LsFolderSettingsKeys.SCAN_COMMAND_CONFIG);
+      if (scanCommandConfig != null && !scanCommandConfig.isNull()) {
+        Map<String, ScanCommandConfig> targetConfigMap = convertScanCommandConfig(scanCommandConfig);
         config = config.withSettingIfChanged(LsFolderSettingsKeys.SCAN_COMMAND_CONFIG, targetConfigMap);
       }
       return config;
@@ -286,20 +330,22 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   }
 
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-  private Map<String, ScanCommandConfig> convertScanCommandConfig(
-      Map<String, IdeConfigData.ScanCommandConfigData> sourceConfigMap) {
+  private Map<String, ScanCommandConfig> convertScanCommandConfig(JsonNode sourceNode) {
     Map<String, ScanCommandConfig> targetConfigMap = new HashMap<>();
-    for (Map.Entry<String, IdeConfigData.ScanCommandConfigData> entry :
-        sourceConfigMap.entrySet()) {
-      IdeConfigData.ScanCommandConfigData configData = entry.getValue();
+    sourceNode.fields().forEachRemaining(entry -> {
+      JsonNode configData = entry.getValue();
       ScanCommandConfig scanCommandConfig =
           new ScanCommandConfig(
-              configData.preScanCommand(),
-              Boolean.TRUE.equals(configData.preScanOnlyReferenceFolder()),
-              configData.postScanCommand(),
-              Boolean.TRUE.equals(configData.postScanOnlyReferenceFolder()));
+              configData.has("preScanCommand") && !configData.get("preScanCommand").isNull()
+                  ? configData.get("preScanCommand").asText() : null,
+              configData.has("preScanOnlyReferenceFolder")
+                  && configData.get("preScanOnlyReferenceFolder").booleanValue(),
+              configData.has("postScanCommand") && !configData.get("postScanCommand").isNull()
+                  ? configData.get("postScanCommand").asText() : null,
+              configData.has("postScanOnlyReferenceFolder")
+                  && configData.get("postScanOnlyReferenceFolder").booleanValue());
       targetConfigMap.put(entry.getKey(), scanCommandConfig);
-    }
+    });
     return targetConfigMap;
   }
 

@@ -14,8 +14,16 @@ public class LspFolderConfig {
 		return folderPath;
 	}
 
+	public void setFolderPath(String folderPath) {
+		this.folderPath = folderPath;
+	}
+
 	public Map<String, ConfigSetting> getSettings() {
 		return settings;
+	}
+
+	public void setSettings(Map<String, ConfigSetting> settings) {
+		this.settings = settings;
 	}
 
 	public LspFolderConfig withSetting(String key, Object value, boolean changed) {

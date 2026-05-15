@@ -423,6 +423,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (param.getFolderConfigs() != null) {
 				var folderConfigSettings = FolderConfigSettings.getInstance();
 				folderConfigSettings.addAll(param.getFolderConfigs());
+				if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
+					triggerScan(null);
+				}
+				if (this.toolView != null) {
+					this.toolView.refreshDeltaReference();
+				}
 			}
 		} catch (Exception e) {
 			SnykLogger.logError(e);
@@ -434,7 +440,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (var entry : settings.entrySet()) {
 			try {
 				var registryEntry = io.snyk.languageserver.LsSettingsRegistry.BY_LS_KEY.get(entry.getKey());
-				if (registryEntry == null || registryEntry.alwaysFixed || registryEntry.prefKey == null) {
+				if (registryEntry == null || registryEntry.prefKey == null) {
 					continue;
 				}
 				var setting = entry.getValue();
