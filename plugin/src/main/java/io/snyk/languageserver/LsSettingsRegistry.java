@@ -159,7 +159,7 @@ public final class LsSettingsRegistry {
                     try {
                         int i = Integer.parseInt(v);
                         return i > 0 ? Integer.valueOf(i) : null;
-                    } catch (NumberFormatException e) { return null; } // NOPMD - invalid values default to null
+                    } catch (NumberFormatException e) { return null; }
                 },
                 value -> {
                     if (value == null) return "0";
