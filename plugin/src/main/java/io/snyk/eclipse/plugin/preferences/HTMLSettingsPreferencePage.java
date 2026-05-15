@@ -9,18 +9,15 @@ import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.languageserver.LsFolderSettingsKeys;
-import io.snyk.languageserver.LsKey;
 import io.snyk.languageserver.LsSettingsRegistry;
 import io.snyk.languageserver.LsSettingsRegistry.Entry;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
@@ -173,15 +170,6 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     }
   }
 
-  // LS keys always saved regardless of fallback/full form (CLI-related fields).
-  private static final Set<LsKey> FALLBACK_FORM_KEYS = Set.of(
-      LsKey.CLI_PATH,
-      LsKey.MANAGE_BINARIES_AUTOMATICALLY,
-      LsKey.CLI_BASE_DOWNLOAD_URL,
-      LsKey.CLI_RELEASE_CHANNEL,
-      LsKey.INSECURE
-  );
-
   private void parseAndSaveConfig(String jsonString) {
     try {
       JsonNode root = objectMapper.readTree(jsonString);
@@ -190,69 +178,21 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       JsonNode fallbackNode = root.get("isFallbackForm");
       boolean isFallback = fallbackNode != null && fallbackNode.booleanValue();
 
-      // Registry-driven loop over all outbound entries.
       for (Entry entry : LsSettingsRegistry.ENTRIES.values()) {
-        // Skip hardcoded entries with no pref backing.
-        if (entry.prefKey == null) {
-          continue;
-        }
-        // Skip non-fallback fields when processing the fallback form.
-        if (isFallback && !FALLBACK_FORM_KEYS.contains(entry.lsKey)) {
-          continue;
-        }
-
-        // Special case: scan_automatic — form sends "auto"/"manual", pref stores boolean string.
-        if (LsKey.SCANNING_MODE == entry.lsKey) {
-          JsonNode n = root.get(entry.lsKey.key);
-          if (n == null || n.isNull()) {
-            prefs.clearExplicitlyChanged(entry.prefKey);
-          } else {
-            boolean isAutomatic = "auto".equals(n.asText());
-            prefs.storeAndTrackChange(entry.prefKey, String.valueOf(isAutomatic));
-          }
-          continue;
-        }
+        if (entry.prefKey == null) continue;
+        if (isFallback && !entry.useInFallbackForm) continue;
 
         JsonNode n = root.get(entry.lsKey.key);
-        applyFormValue(prefs, entry.prefKey, n);
+        if (n == null || n.isNull()) {
+          prefs.clearExplicitlyChanged(entry.prefKey);
+        } else if (entry.formDeserializer != null) {
+          prefs.storeAndTrackChange(entry.prefKey, entry.formDeserializer.apply(n));
+        } else {
+          prefs.storeAndTrackChange(entry.prefKey, nodeToString(n));
+        }
       }
 
-      // Fields not in ENTRIES — only applied for the full form.
       if (!isFallback) {
-        // Severity filters (inbound-only in BY_LS_KEY, not in ENTRIES).
-        applyFormValue(prefs, Preferences.FILTER_SHOW_CRITICAL,
-            root.get(LsKey.SEVERITY_FILTER_CRITICAL.key));
-        applyFormValue(prefs, Preferences.FILTER_SHOW_HIGH,
-            root.get(LsKey.SEVERITY_FILTER_HIGH.key));
-        applyFormValue(prefs, Preferences.FILTER_SHOW_MEDIUM,
-            root.get(LsKey.SEVERITY_FILTER_MEDIUM.key));
-        applyFormValue(prefs, Preferences.FILTER_SHOW_LOW,
-            root.get(LsKey.SEVERITY_FILTER_LOW.key));
-
-        // risk_score_threshold — integer or null.
-        JsonNode riskNode = root.get(LsKey.RISK_SCORE_THRESHOLD.key);
-        if (riskNode == null || riskNode.isNull()) {
-          prefs.clearExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD);
-        } else {
-          prefs.storeAndTrackChange(Preferences.RISK_SCORE_THRESHOLD,
-              String.valueOf(riskNode.asInt()));
-        }
-
-        // trusted_folders — array of strings joined with File.pathSeparator.
-        JsonNode trustedNode = root.get(LsKey.TRUSTED_FOLDERS.key);
-        if (trustedNode == null || trustedNode.isNull()) {
-          prefs.clearExplicitlyChanged(Preferences.TRUSTED_FOLDERS);
-        } else {
-          StringBuilder sb = new StringBuilder();
-          for (JsonNode element : trustedNode) {
-            if (sb.length() > 0) {
-              sb.append(File.pathSeparator);
-            }
-            sb.append(element.asText());
-          }
-          prefs.storeAndTrackChange(Preferences.TRUSTED_FOLDERS, sb.toString());
-        }
-
         // Folder configs.
         JsonNode folderConfigsNode = root.get("folderConfigs");
         if (folderConfigsNode != null && folderConfigsNode.isArray()) {
@@ -266,14 +206,6 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       refreshToolbarUI();
     } catch (JsonProcessingException e) {
       SnykLogger.logError(e);
-    }
-  }
-
-  private void applyFormValue(Preferences prefs, String key, JsonNode node) {
-    if (node == null || node.isNull()) {
-      prefs.clearExplicitlyChanged(key);
-    } else {
-      prefs.storeAndTrackChange(key, nodeToString(node));
     }
   }
 

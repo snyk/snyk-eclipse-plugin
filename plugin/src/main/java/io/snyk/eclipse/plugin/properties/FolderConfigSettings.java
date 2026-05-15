@@ -49,41 +49,9 @@ public class FolderConfigSettings {
 			}
 			String key = normalizePath(incoming.getFolderPath());
 			incomingKeys.add(key);
-			LspFolderConfig existing = configs.get(key);
-			if (existing == null) {
-				configs.put(key, incoming);
-			} else {
-				configs.put(key, mergeConfigs(existing, incoming));
-			}
+			configs.put(key, incoming);
 		}
 		configs.keySet().retainAll(incomingKeys);
-	}
-
-	/**
-	 * Merges incoming folder config into existing. Incoming wins for every key
-	 * except keys where existing has changed=true (user override in flight).
-	 */
-	private LspFolderConfig mergeConfigs(LspFolderConfig existing, LspFolderConfig incoming) {
-		Map<String, ConfigSetting> existingSettings = existing.getSettings();
-		Map<String, ConfigSetting> incomingSettings = incoming.getSettings();
-
-		if (existingSettings == null || existingSettings.isEmpty()) {
-			return incoming;
-		}
-		if (incomingSettings == null || incomingSettings.isEmpty()) {
-			return existing;
-		}
-
-		// Start from incoming and overlay any user-overridden keys from existing.
-		LspFolderConfig merged = incoming;
-		for (Map.Entry<String, ConfigSetting> entry : existingSettings.entrySet()) {
-			ConfigSetting existingSetting = entry.getValue();
-			if (existingSetting != null && Boolean.TRUE.equals(existingSetting.getChanged())) {
-				// Keep existing value: user changed this key, not yet acknowledged by LS.
-				merged = merged.withSetting(entry.getKey(), existingSetting.getValue(), true);
-			}
-		}
-		return merged;
 	}
 
 	public synchronized LspFolderConfig getFolderConfig(String folderPath) {
