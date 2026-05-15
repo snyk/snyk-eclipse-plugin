@@ -228,57 +228,35 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     if (pathNode == null || pathNode.isNull()) {
       return;
     }
-
     String pathStr = pathNode.asText();
     FolderConfigSettings.getInstance().computeFolderConfig(pathStr, config -> {
-      JsonNode preferredOrg = folderNode.get(LsFolderSettingsKeys.PREFERRED_ORG);
-      if (preferredOrg != null && !preferredOrg.isNull()) {
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.PREFERRED_ORG, preferredOrg.asText());
-      }
-      JsonNode autoDeterminedOrg = folderNode.get(LsFolderSettingsKeys.AUTO_DETERMINED_ORG);
-      if (autoDeterminedOrg != null && !autoDeterminedOrg.isNull()) {
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.AUTO_DETERMINED_ORG, autoDeterminedOrg.asText());
-      }
-      JsonNode orgSetByUser = folderNode.get(LsFolderSettingsKeys.ORG_SET_BY_USER);
-      if (orgSetByUser != null && !orgSetByUser.isNull()) {
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.ORG_SET_BY_USER, orgSetByUser.booleanValue());
-      }
-      JsonNode additionalEnv = folderNode.get(LsFolderSettingsKeys.ADDITIONAL_ENV);
-      if (additionalEnv != null && !additionalEnv.isNull()) {
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.ADDITIONAL_ENV, additionalEnv.asText());
-      }
-      JsonNode additionalParameters = folderNode.get(LsFolderSettingsKeys.ADDITIONAL_PARAMETERS);
-      if (additionalParameters != null && !additionalParameters.isNull()) {
-        config = config.withSettingIfChanged(
-            LsFolderSettingsKeys.ADDITIONAL_PARAMETERS, additionalParameters.asText());
-      }
-      JsonNode scanCommandConfig = folderNode.get(LsFolderSettingsKeys.SCAN_COMMAND_CONFIG);
-      if (scanCommandConfig != null && !scanCommandConfig.isNull()) {
-        Map<String, ScanCommandConfig> targetConfigMap = convertScanCommandConfig(scanCommandConfig);
-        config = config.withSettingIfChanged(LsFolderSettingsKeys.SCAN_COMMAND_CONFIG, targetConfigMap);
+      var fields = folderNode.fields();
+      while (fields.hasNext()) {
+        var field = fields.next();
+        String key = field.getKey();
+        JsonNode node = field.getValue();
+        if ("folderPath".equals(key) || node.isNull()) {
+          continue;
+        }
+        if (LsFolderSettingsKeys.SCAN_COMMAND_CONFIG.equals(key)) {
+          Map<String, ScanCommandConfig> scanCommandMap = new HashMap<>();
+          node.fields().forEachRemaining(e -> {
+            JsonNode d = e.getValue();
+            scanCommandMap.put(e.getKey(), new ScanCommandConfig(
+                d.has("preScanCommand") && !d.get("preScanCommand").isNull() ? d.get("preScanCommand").asText() : null,
+                d.has("preScanOnlyReferenceFolder") && d.get("preScanOnlyReferenceFolder").booleanValue(),
+                d.has("postScanCommand") && !d.get("postScanCommand").isNull() ? d.get("postScanCommand").asText() : null,
+                d.has("postScanOnlyReferenceFolder") && d.get("postScanOnlyReferenceFolder").booleanValue()));
+          });
+          config = config.withSetting(key, scanCommandMap, true);
+        } else if (node.isBoolean()) {
+          config = config.withSetting(key, node.booleanValue(), true);
+        } else {
+          config = config.withSetting(key, node.asText(), true);
+        }
       }
       return config;
     });
-  }
-
-  @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-  private Map<String, ScanCommandConfig> convertScanCommandConfig(JsonNode sourceNode) {
-    Map<String, ScanCommandConfig> targetConfigMap = new HashMap<>();
-    sourceNode.fields().forEachRemaining(entry -> {
-      JsonNode configData = entry.getValue();
-      ScanCommandConfig scanCommandConfig =
-          new ScanCommandConfig(
-              configData.has("preScanCommand") && !configData.get("preScanCommand").isNull()
-                  ? configData.get("preScanCommand").asText() : null,
-              configData.has("preScanOnlyReferenceFolder")
-                  && configData.get("preScanOnlyReferenceFolder").booleanValue(),
-              configData.has("postScanCommand") && !configData.get("postScanCommand").isNull()
-                  ? configData.get("postScanCommand").asText() : null,
-              configData.has("postScanOnlyReferenceFolder")
-                  && configData.get("postScanOnlyReferenceFolder").booleanValue());
-      targetConfigMap.put(entry.getKey(), scanCommandConfig);
-    });
-    return targetConfigMap;
   }
 
   private void refreshToolbarUI() {
