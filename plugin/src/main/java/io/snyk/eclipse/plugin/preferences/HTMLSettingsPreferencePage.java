@@ -185,7 +185,9 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         if (isFallback && !entry.useInFallbackForm) continue;
 
         JsonNode n = root.get(entry.lsKey.key);
-        if (n == null || n.isNull()) {
+        if (n == null) {
+          // absent — form didn't send this key, leave tracking untouched
+        } else if (n.isNull()) {
           prefs.clearExplicitlyChanged(entry.prefKey);
         } else if (entry.formDeserializer != null) {
           prefs.store(entry.prefKey, entry.formDeserializer.apply(n));
