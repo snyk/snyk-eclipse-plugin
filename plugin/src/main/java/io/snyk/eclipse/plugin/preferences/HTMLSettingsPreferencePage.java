@@ -16,7 +16,9 @@ import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.eclipse.jface.preference.PreferencePage;
@@ -244,6 +246,12 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           Map<String, ScanCommandConfig> scanCommandMap = objectMapper.convertValue(
               node, objectMapper.getTypeFactory().constructMapType(HashMap.class, String.class, ScanCommandConfig.class));
           config = config.withSetting(key, scanCommandMap, true);
+        } else if (node.isArray()) {
+          List<String> list = new ArrayList<>();
+          for (JsonNode el : node) {
+            if (!el.isNull()) list.add(el.asText());
+          }
+          config = config.withSetting(key, list, true);
         } else if (node.isBoolean()) {
           config = config.withSetting(key, node.booleanValue(), true);
         } else {
