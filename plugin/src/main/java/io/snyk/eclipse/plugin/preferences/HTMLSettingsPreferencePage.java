@@ -16,11 +16,12 @@ import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
@@ -185,7 +186,9 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         if (isFallback && !entry.useInFallbackForm) continue;
 
         JsonNode n = root.get(entry.lsKey.key);
-        if (n == null || n.isNull()) {
+        if (n == null) {
+          // absent — form didn't send this key, leave tracking untouched
+        } else if (n.isNull()) {
           prefs.clearExplicitlyChanged(entry.prefKey);
         } else if (entry.formDeserializer != null) {
           prefs.store(entry.prefKey, entry.formDeserializer.apply(n));
@@ -247,10 +250,10 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
               node, objectMapper.getTypeFactory().constructMapType(HashMap.class, String.class, ScanCommandConfig.class));
           config = config.withSetting(key, scanCommandMap, true);
         } else if (node.isArray()) {
-          List<String> list = new ArrayList<>();
-          for (JsonNode el : node) {
-            if (!el.isNull()) list.add(el.asText());
-          }
+          List<String> list = StreamSupport.stream(node.spliterator(), false)
+              .filter(el -> !el.isNull())
+              .map(JsonNode::asText)
+              .collect(Collectors.toList());
           config = config.withSetting(key, list, true);
         } else if (node.isBoolean()) {
           config = config.withSetting(key, node.booleanValue(), true);
