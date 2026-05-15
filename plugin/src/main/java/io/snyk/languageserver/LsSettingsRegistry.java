@@ -28,6 +28,7 @@ public final class LsSettingsRegistry {
         /** Converts LS value (Object) → pref string (inbound). null for hardcoded entries. */
         public final Function<Object, String> inboundDeserializer;
         /** Always sent with changed=true — value treated as user-set regardless of tracking. */
+        @SuppressWarnings("PMD.AvoidFieldNameMatchingMethodName")
         public final boolean alwaysChanged;
         /** Included when the fallback HTML settings form is active. */
         public final boolean useInFallbackForm;
@@ -92,6 +93,8 @@ public final class LsSettingsRegistry {
         }
     }
 
+    private static final String TRUE = "true";
+
     /**
      * Ordered outbound entries keyed by LsKey.
      * Iterated by LsConfigurationUpdater.buildConfigurationParam().
@@ -135,19 +138,19 @@ public final class LsSettingsRegistry {
         entries.put(LsKey.ISSUE_VIEW_OPEN_ISSUES, Entry.bool(LsKey.ISSUE_VIEW_OPEN_ISSUES, Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true));
         entries.put(LsKey.ISSUE_VIEW_IGNORED_ISSUES, Entry.bool(LsKey.ISSUE_VIEW_IGNORED_ISSUES, Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false));
         // Severity filters share a changed flag: if any one changed, all 4 are sent changed=true.
-        entries.put(LsKey.SEVERITY_FILTER_CRITICAL, new Entry(LsKey.SEVERITY_FILTER_CRITICAL, Preferences.FILTER_SHOW_CRITICAL, "true",
+        entries.put(LsKey.SEVERITY_FILTER_CRITICAL, new Entry(LsKey.SEVERITY_FILTER_CRITICAL, Preferences.FILTER_SHOW_CRITICAL, TRUE,
                 v -> Boolean.parseBoolean(v), LsSettingsRegistry::defaultToString, false, false,
                 new String[]{Preferences.FILTER_SHOW_HIGH, Preferences.FILTER_SHOW_MEDIUM, Preferences.FILTER_SHOW_LOW},
                 null));
-        entries.put(LsKey.SEVERITY_FILTER_HIGH, new Entry(LsKey.SEVERITY_FILTER_HIGH, Preferences.FILTER_SHOW_HIGH, "true",
+        entries.put(LsKey.SEVERITY_FILTER_HIGH, new Entry(LsKey.SEVERITY_FILTER_HIGH, Preferences.FILTER_SHOW_HIGH, TRUE,
                 v -> Boolean.parseBoolean(v), LsSettingsRegistry::defaultToString, false, false,
                 new String[]{Preferences.FILTER_SHOW_CRITICAL, Preferences.FILTER_SHOW_MEDIUM, Preferences.FILTER_SHOW_LOW},
                 null));
-        entries.put(LsKey.SEVERITY_FILTER_MEDIUM, new Entry(LsKey.SEVERITY_FILTER_MEDIUM, Preferences.FILTER_SHOW_MEDIUM, "true",
+        entries.put(LsKey.SEVERITY_FILTER_MEDIUM, new Entry(LsKey.SEVERITY_FILTER_MEDIUM, Preferences.FILTER_SHOW_MEDIUM, TRUE,
                 v -> Boolean.parseBoolean(v), LsSettingsRegistry::defaultToString, false, false,
                 new String[]{Preferences.FILTER_SHOW_CRITICAL, Preferences.FILTER_SHOW_HIGH, Preferences.FILTER_SHOW_LOW},
                 null));
-        entries.put(LsKey.SEVERITY_FILTER_LOW, new Entry(LsKey.SEVERITY_FILTER_LOW, Preferences.FILTER_SHOW_LOW, "true",
+        entries.put(LsKey.SEVERITY_FILTER_LOW, new Entry(LsKey.SEVERITY_FILTER_LOW, Preferences.FILTER_SHOW_LOW, TRUE,
                 v -> Boolean.parseBoolean(v), LsSettingsRegistry::defaultToString, false, false,
                 new String[]{Preferences.FILTER_SHOW_CRITICAL, Preferences.FILTER_SHOW_HIGH, Preferences.FILTER_SHOW_MEDIUM},
                 null));

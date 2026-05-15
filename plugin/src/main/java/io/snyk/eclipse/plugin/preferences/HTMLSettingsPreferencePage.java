@@ -239,15 +239,8 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           continue;
         }
         if (LsFolderSettingsKeys.SCAN_COMMAND_CONFIG.equals(key)) {
-          Map<String, ScanCommandConfig> scanCommandMap = new HashMap<>();
-          node.fields().forEachRemaining(e -> {
-            JsonNode d = e.getValue();
-            scanCommandMap.put(e.getKey(), new ScanCommandConfig(
-                d.has("preScanCommand") && !d.get("preScanCommand").isNull() ? d.get("preScanCommand").asText() : null,
-                d.has("preScanOnlyReferenceFolder") && d.get("preScanOnlyReferenceFolder").booleanValue(),
-                d.has("postScanCommand") && !d.get("postScanCommand").isNull() ? d.get("postScanCommand").asText() : null,
-                d.has("postScanOnlyReferenceFolder") && d.get("postScanOnlyReferenceFolder").booleanValue()));
-          });
+          Map<String, ScanCommandConfig> scanCommandMap = objectMapper.convertValue(
+              node, objectMapper.getTypeFactory().constructMapType(HashMap.class, String.class, ScanCommandConfig.class));
           config = config.withSetting(key, scanCommandMap, true);
         } else if (node.isBoolean()) {
           config = config.withSetting(key, node.booleanValue(), true);
