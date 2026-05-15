@@ -227,17 +227,10 @@ public class PreferencesPage extends FieldEditorPreferencePage implements IWorkb
 	public boolean performOk() {
 		Preferences preferences = Preferences.getInstance();
 		// Snapshot old values before field editors store directly to IPreferenceStore
-		String[] trackedKeys = {
-			Preferences.ENDPOINT_KEY, Preferences.INSECURE_KEY, Preferences.AUTHENTICATION_METHOD,
-			Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.ACTIVATE_SNYK_CODE_SECURITY,
-			Preferences.ACTIVATE_SNYK_IAC, Preferences.SCANNING_MODE_AUTOMATIC,
-			Preferences.ORGANIZATION_KEY, Preferences.ADDITIONAL_PARAMETERS,
-			Preferences.ADDITIONAL_ENVIRONMENT, Preferences.PATH_KEY,
-			Preferences.MANAGE_BINARIES_AUTOMATICALLY, Preferences.CLI_BASE_URL,
-			Preferences.CLI_PATH, Preferences.RELEASE_CHANNEL,
-			Preferences.SEND_ERROR_REPORTS, Preferences.ENABLE_TELEMETRY,
-			Preferences.TRUSTED_FOLDERS
-		};
+		String[] trackedKeys = io.snyk.languageserver.LsSettingsRegistry.ENTRIES.values().stream()
+				.filter(e -> e.prefKey != null)
+				.map(e -> e.prefKey)
+				.toArray(String[]::new);
 		Map<String, String> oldValues = new HashMap<>();
 		for (String key : trackedKeys) {
 			oldValues.put(key, preferences.getPref(key, ""));
