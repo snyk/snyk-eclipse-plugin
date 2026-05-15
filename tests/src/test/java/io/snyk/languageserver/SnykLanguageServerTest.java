@@ -5,9 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +20,7 @@ import com.google.gson.JsonObject;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.languageserver.LsKey;
+import io.snyk.languageserver.download.LsBinaries;
 
 class SnykLanguageServerTest extends LsBaseTest {
 
@@ -122,4 +127,45 @@ class SnykLanguageServerTest extends LsBaseTest {
     assertEquals(existingBinary.getAbsolutePath(), result);
   }
 
+  @Test
+  void verifyCliProtocolVersion_passesWhenVersionMatches() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    File script = createCliStub(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
+
+    SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+  }
+
+  @Test
+  void verifyCliProtocolVersion_throwsWhenVersionMismatches() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    File script = createCliStub("999");
+
+    IOException ex = assertThrows(IOException.class,
+        () -> SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
+
+    assertTrue(ex.getMessage().contains("protocol version mismatch"));
+    assertTrue(ex.getMessage().contains("999"));
+    assertTrue(ex.getMessage().contains(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION));
+  }
+
+  @Test
+  void verifyCliProtocolVersion_doesNotThrowOnUnparseableOutput() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    File script = createCliStub("not-a-number");
+
+    SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+  }
+
+  private File createCliStub(String outputVersion) throws IOException {
+    File script = File.createTempFile("snyk-cli-stub", ".sh");
+    script.deleteOnExit();
+    Files.writeString(script.toPath(), "#!/bin/sh\necho " + outputVersion + "\n");
+    Files.setPosixFilePermissions(script.toPath(),
+        Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+            PosixFilePermission.OWNER_EXECUTE));
+    return script;
+  }
 }
