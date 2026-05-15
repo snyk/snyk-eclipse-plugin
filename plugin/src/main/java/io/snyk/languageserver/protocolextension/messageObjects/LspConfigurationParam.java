@@ -73,8 +73,8 @@ public class LspConfigurationParam {
 		this.path = path;
 	}
 
-	public void setTrustedFolders(String[] trustedFolders) {
-		this.trustedFolders = trustedFolders;
+	public void setTrustedFolders(String... trustedFolders) {
+		this.trustedFolders = trustedFolders == null ? new String[0] : trustedFolders.clone();
 	}
 
 	public String getRequiredProtocolVersion() {
@@ -114,6 +114,6 @@ public class LspConfigurationParam {
 	}
 
 	public String[] getTrustedFolders() {
-		return trustedFolders;
+		return trustedFolders == null ? new String[0] : trustedFolders.clone();
 	}
 }
