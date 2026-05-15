@@ -186,9 +186,11 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         if (n == null || n.isNull()) {
           prefs.clearExplicitlyChanged(entry.prefKey);
         } else if (entry.formDeserializer != null) {
-          prefs.storeAndTrackChange(entry.prefKey, entry.formDeserializer.apply(n));
+          prefs.store(entry.prefKey, entry.formDeserializer.apply(n));
+          prefs.markExplicitlyChanged(entry.prefKey);
         } else {
-          prefs.storeAndTrackChange(entry.prefKey, nodeToString(n));
+          prefs.store(entry.prefKey, nodeToString(n));
+          prefs.markExplicitlyChanged(entry.prefKey);
         }
       }
 

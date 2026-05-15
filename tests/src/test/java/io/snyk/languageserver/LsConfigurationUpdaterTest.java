@@ -135,15 +135,42 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
-	void testBuildConfigurationParam_unchangedSettingHasChangedFalse() {
+	void testBuildConfigurationParam_nonDefaultValueSendsChangedTrue() {
 		setupPreferenceMock();
+		// mock returns "endpoint" which differs from outboundDefault "" → changed=true
 		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(false);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 		ConfigSetting endpointSetting = param.getSettings().get(LsKey.ENDPOINT.key);
 
 		assertNotNull(endpointSetting.getValue());
+		assertTrue(endpointSetting.getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_defaultValueSendsChangedFalse() {
+		setupPreferenceMock();
+		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn("");
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(false);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting endpointSetting = param.getSettings().get(LsKey.ENDPOINT.key);
+
 		assertFalse(endpointSetting.getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_nonDefaultEndpointSendsChangedAfterRestart() {
+		// Post-restart: explicitChanges empty, but prefs file has non-default endpoint (e.g. set via login)
+		setupPreferenceMock();
+		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn("https://api.dev.snyk.io");
+		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(false);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		ConfigSetting endpointSetting = param.getSettings().get(LsKey.ENDPOINT.key);
+
+		assertEquals("https://api.dev.snyk.io", endpointSetting.getValue());
+		assertTrue(endpointSetting.getChanged());
 	}
 
 	@Test
@@ -208,8 +235,8 @@ class LsConfigurationUpdaterTest {
 		assertEquals("cli", baseBranch.getSource());
 		assertEquals("folder", baseBranch.getOriginScope());
 
-		// Unchanged settings have changed=false
-		assertFalse(param.getSettings().get(LsKey.INSECURE.key).getChanged());
+		// insecure mock returns "true", outboundDefault is "false" → deviates → changed=true
+		assertTrue(param.getSettings().get(LsKey.INSECURE.key).getChanged());
 
 		// No lock metadata on machine-scope settings
 		assertNull(param.getSettings().get(LsKey.ENDPOINT.key).getSource());
