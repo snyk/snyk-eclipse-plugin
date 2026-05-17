@@ -1,6 +1,10 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_TYPE_TO_DISPLAY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_IAC;
@@ -100,6 +104,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCl
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SummaryPanelParams;
+import io.snyk.languageserver.protocolextension.messageObjects.TreeViewParams;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 @SuppressWarnings({"restriction", "PMD.AvoidCatchingGenericException"})
@@ -437,6 +442,27 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		});
 	}
 
+	@JsonNotification(value = LsConstants.SNYK_TREE_VIEW)
+	public void snykTreeView(TreeViewParams params) {
+		if (params == null || params.getTreeViewHtml() == null) {
+			return;
+		}
+		if (!Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW)) {
+			return;
+		}
+		String html = params.getTreeViewHtml();
+		if (this.toolView != null) {
+			this.toolView.updateTreeViewHtml(html);
+			return;
+		}
+		CompletableFuture.runAsync(() -> {
+			openToolView();
+			if (this.toolView != null) {
+				this.toolView.updateTreeViewHtml(html);
+			}
+		});
+	}
+
 	@Override
 	public CompletableFuture<ShowDocumentResult> showDocument(ShowDocumentParams params) {
 		URI uri;
@@ -444,10 +470,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			uri = new URI(params.getUri());
 		} catch (URISyntaxException e) {
 			SnykLogger.logError(e);
-			return null;
+			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
 		}
 
 		SnykShowFixUriDetails uriDetails = SnykShowFixUriDetails.fromURI(uri);
+
+		if ("snyk".equals(uriDetails.scheme()) && !uriDetails.isValid()) {
+			SnykLogger.logInfo(String.format("Unsupported snyk URI: action=%s, product=%s",
+					uriDetails.action(), uriDetails.product()));
+			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
+		}
 
 		Issue issue;
 		if (uriDetails.isValid()) {
@@ -460,12 +492,14 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		if (issue == null) {
 			SnykLogger.logInfo(String.format("Issue not found in the issueCache; issueId: %s", uriDetails.issueId()));
-			return null;
+			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
 		}
 
 		return CompletableFuture.supplyAsync(() -> {
 			openToolView();
-			this.toolView.selectTreeNode(issue, issue.filterableIssueType());
+			String displayProduct = FILTERABLE_ISSUE_TYPE_TO_DISPLAY.getOrDefault(issue.filterableIssueType(),
+					issue.filterableIssueType());
+			this.toolView.selectTreeNode(issue, displayProduct);
 			return new ShowDocumentResult(true);
 		});
 	}
@@ -474,13 +508,31 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		Issue issue = null;
 		IssueCacheHolder issueCacheHolder = IssueCacheHolder.getInstance();
 		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
+		String normalizedProduct = normalizeProductCodename(product);
 		for (IProject iProject : openProjects) {
-			issue = issueCacheHolder.getCacheInstance(iProject).getIssueByDiagnosticProductAndKey(product, issueId);
+			issue = issueCacheHolder.getCacheInstance(iProject).getIssueByDiagnosticProductAndKey(normalizedProduct,
+					issueId);
 			if (issue != null) {
 				return issue;
 			}
 		}
 		return issue;
+	}
+
+	static String normalizeProductCodename(String product) {
+		if (product == null) {
+			return null;
+		}
+		switch (product) {
+		case "oss":
+			return DIAGNOSTIC_SOURCE_SNYK_OSS;
+		case "code":
+			return DIAGNOSTIC_SOURCE_SNYK_CODE;
+		case "iac":
+			return DIAGNOSTIC_SOURCE_SNYK_IAC;
+		default:
+			return product;
+		}
 	}
 
 	private ISnykToolView openToolView() {

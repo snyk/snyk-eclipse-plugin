@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -68,7 +69,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private BrowserHandler browserHandler;
 	private Browser summaryBrowser;
 	private SummaryBrowserHandler summaryBrowserHandler;
+	private Browser treeBrowser;
+	private volatile TreeViewBrowserHandler treeBrowserHandler;
 	private TreeNode selectedNode;
+	private final AtomicReference<String> pendingHtml = new AtomicReference<>();
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -102,7 +106,20 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		registerTreeContextMenu(treeViewer.getControl());
 
-		verticalSashForm.setWeights(1, 3);
+		// Create treeBrowser below the legacy TreeViewer, shown only when USE_HTML_TREE_VIEW is true
+		treeBrowser = new Browser(verticalSashForm, SWT.EDGE);
+		treeBrowserHandler = new TreeViewBrowserHandler(treeBrowser);
+		treeBrowserHandler.initialize();
+
+		String buffered = pendingHtml.getAndSet(null);
+		if (buffered != null) {
+			treeBrowserHandler.setBrowserText(buffered);
+		}
+
+		boolean useHtmlTreeView = Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW);
+		treeViewer.getControl().setVisible(!useHtmlTreeView);
+		treeBrowser.setVisible(useHtmlTreeView);
+		verticalSashForm.setWeights(1, useHtmlTreeView ? 0 : 3, useHtmlTreeView ? 3 : 0);
 
 		// Create Browser
 		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
@@ -128,6 +145,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 						FileTreeNode fileNode = (FileTreeNode) issueTreeNode.getParent();
 						LSPEclipseUtils.open(fileNode.getPath().toUri().toASCIIString(),
 								issueTreeNode.getIssue().getLSP4JRange());
+						if (treeBrowserHandler != null) {
+							treeBrowserHandler.selectNode(issueTreeNode.getIssue().id());
+						}
 					}
 					boolean deltaEnabled = Preferences.isDeltaEnabled();
 					if (selectedNode instanceof ContentRootNode && deltaEnabled) {
@@ -537,4 +557,14 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			treeViewer.setSelection(selection, true);
 		});
 	}
+
+	@Override
+	public void updateTreeViewHtml(String html) {
+		if (treeBrowserHandler == null) {
+			pendingHtml.set(html);
+			return;
+		}
+		Display.getDefault().asyncExec(() -> treeBrowserHandler.setBrowserText(html));
+	}
+
 }
