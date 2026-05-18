@@ -444,6 +444,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					continue;
 				}
 				var setting = entry.getValue();
+				// isLocked not checked intentionally: IDE persists LS-pushed values regardless of lock
+				// so they survive IDE restarts. Lock enforcement is the LS's responsibility on next send.
 				if (setting.getValue() != null) {
 					prefs.store(registryEntry.prefKey, registryEntry.inboundDeserializer.apply(setting.getValue()));
 				}

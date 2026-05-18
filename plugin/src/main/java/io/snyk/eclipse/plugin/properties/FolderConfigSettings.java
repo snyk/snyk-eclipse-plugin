@@ -40,6 +40,11 @@ public class FolderConfigSettings {
 		configs.put(key, folderConfig);
 	}
 
+	/**
+	 * Replaces the full folder config state with the incoming snapshot from the LS.
+	 * LS protocol v25 guarantees {@code $/snyk.configuration} carries all folders — incoming list
+	 * is authoritative; folders absent from it are removed.
+	 */
 	public synchronized void addAll(List<LspFolderConfig> folderConfigs) {
 		// Collect paths present in the incoming list; remove folders no longer reported by LS.
 		Set<String> incomingKeys = new HashSet<>();
