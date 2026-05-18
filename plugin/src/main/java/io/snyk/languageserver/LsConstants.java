@@ -27,7 +27,7 @@ public final class LsConstants {
 	public static final String SNYK_ADD_TRUSTED_FOLDERS = "$/snyk.addTrustedFolders";
 	public static final String SNYK_SCAN = "$/snyk.scan";
 	public static final String SNYK_PUBLISH_DIAGNOSTICS_316 = "$/snyk.publishDiagnostics316";
-	public static final String SNYK_FOLDER_CONFIG = "$/snyk.folderConfigs";
+	public static final String SNYK_CONFIGURATION = "$/snyk.configuration";
 	public static final String SNYK_SCAN_SUMMARY = "$/snyk.scanSummary";
 	public static final String SNYK_SHOW_DOCUMENT = "$/snyk.showDocument";
 }

@@ -12,11 +12,13 @@ import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
 
+import com.google.gson.Gson;
+
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.languageserver.protocolextension.messageObjects.Settings;
+
 
 @SuppressWarnings("restriction")
 public class SnykLanguageServer extends ProcessStreamConnectionProvider implements StreamConnectionProvider {
@@ -112,13 +114,16 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 			waitForInit();
 		}
 
-		Settings currentSettings = null;
 		try {
-			currentSettings = new LsConfigurationUpdater().getCurrentSettings();
-		} catch (IllegalStateException | IllegalArgumentException e) {
+			var param = new LsConfigurationUpdater().buildConfigurationParam();
+			// Pre-serialize to JsonElement so LSP4J embeds the JSON directly
+			// instead of re-serializing through its own Gson instance, which
+			// can drop fields from custom POJOs like ConfigSetting.
+			return new Gson().toJsonTree(param);
+		} catch (Exception e) { // NOPMD - broad catch prevents LS handshake abort on unexpected errors
 			// Handle initialization errors gracefully - log and return null to allow LS to start
 			SnykLogger.logError(e);
 		}
-		return currentSettings;
+		return null;
 	}
 }
