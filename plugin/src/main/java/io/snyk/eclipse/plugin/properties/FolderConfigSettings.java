@@ -32,7 +32,7 @@ public class FolderConfigSettings {
 		instance = i;
 	}
 
-	public synchronized void addFolderConfig(LspFolderConfig folderConfig) {
+	public void addFolderConfig(LspFolderConfig folderConfig) {
 		if (folderConfig.getFolderPath() == null) {
 			return;
 		}
@@ -54,7 +54,7 @@ public class FolderConfigSettings {
 		configs.keySet().retainAll(incomingKeys);
 	}
 
-	public synchronized LspFolderConfig getFolderConfig(String folderPath) {
+	public LspFolderConfig getFolderConfig(String folderPath) {
 		if (folderPath == null) {
 			return createEmptyConfig(null);
 		}
@@ -77,7 +77,7 @@ public class FolderConfigSettings {
 		return new ArrayList<>(configs.values());
 	}
 
-	public synchronized boolean isConfigured(String folderPath) {
+	public boolean isConfigured(String folderPath) {
 		if (folderPath == null) {
 			return false;
 		}
@@ -85,7 +85,7 @@ public class FolderConfigSettings {
 		return configs.containsKey(key);
 	}
 
-	public synchronized void updateFolderConfig(String folderPath, LspFolderConfig config) {
+	public void updateFolderConfig(String folderPath, LspFolderConfig config) {
 		if (folderPath == null) {
 			return;
 		}
