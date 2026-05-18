@@ -33,7 +33,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesCliPath() throws Exception {
-		String json = "{\"cliPath\": \"/usr/local/bin/snyk\"}";
+		String json = "{\"cli_path\": \"/usr/local/bin/snyk\"}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -42,7 +42,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesManageBinariesAutomatically() throws Exception {
-		String json = "{\"manageBinariesAutomatically\": false}";
+		String json = "{\"automatic_download\": false}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -51,7 +51,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesCliBaseDownloadURL() throws Exception {
-		String json = "{\"cliBaseDownloadURL\": \"https://custom.downloads.snyk.io\"}";
+		String json = "{\"binary_base_url\": \"https://custom.downloads.snyk.io\"}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -60,7 +60,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesCliReleaseChannel() throws Exception {
-		String json = "{\"cliReleaseChannel\": \"preview\"}";
+		String json = "{\"cli_release_channel\": \"preview\"}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -69,7 +69,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesActivateSnykOpenSource() throws Exception {
-		String json = "{\"activateSnykOpenSource\": false}";
+		String json = "{\"snyk_oss_enabled\": false}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -78,7 +78,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesActivateSnykCode() throws Exception {
-		String json = "{\"activateSnykCode\": true}";
+		String json = "{\"snyk_code_enabled\": true}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -87,7 +87,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesActivateSnykIac() throws Exception {
-		String json = "{\"activateSnykIac\": false}";
+		String json = "{\"snyk_iac_enabled\": false}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -105,7 +105,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesEndpoint() throws Exception {
-		String json = "{\"endpoint\": \"https://custom.api.snyk.io\"}";
+		String json = "{\"api_endpoint\": \"https://custom.api.snyk.io\"}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -114,7 +114,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesInsecure() throws Exception {
-		String json = "{\"insecure\": true}";
+		String json = "{\"proxy_insecure\": true}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -123,7 +123,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesScanningModeAuto() throws Exception {
-		String json = "{\"scanningMode\": \"auto\"}";
+		String json = "{\"scan_automatic\": \"auto\"}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -132,7 +132,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesScanningModeManual() throws Exception {
-		String json = "{\"scanningMode\": \"manual\"}";
+		String json = "{\"scan_automatic\": \"manual\"}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -141,7 +141,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesAuthenticationMethodOAuth() throws Exception {
-		String json = "{\"authenticationMethod\": \"oauth\"}";
+		String json = "{\"authentication_method\": \"oauth\"}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -150,7 +150,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesAuthenticationMethodToken() throws Exception {
-		String json = "{\"authenticationMethod\": \"token\"}";
+		String json = "{\"authentication_method\": \"token\"}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -159,7 +159,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesSeverityFilters() throws Exception {
-		String json = "{\"filterSeverity\": {\"critical\": false, \"high\": true, \"medium\": false, \"low\": true}}";
+		String json = "{\"severity_filter_critical\": false, \"severity_filter_high\": true, \"severity_filter_medium\": false, \"severity_filter_low\": true}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -171,7 +171,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesIssueViewOptions() throws Exception {
-		String json = "{\"issueViewOptions\": {\"openIssues\": false, \"ignoredIssues\": true}}";
+		String json = "{\"issue_view_open_issues\": false, \"issue_view_ignored_issues\": true}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -181,7 +181,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesEnableDeltaFindings() throws Exception {
-		String json = "{\"enableDeltaFindings\": true}";
+		String json = "{\"scan_net_new\": true}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -190,7 +190,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_savesRiskScoreThreshold() throws Exception {
-		String json = "{\"riskScoreThreshold\": 200}";
+		String json = "{\"risk_score_threshold\": 200}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -199,7 +199,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_handlesMultipleSettings() throws Exception {
-		String json = "{\"cliPath\": \"/custom/path\", \"organization\": \"test-org\", \"insecure\": true}";
+		String json = "{\"cli_path\": \"/custom/path\", \"organization\": \"test-org\", \"proxy_insecure\": true}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -210,7 +210,7 @@ class HTMLSettingsPreferencePageTest {
 
 	@Test
 	void parseAndSaveConfig_ignoresUnknownFields() throws Exception {
-		String json = "{\"unknownField\": \"value\", \"cliPath\": \"/valid/path\"}";
+		String json = "{\"unknownField\": \"value\", \"cli_path\": \"/valid/path\"}";
 
 		invokeParseAndSaveConfig(json);
 
@@ -224,6 +224,58 @@ class HTMLSettingsPreferencePageTest {
 		invokeParseAndSaveConfig(json);
 
 		// Should not throw, preferences should remain unchanged
+	}
+
+	@Test
+	void parseAndSaveConfig_nullEndpointClearsExplicitOverride() throws Exception {
+		// User previously set endpoint
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://user-override.snyk.io");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		// LS form sends null for endpoint (user reset it)
+		String json = "{\"api_endpoint\": null}";
+		invokeParseAndSaveConfig(json);
+
+		// Override should be cleared
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	void parseAndSaveConfig_nullOrganizationClearsExplicitOverride() throws Exception {
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "my-org");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+
+		String json = "{\"organization\": null}";
+		invokeParseAndSaveConfig(json);
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+	}
+
+	@Test
+	void parseAndSaveConfig_nullCliPathClearsExplicitOverride() throws Exception {
+		prefs.storeAndTrackChange(Preferences.CLI_PATH, "/custom/cli");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.CLI_PATH));
+
+		String json = "{\"cli_path\": null}";
+		invokeParseAndSaveConfig(json);
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.CLI_PATH));
+	}
+
+	@Test
+	void parseAndSaveConfig_mixedNullAndValueFields() throws Exception {
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://custom.snyk.io");
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "old-org");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+
+		// Endpoint reset (null), organization changed to new value
+		String json = "{\"api_endpoint\": null, \"organization\": \"new-org\"}";
+		invokeParseAndSaveConfig(json);
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+		assertEquals("new-org", prefs.getPref(Preferences.ORGANIZATION_KEY));
 	}
 
 	private void invokeParseAndSaveConfig(String json) throws Exception {
