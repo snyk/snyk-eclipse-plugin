@@ -44,8 +44,7 @@ public class LsConfigurationUpdater {
 
 			Object lsValue = entry.outboundSerializer.apply(rawValue);
 
-			boolean changed = entry.isAlwaysChanged || preferences.isExplicitlyChanged(entry.prefKey)
-					|| (entry.outboundDefault != null && !entry.outboundDefault.equals(rawValue));
+			boolean changed = entry.isAlwaysChanged || preferences.isExplicitlyChanged(entry.prefKey);
 			for (String additionalKey : entry.additionalChangedPrefKeys) {
 				if (preferences.isExplicitlyChanged(additionalKey)) {
 					changed = true;

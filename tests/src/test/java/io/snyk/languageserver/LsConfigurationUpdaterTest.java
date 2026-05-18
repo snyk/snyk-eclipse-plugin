@@ -124,7 +124,7 @@ class LsConfigurationUpdaterTest {
 	@Test
 	void testBuildConfigurationParam_resetToDefault_sendsNullValueWithChangedTrue() {
 		setupPreferenceMock();
-		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn(null);
+		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, Preferences.DEFAULT_ENDPOINT)).thenReturn(null);
 		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(true);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
@@ -135,42 +135,15 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
-	void testBuildConfigurationParam_nonDefaultValueSendsChangedTrue() {
+	void testBuildConfigurationParam_unchangedSettingHasChangedFalse() {
 		setupPreferenceMock();
-		// mock returns "endpoint" which differs from outboundDefault "" → changed=true
-		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(false);
-
-		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting endpointSetting = param.getSettings().get(LsKey.ENDPOINT.key);
-
-		assertNotNull(endpointSetting.getValue());
-		assertTrue(endpointSetting.getChanged());
-	}
-
-	@Test
-	void testBuildConfigurationParam_defaultValueSendsChangedFalse() {
-		setupPreferenceMock();
-		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn("");
+		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, Preferences.DEFAULT_ENDPOINT)).thenReturn(Preferences.DEFAULT_ENDPOINT);
 		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(false);
 
 		var param = new LsConfigurationUpdater().buildConfigurationParam();
 		ConfigSetting endpointSetting = param.getSettings().get(LsKey.ENDPOINT.key);
 
 		assertFalse(endpointSetting.getChanged());
-	}
-
-	@Test
-	void testBuildConfigurationParam_nonDefaultEndpointSendsChangedAfterRestart() {
-		// Post-restart: explicitChanges empty, but prefs file has non-default endpoint (e.g. set via login)
-		setupPreferenceMock();
-		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn("https://api.dev.snyk.io");
-		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(false);
-
-		var param = new LsConfigurationUpdater().buildConfigurationParam();
-		ConfigSetting endpointSetting = param.getSettings().get(LsKey.ENDPOINT.key);
-
-		assertEquals("https://api.dev.snyk.io", endpointSetting.getValue());
-		assertTrue(endpointSetting.getChanged());
 	}
 
 	@Test
@@ -199,10 +172,11 @@ class LsConfigurationUpdaterTest {
 	@Test
 	void testRoundTrip_userChangeProducesCorrectPayload() {
 		setupPreferenceMock();
-		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn("https://custom.api.snyk.io");
+		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, Preferences.DEFAULT_ENDPOINT)).thenReturn("https://custom.api.snyk.io");
 		when(preferenceMock.isExplicitlyChanged(Preferences.ENDPOINT_KEY)).thenReturn(true);
 		when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("my-org");
 		when(preferenceMock.isExplicitlyChanged(Preferences.ORGANIZATION_KEY)).thenReturn(true);
+		when(preferenceMock.isExplicitlyChanged(Preferences.INSECURE_KEY)).thenReturn(true);
 
 		String folderJson = """
 				{
@@ -235,7 +209,6 @@ class LsConfigurationUpdaterTest {
 		assertEquals("cli", baseBranch.getSource());
 		assertEquals("folder", baseBranch.getOriginScope());
 
-		// insecure mock returns "true", outboundDefault is "false" → deviates → changed=true
 		assertTrue(param.getSettings().get(LsKey.INSECURE.key).getChanged());
 
 		// No lock metadata on machine-scope settings
@@ -452,7 +425,7 @@ class LsConfigurationUpdaterTest {
 		when(preferenceMock.getPref(Preferences.INSECURE_KEY, "")).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.INSECURE_KEY, "true")).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.INSECURE_KEY, "false")).thenReturn("true");
-		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, "")).thenReturn("endpoint");
+		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, Preferences.DEFAULT_ENDPOINT)).thenReturn("endpoint");
 		when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("addParams");
 		when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("a=b;c=d");
 		when(preferenceMock.getPref(Preferences.PATH_KEY, "")).thenReturn("path");
@@ -489,6 +462,6 @@ class LsConfigurationUpdaterTest {
 		// Issue view options mocks
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true)).thenReturn(true);
 		when(preferenceMock.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false)).thenReturn(false);
-		when(preferenceMock.getPref(Preferences.SCANNING_MODE_AUTOMATIC, "false")).thenReturn("true");
+		when(preferenceMock.getPref(Preferences.SCANNING_MODE_AUTOMATIC, "true")).thenReturn("true");
 	}
 }

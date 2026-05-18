@@ -110,7 +110,7 @@ public final class LsSettingsRegistry {
     static {
         Map<LsKey, Entry> entries = new EnumMap<>(LsKey.class);
 
-        entries.put(LsKey.ENDPOINT,               Entry.simple(LsKey.ENDPOINT, Preferences.ENDPOINT_KEY, ""));
+        entries.put(LsKey.ENDPOINT,               Entry.simple(LsKey.ENDPOINT, Preferences.ENDPOINT_KEY, Preferences.DEFAULT_ENDPOINT));
         entries.put(LsKey.TOKEN,                  Entry.alwaysChanged(LsKey.TOKEN, Preferences.AUTH_TOKEN_KEY, ""));
         entries.put(LsKey.ORGANIZATION,           Entry.simple(LsKey.ORGANIZATION, Preferences.ORGANIZATION_KEY, ""));
         entries.put(LsKey.AUTHENTICATION_METHOD,  Entry.simple(LsKey.AUTHENTICATION_METHOD, Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2));
@@ -121,7 +121,7 @@ public final class LsSettingsRegistry {
         entries.put(LsKey.ACTIVATE_SNYK_SECRETS,  Entry.bool(LsKey.ACTIVATE_SNYK_SECRETS, Preferences.ACTIVATE_SNYK_SECRETS, false));
         // scan_automatic: LS expects boolean. "true" = automatic, "false" = manual.
         // formDeserializer: form sends "auto"/"manual", pref stores "true"/"false".
-        entries.put(LsKey.SCANNING_MODE, new Entry(LsKey.SCANNING_MODE, Preferences.SCANNING_MODE_AUTOMATIC, "false",
+        entries.put(LsKey.SCANNING_MODE, new Entry(LsKey.SCANNING_MODE, Preferences.SCANNING_MODE_AUTOMATIC, "true",
                 v -> Boolean.parseBoolean(v),
                 value -> String.valueOf("automatic".equals(String.valueOf(value))),
                 false, false, new String[0],
