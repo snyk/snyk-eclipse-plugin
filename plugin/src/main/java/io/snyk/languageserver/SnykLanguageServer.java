@@ -120,7 +120,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 			// instead of re-serializing through its own Gson instance, which
 			// can drop fields from custom POJOs like ConfigSetting.
 			return new Gson().toJsonTree(param);
-		} catch (IllegalStateException | IllegalArgumentException e) {
+		} catch (Exception e) {
 			// Handle initialization errors gracefully - log and return null to allow LS to start
 			SnykLogger.logError(e);
 		}
