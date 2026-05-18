@@ -299,7 +299,6 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   private static String htmlAttr(String v) {
     if (v == null) return "";
     return v.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;");
-  }
 
   private void refreshToolbarUI() {
     Display display = Display.getCurrent();
