@@ -83,8 +83,8 @@ public class SnykWizard extends Wizard implements INewWizard {
 				monitor.subTask("saving preferences");
 				Preferences prefs = Preferences.getInstance();
 
-				prefs.store(Preferences.ENDPOINT_KEY, endpoint);
-				prefs.store(Preferences.INSECURE_KEY, unknownCerts);
+				prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, endpoint);
+				prefs.storeAndTrackChange(Preferences.INSECURE_KEY, unknownCerts);
 				monitor.subTask("updating language server configuration");
 				lc.updateConfiguration();
 				monitor.worked(20);
