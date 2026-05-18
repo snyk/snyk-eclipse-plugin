@@ -70,7 +70,7 @@ import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.preferences.HTMLSettingsPreferencePage;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.preferences.PreferencesPage;
-import io.snyk.eclipse.plugin.properties.FolderConfigs;
+import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
@@ -91,8 +91,8 @@ import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfig;
-import io.snyk.languageserver.protocolextension.messageObjects.FolderConfigsParam;
+import io.snyk.languageserver.protocolextension.messageObjects.ConfigSetting;
+import io.snyk.languageserver.protocolextension.messageObjects.LspConfigurationParam;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.LsSdk;
 import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
@@ -200,17 +200,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (!Preferences.getInstance().isAuthenticated()) {
 				SnykWizard.createAndLaunch();
 			} else {
-				final var languageServerConfigReceived = FolderConfigs.LanguageServerConfigReceived;
+				var folderConfigSettings = FolderConfigSettings.getInstance();
 				updateConfiguration();
 				openToolView();
 				try {
 					if (projectPath != null) {
-						if (languageServerConfigReceived.contains(projectPath)) {
+						if (folderConfigSettings.isConfigured(projectPath.toString())) {
 							executeCommand(LsConstants.COMMAND_WORKSPACE_FOLDER_SCAN, List.of(projectPath.toString()));
 						}
 						return;
 					}
-					if (!languageServerConfigReceived.isEmpty()) {
+					if (!folderConfigSettings.getAll().isEmpty()) {
 						executeCommand(LsConstants.COMMAND_WORKSPACE_SCAN, new ArrayList<>());
 					}
 				} catch (Exception e) {
@@ -409,21 +409,47 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		this.toolView.refreshBrowser(param.getStatus());
 	}
 
-	@JsonNotification(value = LsConstants.SNYK_FOLDER_CONFIG)
-	public void folderConfig(FolderConfigsParam folderConfigParam) {
-		List<FolderConfig> folderConfigs = folderConfigParam != null ? folderConfigParam.getFolderConfigs() : List.of();
-		var fcs = FolderConfigs.getInstance();
-		for (FolderConfig folderConfig : folderConfigs) {
-			fcs.addFolderConfig(folderConfig);
-			final var folderPath = folderConfig.getFolderPath();
-			final var path = Paths.get(folderPath);
-			FolderConfigs.LanguageServerConfigReceived.add(path);
-			if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
-				this.triggerScan(path);
+	@JsonNotification(value = LsConstants.SNYK_CONFIGURATION)
+	public void snykConfiguration(LspConfigurationParam param) {
+		try {
+			if (param == null) {
+				return;
 			}
+
+			if (param.getSettings() != null) {
+				persistGlobalSettings(param.getSettings());
+			}
+
+			if (param.getFolderConfigs() != null) {
+				var folderConfigSettings = FolderConfigSettings.getInstance();
+				folderConfigSettings.addAll(param.getFolderConfigs());
+				if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
+					triggerScan(null);
+				}
+				if (this.toolView != null) {
+					this.toolView.refreshDeltaReference();
+				}
+			}
+		} catch (Exception e) {
+			SnykLogger.logError(e);
 		}
-		if (this.toolView != null) {
-			this.toolView.refreshDeltaReference();
+	}
+
+	private void persistGlobalSettings(java.util.Map<String, ConfigSetting> settings) {
+		var prefs = Preferences.getInstance();
+		for (var entry : settings.entrySet()) {
+			try {
+				var registryEntry = io.snyk.languageserver.LsSettingsRegistry.BY_LS_KEY.get(entry.getKey());
+				if (registryEntry == null || registryEntry.prefKey == null) {
+					continue;
+				}
+				var setting = entry.getValue();
+				if (setting.getValue() != null) {
+					prefs.store(registryEntry.prefKey, registryEntry.inboundDeserializer.apply(setting.getValue()));
+				}
+			} catch (Exception e) {
+				SnykLogger.logError(e);
+			}
 		}
 	}
 

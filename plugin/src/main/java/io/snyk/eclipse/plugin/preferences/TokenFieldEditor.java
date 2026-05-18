@@ -1,5 +1,7 @@
 package io.snyk.eclipse.plugin.preferences;
 
+import java.util.Objects;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
@@ -14,13 +16,21 @@ public class TokenFieldEditor extends StringFieldEditor {
 		super.setPreferenceStore(preferences.getSecureStore());
 		this.getTextControl().setEchoChar('*');
 	}
-	
+
 	@Override
 	protected final  Text getTextControl() {
 		return super.getTextControl();
 	}
 
-
+	@Override
+	protected void doStore() {
+		String oldValue = getPreferenceStore().getString(getPreferenceName());
+		super.doStore();
+		String newValue = getStringValue();
+		if (!Objects.equals(oldValue, newValue)) {
+			preferences.markExplicitlyChanged(Preferences.AUTH_TOKEN_KEY);
+		}
+	}
 
 	public void emptyTextfield() {
 		setStringValue("");
