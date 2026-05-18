@@ -189,15 +189,16 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         if (n == null) {
           // absent — form didn't send this key, leave tracking untouched
         } else if (n.isNull()) {
-          prefs.clearExplicitlyChanged(entry.prefKey);
+          prefs.clearExplicitlyChangedNoFlush(entry.prefKey);
         } else if (entry.formDeserializer != null) {
           prefs.store(entry.prefKey, entry.formDeserializer.apply(n));
-          prefs.markExplicitlyChanged(entry.prefKey);
+          prefs.markExplicitlyChangedNoFlush(entry.prefKey);
         } else {
           prefs.store(entry.prefKey, nodeToString(n));
-          prefs.markExplicitlyChanged(entry.prefKey);
+          prefs.markExplicitlyChangedNoFlush(entry.prefKey);
         }
       }
+      prefs.flushExplicitChanges();
 
       if (!isFallback) {
         // Folder configs.

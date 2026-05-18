@@ -116,13 +116,14 @@ public class ExecuteCommandBridge {
     storeAndMarkIfChanged(prefs, LsKey.AUTHENTICATION_METHOD, authMethod);
     storeAndMarkIfChanged(prefs, LsKey.ENDPOINT, endpoint);
     storeAndMarkIfChanged(prefs, LsKey.INSECURE, insecure);
+    prefs.flushExplicitChanges();
   }
 
   private static void storeAndMarkIfChanged(Preferences prefs, LsKey lsKey, String value) {
     LsSettingsRegistry.Entry entry = LsSettingsRegistry.ENTRIES.get(lsKey);
     prefs.store(entry.prefKey, value);
     if (!value.equals(entry.outboundDefault)) {
-      prefs.markExplicitlyChanged(entry.prefKey);
+      prefs.markExplicitlyChangedNoFlush(entry.prefKey);
     }
   }
 

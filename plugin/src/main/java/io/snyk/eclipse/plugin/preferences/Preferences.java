@@ -400,6 +400,24 @@ public class Preferences {
 		persistExplicitChanges();
 	}
 
+	public void markExplicitlyChangedNoFlush(String key) {
+		if (key == null) {
+			return;
+		}
+		explicitChanges.add(key);
+	}
+
+	public void clearExplicitlyChangedNoFlush(String key) {
+		if (key == null) {
+			return;
+		}
+		explicitChanges.remove(key);
+	}
+
+	public void flushExplicitChanges() {
+		persistExplicitChanges();
+	}
+
 	public boolean isExplicitlyChanged(String key) {
 		if (key == null) {
 			return false;
