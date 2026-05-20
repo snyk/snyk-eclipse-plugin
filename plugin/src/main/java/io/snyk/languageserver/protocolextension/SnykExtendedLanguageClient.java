@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -332,7 +333,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var oldApi = prefs.getEndpoint();
 
 		String newToken = param.getToken();
-		boolean differentToken = !newToken.equals(oldToken);
+		boolean differentToken = !Objects.equals(newToken, oldToken);
 		boolean differentApi = param.getApiUrl() != null && !param.getApiUrl().isBlank() && !param.getApiUrl().equals(oldApi);
 
 		// Update UIs first, then persist to storage (avoids race conditions)
