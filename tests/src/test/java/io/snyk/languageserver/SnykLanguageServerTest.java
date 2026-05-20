@@ -121,5 +121,4 @@ class SnykLanguageServerTest extends LsBaseTest {
 
     assertEquals(existingBinary.getAbsolutePath(), result);
   }
-
 }
