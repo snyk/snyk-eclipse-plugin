@@ -29,13 +29,7 @@ public class LspFolderConfig {
 	public LspFolderConfig withSetting(String key, Object value, boolean changed) {
 		LspFolderConfig copy = new LspFolderConfig();
 		copy.folderPath = this.folderPath;
-		copy.settings = new HashMap<>();
-
-		if (this.settings != null) {
-			for (Map.Entry<String, ConfigSetting> entry : this.settings.entrySet()) {
-				copy.settings.put(entry.getKey(), entry.getValue());
-			}
-		}
+		copy.settings = this.settings != null ? new HashMap<>(this.settings) : new HashMap<>();
 
 		ConfigSetting existing = (this.settings != null) ? this.settings.get(key) : null;
 		ConfigSetting updated = new ConfigSetting();
