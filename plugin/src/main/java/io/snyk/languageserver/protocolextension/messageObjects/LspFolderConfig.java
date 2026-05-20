@@ -67,7 +67,7 @@ public class LspFolderConfig {
 			return false;
 		}
 		if (a instanceof Number && b instanceof Number) {
-			return ((Number) a).doubleValue() == ((Number) b).doubleValue();
+			return Double.compare(((Number) a).doubleValue(), ((Number) b).doubleValue()) == 0;
 		}
 		return Objects.equals(String.valueOf(a), String.valueOf(b));
 	}
