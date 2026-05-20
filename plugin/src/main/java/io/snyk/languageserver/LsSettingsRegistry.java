@@ -29,6 +29,7 @@ public final class LsSettingsRegistry {
         public final Function<Object, String> inboundDeserializer;
         /** Always sent with changed=true — value treated as user-set regardless of tracking. */
         public final boolean isAlwaysChanged;
+        public final boolean encrypted;
         /** Included when the fallback HTML settings form is active. */
         public final boolean useInFallbackForm;
         /**
@@ -48,47 +49,53 @@ public final class LsSettingsRegistry {
                 Function<Object, String> inboundDeserializer,
                 boolean alwaysChanged, boolean useInFallbackForm,
                 String[] additionalChangedPrefKeys,
-                Function<com.fasterxml.jackson.databind.JsonNode, String> formDeserializer) {
+                Function<com.fasterxml.jackson.databind.JsonNode, String> formDeserializer,
+                boolean encrypted) {
             this.lsKey = lsKey;
             this.prefKey = prefKey;
             this.outboundDefault = outboundDefault;
             this.outboundSerializer = outboundSerializer;
             this.inboundDeserializer = inboundDeserializer;
             this.isAlwaysChanged = alwaysChanged;
+            this.encrypted = encrypted;
             this.useInFallbackForm = useInFallbackForm;
             this.additionalChangedPrefKeys = additionalChangedPrefKeys;
             this.formDeserializer = formDeserializer;
         }
 
         static Entry simple(LsKey lsKey, String prefKey, String outboundDefault) {
-            return new Entry(lsKey, prefKey, outboundDefault, v -> v, LsSettingsRegistry::defaultToString, false, false, new String[0], null);
+            return new Entry(lsKey, prefKey, outboundDefault, v -> v, LsSettingsRegistry::defaultToString, false, false, new String[0], null, false);
         }
 
         static Entry fallback(LsKey lsKey, String prefKey, String outboundDefault) {
-            return new Entry(lsKey, prefKey, outboundDefault, v -> v, LsSettingsRegistry::defaultToString, false, true, new String[0], null);
+            return new Entry(lsKey, prefKey, outboundDefault, v -> v, LsSettingsRegistry::defaultToString, false, true, new String[0], null, false);
         }
 
         /** Outbound sends Java Boolean (not string). LS GetBool handles both bool and "true"/"false". */
         static Entry bool(LsKey lsKey, String prefKey, boolean outboundDefault) {
             return new Entry(lsKey, prefKey, Boolean.toString(outboundDefault),
                     v -> Boolean.parseBoolean(v),
-                    LsSettingsRegistry::defaultToString, false, false, new String[0], null);
+                    LsSettingsRegistry::defaultToString, false, false, new String[0], null, false);
         }
 
         static Entry boolFallback(LsKey lsKey, String prefKey, boolean outboundDefault) {
             return new Entry(lsKey, prefKey, Boolean.toString(outboundDefault),
                     v -> Boolean.parseBoolean(v),
-                    LsSettingsRegistry::defaultToString, false, true, new String[0], null);
+                    LsSettingsRegistry::defaultToString, false, true, new String[0], null, false);
         }
 
         /** Value read from prefs normally, but always sent with changed=true. */
         static Entry alwaysChanged(LsKey lsKey, String prefKey, String outboundDefault) {
-            return new Entry(lsKey, prefKey, outboundDefault, v -> v, LsSettingsRegistry::defaultToString, true, false, new String[0], null);
+            return new Entry(lsKey, prefKey, outboundDefault, v -> v, LsSettingsRegistry::defaultToString, true, false, new String[0], null, false);
         }
 
         /** Hardcoded value (no pref), always sent with changed=true. Matches VSCode alwaysChanged+hardcoded resolve. */
         static Entry fixed(LsKey lsKey, String fixedValue) {
-            return new Entry(lsKey, null, fixedValue, v -> v, null, true, false, new String[0], null);
+            return new Entry(lsKey, null, fixedValue, v -> v, null, true, false, new String[0], null, false);
+        }
+
+        static Entry encryptedAlwaysChanged(LsKey lsKey, String prefKey, String outboundDefault) {
+            return new Entry(lsKey, prefKey, outboundDefault, v -> v, LsSettingsRegistry::defaultToString, true, false, new String[0], null, true);
         }
     }
 
@@ -111,7 +118,7 @@ public final class LsSettingsRegistry {
         Map<LsKey, Entry> entries = new EnumMap<>(LsKey.class);
 
         entries.put(LsKey.ENDPOINT,               Entry.simple(LsKey.ENDPOINT, Preferences.ENDPOINT_KEY, Preferences.DEFAULT_ENDPOINT));
-        entries.put(LsKey.TOKEN,                  Entry.alwaysChanged(LsKey.TOKEN, Preferences.AUTH_TOKEN_KEY, ""));
+        entries.put(LsKey.TOKEN,                  Entry.encryptedAlwaysChanged(LsKey.TOKEN, Preferences.AUTH_TOKEN_KEY, ""));
         entries.put(LsKey.ORGANIZATION,           Entry.simple(LsKey.ORGANIZATION, Preferences.ORGANIZATION_KEY, ""));
         entries.put(LsKey.AUTHENTICATION_METHOD,  Entry.simple(LsKey.AUTHENTICATION_METHOD, Preferences.AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2));
         entries.put(LsKey.AUTOMATIC_AUTHENTICATION, Entry.fixed(LsKey.AUTOMATIC_AUTHENTICATION, "false"));
@@ -123,7 +130,7 @@ public final class LsSettingsRegistry {
                 v -> Boolean.parseBoolean(v),
                 value -> String.valueOf(Boolean.TRUE.equals(value)),
                 false, false, new String[0],
-                node -> String.valueOf("auto".equals(node.asText()))));
+                node -> String.valueOf("auto".equals(node.asText())), false));
         entries.put(LsKey.ENABLE_DELTA_FINDINGS,  Entry.bool(LsKey.ENABLE_DELTA_FINDINGS, Preferences.ENABLE_DELTA, false));
         entries.put(LsKey.SEND_ERROR_REPORTS,     Entry.simple(LsKey.SEND_ERROR_REPORTS, Preferences.SEND_ERROR_REPORTS, ""));
         entries.put(LsKey.MANAGE_BINARIES_AUTOMATICALLY, Entry.boolFallback(LsKey.MANAGE_BINARIES_AUTOMATICALLY, Preferences.MANAGE_BINARIES_AUTOMATICALLY, true));
@@ -138,19 +145,19 @@ public final class LsSettingsRegistry {
         entries.put(LsKey.SEVERITY_FILTER_CRITICAL, new Entry(LsKey.SEVERITY_FILTER_CRITICAL, Preferences.FILTER_SHOW_CRITICAL, TRUE,
                 v -> Boolean.parseBoolean(v), LsSettingsRegistry::defaultToString, false, false,
                 new String[]{Preferences.FILTER_SHOW_HIGH, Preferences.FILTER_SHOW_MEDIUM, Preferences.FILTER_SHOW_LOW},
-                null));
+                null, false));
         entries.put(LsKey.SEVERITY_FILTER_HIGH, new Entry(LsKey.SEVERITY_FILTER_HIGH, Preferences.FILTER_SHOW_HIGH, TRUE,
                 v -> Boolean.parseBoolean(v), LsSettingsRegistry::defaultToString, false, false,
                 new String[]{Preferences.FILTER_SHOW_CRITICAL, Preferences.FILTER_SHOW_MEDIUM, Preferences.FILTER_SHOW_LOW},
-                null));
+                null, false));
         entries.put(LsKey.SEVERITY_FILTER_MEDIUM, new Entry(LsKey.SEVERITY_FILTER_MEDIUM, Preferences.FILTER_SHOW_MEDIUM, TRUE,
                 v -> Boolean.parseBoolean(v), LsSettingsRegistry::defaultToString, false, false,
                 new String[]{Preferences.FILTER_SHOW_CRITICAL, Preferences.FILTER_SHOW_HIGH, Preferences.FILTER_SHOW_LOW},
-                null));
+                null, false));
         entries.put(LsKey.SEVERITY_FILTER_LOW, new Entry(LsKey.SEVERITY_FILTER_LOW, Preferences.FILTER_SHOW_LOW, TRUE,
                 v -> Boolean.parseBoolean(v), LsSettingsRegistry::defaultToString, false, false,
                 new String[]{Preferences.FILTER_SHOW_CRITICAL, Preferences.FILTER_SHOW_HIGH, Preferences.FILTER_SHOW_MEDIUM},
-                null));
+                null, false));
         // risk_score_threshold: int or null (null = no threshold); "0" = no threshold in pref.
         entries.put(LsKey.RISK_SCORE_THRESHOLD, new Entry(LsKey.RISK_SCORE_THRESHOLD, Preferences.RISK_SCORE_THRESHOLD, "0",
                 v -> {
@@ -168,7 +175,7 @@ public final class LsSettingsRegistry {
                     return String.valueOf(value);
                 },
                 false, false, new String[0],
-                node -> node.isNull() ? "0" : String.valueOf(node.asInt())));
+                node -> node.isNull() ? "0" : String.valueOf(node.asInt()), false));
         // trusted_folders: always-changed array, also set top-level for InitializationOptions.
         entries.put(LsKey.TRUSTED_FOLDERS, new Entry(LsKey.TRUSTED_FOLDERS, Preferences.TRUSTED_FOLDERS, "",
                 v -> {
@@ -194,7 +201,7 @@ public final class LsSettingsRegistry {
                         sb.append(el.asText());
                     }
                     return sb.toString();
-                }));
+                }, false));
         entries.put(LsKey.CLI_RELEASE_CHANNEL,    Entry.fallback(LsKey.CLI_RELEASE_CHANNEL, Preferences.RELEASE_CHANNEL, "stable"));
 
         ENTRIES = Collections.unmodifiableMap(entries);

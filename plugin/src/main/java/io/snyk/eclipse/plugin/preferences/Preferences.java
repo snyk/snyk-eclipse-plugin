@@ -129,7 +129,7 @@ public class Preferences {
 		// Defaults for LS-backed keys driven from registry — single source of truth.
 		// Skips: fixed entries (no prefKey), AUTH_TOKEN_KEY (encrypted, not in insecureStore), CLI_PATH (computed below).
 		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
-			if (entry.prefKey == null || AUTH_TOKEN_KEY.equals(entry.prefKey) || CLI_PATH.equals(entry.prefKey)) {
+			if (entry.prefKey == null || entry.encrypted || CLI_PATH.equals(entry.prefKey)) {
 				continue;
 			}
 			insecureStore.setDefault(entry.prefKey, entry.outboundDefault);
@@ -142,6 +142,7 @@ public class Preferences {
 		insecureStore.setDefault(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
 		insecureStore.setDefault(USE_LS_HTML_CONFIG_DIALOG, TRUE);
+		// TODO: move to LsSettingsRegistry once Entry supports Supplier<String> defaults (CLI_PATH is runtime-computed)
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 
 		String savedExplicitChanges = insecure.get(EXPLICIT_CHANGES_KEY, "");
@@ -197,6 +198,21 @@ public class Preferences {
 		if (getBooleanPref(USE_TOKEN_AUTH)) {
 			store(AUTHENTICATION_METHOD, AuthConstants.AUTH_API_TOKEN);
 			store(USE_TOKEN_AUTH, FALSE);
+		}
+
+		// One-time upgrade migration: seed explicitChanges for any pref already
+		// customized on disk, so the first outbound sync sends changed=true for them.
+		if (explicitChanges.isEmpty()) {
+			for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
+				if (entry.prefKey == null || entry.encrypted) {
+					continue;
+				}
+				String stored = insecurePreferences.get(entry.prefKey, null);
+				if (stored != null && !stored.equals(entry.outboundDefault)) {
+					explicitChanges.add(entry.prefKey);
+				}
+			}
+			persistExplicitChanges();
 		}
 	}
 
