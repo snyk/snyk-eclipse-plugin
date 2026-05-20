@@ -29,8 +29,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -100,11 +102,24 @@ import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCl
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SummaryPanelParams;
+import io.snyk.languageserver.LsKey;
+import io.snyk.languageserver.LsSettingsRegistry;
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 @SuppressWarnings({"restriction", "PMD.AvoidCatchingGenericException"})
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private static final String MARKER_TYPE = "io.snyk.languageserver.marker";
+
+	// Keys the LS is allowed to push back to the IDE. TOKEN is write-only (IDE → LS only).
+	private static final Set<LsKey> INBOUND_ALLOWED_GLOBAL_KEYS = EnumSet.of(
+			LsKey.ENDPOINT,
+			LsKey.ORGANIZATION,
+			LsKey.INSECURE,
+			LsKey.MANAGE_BINARIES_AUTOMATICALLY,
+			LsKey.CLI_PATH,
+			LsKey.CLI_BASE_DOWNLOAD_URL,
+			LsKey.CLI_RELEASE_CHANNEL
+	);
 	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
 	private TaskProcessor taskProcessor;
@@ -439,8 +454,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var prefs = Preferences.getInstance();
 		for (var entry : settings.entrySet()) {
 			try {
-				var registryEntry = io.snyk.languageserver.LsSettingsRegistry.BY_LS_KEY.get(entry.getKey());
+				var registryEntry = LsSettingsRegistry.BY_LS_KEY.get(entry.getKey());
 				if (registryEntry == null || registryEntry.prefKey == null) {
+					continue;
+				}
+				if (!INBOUND_ALLOWED_GLOBAL_KEYS.contains(registryEntry.lsKey)) {
 					continue;
 				}
 				var setting = entry.getValue();
