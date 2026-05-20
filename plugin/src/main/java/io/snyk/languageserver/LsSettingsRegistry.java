@@ -97,7 +97,7 @@ public final class LsSettingsRegistry {
     /**
      * Ordered outbound entries keyed by LsKey.
      * Iterated by LsConfigurationUpdater.buildConfigurationParam().
-     * EnumMap preserves insertion order.
+     * EnumMap preserves LsKey declaration order; reordering LsKey members changes the outbound config sequence.
      */
     public static final Map<LsKey, Entry> ENTRIES;
 
