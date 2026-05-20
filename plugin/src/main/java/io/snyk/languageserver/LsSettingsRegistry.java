@@ -119,11 +119,9 @@ public final class LsSettingsRegistry {
         entries.put(LsKey.ACTIVATE_SNYK_OPEN_SOURCE, Entry.bool(LsKey.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.ACTIVATE_SNYK_OPEN_SOURCE, true));
         entries.put(LsKey.ACTIVATE_SNYK_IAC,      Entry.bool(LsKey.ACTIVATE_SNYK_IAC, Preferences.ACTIVATE_SNYK_IAC, true));
         entries.put(LsKey.ACTIVATE_SNYK_SECRETS,  Entry.bool(LsKey.ACTIVATE_SNYK_SECRETS, Preferences.ACTIVATE_SNYK_SECRETS, false));
-        // scan_automatic: LS expects boolean. "true" = automatic, "false" = manual.
-        // formDeserializer: form sends "auto"/"manual", pref stores "true"/"false".
         entries.put(LsKey.SCANNING_MODE, new Entry(LsKey.SCANNING_MODE, Preferences.SCANNING_MODE_AUTOMATIC, "true",
                 v -> Boolean.parseBoolean(v),
-                value -> String.valueOf("automatic".equals(String.valueOf(value))),
+                value -> String.valueOf(Boolean.TRUE.equals(value)),
                 false, false, new String[0],
                 node -> String.valueOf("auto".equals(node.asText()))));
         entries.put(LsKey.ENABLE_DELTA_FINDINGS,  Entry.bool(LsKey.ENABLE_DELTA_FINDINGS, Preferences.ENABLE_DELTA, false));
