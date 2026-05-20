@@ -32,7 +32,7 @@ public class FolderConfigSettings {
 		instance = i;
 	}
 
-	public void addFolderConfig(LspFolderConfig folderConfig) {
+	public synchronized void addFolderConfig(LspFolderConfig folderConfig) {
 		if (folderConfig.getFolderPath() == null) {
 			return;
 		}
@@ -90,7 +90,7 @@ public class FolderConfigSettings {
 		return configs.containsKey(key);
 	}
 
-	public void updateFolderConfig(String folderPath, LspFolderConfig config) {
+	public synchronized void updateFolderConfig(String folderPath, LspFolderConfig config) {
 		if (folderPath == null) {
 			return;
 		}
