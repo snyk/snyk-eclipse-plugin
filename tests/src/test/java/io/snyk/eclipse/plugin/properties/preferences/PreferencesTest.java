@@ -1,25 +1,13 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_SECURITY;
-import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT;
-import static io.snyk.eclipse.plugin.preferences.Preferences.AUTHENTICATION_METHOD;
-import static io.snyk.eclipse.plugin.preferences.Preferences.CLI_BASE_URL;
-import static io.snyk.eclipse.plugin.preferences.Preferences.ENABLE_DELTA;
-import static io.snyk.eclipse.plugin.preferences.Preferences.ENDPOINT_KEY;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_CRITICAL;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_HIGH;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_LOW;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_MEDIUM;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_ONLY_FIXABLE;
 import static io.snyk.eclipse.plugin.preferences.Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED;
 import static io.snyk.eclipse.plugin.preferences.Preferences.LSP_VERSION;
 import static io.snyk.eclipse.plugin.preferences.Preferences.MANAGE_BINARIES_AUTOMATICALLY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.RELEASE_CHANNEL;
-import static io.snyk.eclipse.plugin.preferences.Preferences.SCANNING_MODE_AUTOMATIC;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,6 +26,7 @@ import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.preferences.InMemorySecurePreferenceStore;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.languageserver.LsRuntimeEnvironment;
+import io.snyk.languageserver.LsSettingsRegistry;
 
 class PreferencesTest {
 
@@ -53,26 +42,20 @@ class PreferencesTest {
 				new InMemorySecurePreferenceStore());
 		LsRuntimeEnvironment lsRuntimeEnv = new LsRuntimeEnvironment();
 
-		assertEquals("false", preferences.getPref(ACTIVATE_SNYK_CODE_SECURITY));
-		assertEquals("true", preferences.getPref(ACTIVATE_SNYK_OPEN_SOURCE));
-		assertEquals("true", preferences.getPref(ACTIVATE_SNYK_IAC));
-		assertEquals("true", preferences.getPref(FILTER_SHOW_CRITICAL));
-		assertEquals("true", preferences.getPref(FILTER_SHOW_HIGH));
-		assertEquals("true", preferences.getPref(FILTER_SHOW_MEDIUM));
-		assertEquals("true", preferences.getPref(FILTER_SHOW_LOW));
-		assertEquals("false", preferences.getPref(ENABLE_DELTA));
-		assertEquals("true", preferences.getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES));
-		assertEquals("false", preferences.getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES));
+		// Registry-backed keys: assert stored default matches registry default to catch drift.
+		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
+			if (entry.prefKey == null || entry.encrypted || Preferences.CLI_PATH.equals(entry.prefKey)) {
+				continue;
+			}
+			assertEquals(entry.outboundDefault, preferences.getPref(entry.prefKey),
+					"Default mismatch for registry key: " + entry.lsKey);
+		}
+
+		// Non-registry keys with their own defaults.
 		assertEquals("false", preferences.getPref(FILTER_SHOW_ONLY_FIXABLE));
-		assertEquals("true", preferences.getPref(MANAGE_BINARIES_AUTOMATICALLY));
 		assertEquals("1", preferences.getPref(LSP_VERSION));
 		assertEquals("false", preferences.getPref(IS_GLOBAL_IGNORES_FEATURE_ENABLED));
-		assertEquals("https://api.snyk.io", preferences.getPref(ENDPOINT_KEY));
-		assertEquals("https://downloads.snyk.io", preferences.getPref(CLI_BASE_URL));
-		assertEquals("true", preferences.getPref(SCANNING_MODE_AUTOMATIC));
 		assertEquals("false", preferences.getPref(ANALYTICS_PLUGIN_INSTALLED_SENT));
-		assertEquals("stable", preferences.getPref(RELEASE_CHANNEL));
-		assertEquals(AuthConstants.AUTH_OAUTH2, preferences.getPref(AUTHENTICATION_METHOD));
 		assertTrue(preferences.getCliPath().endsWith(lsRuntimeEnv.getDownloadBinaryName()));
 	}
 
