@@ -409,6 +409,33 @@ class LsConfigurationUpdaterTest {
 		assertTrue(settings.containsKey("issue_view_open_issues"));
 	}
 
+	@Test
+	void testBuildConfigurationParam_highRiskKeySerializedValues() {
+		setupPreferenceMock();
+
+		// risk_score_threshold: "200" pref → Integer(200), "0" → null
+		when(preferenceMock.getPref(Preferences.RISK_SCORE_THRESHOLD, "0")).thenReturn("200");
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertEquals(Integer.valueOf(200), param.getSettings().get(LsKey.RISK_SCORE_THRESHOLD.key).getValue(),
+				"risk_score_threshold must serialize as Integer, not String");
+
+		when(preferenceMock.getPref(Preferences.RISK_SCORE_THRESHOLD, "0")).thenReturn("0");
+		param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertNull(param.getSettings().get(LsKey.RISK_SCORE_THRESHOLD.key).getValue(),
+				"risk_score_threshold '0' must serialize as null (no threshold)");
+
+		// scan_automatic: pref "true" → Boolean.TRUE, "false" → Boolean.FALSE
+		when(preferenceMock.getPref(Preferences.SCANNING_MODE_AUTOMATIC, "true")).thenReturn("true");
+		param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertEquals(Boolean.TRUE, param.getSettings().get(LsKey.SCANNING_MODE.key).getValue(),
+				"scan_automatic must serialize as Boolean, not String");
+
+		when(preferenceMock.getPref(Preferences.SCANNING_MODE_AUTOMATIC, "true")).thenReturn("false");
+		param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertEquals(Boolean.FALSE, param.getSettings().get(LsKey.SCANNING_MODE.key).getValue(),
+				"scan_automatic false must serialize as Boolean.FALSE");
+	}
+
 	private void setupPreferenceMock() {
 		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC, "true")).thenReturn("iac");
 		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC, "false")).thenReturn("iac");
