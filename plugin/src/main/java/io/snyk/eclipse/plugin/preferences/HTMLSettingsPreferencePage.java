@@ -247,9 +247,18 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           continue;
         }
         if (LsFolderSettingsKeys.SCAN_COMMAND_CONFIG.equals(key)) {
-          Map<String, ScanCommandConfig> scanCommandMap = objectMapper.convertValue(
-              node, objectMapper.getTypeFactory().constructMapType(HashMap.class, String.class, ScanCommandConfig.class));
-          config = config.withSetting(key, scanCommandMap, true);
+          if (!node.isObject()) {
+            SnykLogger.logInfo("Skipping non-object scan_command_config for folder " + pathStr);
+            continue;
+          }
+          try {
+            Map<String, ScanCommandConfig> scanCommandMap = objectMapper.convertValue(
+                node, objectMapper.getTypeFactory().constructMapType(HashMap.class, String.class, ScanCommandConfig.class));
+            config = config.withSetting(key, scanCommandMap, true);
+          } catch (IllegalArgumentException e) {
+            SnykLogger.logError(e);
+            continue;
+          }
         } else if (node.isArray()) {
           List<String> list = StreamSupport.stream(node.spliterator(), false)
               .filter(el -> !el.isNull())
