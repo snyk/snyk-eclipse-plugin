@@ -156,8 +156,8 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           .replace("{{MANAGE_BINARIES_CHECKED}}", prefs.isManagedBinaries() ? "checked" : "")
           .replace(
               "{{CLI_BASE_DOWNLOAD_URL}}",
-              prefs.getPref(Preferences.CLI_BASE_URL, "https://downloads.snyk.io"))
-          .replace("{{CLI_PATH}}", prefs.getCliPath())
+              htmlAttr(prefs.getPref(Preferences.CLI_BASE_URL, "https://downloads.snyk.io")))
+          .replace("{{CLI_PATH}}", htmlAttr(prefs.getCliPath()))
           .replace(
               "{{CHANNEL_STABLE_SELECTED}}",
               "stable".equals(prefs.getReleaseChannel()) ? "selected" : "")
@@ -273,6 +273,11 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       }
       return config;
     });
+  }
+
+  private static String htmlAttr(String v) {
+    if (v == null) return "";
+    return v.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;");
   }
 
   private void refreshToolbarUI() {
