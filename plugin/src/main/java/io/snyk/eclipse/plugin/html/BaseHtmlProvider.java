@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.html;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
@@ -271,7 +272,7 @@ public class BaseHtmlProvider {
 		double targetSizePt = targetSizePx * pxToPtMultiplier;
 
 		// CSS allows 3 decimal places of precision for calculations.
-		return String.format("%.3frem", targetSizePt / startingFontSizePt);
+		return String.format(Locale.ROOT, "%.3frem", targetSizePt / startingFontSizePt);
 	}
 
 	public String getColorAsHex(String colorKey, String defaultColor) {

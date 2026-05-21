@@ -209,3 +209,6 @@ CLAUDE.md
 *IDE-*
 tests.json
 .vscode
+.commit-progress
+.verify-range
+.verify-agent-progress

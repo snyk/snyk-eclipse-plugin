@@ -119,6 +119,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		boolean useHtmlTreeView = Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW);
 		treeViewer.getControl().setVisible(!useHtmlTreeView);
 		treeBrowser.setVisible(useHtmlTreeView);
+		// weight 0 is technically invalid per SWT Javadoc but works in Eclipse SWT to collapse a child;
+		// the setVisible(false) call above ensures the collapsed child is also non-interactive
 		verticalSashForm.setWeights(1, useHtmlTreeView ? 0 : 3, useHtmlTreeView ? 3 : 0);
 
 		// Create Browser
@@ -532,6 +534,13 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public void selectTreeNode(Issue issue, String product) {
+		if (issue == null) return;
+		if (Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW)) {
+			if (treeBrowserHandler != null) {
+				Display.getDefault().asyncExec(() -> treeBrowserHandler.selectNode(issue.id()));
+			}
+			return;
+		}
 		ProductTreeNode productNode = getProductNode(product, issue.filePath());
 		selectTreenodeForIssue((TreeNode) productNode, issue);
 	}
@@ -561,6 +570,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void updateTreeViewHtml(String html) {
 		if (treeBrowserHandler == null) {
+			// last-write-wins: only the most-recent HTML is needed; earlier ones are stale
 			pendingHtml.set(html);
 			return;
 		}

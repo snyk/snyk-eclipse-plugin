@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Locale;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -134,5 +136,21 @@ class BaseHtmlProviderTest extends LsBaseTest {
 		String nonce2 = htmlProvider.getNonce();
 
 		assertTrue(nonce1.equals(nonce2));
+	}
+
+	@Test
+	void replaceCssVariables_withRelativeFontSize_usesDecimalDotOnNonEnglishLocale() {
+		Locale original = Locale.getDefault();
+		try {
+			Locale.setDefault(Locale.GERMAN);
+			String html = "<body style=\"font-size: var(--main-font-size)\">Test</body>";
+
+			String result = htmlProvider.replaceCssVariables(html, true);
+
+			assertTrue(result.contains("rem"), "font-size must end with rem");
+			assertFalse(result.matches(".*\\d,\\d+rem.*"), "font-size must use decimal dot, not comma (locale-independent)");
+		} finally {
+			Locale.setDefault(original);
+		}
 	}
 }

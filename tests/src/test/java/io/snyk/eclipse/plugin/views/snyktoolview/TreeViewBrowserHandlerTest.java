@@ -61,4 +61,22 @@ class TreeViewBrowserHandlerTest extends LsBaseTest {
 		String escaped = TreeViewBrowserHandler.escapeJsSingleQuotedString("back\\slash");
 		assertTrue(escaped.contains("\\\\"), "escaped string must escape backslashes");
 	}
+
+	// Issue #4: U+2028 and U+2029 must be replaced with \u2028/\u2029 escape sequences.
+	// The implementation must NOT use literal Unicode chars (which can be corrupted by tools).
+	@Test
+	void escapeJsSingleQuotedString_escapesLineSeparator_U2028() {
+		String input = "before\u2028after";
+		String escaped = TreeViewBrowserHandler.escapeJsSingleQuotedString(input);
+		assertFalse(escaped.contains("\u2028"), "escaped string must not contain literal U+2028");
+		assertTrue(escaped.contains("\\u2028"), "escaped string must contain \\u2028 escape");
+	}
+
+	@Test
+	void escapeJsSingleQuotedString_escapesParagraphSeparator_U2029() {
+		String input = "before\u2029after";
+		String escaped = TreeViewBrowserHandler.escapeJsSingleQuotedString(input);
+		assertFalse(escaped.contains("\u2029"), "escaped string must not contain literal U+2029");
+		assertTrue(escaped.contains("\\u2029"), "escaped string must contain \\u2029 escape");
+	}
 }
