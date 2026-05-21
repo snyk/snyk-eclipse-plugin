@@ -119,9 +119,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		boolean useHtmlTreeView = Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW);
 		treeViewer.getControl().setVisible(!useHtmlTreeView);
 		treeBrowser.setVisible(useHtmlTreeView);
-		// weight 0 is technically invalid per SWT Javadoc but works in Eclipse SWT to collapse a child;
-		// the setVisible(false) call above ensures the collapsed child is also non-interactive
-		verticalSashForm.setWeights(1, useHtmlTreeView ? 0 : 3, useHtmlTreeView ? 3 : 0);
+		// setWeights() counts all children (visible or not) — always 3 positive weights for 3 children.
+		// layout() only positions visible children, so setVisible(false) above collapses the inactive pane.
+		verticalSashForm.setWeights(1, 3, 3);
 
 		// Create Browser
 		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
