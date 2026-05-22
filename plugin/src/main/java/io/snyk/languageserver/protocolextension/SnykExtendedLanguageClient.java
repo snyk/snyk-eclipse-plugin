@@ -71,7 +71,6 @@ import io.snyk.eclipse.plugin.analytics.AnalyticsEventTask;
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.preferences.HTMLSettingsPreferencePage;
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.preferences.PreferencesPage;
 import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
@@ -328,7 +327,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		// Update UIs first, then persist to storage (avoids race conditions)
 		if (differentToken) {
 			HTMLSettingsPreferencePage.notifyAuthTokenChanged(newToken, param.getApiUrl());
-			PreferencesPage.notifyAuthTokenChanged(newToken);
 		}
 
 		if (differentApi) {
