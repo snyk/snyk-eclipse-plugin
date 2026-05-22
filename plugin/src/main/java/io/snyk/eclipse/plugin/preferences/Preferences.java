@@ -86,6 +86,9 @@ public class Preferences {
 	public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
+	public static final String RELEASE_CHANNEL_STABLE = "stable";
+	public static final String RELEASE_CHANNEL_RC = "rc";
+	public static final String RELEASE_CHANNEL_PREVIEW = "preview";
 	public static final String USE_LS_HTML_CONFIG_DIALOG = "useLsHtmlConfigDialog";
 	public static final String EXPLICIT_CHANGES_KEY = "explicitChanges";
 
@@ -342,7 +345,7 @@ public class Preferences {
 	}
 
 	public final String getReleaseChannel() {
-		return getPref(RELEASE_CHANNEL, "stable");
+		return getPref(RELEASE_CHANNEL, RELEASE_CHANNEL_STABLE);
 	}
 
 	public void setTest(boolean b) {

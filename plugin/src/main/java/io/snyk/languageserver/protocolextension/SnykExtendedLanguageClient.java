@@ -448,10 +448,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		for (var entry : settings.entrySet()) {
 			try {
 				var registryEntry = LsSettingsRegistry.BY_LS_KEY.get(entry.getKey());
-				if (registryEntry == null || registryEntry.prefKey == null) {
-					continue;
-				}
-				if (registryEntry.lsKey == LsKey.TOKEN) {
+				if (registryEntry == null || registryEntry.prefKey == null || registryEntry.encrypted) {
 					continue;
 				}
 				var setting = entry.getValue();
