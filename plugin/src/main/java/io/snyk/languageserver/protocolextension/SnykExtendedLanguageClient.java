@@ -30,7 +30,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -111,16 +110,6 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private static final String MARKER_TYPE = "io.snyk.languageserver.marker";
 
-	// Keys the LS is allowed to push back to the IDE. TOKEN is write-only (IDE → LS only).
-	private static final Set<LsKey> INBOUND_ALLOWED_GLOBAL_KEYS = EnumSet.of(
-			LsKey.ENDPOINT,
-			LsKey.ORGANIZATION,
-			LsKey.INSECURE,
-			LsKey.MANAGE_BINARIES_AUTOMATICALLY,
-			LsKey.CLI_PATH,
-			LsKey.CLI_BASE_DOWNLOAD_URL,
-			LsKey.CLI_RELEASE_CHANNEL
-	);
 	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
 	private TaskProcessor taskProcessor;
@@ -431,6 +420,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			if (param == null) {
 				return;
 			}
+			int settingsCount = param.getSettings() != null ? param.getSettings().size() : 0;
+			int folderCount = param.getFolderConfigs() != null ? param.getFolderConfigs().size() : 0;
+			SnykLogger.logInfo("$/snyk.configuration received: settings=" + settingsCount + ", folders=" + folderCount);
 
 			if (param.getSettings() != null) {
 				persistGlobalSettings(param.getSettings());
@@ -459,7 +451,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				if (registryEntry == null || registryEntry.prefKey == null) {
 					continue;
 				}
-				if (!INBOUND_ALLOWED_GLOBAL_KEYS.contains(registryEntry.lsKey)) {
+				if (registryEntry.lsKey == LsKey.TOKEN) {
 					continue;
 				}
 				var setting = entry.getValue();

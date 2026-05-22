@@ -853,6 +853,24 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
+	void snykConfigurationNeverPersistsInboundToken() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"token": { "value": "compromised-token" }
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		assertEquals("dummy", pref.getPref(Preferences.AUTH_TOKEN_KEY));
+	}
+
+	@Test
 	void snykConfigurationSkipsAlwaysFixedEntries() {
 		var gson = new com.google.gson.Gson();
 		// automatic_authentication and trust_enabled are always-fixed — inbound values ignored
