@@ -11,8 +11,10 @@ public enum LsKey {
     INSECURE("proxy_insecure"),
     ADDITIONAL_PARAMS("additional_parameters"),
     SCANNING_MODE("scan_automatic"),
+    /** Not in ENTRIES — global scope not yet implemented; folder-scoped env uses LsFolderSettingsKeys.ADDITIONAL_ENV. */
     ADDITIONAL_ENV("additional_environment"),
     SEND_ERROR_REPORTS("send_error_reports"),
+    /** Not in ENTRIES — superseded by SEND_ERROR_REPORTS; retained for backward compatibility with stored prefs. */
     ENABLE_TELEMETRY("enableTelemetry"),
     MANAGE_BINARIES_AUTOMATICALLY("automatic_download"),
     CLI_PATH("cli_path"),
@@ -30,6 +32,7 @@ public enum LsKey {
     ISSUE_VIEW_OPEN_ISSUES("issue_view_open_issues"),
     ISSUE_VIEW_IGNORED_ISSUES("issue_view_ignored_issues"),
     CLI_RELEASE_CHANNEL("cli_release_channel"),
+    /** Not in ENTRIES — sent as a top-level field on LspConfigurationParam, not via the settings map. */
     DEVICE_ID("device_id"),
     ACTIVATE_SNYK_SECRETS("snyk_secrets_enabled");
 
