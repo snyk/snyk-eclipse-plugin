@@ -37,6 +37,7 @@ import org.eclipse.ui.commands.ICommandService;
 
 public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
+  private static final String SELECTED = "selected";
   private static volatile HTMLSettingsPreferencePage instance;
   private Browser browser;
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -160,16 +161,16 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           .replace("{{CLI_PATH}}", htmlAttr(prefs.getCliPath()))
           .replace(
               "{{CHANNEL_STABLE_SELECTED}}",
-              Preferences.RELEASE_CHANNEL_STABLE.equals(prefs.getReleaseChannel()) ? "selected" : "")
+              Preferences.RELEASE_CHANNEL_STABLE.equals(prefs.getReleaseChannel()) ? SELECTED : "")
           .replace(
               "{{CHANNEL_RC_SELECTED}}",
-              Preferences.RELEASE_CHANNEL_RC.equals(prefs.getReleaseChannel()) ? "selected" : "")
+              Preferences.RELEASE_CHANNEL_RC.equals(prefs.getReleaseChannel()) ? SELECTED : "")
           .replace(
               "{{CHANNEL_PREVIEW_SELECTED}}",
-              Preferences.RELEASE_CHANNEL_PREVIEW.equals(prefs.getReleaseChannel()) ? "selected" : "")
+              Preferences.RELEASE_CHANNEL_PREVIEW.equals(prefs.getReleaseChannel()) ? SELECTED : "")
           .replace(
               "{{CHANNEL_CUSTOM_SELECTED}}",
-              isCustomChannel(prefs.getReleaseChannel()) ? "selected" : "")
+              isCustomChannel(prefs.getReleaseChannel()) ? SELECTED : "")
           .replace(
               "{{CLI_RELEASE_CHANNEL_CUSTOM_HIDDEN}}",
               isCustomChannel(prefs.getReleaseChannel()) ? "" : "hidden")
