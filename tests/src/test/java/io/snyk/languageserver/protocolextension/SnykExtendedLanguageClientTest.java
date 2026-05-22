@@ -703,7 +703,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 				{
 					"settings": {
 						"scan_automatic": {
-							"value": "automatic"
+							"value": true
 						}
 					}
 				}
@@ -723,7 +723,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 				{
 					"settings": {
 						"scan_automatic": {
-							"value": "manual"
+							"value": false
 						}
 					}
 				}
