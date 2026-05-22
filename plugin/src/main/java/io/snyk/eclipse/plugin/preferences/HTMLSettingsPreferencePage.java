@@ -268,6 +268,8 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         } else if (node.isBoolean()) {
           config = config.withSetting(key, node.booleanValue(), true);
         } else {
+          SnykLogger.logInfo("processFolderConfig: storing unknown field type as text for key=" + key
+              + " jsonType=" + node.getNodeType());
           config = config.withSetting(key, node.asText(), true);
         }
       }
@@ -275,6 +277,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     });
   }
 
+  /** Escapes for double-quoted HTML attribute context only. Do not use in JS/URL contexts. */
   private static String htmlAttr(String v) {
     if (v == null) return "";
     return v.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;");
