@@ -26,7 +26,7 @@ public class SummaryBrowserHandler {
 					value = (Boolean) arguments[0];
 				}
 
-				Preferences.getInstance().store(Preferences.ENABLE_DELTA, Boolean.toString(value));
+				Preferences.getInstance().storeAndTrackChange(Preferences.ENABLE_DELTA, Boolean.toString(value));
 
 				CompletableFuture.runAsync(() -> SnykExtendedLanguageClient.getInstance().updateConfiguration());
 

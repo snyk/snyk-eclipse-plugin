@@ -84,6 +84,24 @@
         <testSourceDirectory>src/test/java</testSourceDirectory>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-bytebuddy-agent</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifact>net.bytebuddy:byte-buddy-agent:1.14.1</artifact>
+                            <outputDirectory>${project.build.directory}/agents</outputDirectory>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.eclipse.tycho</groupId>
                 <artifactId>target-platform-configuration</artifactId>
                 <version>${tycho-version}</version>
@@ -107,7 +125,7 @@
                     <failIfNoTests/>
                     <useUIHarness>false</useUIHarness>
                     <providerHint>junit59</providerHint>
-                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    <argLine>-XX:+EnableDynamicAgentLoading -Djdk.attach.allowAttachSelf=true -javaagent:${project.build.directory}/agents/byte-buddy-agent.jar</argLine>
                 </configuration>
             </plugin>
         </plugins>
