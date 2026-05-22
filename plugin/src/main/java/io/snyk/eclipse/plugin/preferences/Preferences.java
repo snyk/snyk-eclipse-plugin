@@ -89,7 +89,6 @@ public class Preferences {
 	public static final String RELEASE_CHANNEL_STABLE = "stable";
 	public static final String RELEASE_CHANNEL_RC = "rc";
 	public static final String RELEASE_CHANNEL_PREVIEW = "preview";
-	public static final String USE_LS_HTML_CONFIG_DIALOG = "useLsHtmlConfigDialog";
 	public static final String EXPLICIT_CHANGES_KEY = "explicitChanges";
 
 	private static final Set<String> encryptedPreferenceKeys = Set.of(AUTH_TOKEN_KEY);
@@ -144,7 +143,6 @@ public class Preferences {
 		insecureStore.setDefault(USE_TOKEN_AUTH, FALSE);
 		insecureStore.setDefault(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
-		insecureStore.setDefault(USE_LS_HTML_CONFIG_DIALOG, TRUE);
 		// TODO: move to LsSettingsRegistry once Entry supports Supplier<String> defaults (CLI_PATH is runtime-computed)
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 
@@ -358,14 +356,6 @@ public class Preferences {
 
 	public static boolean isDeltaEnabled() {
 		return getInstance().getBooleanPref(Preferences.ENABLE_DELTA);
-	}
-
-	public static boolean isNewConfigDialogEnabled() {
-		String envValue = envProvider.apply("SNYK_USE_HTML_SETTINGS");
-		if (envValue == null || envValue.isBlank()) {
-			return false;
-		}
-		return Boolean.parseBoolean(envValue);
 	}
 
 	// Set environment variable provider for testing. This is not used in production code.

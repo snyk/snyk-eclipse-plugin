@@ -176,23 +176,6 @@ class PreferencesTest {
 	}
 
 	@Test
-	public void testIsNewConfigDialogEnabled_defaultIsFalse() {
-		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
-				new InMemorySecurePreferenceStore());
-		PreferencesUtils.setPreferences(prefs);
-		assertFalse(Preferences.isNewConfigDialogEnabled());
-	}
-
-	@Test
-	public void testIsNewConfigDialogEnabled_falseWhenEnvVarSetToFalse() {
-		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
-				new InMemorySecurePreferenceStore());
-		PreferencesUtils.setPreferences(prefs);
-		Preferences.setEnvProvider(k -> "SNYK_USE_HTML_SETTINGS".equals(k) ? "false" : null);
-		assertFalse(Preferences.isNewConfigDialogEnabled());
-	}
-
-	@Test
 	public void testMarkExplicitlyChanged_addsKeyToSet() {
 		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
 				new InMemorySecurePreferenceStore());
