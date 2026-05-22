@@ -6,13 +6,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonElement;
@@ -20,7 +25,9 @@ import com.google.gson.JsonObject;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.languageserver.LsKey;
+import io.snyk.languageserver.download.HttpClientFactory;
 import io.snyk.languageserver.download.LsBinaries;
+import io.snyk.languageserver.download.LsDownloader;
 
 class SnykLanguageServerTest extends LsBaseTest {
 
@@ -157,6 +164,39 @@ class SnykLanguageServerTest extends LsBaseTest {
     File script = createCliStub("not-a-number");
 
     SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+  }
+
+  @Test
+  @Tag("smoke")
+  // The --protocolVersion flag is not yet in released CLI builds, so the real binary
+  // returns unparseable output. verifyCliProtocolVersion() must treat that as non-fatal.
+  void verifyCliProtocolVersion_withRealCliDownload_doesNotThrowWhenFlagUnknown() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Real CLI download not supported on Windows in this test");
+    assumeTrue(isNetworkAvailable(), "Network not available — skipping smoke test");
+
+    File tempBinary = File.createTempFile("snyk-cli-smoke", "");
+    tempBinary.deleteOnExit();
+    String originalCliPath = prefs.getCliPath();
+    try {
+      prefs.store(Preferences.CLI_PATH, tempBinary.getAbsolutePath());
+      LsRuntimeEnvironment realEnv = new LsRuntimeEnvironment();
+      LsDownloader downloader = new LsDownloader(HttpClientFactory.getInstance(), realEnv, null);
+      downloader.download(new NullProgressMonitor());
+      SnykLanguageServer.verifyCliProtocolVersion(tempBinary.getAbsolutePath());
+    } finally {
+      prefs.store(Preferences.CLI_PATH, originalCliPath);
+      tempBinary.delete();
+    }
+  }
+
+  private static boolean isNetworkAvailable() {
+    try (Socket socket = new Socket()) {
+      socket.connect(new InetSocketAddress("downloads.snyk.io", 443), 3000);
+      return true;
+    } catch (IOException e) {
+      return false;
+    }
   }
 
   private File createCliStub(String outputVersion) throws IOException {
