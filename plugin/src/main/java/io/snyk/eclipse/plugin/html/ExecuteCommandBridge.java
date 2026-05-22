@@ -6,6 +6,8 @@ import io.snyk.eclipse.plugin.preferences.AuthConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.CommandHandler;
+import io.snyk.languageserver.LsKey;
+import io.snyk.languageserver.LsSettingsRegistry;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -111,9 +113,18 @@ public class ExecuteCommandBridge {
     String endpoint = args.get(1) != null ? String.valueOf(args.get(1)) : "";
     String insecure = String.valueOf(args.get(2));
     Preferences prefs = Preferences.getInstance();
-    prefs.store(Preferences.AUTHENTICATION_METHOD, authMethod);
-    prefs.store(Preferences.ENDPOINT_KEY, endpoint);
-    prefs.store(Preferences.INSECURE_KEY, insecure);
+    storeAndMarkIfChanged(prefs, LsKey.AUTHENTICATION_METHOD, authMethod);
+    storeAndMarkIfChanged(prefs, LsKey.ENDPOINT, endpoint);
+    storeAndMarkIfChanged(prefs, LsKey.INSECURE, insecure);
+    prefs.flushExplicitChanges();
+  }
+
+  private static void storeAndMarkIfChanged(Preferences prefs, LsKey lsKey, String value) {
+    LsSettingsRegistry.Entry entry = LsSettingsRegistry.ENTRIES.get(lsKey);
+    prefs.store(entry.prefKey, value);
+    if (!value.equals(entry.outboundDefault)) {
+      prefs.markExplicitlyChangedNoFlush(entry.prefKey);
+    }
   }
 
   private static void registerBridgeFunction(Browser browser) {

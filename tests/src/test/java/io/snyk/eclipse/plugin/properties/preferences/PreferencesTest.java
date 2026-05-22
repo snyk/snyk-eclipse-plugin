@@ -1,25 +1,13 @@
 package io.snyk.eclipse.plugin.properties.preferences;
 
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_CODE_SECURITY;
-import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_IAC;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ACTIVATE_SNYK_OPEN_SOURCE;
 import static io.snyk.eclipse.plugin.preferences.Preferences.ANALYTICS_PLUGIN_INSTALLED_SENT;
-import static io.snyk.eclipse.plugin.preferences.Preferences.AUTHENTICATION_METHOD;
-import static io.snyk.eclipse.plugin.preferences.Preferences.CLI_BASE_URL;
-import static io.snyk.eclipse.plugin.preferences.Preferences.ENABLE_DELTA;
-import static io.snyk.eclipse.plugin.preferences.Preferences.ENDPOINT_KEY;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_CRITICAL;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_HIGH;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_LOW;
-import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_MEDIUM;
 import static io.snyk.eclipse.plugin.preferences.Preferences.FILTER_SHOW_ONLY_FIXABLE;
 import static io.snyk.eclipse.plugin.preferences.Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED;
 import static io.snyk.eclipse.plugin.preferences.Preferences.LSP_VERSION;
 import static io.snyk.eclipse.plugin.preferences.Preferences.MANAGE_BINARIES_AUTOMATICALLY;
 import static io.snyk.eclipse.plugin.preferences.Preferences.RELEASE_CHANNEL;
-import static io.snyk.eclipse.plugin.preferences.Preferences.SCANNING_MODE_AUTOMATIC;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,6 +26,7 @@ import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.preferences.InMemorySecurePreferenceStore;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.languageserver.LsRuntimeEnvironment;
+import io.snyk.languageserver.LsSettingsRegistry;
 
 class PreferencesTest {
 
@@ -53,26 +42,20 @@ class PreferencesTest {
 				new InMemorySecurePreferenceStore());
 		LsRuntimeEnvironment lsRuntimeEnv = new LsRuntimeEnvironment();
 
-		assertEquals("false", preferences.getPref(ACTIVATE_SNYK_CODE_SECURITY));
-		assertEquals("true", preferences.getPref(ACTIVATE_SNYK_OPEN_SOURCE));
-		assertEquals("true", preferences.getPref(ACTIVATE_SNYK_IAC));
-		assertEquals("true", preferences.getPref(FILTER_SHOW_CRITICAL));
-		assertEquals("true", preferences.getPref(FILTER_SHOW_HIGH));
-		assertEquals("true", preferences.getPref(FILTER_SHOW_MEDIUM));
-		assertEquals("true", preferences.getPref(FILTER_SHOW_LOW));
-		assertEquals("false", preferences.getPref(ENABLE_DELTA));
-		assertEquals("true", preferences.getPref(FILTER_IGNORES_SHOW_OPEN_ISSUES));
-		assertEquals("false", preferences.getPref(FILTER_IGNORES_SHOW_IGNORED_ISSUES));
+		// Registry-backed keys: assert stored default matches registry default to catch drift.
+		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
+			if (entry.prefKey == null || entry.encrypted || Preferences.CLI_PATH.equals(entry.prefKey)) {
+				continue;
+			}
+			assertEquals(entry.outboundDefault, preferences.getPref(entry.prefKey),
+					"Default mismatch for registry key: " + entry.lsKey);
+		}
+
+		// Non-registry keys with their own defaults.
 		assertEquals("false", preferences.getPref(FILTER_SHOW_ONLY_FIXABLE));
-		assertEquals("true", preferences.getPref(MANAGE_BINARIES_AUTOMATICALLY));
 		assertEquals("1", preferences.getPref(LSP_VERSION));
 		assertEquals("false", preferences.getPref(IS_GLOBAL_IGNORES_FEATURE_ENABLED));
-		assertEquals("https://api.snyk.io", preferences.getPref(ENDPOINT_KEY));
-		assertEquals("https://downloads.snyk.io", preferences.getPref(CLI_BASE_URL));
-		assertEquals("true", preferences.getPref(SCANNING_MODE_AUTOMATIC));
 		assertEquals("false", preferences.getPref(ANALYTICS_PLUGIN_INSTALLED_SENT));
-		assertEquals("stable", preferences.getPref(RELEASE_CHANNEL));
-		assertEquals(AuthConstants.AUTH_OAUTH2, preferences.getPref(AUTHENTICATION_METHOD));
 		assertTrue(preferences.getCliPath().endsWith(lsRuntimeEnv.getDownloadBinaryName()));
 	}
 
@@ -207,6 +190,175 @@ class PreferencesTest {
 		PreferencesUtils.setPreferences(prefs);
 		Preferences.setEnvProvider(k -> "SNYK_USE_HTML_SETTINGS".equals(k) ? "false" : null);
 		assertFalse(Preferences.isNewConfigDialogEnabled());
+	}
+
+	@Test
+	public void testMarkExplicitlyChanged_addsKeyToSet() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		assertFalse(prefs.isExplicitlyChanged("endpoint"));
+		prefs.markExplicitlyChanged("endpoint");
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+	}
+
+	@Test
+	public void testIsExplicitlyChanged_returnsFalseForUnchangedKey() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		assertFalse(prefs.isExplicitlyChanged("organization"));
+	}
+
+	@Test
+	public void testClearExplicitlyChanged_removesKeyFromSet() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.markExplicitlyChanged("endpoint");
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+		prefs.clearExplicitlyChanged("endpoint");
+		assertFalse(prefs.isExplicitlyChanged("endpoint"));
+	}
+
+	@Test
+	public void testExplicitChanges_multipleKeys() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.markExplicitlyChanged("endpoint");
+		prefs.markExplicitlyChanged("organization");
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+		assertTrue(prefs.isExplicitlyChanged("organization"));
+		assertFalse(prefs.isExplicitlyChanged("path"));
+	}
+
+	@Test
+	public void testExplicitChanges_persistedAsCommaSeparatedString() {
+		InMemoryPreferenceStore store = new InMemoryPreferenceStore();
+		Preferences prefs = Preferences.getTestInstance(store, new InMemorySecurePreferenceStore());
+		prefs.markExplicitlyChanged("endpoint");
+		prefs.markExplicitlyChanged("organization");
+
+		String persisted = store.get(Preferences.EXPLICIT_CHANGES_KEY, "");
+		assertTrue(persisted.contains("endpoint"));
+		assertTrue(persisted.contains("organization"));
+	}
+
+	@Test
+	public void testExplicitChanges_restoredFromPreferenceStoreOnConstruction() {
+		InMemoryPreferenceStore store = new InMemoryPreferenceStore();
+		store.put(Preferences.EXPLICIT_CHANGES_KEY, "endpoint,organization");
+
+		Preferences prefs = Preferences.getTestInstance(store, new InMemorySecurePreferenceStore());
+		assertTrue(prefs.isExplicitlyChanged("endpoint"));
+		assertTrue(prefs.isExplicitlyChanged("organization"));
+		assertFalse(prefs.isExplicitlyChanged("path"));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_marksChangedWhenValueDiffers() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.store(Preferences.ENDPOINT_KEY, "https://old.endpoint.io");
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://new.endpoint.io");
+
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertEquals("https://new.endpoint.io", prefs.getPref(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_doesNotMarkChangedWhenValueSame() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.store(Preferences.ENDPOINT_KEY, "https://same.endpoint.io");
+
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://same.endpoint.io");
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_marksChangedOnFirstWrite() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "my-org");
+
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+		assertEquals("my-org", prefs.getPref(Preferences.ORGANIZATION_KEY));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_doesNotFalsePositiveWhenValueMatchesRegisteredDefault() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		// ACTIVATE_SNYK_OPEN_SOURCE has a registered default of "true".
+		// storeAndTrackChange should compare against the registered default, not "".
+		prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true");
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE),
+				"Should not mark as changed when value matches registered default");
+	}
+
+	@Test
+	public void testStoreAndTrackChange_doesNotFalsePositiveForBooleanDefaults() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_IAC, "true");
+		prefs.storeAndTrackChange(Preferences.FILTER_SHOW_CRITICAL, "true");
+		prefs.storeAndTrackChange(Preferences.MANAGE_BINARIES_AUTOMATICALLY, "true");
+		prefs.storeAndTrackChange(Preferences.SCANNING_MODE_AUTOMATIC, "true");
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_IAC));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.FILTER_SHOW_CRITICAL));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.MANAGE_BINARIES_AUTOMATICALLY));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.SCANNING_MODE_AUTOMATIC));
+	}
+
+	@Test
+	public void testStoreAndTrackChange_handlesNullKeyGracefully() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(null, "value");
+		// should not throw
+	}
+
+	@Test
+	public void testStoreAndTrackChange_handlesNullValueGracefully() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, null);
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testClearExplicitlyChanged_resetFlowClearsOverride() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		// User sets a value
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://user-override.snyk.io");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		// User resets the value (LS form sends null)
+		prefs.clearExplicitlyChanged(Preferences.ENDPOINT_KEY);
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+
+		// Value is still stored (clearing override doesn't erase the value)
+		assertEquals("https://user-override.snyk.io", prefs.getPref(Preferences.ENDPOINT_KEY));
+	}
+
+	@Test
+	public void testClearExplicitlyChanged_onlyAffectsSpecifiedKey() {
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(),
+				new InMemorySecurePreferenceStore());
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://custom.snyk.io");
+		prefs.storeAndTrackChange(Preferences.ORGANIZATION_KEY, "my-org");
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+
+		prefs.clearExplicitlyChanged(Preferences.ENDPOINT_KEY);
+
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
 	}
 
 }
