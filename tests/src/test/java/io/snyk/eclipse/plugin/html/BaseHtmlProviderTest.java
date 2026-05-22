@@ -139,6 +139,56 @@ class BaseHtmlProviderTest extends LsBaseTest {
 	}
 
 	@Test
+	void replaceCssVariables_replacesVscodeScrollbarSliderBackground() {
+		String html = "::-webkit-scrollbar-thumb { background: var(--vscode-scrollbarSlider-background); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("var(--vscode-scrollbarSlider-background)"));
+	}
+
+	@Test
+	void replaceCssVariables_replacesVscodeScrollbarSliderHoverBackground() {
+		String html = "::-webkit-scrollbar-thumb:hover { background: var(--vscode-scrollbarSlider-hoverBackground); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("var(--vscode-scrollbarSlider-hoverBackground)"));
+	}
+
+	@Test
+	void replaceCssVariables_replacesVscodeScrollbarSliderActiveBackground() {
+		String html = "::-webkit-scrollbar-thumb:active { background: var(--vscode-scrollbarSlider-activeBackground); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("var(--vscode-scrollbarSlider-activeBackground)"));
+	}
+
+	@Test
+	void replaceCssVariables_preservesUnknownTokenWithNestedParenFallback() {
+		String html = "body { color: var(--vscode-unknown-token, rgba(255,0,0,0.5)); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertTrue(result.contains("var(--vscode-unknown-token, rgba(255,0,0,0.5))"),
+				"unknown vscode token with nested-paren fallback must be left untouched");
+	}
+
+	@Test
+	void replaceCssVariables_leavesKnownTokenWithNestedParenFallbackUnresolved() {
+		// By design: the regex uses [^()]* so a var() whose fallback itself contains parens
+		// (e.g. a nested var() call) is intentionally NOT matched and left as-is.
+		// Snyk-ls currently does not emit such forms, but this test documents the boundary.
+		String html = "body { background: var(--vscode-editor-background, var(--fallback, #1e1e1e)); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertTrue(result.contains("var(--vscode-editor-background, var(--fallback, #1e1e1e))"),
+				"known vscode token with nested-paren fallback must be left untouched (by design)");
+	}
+
+	@Test
 	void replaceCssVariables_withRelativeFontSize_usesDecimalDotOnNonEnglishLocale() {
 		Locale original = Locale.getDefault();
 		try {
