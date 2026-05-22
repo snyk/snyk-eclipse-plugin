@@ -117,7 +117,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
 	private TaskProcessor taskProcessor;
-	private ISnykToolView toolView;
+	private volatile ISnykToolView toolView;
 	// this field is for testing only
 	private LanguageServer ls;
 	private LsConfigurationUpdater configurationUpdater = new LsConfigurationUpdater();
@@ -529,9 +529,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		return CompletableFuture.supplyAsync(() -> {
 			openToolView();
+			ISnykToolView view = this.toolView;
+			if (view == null) {
+				return new ShowDocumentResult(false);
+			}
 			String displayProduct = FILTERABLE_ISSUE_TYPE_TO_DISPLAY.getOrDefault(issue.filterableIssueType(),
 					issue.filterableIssueType());
-			this.toolView.selectTreeNode(issue, displayProduct);
+			view.selectTreeNode(issue, displayProduct);
 			return new ShowDocumentResult(true);
 		});
 	}
