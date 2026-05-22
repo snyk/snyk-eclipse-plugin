@@ -32,6 +32,7 @@ import org.eclipse.lsp4j.MessageType;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -88,8 +89,15 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		summaryBrowserHandler = new SummaryBrowserHandler(summaryBrowser);
 		summaryBrowserHandler.initialize();
 
+		// Stack composite: only one of treeViewer / treeBrowser is active at a time.
+		// A single Composite child in the SashForm avoids any interaction between
+		// SashForm weight-tracking and control visibility.
+		Composite treeStack = new Composite(verticalSashForm, SWT.NONE);
+		StackLayout stackLayout = new StackLayout();
+		treeStack.setLayout(stackLayout);
+
 		// Create TreeViewer
-		treeViewer = new TreeViewer(verticalSashForm, SWT.BORDER);
+		treeViewer = new TreeViewer(treeStack, SWT.BORDER);
 		Tree tree = treeViewer.getTree();
 		tree.setHeaderVisible(false);
 		tree.setLinesVisible(false);
@@ -106,8 +114,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		registerTreeContextMenu(treeViewer.getControl());
 
-		// Create treeBrowser below the legacy TreeViewer, shown only when USE_HTML_TREE_VIEW is true
-		treeBrowser = new Browser(verticalSashForm, SWT.EDGE);
+		// Create treeBrowser; shown only when USE_HTML_TREE_VIEW is true
+		treeBrowser = new Browser(treeStack, SWT.EDGE);
 		treeBrowserHandler = new TreeViewBrowserHandler(treeBrowser);
 		treeBrowserHandler.initialize();
 
@@ -117,11 +125,10 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		}
 
 		boolean useHtmlTreeView = Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW);
-		treeViewer.getControl().setVisible(!useHtmlTreeView);
-		treeBrowser.setVisible(useHtmlTreeView);
-		// setWeights() counts all children (visible or not) — always 3 positive weights for 3 children.
-		// layout() only positions visible children, so setVisible(false) above collapses the inactive pane.
-		verticalSashForm.setWeights(1, 3, 3);
+		stackLayout.topControl = useHtmlTreeView ? treeBrowser : treeViewer.getControl();
+		treeStack.layout();
+		// verticalSashForm has exactly 2 children: summaryBrowser and treeStack.
+		verticalSashForm.setWeights(1, 3);
 
 		// Create Browser
 		// SWT.EDGE will be ignored if OS not windows and will be set to SWT.NONE.
