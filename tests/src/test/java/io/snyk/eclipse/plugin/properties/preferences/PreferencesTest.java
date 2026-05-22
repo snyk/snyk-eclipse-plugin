@@ -33,7 +33,6 @@ class PreferencesTest {
 	@BeforeEach
 	void setUp() {
 		PreferencesUtils.setPreferences(null);
-		Preferences.setEnvProvider(k -> null);
 	}
 
 	@Test

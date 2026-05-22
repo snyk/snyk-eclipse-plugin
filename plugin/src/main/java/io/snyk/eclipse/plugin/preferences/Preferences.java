@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -99,7 +98,6 @@ public class Preferences {
 	private boolean secureStorageReady;
 	private Map<String, String> prefSaveMap = new ConcurrentHashMap<>();
 	private final Set<String> explicitChanges = ConcurrentHashMap.newKeySet();
-	private static Function<String, String> envProvider = System::getenv;
 
 	public static synchronized Preferences getInstance() {
 		if (instance == null) {
@@ -356,11 +354,6 @@ public class Preferences {
 
 	public static boolean isDeltaEnabled() {
 		return getInstance().getBooleanPref(Preferences.ENABLE_DELTA);
-	}
-
-	// Set environment variable provider for testing. This is not used in production code.
-	public static void setEnvProvider(Function<String, String> provider) {
-		envProvider = provider == null ? System::getenv : provider;
 	}
 
 	public static void setCurrentPreferences(Preferences prefs) {
