@@ -542,6 +542,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			return;
 		}
 		ProductTreeNode productNode = getProductNode(product, issue.filePath());
+		if (productNode == null) return;
 		selectTreenodeForIssue((TreeNode) productNode, issue);
 	}
 
