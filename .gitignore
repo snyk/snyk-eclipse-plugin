@@ -212,3 +212,5 @@ tests.json
 .commit-progress
 .verify-range
 .verify-agent-progress
+.commit-reviewed
+.pr-review-*.md
