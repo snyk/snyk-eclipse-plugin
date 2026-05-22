@@ -160,12 +160,22 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           .replace("{{CLI_PATH}}", htmlAttr(prefs.getCliPath()))
           .replace(
               "{{CHANNEL_STABLE_SELECTED}}",
-              "stable".equals(prefs.getReleaseChannel()) ? "selected" : "")
+              Preferences.RELEASE_CHANNEL_STABLE.equals(prefs.getReleaseChannel()) ? "selected" : "")
           .replace(
-              "{{CHANNEL_RC_SELECTED}}", "rc".equals(prefs.getReleaseChannel()) ? "selected" : "")
+              "{{CHANNEL_RC_SELECTED}}",
+              Preferences.RELEASE_CHANNEL_RC.equals(prefs.getReleaseChannel()) ? "selected" : "")
           .replace(
               "{{CHANNEL_PREVIEW_SELECTED}}",
-              "preview".equals(prefs.getReleaseChannel()) ? "selected" : "")
+              Preferences.RELEASE_CHANNEL_PREVIEW.equals(prefs.getReleaseChannel()) ? "selected" : "")
+          .replace(
+              "{{CHANNEL_CUSTOM_SELECTED}}",
+              isCustomChannel(prefs.getReleaseChannel()) ? "selected" : "")
+          .replace(
+              "{{CLI_RELEASE_CHANNEL_CUSTOM_HIDDEN}}",
+              isCustomChannel(prefs.getReleaseChannel()) ? "" : "hidden")
+          .replace(
+              "{{CLI_RELEASE_CHANNEL_CUSTOM_VALUE}}",
+              isCustomChannel(prefs.getReleaseChannel()) ? htmlAttr(prefs.getReleaseChannel()) : "")
           .replace("{{INSECURE_CHECKED}}", prefs.isInsecure() ? "checked" : "");
     } catch (IOException e) {
       SnykLogger.logError(e);
@@ -275,6 +285,13 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       }
       return config;
     });
+  }
+
+  private static boolean isCustomChannel(String channel) {
+    return channel != null
+        && !Preferences.RELEASE_CHANNEL_STABLE.equals(channel)
+        && !Preferences.RELEASE_CHANNEL_RC.equals(channel)
+        && !Preferences.RELEASE_CHANNEL_PREVIEW.equals(channel);
   }
 
   /** Escapes for double-quoted HTML attribute context only. Do not use in JS/URL contexts. */

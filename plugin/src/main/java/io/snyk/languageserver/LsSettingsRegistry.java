@@ -202,7 +202,7 @@ public final class LsSettingsRegistry {
                     }
                     return sb.toString();
                 }, false));
-        entries.put(LsKey.CLI_RELEASE_CHANNEL,    Entry.fallback(LsKey.CLI_RELEASE_CHANNEL, Preferences.RELEASE_CHANNEL, "stable"));
+        entries.put(LsKey.CLI_RELEASE_CHANNEL,    Entry.fallback(LsKey.CLI_RELEASE_CHANNEL, Preferences.RELEASE_CHANNEL, Preferences.RELEASE_CHANNEL_STABLE));
 
         ENTRIES = Collections.unmodifiableMap(entries);
 
