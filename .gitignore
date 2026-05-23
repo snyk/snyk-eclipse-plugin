@@ -214,3 +214,4 @@ tests.json
 .verify-agent-progress
 .commit-reviewed
 .pr-review-*.md
+.verify-metrics-pending

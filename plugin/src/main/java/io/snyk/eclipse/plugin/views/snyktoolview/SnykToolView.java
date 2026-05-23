@@ -114,17 +114,16 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		registerTreeContextMenu(treeViewer.getControl());
 
-		// Create treeBrowser; shown only when USE_HTML_TREE_VIEW is true
-		treeBrowser = new Browser(treeStack, SWT.EDGE);
-		treeBrowserHandler = new TreeViewBrowserHandler(treeBrowser);
-		treeBrowserHandler.initialize();
-
-		String buffered = pendingHtml.getAndSet(null);
-		if (buffered != null) {
-			treeBrowserHandler.setBrowserText(buffered);
-		}
-
 		boolean useHtmlTreeView = Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW);
+		if (useHtmlTreeView) {
+			treeBrowser = new Browser(treeStack, SWT.EDGE);
+			treeBrowserHandler = new TreeViewBrowserHandler(treeBrowser);
+			treeBrowserHandler.initialize();
+			String buffered = pendingHtml.getAndSet(null);
+			if (buffered != null) {
+				treeBrowserHandler.setBrowserText(buffered);
+			}
+		}
 		stackLayout.topControl = useHtmlTreeView ? treeBrowser : treeViewer.getControl();
 		treeStack.layout();
 		// verticalSashForm has exactly 2 children: summaryBrowser and treeStack.
@@ -578,12 +577,28 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public void updateTreeViewHtml(String html) {
-		if (treeBrowserHandler == null) {
-			// last-write-wins: only the most-recent HTML is needed; earlier ones are stale
-			pendingHtml.set(html);
-			return;
+		// Always store first (last-write-wins), then drain on the UI thread.
+		// Since createPartControl also runs on the UI thread, the drain callbacks
+		// are serialized — whichever runs last when treeBrowserHandler is non-null wins.
+		pendingHtml.set(html);
+		drainPendingHtmlAsync();
+	}
+
+	private void drainPendingHtmlAsync() {
+		try {
+			Display display = Display.getDefault();
+			if (display != null && !display.isDisposed()) {
+				display.asyncExec(() -> {
+					if (treeBrowserHandler == null) return;
+					String buffered = pendingHtml.getAndSet(null);
+					if (buffered != null) {
+						treeBrowserHandler.setBrowserText(buffered);
+					}
+				});
+			}
+		} catch (UnsatisfiedLinkError | NoClassDefFoundError e) { // NOPMD — SWT natives absent in headless/test environments
+			SnykLogger.logInfo("No SWT Display available, HTML will be drained on createPartControl: " + e.getMessage());
 		}
-		Display.getDefault().asyncExec(() -> treeBrowserHandler.setBrowserText(html));
 	}
 
 }

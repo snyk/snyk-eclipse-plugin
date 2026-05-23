@@ -1,5 +1,8 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_IAC;
@@ -10,6 +13,7 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
@@ -957,5 +961,31 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 			assertTrue(result.isSuccess());
 			verify(toolWindowMock).selectTreeNode(any(), any());
 		}
+	}
+
+	// Fix 2: normalizeProductCodename must map SCAN_PARAMS_* constants to DIAGNOSTIC_SOURCE_* constants
+	@Test
+	void normalizeProductCodename_oss_returnsDiagnosticSourceSnykOss() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_OSS, SnykExtendedLanguageClient.normalizeProductCodename(SCAN_PARAMS_OSS));
+	}
+
+	@Test
+	void normalizeProductCodename_code_returnsDiagnosticSourceSnykCode() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_CODE, SnykExtendedLanguageClient.normalizeProductCodename(SCAN_PARAMS_CODE));
+	}
+
+	@Test
+	void normalizeProductCodename_iac_returnsDiagnosticSourceSnykIac() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_IAC, SnykExtendedLanguageClient.normalizeProductCodename(SCAN_PARAMS_IAC));
+	}
+
+	@Test
+	void normalizeProductCodename_unknown_returnsInputUnchanged() {
+		assertEquals("custom", SnykExtendedLanguageClient.normalizeProductCodename("custom"));
+	}
+
+	@Test
+	void normalizeProductCodename_null_returnsNull() {
+		assertNull(SnykExtendedLanguageClient.normalizeProductCodename(null));
 	}
 }

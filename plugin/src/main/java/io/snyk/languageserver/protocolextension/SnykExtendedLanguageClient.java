@@ -560,11 +560,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return null;
 		}
 		switch (product) {
-		case "oss":
+		case SCAN_PARAMS_OSS:
 			return DIAGNOSTIC_SOURCE_SNYK_OSS;
-		case "code":
+		case SCAN_PARAMS_CODE:
 			return DIAGNOSTIC_SOURCE_SNYK_CODE;
-		case "iac":
+		case SCAN_PARAMS_IAC:
 			return DIAGNOSTIC_SOURCE_SNYK_IAC;
 		default:
 			return product;

@@ -73,6 +73,38 @@ class SnykToolViewTest {
 		assertEquals("<html>second</html>", pendingHtml.get());
 	}
 
+	// Fix 3: updateTreeViewHtml must always set pendingHtml (not just when handler is null)
+	// so the asyncExec drain can pick it up regardless of race timing.
+	@Test
+	void updateTreeViewHtml_alwaysSetsPendingHtmlBeforeAsyncExec() throws Exception {
+		SnykToolView view = new SnykToolView();
+
+		view.updateTreeViewHtml("<html>race-safe</html>");
+
+		AtomicReference<?> pendingHtml = getPendingHtml(view);
+		assertEquals("<html>race-safe</html>", pendingHtml.get());
+	}
+
+	// Fix 4: HTML tree view enabled — selectTreeNode should not throw when handler is null
+	@Test
+	void selectTreeNode_withHtmlTreeViewEnabled_andNullHandler_doesNotThrow() {
+		Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore())
+				.store(Preferences.USE_HTML_TREE_VIEW, "true");
+		SnykToolView view = new SnykToolView();
+		Issue issue = new Issue("issue-id", "Test Issue", "high", "/some/path/File.java",
+				null, false, false, "Code Security", null, null);
+		assertDoesNotThrow(() -> view.selectTreeNode(issue, "Snyk Code"));
+	}
+
+	// Fix 4: HTML tree view enabled — selectTreeNode with null issue should not throw
+	@Test
+	void selectTreeNode_withHtmlTreeViewEnabled_andNullIssue_doesNotThrow() {
+		Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore())
+				.store(Preferences.USE_HTML_TREE_VIEW, "true");
+		SnykToolView view = new SnykToolView();
+		assertDoesNotThrow(() -> view.selectTreeNode(null, "Snyk Code"));
+	}
+
 	@SuppressWarnings("unchecked")
 	private AtomicReference<String> getPendingHtml(SnykToolView view) throws Exception {
 		Field f = SnykToolView.class.getDeclaredField("pendingHtml");
