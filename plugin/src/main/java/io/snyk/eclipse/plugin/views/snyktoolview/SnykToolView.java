@@ -30,6 +30,7 @@ import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.StackLayout;
@@ -596,7 +597,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					}
 				});
 			}
-		} catch (UnsatisfiedLinkError | NoClassDefFoundError e) { // NOPMD — SWT natives absent in headless/test environments
+		} catch (SWTException | UnsatisfiedLinkError | NoClassDefFoundError e) { // NOPMD — SWT unavailable in headless/test environments
 			SnykLogger.logInfo("No SWT Display available, HTML will be drained on createPartControl: " + e.getMessage());
 		}
 	}

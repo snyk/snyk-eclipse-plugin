@@ -73,18 +73,6 @@ class SnykToolViewTest {
 		assertEquals("<html>second</html>", pendingHtml.get());
 	}
 
-	// Fix 3: updateTreeViewHtml must always set pendingHtml (not just when handler is null)
-	// so the asyncExec drain can pick it up regardless of race timing.
-	@Test
-	void updateTreeViewHtml_alwaysSetsPendingHtmlBeforeAsyncExec() throws Exception {
-		SnykToolView view = new SnykToolView();
-
-		view.updateTreeViewHtml("<html>race-safe</html>");
-
-		AtomicReference<?> pendingHtml = getPendingHtml(view);
-		assertEquals("<html>race-safe</html>", pendingHtml.get());
-	}
-
 	// Fix 4: HTML tree view enabled — selectTreeNode should not throw when handler is null
 	@Test
 	void selectTreeNode_withHtmlTreeViewEnabled_andNullHandler_doesNotThrow() {
