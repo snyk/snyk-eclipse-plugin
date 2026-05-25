@@ -171,8 +171,6 @@ class SnykLanguageServerTest extends LsBaseTest {
   // The --protocolVersion flag is not yet in released CLI builds, so the real binary
   // returns unparseable output. verifyCliProtocolVersion() must treat that as non-fatal.
   void verifyCliProtocolVersion_withRealCliDownload_doesNotThrowWhenFlagUnknown() throws Exception {
-    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
-        "Real CLI download not supported on Windows in this test");
     assumeTrue(isNetworkAvailable(), "Network not available — skipping smoke test");
 
     File tempBinary = File.createTempFile("snyk-cli-smoke", "");
