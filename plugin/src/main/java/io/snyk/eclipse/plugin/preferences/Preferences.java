@@ -145,7 +145,7 @@ public class Preferences {
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
 		// TODO: move to LsSettingsRegistry once Entry supports Supplier<String> defaults (CLI_PATH is runtime-computed)
 		insecureStore.setDefault(USE_LS_HTML_CONFIG_DIALOG, TRUE);
-		insecureStore.setDefault(USE_HTML_TREE_VIEW, FALSE);
+		insecureStore.setDefault(USE_HTML_TREE_VIEW, TRUE);
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 
 		String savedExplicitChanges = insecure.get(EXPLICIT_CHANGES_KEY, "");
