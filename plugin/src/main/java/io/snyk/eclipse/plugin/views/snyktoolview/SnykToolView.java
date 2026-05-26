@@ -547,6 +547,14 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			if (treeBrowserHandler != null) {
 				Display.getDefault().asyncExec(() -> treeBrowserHandler.selectNode(issue.id()));
 			}
+			// selectTreenodeForIssue triggers selectionChanged on the hidden SWT tree,
+			// which updates the detail browser panel via browserHandler.updateBrowserContent.
+			if (treeViewer != null) {
+				ProductTreeNode productNode = getProductNode(product, issue.filePath());
+				if (productNode != null) {
+					selectTreenodeForIssue((TreeNode) productNode, issue);
+				}
+			}
 			return;
 		}
 		ProductTreeNode productNode = getProductNode(product, issue.filePath());

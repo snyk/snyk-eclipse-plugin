@@ -214,7 +214,7 @@ public class BaseHtmlProvider {
 		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
 		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
-		String focusColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
+		String focusColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066cc");
 		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 
 		// Button colors: Use Eclipse hyperlink color for primary, inactive tab for secondary

@@ -96,15 +96,24 @@ public class ResourceUtils {
 
 		SnykLogger.logInfo("After filtering: " + projects.size() + " accessible project(s)");
 
+		// Collect paths of ALL workspace projects (open or closed) so that accessible
+		// projects nested inside a closed parent are still recognised as sub-projects.
+		List<Path> allProjectPaths = new ArrayList<>();
+		for (IProject p : allProjects) {
+			Path path = getFullPath(p);
+			if (path != null) {
+				allProjectPaths.add(path);
+			}
+		}
+
 		Set<IProject> topLevel = new TreeSet<>(projectByPathComparator);
 		for (IProject iProject : projects) {
 			var projectPath = ResourceUtils.getFullPath(iProject);
 			boolean isSubProject = false;
-			for (IProject tp : topLevel) {
-				var topLevelPath = ResourceUtils.getFullPath(tp);
-				if (projectPath.startsWith(topLevelPath)) {
+			for (Path parentPath : allProjectPaths) {
+				if (projectPath != null && !projectPath.equals(parentPath) && projectPath.startsWith(parentPath)) {
 					isSubProject = true;
-					SnykLogger.logInfo("Project filtered (sub-project of " + tp.getName() + "): " + iProject.getName() + PATH_LOG_PREFIX + projectPath);
+					SnykLogger.logInfo("Project filtered (sub-project of " + parentPath + "): " + iProject.getName() + PATH_LOG_PREFIX + projectPath);
 					break;
 				}
 			}
