@@ -203,3 +203,15 @@ hs_err_pid*
 /update-site/.idea/
 /update-site/.dcignore
 .dccache
+
+CLAUDE.md
+.claude
+*IDE-*
+tests.json
+.vscode
+.commit-progress
+.verify-range
+.verify-agent-progress
+.commit-reviewed
+.pr-review-*.md
+.verify-metrics-pending

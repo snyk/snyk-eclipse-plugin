@@ -1,5 +1,8 @@
 package io.snyk.languageserver.protocolextension;
 
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_IAC;
@@ -10,7 +13,10 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -24,12 +30,16 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.lsp4j.ProgressParams;
+import org.eclipse.lsp4j.ShowDocumentParams;
+import org.eclipse.lsp4j.ShowDocumentResult;
 import org.eclipse.lsp4j.WorkDoneProgressBegin;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressNotification;
@@ -46,6 +56,7 @@ import org.mockito.Mockito;
 
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
 import io.snyk.eclipse.plugin.preferences.Preferences;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
@@ -889,4 +900,92 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykConfiguration(param);
 	}
 
+	// Regression: showDocument must not NPE when toolView is null after openToolView()
+	// is a no-op (test mode). Issue IS in cache so the code enters the supplyAsync
+	// block and reaches the null guard at toolView == null.
+	@Test
+	void showDocument_withNullToolViewAndIssueInCache_returnsFalseWithoutNpe() throws Exception {
+		Path projectPath = Paths.get("/test/project-null-toolview");
+		SnykIssueCache cache = new SnykIssueCache(projectPath);
+		String issueId = "test-issue-for-null-guard";
+		Issue issue = Instancio.of(Issue.class).set(Select.field(Issue::id), issueId).create();
+		cache.addCodeIssues("/test/project-null-toolview/Test.java", Set.of(issue));
+		IssueCacheHolder.getInstance().addCacheForTest(cache);
+
+		IProject mockProject = mock(IProject.class);
+		try (MockedStatic<ResourceUtils> mockedResourceUtils = mockStatic(ResourceUtils.class)) {
+			mockedResourceUtils.when(ResourceUtils::getAccessibleTopLevelProjects)
+					.thenReturn(List.of(mockProject));
+			mockedResourceUtils.when(() -> ResourceUtils.getFullPath(mockProject))
+					.thenReturn(projectPath);
+
+			cut = new SnykExtendedLanguageClient();
+			// toolView intentionally not set; openToolView() is a no-op in test mode.
+			// Without the null guard this would NPE on this.toolView.selectTreeNode().
+
+			ShowDocumentParams params = new ShowDocumentParams();
+			params.setUri("snyk:///test?product=code&action=showInDetailPanel&issueId=" + issueId);
+
+			ShowDocumentResult result = cut.showDocument(params).get(5, TimeUnit.SECONDS);
+
+			assertFalse(result.isSuccess());
+		}
+	}
+
+	// Regression: showDocument with toolView set and issue in cache must call
+	// selectTreeNode and return true (null guard must not block the happy path).
+	@Test
+	void showDocument_withToolViewSetAndIssueInCache_callsSelectTreeNodeAndReturnsTrue() throws Exception {
+		Path projectPath = Paths.get("/test/project-with-toolview");
+		SnykIssueCache cache = new SnykIssueCache(projectPath);
+		String issueId = "test-issue-for-happy-path";
+		Issue issue = Instancio.of(Issue.class).set(Select.field(Issue::id), issueId).create();
+		cache.addCodeIssues("/test/project-with-toolview/Test.java", Set.of(issue));
+		IssueCacheHolder.getInstance().addCacheForTest(cache);
+
+		IProject mockProject = mock(IProject.class);
+		try (MockedStatic<ResourceUtils> mockedResourceUtils = mockStatic(ResourceUtils.class)) {
+			mockedResourceUtils.when(ResourceUtils::getAccessibleTopLevelProjects)
+					.thenReturn(List.of(mockProject));
+			mockedResourceUtils.when(() -> ResourceUtils.getFullPath(mockProject))
+					.thenReturn(projectPath);
+
+			cut = new SnykExtendedLanguageClient();
+			cut.setToolWindow(toolWindowMock);
+
+			ShowDocumentParams params = new ShowDocumentParams();
+			params.setUri("snyk:///test?product=code&action=showInDetailPanel&issueId=" + issueId);
+
+			ShowDocumentResult result = cut.showDocument(params).get(5, TimeUnit.SECONDS);
+
+			assertTrue(result.isSuccess());
+			verify(toolWindowMock).selectTreeNode(any(), any());
+		}
+	}
+
+	// Fix 2: normalizeProductCodename must map SCAN_PARAMS_* constants to DIAGNOSTIC_SOURCE_* constants
+	@Test
+	void normalizeProductCodename_oss_returnsDiagnosticSourceSnykOss() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_OSS, SnykExtendedLanguageClient.normalizeProductCodename(SCAN_PARAMS_OSS));
+	}
+
+	@Test
+	void normalizeProductCodename_code_returnsDiagnosticSourceSnykCode() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_CODE, SnykExtendedLanguageClient.normalizeProductCodename(SCAN_PARAMS_CODE));
+	}
+
+	@Test
+	void normalizeProductCodename_iac_returnsDiagnosticSourceSnykIac() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_IAC, SnykExtendedLanguageClient.normalizeProductCodename(SCAN_PARAMS_IAC));
+	}
+
+	@Test
+	void normalizeProductCodename_unknown_returnsInputUnchanged() {
+		assertEquals("custom", SnykExtendedLanguageClient.normalizeProductCodename("custom"));
+	}
+
+	@Test
+	void normalizeProductCodename_null_returnsNull() {
+		assertNull(SnykExtendedLanguageClient.normalizeProductCodename(null));
+	}
 }
