@@ -597,7 +597,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					}
 				});
 			}
-		} catch (SWTException | UnsatisfiedLinkError | NoClassDefFoundError e) { // NOPMD — SWT unavailable in headless/test environments
+		} catch (SWTException | UnsatisfiedLinkError | NoClassDefFoundError e) {
 			SnykLogger.logInfo("No SWT Display available, HTML will be drained on createPartControl: " + e.getMessage());
 		}
 	}
