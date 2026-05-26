@@ -43,7 +43,7 @@ public final class ContentRootNode extends BaseTreeNode {
 		case ProductConstants.DISPLAYED_IAC:
 			return (ProductTreeNode) this.getChildren()[2];
 		default:
-			throw new IllegalArgumentException("unknown product in tree");
+			return null;
 		}
 	}
 	
