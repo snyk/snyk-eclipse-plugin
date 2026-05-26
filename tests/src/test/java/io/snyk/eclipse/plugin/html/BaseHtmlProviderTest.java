@@ -189,6 +189,26 @@ class BaseHtmlProviderTest extends LsBaseTest {
 	}
 
 	@Test
+	void isDarkTheme_returnsFalseWhenDarkBackgroundColorAbsent() {
+		// In test mode getColorAsHex always returns "" regardless of key → isDarkTheme() returns false
+		assertFalse(htmlProvider.isDarkTheme());
+	}
+
+	@Test
+	void isDarkTheme_returnsTrueWhenDarkBackgroundColorPresent() {
+		BaseHtmlProvider darkProvider = new BaseHtmlProvider() {
+			@Override
+			public String getColorAsHex(String colorKey, String defaultColor) {
+				if ("org.eclipse.ui.workbench.DARK_BACKGROUND".equals(colorKey)) {
+					return "#2b2b2b";
+				}
+				return "";
+			}
+		};
+		assertTrue(darkProvider.isDarkTheme());
+	}
+
+	@Test
 	void replaceCssVariables_withRelativeFontSize_usesDecimalDotOnNonEnglishLocale() {
 		Locale original = Locale.getDefault();
 		try {

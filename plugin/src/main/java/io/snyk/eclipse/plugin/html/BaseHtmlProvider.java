@@ -369,9 +369,14 @@ public class BaseHtmlProvider {
 		}
 	}
 
-	public Boolean isDarkTheme() {
+	/**
+	 * Returns true when Eclipse's dark-background color key is present in the color registry.
+	 * THEME_DARK_BACKGROUND is only registered by Eclipse's dark theme variants; its absence
+	 * signals a light theme. In test mode getColorAsHex always returns "" so this returns false.
+	 */
+	public boolean isDarkTheme() {
 		var darkColor = getColorAsHex(THEME_DARK_BACKGROUND, "");
-		return Boolean.valueOf(darkColor);
+		return !darkColor.isEmpty();
 	}
 
 	private ColorRegistry colorRegistry;
