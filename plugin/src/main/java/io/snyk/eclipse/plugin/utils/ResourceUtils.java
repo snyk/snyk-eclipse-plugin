@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -96,25 +97,33 @@ public class ResourceUtils {
 
 		SnykLogger.logInfo("After filtering: " + projects.size() + " accessible project(s)");
 
-		// Collect paths of ALL workspace projects (open or closed) so that accessible
-		// projects nested inside a closed parent are still recognised as sub-projects.
-		List<Path> allProjectPaths = new ArrayList<>();
+		// Collect paths of ALL workspace projects (open or closed) into a HashSet so
+		// ancestor lookup is O(1). Accessible projects nested inside a closed parent
+		// are still recognised as sub-projects because we walk ancestor components.
+		Set<Path> allProjectPathSet = new HashSet<>();
 		for (IProject p : allProjects) {
 			Path path = getFullPath(p);
 			if (path != null) {
-				allProjectPaths.add(path);
+				allProjectPathSet.add(path);
 			}
 		}
 
+		// For each accessible project, walk up its ancestor path components and check
+		// for membership in allProjectPathSet. This is O(M * depth) rather than O(M*N),
+		// where depth is the number of path components (typically < 10).
 		Set<IProject> topLevel = new TreeSet<>(projectByPathComparator);
 		for (IProject iProject : projects) {
 			var projectPath = ResourceUtils.getFullPath(iProject);
 			boolean isSubProject = false;
-			for (Path parentPath : allProjectPaths) {
-				if (projectPath != null && !projectPath.equals(parentPath) && projectPath.startsWith(parentPath)) {
-					isSubProject = true;
-					SnykLogger.logInfo("Project filtered (sub-project of " + parentPath + "): " + iProject.getName() + PATH_LOG_PREFIX + projectPath);
-					break;
+			if (projectPath != null) {
+				Path ancestor = projectPath.getParent();
+				while (ancestor != null) {
+					if (allProjectPathSet.contains(ancestor)) {
+						isSubProject = true;
+						SnykLogger.logInfo("Project filtered (sub-project of " + ancestor + "): " + iProject.getName() + PATH_LOG_PREFIX + projectPath);
+						break;
+					}
+					ancestor = ancestor.getParent();
 				}
 			}
 			if (!isSubProject) {
