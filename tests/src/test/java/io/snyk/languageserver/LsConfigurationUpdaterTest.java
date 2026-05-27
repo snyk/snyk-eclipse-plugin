@@ -267,6 +267,31 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
+	void testBuildConfigurationParam_userSettingsPath_outbound() {
+		setupPreferenceMock();
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertNotNull(param.getSettings().get(LsKey.USER_SETTINGS_PATH.key));
+		assertEquals("path", param.getSettings().get(LsKey.USER_SETTINGS_PATH.key).getValue());
+	}
+
+	@Test
+	void testBuildConfigurationParam_userSettingsPath_changedFlag() {
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.PATH_KEY)).thenReturn(true);
+
+		var param = new LsConfigurationUpdater().buildConfigurationParam();
+		assertTrue(param.getSettings().get(LsKey.USER_SETTINGS_PATH.key).getChanged());
+	}
+
+	@Test
+	void testLsSettingsRegistry_userSettingsPath_inboundRoundTrip() {
+		var entry = LsSettingsRegistry.BY_LS_KEY.get(LsKey.USER_SETTINGS_PATH.key);
+		assertNotNull(entry, "BY_LS_KEY must contain user_settings_path");
+		assertEquals(Preferences.PATH_KEY, entry.prefKey);
+		assertEquals("/usr/local/bin", entry.inboundDeserializer.apply("/usr/local/bin"));
+	}
+
+	@Test
 	void testBuildConfigurationParam_cliBaseDownloadUrlChangedFlag() {
 		setupPreferenceMock();
 		when(preferenceMock.isExplicitlyChanged(Preferences.CLI_BASE_URL)).thenReturn(true);

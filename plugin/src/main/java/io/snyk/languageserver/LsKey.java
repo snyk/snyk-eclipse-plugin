@@ -18,6 +18,7 @@ public enum LsKey {
     ENABLE_TELEMETRY("enableTelemetry"),
     MANAGE_BINARIES_AUTOMATICALLY("automatic_download"),
     CLI_PATH("cli_path"),
+    USER_SETTINGS_PATH("user_settings_path"),
     CLI_BASE_DOWNLOAD_URL("binary_base_url"),
     AUTOMATIC_AUTHENTICATION("automatic_authentication"),
     AUTHENTICATION_METHOD("authentication_method"),
