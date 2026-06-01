@@ -216,6 +216,7 @@ public class BaseHtmlProvider {
 		String textColor = getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000");
 		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
 		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
+		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
 		String focusColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066cc");
 		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 
@@ -262,15 +263,22 @@ public class BaseHtmlProvider {
 		// Overlapping keys would produce a no-op (the literal replacement already consumed the token before
 		// the regex runs). Review this map alongside snyk-ls styles.css whenever REQUIRED_LS_PROTOCOL_VERSION
 		// is bumped — token renames in the LS HTML silently leave unresolved vars if this map is not updated.
+		String dimmedTextColor = getColorAsHex(THEME_ACTIVE_TAB_TEXT, "#4F5456");
+		String inactiveSelectionBg = adjustForHover(inputBgColor, dark);
+
 		Map<String, String> vsCodeVarMap = new HashMap<>();
 		vsCodeVarMap.put("vscode-editor-background", bgColor);
 		vsCodeVarMap.put("vscode-editor-foreground", textColor);
 		vsCodeVarMap.put("vscode-foreground", textColor);
+		vsCodeVarMap.put("vscode-descriptionForeground", dimmedTextColor);
 		vsCodeVarMap.put("vscode-panel-background", bgColor);
+		vsCodeVarMap.put("vscode-panel-border", borderColor);
 		vsCodeVarMap.put("vscode-sideBar-background", bgColor);
 		vsCodeVarMap.put("vscode-sideBar-foreground", textColor);
+		vsCodeVarMap.put("vscode-tab-activeBackground", bgColor);
 		vsCodeVarMap.put("vscode-input-background", inputBgColor);
 		vsCodeVarMap.put("vscode-input-foreground", textColor);
+		vsCodeVarMap.put("vscode-textLink-foreground", focusColor);
 		vsCodeVarMap.put("vscode-button-background", buttonBgColor);
 		vsCodeVarMap.put("vscode-button-foreground", buttonFgColor);
 		vsCodeVarMap.put("vscode-button-hoverBackground", buttonHoverBgColor);
@@ -279,6 +287,13 @@ public class BaseHtmlProvider {
 		vsCodeVarMap.put("vscode-button-secondaryHoverBackground", buttonSecondaryHoverBgColor);
 		vsCodeVarMap.put("vscode-focusBorder", focusColor);
 		vsCodeVarMap.put("vscode-list-hoverBackground", listHoverBg);
+		vsCodeVarMap.put("vscode-editor-inactiveSelectionBackground", inactiveSelectionBg);
+		vsCodeVarMap.put("vscode-checkbox-background", inputBgColor);
+		vsCodeVarMap.put("vscode-checkbox-foreground", textColor);
+		vsCodeVarMap.put("vscode-checkbox-selectBackground", buttonBgColor);
+		vsCodeVarMap.put("vscode-checkbox-border", borderColor);
+		vsCodeVarMap.put("vscode-badge-background", buttonBgColor);
+		vsCodeVarMap.put("vscode-badge-foreground", buttonFgColor);
 		vsCodeVarMap.put("vscode-scrollbarSlider-background", inputBgColor);
 		vsCodeVarMap.put("vscode-scrollbarSlider-hoverBackground", adjustForHover(inputBgColor, dark));
 		vsCodeVarMap.put("vscode-scrollbarSlider-activeBackground", adjustBrightness(inputBgColor, dark ? 1.2f : 0.8f));
