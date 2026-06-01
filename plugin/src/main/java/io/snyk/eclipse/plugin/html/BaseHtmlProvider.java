@@ -218,7 +218,11 @@ public class BaseHtmlProvider {
 		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
 		String focusColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066cc");
-		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
+		// Section background must be visually distinct from the page background.
+		// Eclipse tab-bar keys (INACTIVE_TAB_BG_START / ACTIVE_TAB_BG_END) resolve to near-identical
+		// light grays in the default light theme — mirroring IntelliJ's approach of adjusting the base
+		// background slightly toward black (light) or white (dark) to create a visible card surface.
+		String sectionBgColor = adjustBrightness(bgColor, dark ? 1.05f : 0.92f);
 
 		// Error/warning foreground: #f48771 is dark-theme salmon (2.9:1 on white, fails AA).
 		// Use a darker red on light backgrounds to meet WCAG AA (7.1:1 on white).
@@ -264,7 +268,7 @@ public class BaseHtmlProvider {
 		// the regex runs). Review this map alongside snyk-ls styles.css whenever REQUIRED_LS_PROTOCOL_VERSION
 		// is bumped — token renames in the LS HTML silently leave unresolved vars if this map is not updated.
 		String dimmedTextColor = getColorAsHex(THEME_ACTIVE_TAB_TEXT, "#4F5456");
-		String inactiveSelectionBg = adjustForHover(inputBgColor, dark);
+		String inactiveSelectionBg = sectionBgColor;
 
 		Map<String, String> vsCodeVarMap = new HashMap<>();
 		vsCodeVarMap.put("vscode-editor-background", bgColor);
