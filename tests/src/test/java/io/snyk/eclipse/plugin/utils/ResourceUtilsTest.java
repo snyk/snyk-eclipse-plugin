@@ -111,6 +111,29 @@ class ResourceUtilsTest {
 	}
 
 	@Test
+	void testSubProjectOfClosedParentIsFiltered() {
+		// Closed parent is not accessible; its open child must still be excluded.
+		IProject closedParent = createMockProject("closedParent", "/Users/test/repos/parent");
+		when(closedParent.isAccessible()).thenReturn(false);
+		IProject openChild = createMockProject("openChild", "/Users/test/repos/parent/modules/child");
+
+		IWorkspaceRoot root = mock(IWorkspaceRoot.class);
+		when(root.getProjects()).thenReturn(new IProject[] { closedParent, openChild });
+
+		IWorkspace workspace = mock(IWorkspace.class);
+		when(workspace.getRoot()).thenReturn(root);
+
+		try (MockedStatic<ResourcesPlugin> resourcesPluginMock = mockStatic(ResourcesPlugin.class);
+				MockedStatic<SnykLogger> loggerMock = mockStatic(SnykLogger.class)) {
+			resourcesPluginMock.when(ResourcesPlugin::getWorkspace).thenReturn(workspace);
+
+			List<IProject> result = ResourceUtils.getAccessibleTopLevelProjects();
+
+			assertEquals(0, result.size(), "Sub-project of a closed parent must not be returned");
+		}
+	}
+
+	@Test
 	void testInaccessibleProjectIsFiltered() {
 		IProject accessible = createMockProject("accessible", "/Users/test/repos/accessible");
 		IProject inaccessible = createMockProject("inaccessible", "/Users/test/repos/inaccessible");

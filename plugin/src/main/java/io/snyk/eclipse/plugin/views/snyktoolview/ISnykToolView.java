@@ -134,4 +134,6 @@ public interface ISnykToolView {
 	abstract void disableDelta();
 
 	abstract void selectTreeNode(Issue issue, String product);
+
+	abstract void updateTreeViewHtml(String html);
 }

@@ -1,8 +1,11 @@
 package io.snyk.eclipse.plugin.html;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.core.runtime.Platform;
@@ -77,6 +80,10 @@ public class BaseHtmlProvider {
 	private static final String CSS_VAR_LS_SCROLLBAR_HOVER_BACKGROUND = "var(--scrollbar-hover-background)";
 	private static final String CSS_VAR_LS_SCROLLBAR_ACTIVE_BACKGROUND = "var(--scrollbar-active-background)";
 
+
+	// Matches var(--foo) and var(--foo, simple-fallback). Excludes fallbacks containing parens
+	// (e.g. rgba(...)) so nested-paren fallbacks are left untouched rather than mis-matched.
+	private static final Pattern CSS_VAR_PATTERN = Pattern.compile("var\\(--([a-zA-Z0-9_-]+)(?:,[^()]*)?\\)");
 
 	// Default fallback colors
 	private static final String DEFAULT_SECTION_BG_COLOR = "#F0F0F0";
@@ -207,7 +214,7 @@ public class BaseHtmlProvider {
 		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
 		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
-		String focusColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
+		String focusColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066cc");
 		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 
 		// Button colors: Use Eclipse hyperlink color for primary, inactive tab for secondary
@@ -240,12 +247,54 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_HOVER_BACKGROUND, adjustBrightness(inputBgColor, 1.1f));
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_ACTIVE_BACKGROUND, adjustBrightness(inputBgColor, 1.2f));
 
+		// Single-pass regex replacement for var(--vscode-*) tokens not handled by explicit replacements above.
+		// Mirrors IntelliJ's ThemeBasedStylingGenerator approach to ensure tokens without CSS fallbacks
+		// (e.g. scrollbar rules in snyk-ls styles.css) are resolved to Eclipse theme colors.
+		//
+		// INVARIANT: keys added here must NOT overlap with the CSS_VAR_LS_* literal constants replaced above.
+		// Overlapping keys would produce a no-op (the literal replacement already consumed the token before
+		// the regex runs). Review this map alongside snyk-ls styles.css whenever REQUIRED_LS_PROTOCOL_VERSION
+		// is bumped — token renames in the LS HTML silently leave unresolved vars if this map is not updated.
+		Map<String, String> vsCodeVarMap = new HashMap<>();
+		vsCodeVarMap.put("vscode-editor-background", bgColor);
+		vsCodeVarMap.put("vscode-editor-foreground", textColor);
+		vsCodeVarMap.put("vscode-foreground", textColor);
+		vsCodeVarMap.put("vscode-panel-background", bgColor);
+		vsCodeVarMap.put("vscode-sideBar-background", bgColor);
+		vsCodeVarMap.put("vscode-sideBar-foreground", textColor);
+		vsCodeVarMap.put("vscode-input-background", inputBgColor);
+		vsCodeVarMap.put("vscode-input-foreground", textColor);
+		vsCodeVarMap.put("vscode-button-background", buttonBgColor);
+		vsCodeVarMap.put("vscode-button-foreground", buttonFgColor);
+		vsCodeVarMap.put("vscode-button-hoverBackground", buttonHoverBgColor);
+		vsCodeVarMap.put("vscode-button-secondaryBackground", buttonSecondaryBgColor);
+		vsCodeVarMap.put("vscode-button-secondaryForeground", textColor);
+		vsCodeVarMap.put("vscode-button-secondaryHoverBackground", buttonSecondaryHoverBgColor);
+		vsCodeVarMap.put("vscode-focusBorder", focusColor);
+		vsCodeVarMap.put("vscode-list-hoverBackground", "rgba(255, 255, 255, 0.05)");
+		vsCodeVarMap.put("vscode-scrollbarSlider-background", inputBgColor);
+		vsCodeVarMap.put("vscode-scrollbarSlider-hoverBackground", adjustBrightness(inputBgColor, 1.1f));
+		vsCodeVarMap.put("vscode-scrollbarSlider-activeBackground", adjustBrightness(inputBgColor, 1.2f));
+		htmlStyled = replaceRemainingCssVars(htmlStyled, vsCodeVarMap);
+
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
 		htmlStyled = htmlStyled.replace("${nonce}", nonce);
 		htmlStyled = htmlStyled.replaceAll("ideNonce", nonce);
 		htmlStyled = htmlStyled.replace("${ideScript}", "");
 
 		return htmlStyled;
+	}
+
+	private String replaceRemainingCssVars(String html, Map<String, String> varMap) {
+		Matcher m = CSS_VAR_PATTERN.matcher(html);
+		StringBuilder sb = new StringBuilder();
+		while (m.find()) {
+			String varName = m.group(1);
+			String replacement = varMap.get(varName);
+			m.appendReplacement(sb, Matcher.quoteReplacement(replacement != null ? replacement : m.group(0)));
+		}
+		m.appendTail(sb);
+		return sb.toString();
 	}
 
 	private int getDefaultFontSize() {
@@ -271,7 +320,7 @@ public class BaseHtmlProvider {
 		double targetSizePt = targetSizePx * pxToPtMultiplier;
 
 		// CSS allows 3 decimal places of precision for calculations.
-		return String.format("%.3frem", targetSizePt / startingFontSizePt);
+		return String.format(Locale.ROOT, "%.3frem", targetSizePt / startingFontSizePt);
 	}
 
 	public String getColorAsHex(String colorKey, String defaultColor) {
@@ -320,9 +369,16 @@ public class BaseHtmlProvider {
 		}
 	}
 
+	/**
+	 * Returns true when Eclipse's dark-background color key is present in the color registry.
+	 * THEME_DARK_BACKGROUND is only registered by Eclipse's dark theme variants; its absence
+	 * signals a light theme. In test mode getColorAsHex always returns "" so this returns false.
+	 * NOTE: return type must stay Boolean (not boolean) — changing the descriptor is a binary
+	 * incompatible change in Eclipse's OSGi/JDT incremental class loader.
+	 */
 	public Boolean isDarkTheme() {
 		var darkColor = getColorAsHex(THEME_DARK_BACKGROUND, "");
-		return Boolean.valueOf(darkColor);
+		return !darkColor.isEmpty();
 	}
 
 	private ColorRegistry colorRegistry;

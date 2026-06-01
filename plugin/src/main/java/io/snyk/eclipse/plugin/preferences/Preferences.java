@@ -9,12 +9,12 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -28,6 +28,7 @@ import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.EnvironmentConstants;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsRuntimeEnvironment;
+import io.snyk.languageserver.LsSettingsRegistry;
 
 public class Preferences {
 	private static final String FALSE = "false";
@@ -46,6 +47,7 @@ public class Preferences {
 	public static final String ACTIVATE_SNYK_CODE_SECURITY = "ACTIVATE_SNYK_CODE_SECURITY";
 	public static final String ACTIVATE_SNYK_OPEN_SOURCE = "ACTIVATE_SNYK_OPEN_SOURCE";
 	public static final String ACTIVATE_SNYK_IAC = "ACTIVATE_SNYK_IAC";
+	public static final String ACTIVATE_SNYK_SECRETS = "ACTIVATE_SNYK_SECRETS";
 	public static final String ADDITIONAL_PARAMETERS = "ADDITIONAL_PARAMETERS";
 	public static final String ADDITIONAL_ENVIRONMENT = "ADDITIONAL_ENVIRONMENT";
 	/**
@@ -84,6 +86,11 @@ public class Preferences {
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
 	public static final String USE_LS_HTML_CONFIG_DIALOG = "useLsHtmlConfigDialog";
+	public static final String USE_HTML_TREE_VIEW = "useHtmlTreeView";
+	public static final String RELEASE_CHANNEL_STABLE = "stable";
+	public static final String RELEASE_CHANNEL_RC = "rc";
+	public static final String RELEASE_CHANNEL_PREVIEW = "preview";
+	public static final String EXPLICIT_CHANGES_KEY = "explicitChanges";
 
 	private static final Set<String> encryptedPreferenceKeys = Set.of(AUTH_TOKEN_KEY);
 	private final IEclipsePreferences insecurePreferences;
@@ -92,7 +99,7 @@ public class Preferences {
 	private IPreferenceStore secureStore;
 	private boolean secureStorageReady;
 	private Map<String, String> prefSaveMap = new ConcurrentHashMap<>();
-	private static Function<String, String> envProvider = System::getenv;
+	private final Set<String> explicitChanges = ConcurrentHashMap.newKeySet();
 
 	public static synchronized Preferences getInstance() {
 		if (instance == null) {
@@ -121,32 +128,35 @@ public class Preferences {
 			waitForSecureStorage();
 		});
 
-		insecureStore.setDefault(ACTIVATE_SNYK_CODE_SECURITY, FALSE);
-		insecureStore.setDefault(ACTIVATE_SNYK_OPEN_SOURCE, TRUE);
-		insecureStore.setDefault(ACTIVATE_SNYK_IAC, TRUE);
-		insecureStore.setDefault(FILTER_SHOW_CRITICAL, TRUE);
-		insecureStore.setDefault(FILTER_SHOW_HIGH, TRUE);
-		insecureStore.setDefault(FILTER_SHOW_MEDIUM, TRUE);
-		insecureStore.setDefault(FILTER_SHOW_LOW, TRUE);
-		insecureStore.setDefault(ENABLE_DELTA, FALSE);
-		insecureStore.setDefault(RISK_SCORE_THRESHOLD, "0");
-		insecureStore.setDefault(FILTER_IGNORES_SHOW_OPEN_ISSUES, TRUE);
-		insecureStore.setDefault(FILTER_IGNORES_SHOW_IGNORED_ISSUES, FALSE);
+		// Defaults for LS-backed keys driven from registry — single source of truth.
+		// Skips: fixed entries (no prefKey), AUTH_TOKEN_KEY (encrypted, not in insecureStore), CLI_PATH (computed below).
+		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
+			if (entry.prefKey == null || entry.encrypted || CLI_PATH.equals(entry.prefKey)) {
+				continue;
+			}
+			insecureStore.setDefault(entry.prefKey, entry.outboundDefault);
+		}
+		// Non-LS keys with no registry entry.
 		insecureStore.setDefault(FILTER_SHOW_ONLY_FIXABLE, FALSE);
-		insecureStore.setDefault(MANAGE_BINARIES_AUTOMATICALLY, TRUE);
 		insecureStore.setDefault(LSP_VERSION, "1");
 		insecureStore.setDefault(IS_GLOBAL_IGNORES_FEATURE_ENABLED, FALSE);
-		insecureStore.setDefault(CLI_BASE_URL, "https://downloads.snyk.io");
-		insecureStore.setDefault(SCANNING_MODE_AUTOMATIC, TRUE);
 		insecureStore.setDefault(USE_TOKEN_AUTH, FALSE);
-		insecureStore.setDefault(AUTHENTICATION_METHOD, AuthConstants.AUTH_OAUTH2);
 		insecureStore.setDefault(ANALYTICS_PLUGIN_INSTALLED_SENT, FALSE);
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
-		insecureStore.setDefault(RELEASE_CHANNEL, "stable");
+		// TODO: move to LsSettingsRegistry once Entry supports Supplier<String> defaults (CLI_PATH is runtime-computed)
 		insecureStore.setDefault(USE_LS_HTML_CONFIG_DIALOG, TRUE);
+		insecureStore.setDefault(USE_HTML_TREE_VIEW, TRUE);
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
-		insecureStore.setDefault(ENDPOINT_KEY, DEFAULT_ENDPOINT);
-		insecureStore.setDefault(ORGANIZATION_KEY, "");
+
+		String savedExplicitChanges = insecure.get(EXPLICIT_CHANGES_KEY, "");
+		if (savedExplicitChanges != null && !savedExplicitChanges.isEmpty()) {
+			for (String key : savedExplicitChanges.split(",")) {
+				String trimmed = key.trim();
+				if (!trimmed.isEmpty()) {
+					explicitChanges.add(trimmed);
+				}
+			}
+		}
 
 		var endpoint = getEnvironmentVariable(ENV_SNYK_API, "");
 		if (endpoint != null && !endpoint.isBlank()) {
@@ -191,6 +201,21 @@ public class Preferences {
 		if (getBooleanPref(USE_TOKEN_AUTH)) {
 			store(AUTHENTICATION_METHOD, AuthConstants.AUTH_API_TOKEN);
 			store(USE_TOKEN_AUTH, FALSE);
+		}
+
+		// One-time upgrade migration: seed explicitChanges for any pref already
+		// customized on disk, so the first outbound sync sends changed=true for them.
+		if (explicitChanges.isEmpty()) {
+			for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
+				if (entry.prefKey == null || entry.encrypted) {
+					continue;
+				}
+				String stored = insecurePreferences.get(entry.prefKey, null);
+				if (stored != null && !stored.equals(entry.outboundDefault)) {
+					explicitChanges.add(entry.prefKey);
+				}
+			}
+			persistExplicitChanges();
 		}
 	}
 
@@ -320,7 +345,7 @@ public class Preferences {
 	}
 
 	public final String getReleaseChannel() {
-		return getPref(RELEASE_CHANNEL, "stable");
+		return getPref(RELEASE_CHANNEL, RELEASE_CHANNEL_STABLE);
 	}
 
 	public void setTest(boolean b) {
@@ -333,19 +358,6 @@ public class Preferences {
 
 	public static boolean isDeltaEnabled() {
 		return getInstance().getBooleanPref(Preferences.ENABLE_DELTA);
-	}
-
-	public static boolean isNewConfigDialogEnabled() {
-		String envValue = envProvider.apply("SNYK_USE_HTML_SETTINGS");
-		if (envValue == null || envValue.isBlank()) {
-			return false;
-		}
-		return Boolean.parseBoolean(envValue);
-	}
-
-	// Set environment variable provider for testing. This is not used in production code.
-	public static void setEnvProvider(Function<String, String> provider) {
-		envProvider = provider == null ? System::getenv : provider;
 	}
 
 	public static void setCurrentPreferences(Preferences prefs) {
@@ -373,5 +385,66 @@ public class Preferences {
 			return false;
 		}
 		return true;
+	}
+
+	public final void storeAndTrackChange(String key, String value) {
+		if (key == null || value == null) {
+			return;
+		}
+		String oldValue = getPref(key);
+		store(key, value);
+		if (!Objects.equals(oldValue, value)) {
+			markExplicitlyChanged(key);
+		}
+	}
+
+	public void markExplicitlyChanged(String key) {
+		if (key == null) {
+			return;
+		}
+		explicitChanges.add(key);
+		persistExplicitChanges();
+	}
+
+	public void markExplicitlyChangedNoFlush(String key) {
+		if (key == null) {
+			return;
+		}
+		explicitChanges.add(key);
+	}
+
+	public void clearExplicitlyChangedNoFlush(String key) {
+		if (key == null) {
+			return;
+		}
+		explicitChanges.remove(key);
+	}
+
+	public void flushExplicitChanges() {
+		persistExplicitChanges();
+	}
+
+	public boolean isExplicitlyChanged(String key) {
+		if (key == null) {
+			return false;
+		}
+		return explicitChanges.contains(key);
+	}
+
+	public void clearExplicitlyChanged(String key) {
+		if (key == null) {
+			return;
+		}
+		explicitChanges.remove(key);
+		persistExplicitChanges();
+	}
+
+	private void persistExplicitChanges() {
+		insecurePreferences.put(EXPLICIT_CHANGES_KEY, String.join(",", explicitChanges));
+		try {
+			insecurePreferences.flush();
+		} catch (org.osgi.service.prefs.BackingStoreException e) {
+			SnykLogger.logError(e);
+		}
 	}
 }

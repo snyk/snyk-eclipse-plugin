@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Locale;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -134,5 +136,91 @@ class BaseHtmlProviderTest extends LsBaseTest {
 		String nonce2 = htmlProvider.getNonce();
 
 		assertTrue(nonce1.equals(nonce2));
+	}
+
+	@Test
+	void replaceCssVariables_replacesVscodeScrollbarSliderBackground() {
+		String html = "::-webkit-scrollbar-thumb { background: var(--vscode-scrollbarSlider-background); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("var(--vscode-scrollbarSlider-background)"));
+	}
+
+	@Test
+	void replaceCssVariables_replacesVscodeScrollbarSliderHoverBackground() {
+		String html = "::-webkit-scrollbar-thumb:hover { background: var(--vscode-scrollbarSlider-hoverBackground); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("var(--vscode-scrollbarSlider-hoverBackground)"));
+	}
+
+	@Test
+	void replaceCssVariables_replacesVscodeScrollbarSliderActiveBackground() {
+		String html = "::-webkit-scrollbar-thumb:active { background: var(--vscode-scrollbarSlider-activeBackground); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("var(--vscode-scrollbarSlider-activeBackground)"));
+	}
+
+	@Test
+	void replaceCssVariables_preservesUnknownTokenWithNestedParenFallback() {
+		String html = "body { color: var(--vscode-unknown-token, rgba(255,0,0,0.5)); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertTrue(result.contains("var(--vscode-unknown-token, rgba(255,0,0,0.5))"),
+				"unknown vscode token with nested-paren fallback must be left untouched");
+	}
+
+	@Test
+	void replaceCssVariables_leavesKnownTokenWithNestedParenFallbackUnresolved() {
+		// By design: the regex uses [^()]* so a var() whose fallback itself contains parens
+		// (e.g. a nested var() call) is intentionally NOT matched and left as-is.
+		// Snyk-ls currently does not emit such forms, but this test documents the boundary.
+		String html = "body { background: var(--vscode-editor-background, var(--fallback, #1e1e1e)); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertTrue(result.contains("var(--vscode-editor-background, var(--fallback, #1e1e1e))"),
+				"known vscode token with nested-paren fallback must be left untouched (by design)");
+	}
+
+	@Test
+	void isDarkTheme_returnsFalseWhenDarkBackgroundColorAbsent() {
+		// In test mode getColorAsHex always returns "" regardless of key → isDarkTheme() returns false
+		assertFalse(htmlProvider.isDarkTheme());
+	}
+
+	@Test
+	void isDarkTheme_returnsTrueWhenDarkBackgroundColorPresent() {
+		BaseHtmlProvider darkProvider = new BaseHtmlProvider() {
+			@Override
+			public String getColorAsHex(String colorKey, String defaultColor) {
+				if ("org.eclipse.ui.workbench.DARK_BACKGROUND".equals(colorKey)) {
+					return "#2b2b2b";
+				}
+				return "";
+			}
+		};
+		assertTrue(darkProvider.isDarkTheme());
+	}
+
+	@Test
+	void replaceCssVariables_withRelativeFontSize_usesDecimalDotOnNonEnglishLocale() {
+		Locale original = Locale.getDefault();
+		try {
+			Locale.setDefault(Locale.GERMAN);
+			String html = "<body style=\"font-size: var(--main-font-size)\">Test</body>";
+
+			String result = htmlProvider.replaceCssVariables(html, true);
+
+			assertTrue(result.contains("rem"), "font-size must end with rem");
+			assertFalse(result.matches(".*\\d,\\d+rem.*"), "font-size must use decimal dot, not comma (locale-independent)");
+		} finally {
+			Locale.setDefault(original);
+		}
 	}
 }

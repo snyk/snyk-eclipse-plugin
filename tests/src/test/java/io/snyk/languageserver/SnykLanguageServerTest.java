@@ -5,14 +5,29 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Set;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.languageserver.protocolextension.messageObjects.Settings;
+import io.snyk.languageserver.LsKey;
+import io.snyk.languageserver.download.HttpClientFactory;
+import io.snyk.languageserver.download.LsBinaries;
+import io.snyk.languageserver.download.LsDownloader;
 
 class SnykLanguageServerTest extends LsBaseTest {
 
@@ -24,7 +39,34 @@ class SnykLanguageServerTest extends LsBaseTest {
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);
 
-    assertInstanceOf(Settings.class, output);
+    assertInstanceOf(JsonElement.class, output);
+    JsonObject root = ((JsonElement) output).getAsJsonObject();
+    assertTrue(root.has("settings"), "root should have 'settings' key");
+    assertTrue(root.has("folderConfigs"), "root should have 'folderConfigs' key");
+
+    // Metadata fields should be at the top level
+    assertTrue(root.has("integrationName"), "root should have 'integrationName'");
+    assertTrue(root.has("requiredProtocolVersion"), "root should have 'requiredProtocolVersion'");
+
+    JsonObject settings = root.getAsJsonObject("settings");
+    for (var field : new String[] {
+        LsKey.ENDPOINT.key, LsKey.ORGANIZATION.key, LsKey.TOKEN.key,
+        LsKey.ACTIVATE_SNYK_CODE.key, LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key,
+        LsKey.ACTIVATE_SNYK_IAC.key, LsKey.INSECURE.key,
+        LsKey.ADDITIONAL_PARAMS.key, LsKey.SCANNING_MODE.key,
+        LsKey.CLI_PATH.key, LsKey.CLI_BASE_DOWNLOAD_URL.key,
+        LsKey.AUTHENTICATION_METHOD.key,
+        LsKey.MANAGE_BINARIES_AUTOMATICALLY.key,
+        LsKey.SEVERITY_FILTER_CRITICAL.key,
+        LsKey.SEVERITY_FILTER_HIGH.key,
+        LsKey.SEVERITY_FILTER_MEDIUM.key,
+        LsKey.SEVERITY_FILTER_LOW.key,
+        LsKey.ISSUE_VIEW_OPEN_ISSUES.key, LsKey.ISSUE_VIEW_IGNORED_ISSUES.key
+    }) {
+      assertTrue(settings.has(field), "settings should contain '" + field + "'");
+      assertTrue(settings.getAsJsonObject(field).has("value"),
+          "'" + field + "' should have a 'value' property");
+    }
   }
 
   @Test
@@ -35,10 +77,13 @@ class SnykLanguageServerTest extends LsBaseTest {
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);
 
-    assertInstanceOf(Settings.class, output);
-    Settings settings = (Settings) output;
-    assertEquals("a", settings.getTrustedFolders()[0]);
-    assertEquals("b/c", settings.getTrustedFolders()[1]);
+    assertInstanceOf(JsonElement.class, output);
+    JsonObject root = ((JsonElement) output).getAsJsonObject();
+    var foldersArray = root.getAsJsonArray("trustedFolders");
+    assertNotNull(foldersArray);
+    assertEquals(2, foldersArray.size());
+    assertEquals("a", foldersArray.get(0).getAsString());
+    assertEquals("b/c", foldersArray.get(1).getAsString());
   }
 
   @Test
@@ -47,10 +92,11 @@ class SnykLanguageServerTest extends LsBaseTest {
 
     Object output = snykStreamConnectionProvider.getInitializationOptions(null);
 
-    assertInstanceOf(Settings.class, output);
-    Settings settings = (Settings) output;
-    assertNotNull(settings.getTrustedFolders());
-    assertEquals(0, settings.getTrustedFolders().length);
+    assertInstanceOf(JsonElement.class, output);
+    JsonObject root = ((JsonElement) output).getAsJsonObject();
+    var foldersArray = root.getAsJsonArray("trustedFolders");
+    assertNotNull(foldersArray);
+    assertEquals(0, foldersArray.size());
   }
 
   @Test
@@ -86,5 +132,78 @@ class SnykLanguageServerTest extends LsBaseTest {
     String result = SnykLanguageServer.getCliPathOrThrow(this.prefs);
 
     assertEquals(existingBinary.getAbsolutePath(), result);
+  }
+
+  @Test
+  void verifyCliProtocolVersion_passesWhenVersionMatches() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    File script = createCliStub(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
+
+    SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+  }
+
+  @Test
+  void verifyCliProtocolVersion_throwsWhenVersionMismatches() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    File script = createCliStub("999");
+
+    IOException ex = assertThrows(IOException.class,
+        () -> SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
+
+    assertTrue(ex.getMessage().contains("protocol version mismatch"));
+    assertTrue(ex.getMessage().contains("999"));
+    assertTrue(ex.getMessage().contains(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION));
+  }
+
+  @Test
+  void verifyCliProtocolVersion_doesNotThrowOnUnparseableOutput() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    File script = createCliStub("not-a-number");
+
+    SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+  }
+
+  @Test
+  @Tag("smoke")
+  // The --protocolVersion flag is not yet in released CLI builds, so the real binary
+  // returns unparseable output. verifyCliProtocolVersion() must treat that as non-fatal.
+  void verifyCliProtocolVersion_withRealCliDownload_doesNotThrowWhenFlagUnknown() throws Exception {
+    assumeTrue(isNetworkAvailable(), "Network not available — skipping smoke test");
+
+    File tempBinary = File.createTempFile("snyk-cli-smoke", "");
+    tempBinary.deleteOnExit();
+    String originalCliPath = prefs.getCliPath();
+    try {
+      prefs.store(Preferences.CLI_PATH, tempBinary.getAbsolutePath());
+      LsRuntimeEnvironment realEnv = new LsRuntimeEnvironment();
+      LsDownloader downloader = new LsDownloader(HttpClientFactory.getInstance(), realEnv, null);
+      downloader.download(new NullProgressMonitor());
+      SnykLanguageServer.verifyCliProtocolVersion(tempBinary.getAbsolutePath());
+    } finally {
+      prefs.store(Preferences.CLI_PATH, originalCliPath);
+      tempBinary.delete();
+    }
+  }
+
+  private static boolean isNetworkAvailable() {
+    try (Socket socket = new Socket()) {
+      socket.connect(new InetSocketAddress("downloads.snyk.io", 443), 3000);
+      return true;
+    } catch (IOException e) {
+      return false;
+    }
+  }
+
+  private File createCliStub(String outputVersion) throws IOException {
+    File script = File.createTempFile("snyk-cli-stub", ".sh");
+    script.deleteOnExit();
+    Files.writeString(script.toPath(), "#!/bin/sh\necho " + outputVersion + "\n");
+    Files.setPosixFilePermissions(script.toPath(),
+        Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+            PosixFilePermission.OWNER_EXECUTE));
+    return script;
   }
 }
