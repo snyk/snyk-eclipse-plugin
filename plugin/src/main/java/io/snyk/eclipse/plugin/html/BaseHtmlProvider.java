@@ -167,8 +167,6 @@ public class BaseHtmlProvider {
 	}
 
 	public String replaceCssVariables(String html, boolean useRelativeFontSize) {
-		invalidateCacheOnThemeChange();
-
 		// Build the CSS with the nonce
 		String nonce = getNonce();
 		String css = "<style nonce=\"" + nonce + "\">" + getCss() + "</style>";
@@ -394,22 +392,6 @@ public class BaseHtmlProvider {
 		} catch (NumberFormatException | IndexOutOfBoundsException e) {
 			SnykLogger.logError(new Exception("Failed to adjust brightness for color: " + hexColor, e));
 			return hexColor;
-		}
-	}
-
-	// Clears per-instance color cache when Eclipse theme changes at runtime.
-	// Guards against IllegalStateException in headless/test mode where PlatformUI is unavailable.
-	@SuppressWarnings("PMD.NullAssignment")
-	private void invalidateCacheOnThemeChange() {
-		try {
-			ITheme activeTheme = PlatformUI.getWorkbench().getThemeManager().getCurrentTheme();
-			if (currentTheme != null && !currentTheme.equals(activeTheme)) {
-				colorCache.clear();
-				colorRegistry = null;
-				currentTheme = null;
-			}
-		} catch (IllegalStateException e) {
-			SnykLogger.logInfo("PlatformUI not available for theme-change check (headless/test mode)");
 		}
 	}
 
