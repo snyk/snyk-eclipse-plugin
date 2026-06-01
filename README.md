@@ -40,6 +40,16 @@ Continue by following the instructions in the other Eclipse extension docs:
 * [Environment variables for the Eclipse plugin](environment-variables-for-the-eclipse-plugin.md)
 * [Use the Snyk plugin to secure your Eclipse projects](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/use-the-snyk-plugin-to-secure-your-eclipse-projects)
 
+## Contributing
+
+To develop the plugin locally, see [CONTRIBUTING.md](CONTRIBUTING.md). Quick start:
+
+```sh
+./scripts/setup.sh
+```
+
+The script verifies your JDK, primes the Maven build, and prints the remaining Eclipse IDE steps.
+
 ## Support
 
 For troubleshooting and known issues, see [Troubleshooting for the Eclipse plugin](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/troubleshooting-for-the-eclipse-plugin).
