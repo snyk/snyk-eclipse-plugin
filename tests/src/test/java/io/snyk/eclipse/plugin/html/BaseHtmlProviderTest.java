@@ -209,6 +209,53 @@ class BaseHtmlProviderTest extends LsBaseTest {
 	}
 
 	@Test
+	void replaceCssVariables_lightTheme_listHoverUsesBlackAlpha() {
+		// In test mode isDarkTheme() returns false (light theme) → list hover must use black-alpha
+		String html = "div { background: var(--list-hover-background); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("var(--list-hover-background)"));
+		assertTrue(result.contains("rgba(0, 0, 0"), "light-theme list hover must use black-alpha, not white-alpha");
+	}
+
+	@Test
+	void replaceCssVariables_lightTheme_errorForegroundMeetsAA() {
+		// In test mode isDarkTheme() returns false (light theme) → error-foreground must be dark red
+		String html = "span { color: var(--error-foreground); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("var(--error-foreground)"));
+		assertTrue(result.contains("#a31515"), "light-theme error-foreground must be dark red (#a31515)");
+	}
+
+	@Test
+	void replaceCssVariables_replacesVscodeListHoverBackground() {
+		String html = "li:hover { background: var(--vscode-list-hoverBackground); }";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("var(--vscode-list-hoverBackground)"));
+	}
+
+	@Test
+	void replaceCssVariables_nonce_replacesAttributeFormOnly() {
+		// ideNonce must only be replaced in nonce attribute contexts, not in arbitrary body text
+		String html = "<meta http-equiv='Content-Security-Policy' content=\"script-src 'nonce-ideNonce'\">"
+				+ "<style nonce=\"ideNonce\">body{}</style>"
+				+ "<p>The word ideNonce appears in content</p>";
+
+		String result = htmlProvider.replaceCssVariables(html);
+
+		assertFalse(result.contains("nonce=\"ideNonce\""), "nonce attr form must be replaced");
+		assertFalse(result.contains("'nonce-ideNonce'"), "CSP nonce form must be replaced");
+		// Text content form: the literal string "ideNonce" in body text is no longer rewritten
+		assertTrue(result.contains("The word ideNonce appears in content"),
+				"literal ideNonce in body text must NOT be rewritten");
+	}
+
+	@Test
 	void replaceCssVariables_withRelativeFontSize_usesDecimalDotOnNonEnglishLocale() {
 		Locale original = Locale.getDefault();
 		try {
