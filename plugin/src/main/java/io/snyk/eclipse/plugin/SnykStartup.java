@@ -103,6 +103,7 @@ public class SnykStartup implements IStartup {
 				String message = "Failed to download Snyk CLI: " + errorMessage
 						+ ". Will try to start with existing binary if available.";
 				logger.error(message);
+				SnykLogger.logAndShow("Snyk CLI download failed: " + errorMessage);
 			}
 		};
 		initJob.setPriority(Job.LONG);
