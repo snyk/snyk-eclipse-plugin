@@ -90,7 +90,9 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 	// Make Generate AI fix / Apply fix buttons match the outlined Create-ignore
 	// style (transparent background, link-coloured border + text, fill on hover).
 	private String injectButtonOverride(String html, String linkColor, String onLinkColor) {
-		String override = "<style id=\"snyk-eclipse-button-override\">"
+		// CSP in details.html only allows styles with nonce 'ideNonce' or '{{.Nonce}}';
+		// without it the browser silently drops the override.
+		String override = "<style nonce=\"ideNonce\" id=\"snyk-eclipse-button-override\">"
 				+ "button.generate-ai-fix,button.sn-apply-fix{"
 				+ "background-color:transparent;"
 				+ "color:" + linkColor + ";"
