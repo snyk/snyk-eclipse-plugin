@@ -62,52 +62,26 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 	public String replaceCssVariables(String html) {
 		String htmlStyled = super.replaceCssVariables(html);
 
-		String linkColor = super.getColorAsHex("org.eclipse.ui.editors.hyperlinkColor", "#4C8DEF");
-		String onLinkColor = super.getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_SELECTED_TEXT_COLOR", "#FFFFFF");
-
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace("var(--example-line-removed-color)",
 				super.getColorAsHex("DELETION_COLOR", "#ff0000"));
 		htmlStyled = htmlStyled.replace("var(--example-line-added-color)",
 				super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
-		htmlStyled = htmlStyled.replace("var(--button-background-color)", linkColor);
-		htmlStyled = htmlStyled.replace("var(--button-text-color)", onLinkColor);
+		htmlStyled = htmlStyled.replace("var(--button-background-color)",
+				super.getColorAsHex("org.eclipse.ui.editors.hyperlinkColor", "#4C8DEF"));
+		htmlStyled = htmlStyled.replace("var(--button-text-color)",
+				super.getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_SELECTED_TEXT_COLOR", "#F5F5F5"));
 		htmlStyled = htmlStyled.replace("var(--disabled-background-color)",
 				super.getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR", "#CCCCCC"));
-		htmlStyled = htmlStyled.replace("var(--vscode-input-border)", linkColor);
+		htmlStyled = htmlStyled.replace("var(--vscode-input-border)", super.getColorAsHex("BUTTON_COLOR", "#375578"));
 		htmlStyled = htmlStyled.replace("var(--warning-text)", super.getColorAsHex("WARNING_TEXT_COLOR", "#000000"));
 		htmlStyled = htmlStyled.replace("var(--warning-background)",
 				super.getColorAsHex("WARNING_BACKGROUND_COLOR", "#c8a000"));
-
-		htmlStyled = injectButtonOverride(htmlStyled, linkColor, onLinkColor);
 
 		String htmlWithScripts = replaceAIFixScripts(htmlStyled);
 		String htmlWithIgnoreRequest = replaceIgnoreRequestScript(htmlWithScripts);
 
 		return htmlWithIgnoreRequest;
-	}
-
-	// Make Generate AI fix / Apply fix buttons match the outlined Create-ignore
-	// style (transparent background, link-coloured border + text, fill on hover).
-	private String injectButtonOverride(String html, String linkColor, String onLinkColor) {
-		String override = "<style id=\"snyk-eclipse-button-override\">"
-				+ "button.generate-ai-fix,button.sn-apply-fix{"
-				+ "background-color:transparent;"
-				+ "color:" + linkColor + ";"
-				+ "border:1px solid " + linkColor + ";"
-				+ "transition:background-color .15s ease-in,color .15s ease-in;"
-				+ "}"
-				+ "button.generate-ai-fix:hover:not(:disabled),"
-				+ "button.sn-apply-fix:hover:not(:disabled){"
-				+ "background-color:" + linkColor + ";"
-				+ "color:" + onLinkColor + ";"
-				+ "}"
-				+ "</style>";
-		int headEnd = html.indexOf("</head>");
-		if (headEnd < 0) {
-			return override + html;
-		}
-		return html.substring(0, headEnd) + override + html.substring(headEnd);
 	}
 
 	private String replaceIgnoreRequestScript(String htmlWithScripts) {
