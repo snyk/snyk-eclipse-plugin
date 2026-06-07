@@ -124,6 +124,35 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		LanguageServiceAccessor.startLanguageServer(definition);
 	}
 
+	/**
+	 * Restarts every running Snyk language server wrapper. Use this when a
+	 * settings change (such as the CLI binary path) requires re-launching the LS
+	 * process; settings-only changes should use
+	 * {@code SnykExtendedLanguageClient.updateConfiguration()} instead.
+	 *
+	 * <p>If no wrappers are running yet (e.g. the LS never started), this is a
+	 * no-op; the next normal startup will pick up the new settings.
+	 */
+	public static void restartSnykLanguageServer() {
+		try {
+			var wrappers = LanguageServiceAccessor.getStartedWrappers(null, true);
+			boolean restartedAny = false;
+			for (var wrapper : wrappers) {
+				var def = wrapper.serverDefinition;
+				if (def == null || !LANGUAGE_SERVER_ID.equals(def.id)) {
+					continue;
+				}
+				wrapper.restart();
+				restartedAny = true;
+			}
+			if (!restartedAny) {
+				startSnykLanguageServer();
+			}
+		} catch (Exception e) { // NOPMD - lsp4e can throw various unchecked errors; log and continue
+			SnykLogger.logError(e);
+		}
+	}
+
 	@Override
 	protected ProcessBuilder createProcessBuilder() {
 		var pb = super.createProcessBuilder();

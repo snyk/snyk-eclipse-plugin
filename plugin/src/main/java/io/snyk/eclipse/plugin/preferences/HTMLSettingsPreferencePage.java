@@ -11,6 +11,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.LsSettingsRegistry;
 import io.snyk.languageserver.LsSettingsRegistry.Entry;
+import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
 import java.io.IOException;
@@ -192,6 +193,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     try {
       JsonNode root = objectMapper.readTree(jsonString);
       Preferences prefs = Preferences.getInstance();
+      String previousCliPath = prefs.getCliPath();
 
       JsonNode fallbackNode = root.get("isFallbackForm");
       boolean isFallback = fallbackNode != null && fallbackNode.booleanValue();
@@ -227,6 +229,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 
       // Refresh toolbar UI to reflect changes made in HTML settings.
       refreshToolbarUI();
+
+      // If the user changed the CLI binary path, the running LS process is
+      // still bound to the old binary. updateConfiguration alone won't help —
+      // we have to restart the LS process so the new binary is launched.
+      String newCliPath = prefs.getCliPath();
+      if (!java.util.Objects.equals(previousCliPath, newCliPath)) {
+        CompletableFuture.runAsync(SnykLanguageServer::restartSnykLanguageServer);
+      }
     } catch (JsonProcessingException e) {
       SnykLogger.logError(e);
     }
