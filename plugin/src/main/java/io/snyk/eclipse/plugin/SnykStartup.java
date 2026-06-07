@@ -28,6 +28,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.SnykLanguageServer;
+import io.snyk.languageserver.WorkspaceFolderChangeTracker;
 import io.snyk.languageserver.download.ChecksumVerificationException;
 import io.snyk.languageserver.download.HttpClientFactory;
 import io.snyk.languageserver.download.LsBinaries;
@@ -56,6 +57,7 @@ public class SnykStartup implements IStartup {
 
 				try {
 					SnykLanguageServer.startSnykLanguageServer();
+					WorkspaceFolderChangeTracker.register();
 
 					PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
 						Preferences prefs = Preferences.getInstance();
