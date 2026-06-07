@@ -407,6 +407,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		case SCAN_STATE_ERROR:
 			scanState.setScanInProgress(inProgressKey, false);
 			if (productTreeNode != null) {
+				// Clear stale issue nodes from the previous successful scan so
+				// the user does not see results from an org they are no longer
+				// scanning against (e.g. after switching to an invalid org).
+				this.toolView.resetNode(productTreeNode);
 				productTreeNode.setPresentableError(param.getPresentableError());
 			}
 			break;
