@@ -231,11 +231,13 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       refreshToolbarUI();
 
       // If the user changed the CLI binary path, the running LS process is
-      // still bound to the old binary. updateConfiguration alone won't help —
-      // we have to restart the LS process so the new binary is launched.
+      // still bound to the old binary. In-process restart via lsp4e is too
+      // unreliable (cached connection providers, stuck failed wrappers,
+      // protocol-version probes against the wrong CLI), so prompt the user
+      // to restart Eclipse and let normal startup pick up the new binary.
       String newCliPath = prefs.getCliPath();
       if (!java.util.Objects.equals(previousCliPath, newCliPath)) {
-        CompletableFuture.runAsync(SnykLanguageServer::restartSnykLanguageServer);
+        SnykLanguageServer.promptToRestartEclipseForNewCli();
       }
     } catch (JsonProcessingException e) {
       SnykLogger.logError(e);
