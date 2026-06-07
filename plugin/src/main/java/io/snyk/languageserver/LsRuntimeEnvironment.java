@@ -48,7 +48,14 @@ public class LsRuntimeEnvironment {
   public String getDownloadBinaryName() {
     String base = "snyk-%s%s";
     String os = getOs();
-    String executable = String.format(base, os, getArch());
+    String arch = getArch();
+    // Snyk CLI does not publish a Windows ARM64 build; Windows 11 on ARM
+    // transparently runs x64 binaries via emulation, so fall back to the x64
+    // download rather than 404-ing the install on first launch.
+    if ("win".equals(os) && "-arm64".equals(arch)) {
+      arch = "";
+    }
+    String executable = String.format(base, os, arch);
     if (executable.toLowerCase(Locale.getDefault()).contains("win"))
       executable += ".exe";
     return executable;
