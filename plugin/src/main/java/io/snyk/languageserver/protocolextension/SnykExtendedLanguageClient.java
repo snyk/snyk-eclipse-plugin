@@ -239,6 +239,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public CompletableFuture<Object> triggerAuthentication() {
+		if (Preferences.getInstance().isAuthenticated()) {
+			return CompletableFuture.completedFuture(null);
+		}
 		return executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
 	}
 
