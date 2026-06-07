@@ -4,10 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.lsp4e.LanguageServerWrapper;
 import org.eclipse.lsp4e.LanguageServersRegistry;
 import org.eclipse.lsp4e.LanguageServersRegistry.LanguageServerDefinition;
 import org.eclipse.lsp4e.LanguageServiceAccessor;
@@ -19,6 +24,7 @@ import com.google.gson.Gson;
 import io.snyk.eclipse.plugin.SnykStartup;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.Lists;
+import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 
 
@@ -125,33 +131,100 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 	}
 
 	/**
-	 * Restarts every running Snyk language server wrapper. Use this when a
-	 * settings change (such as the CLI binary path) requires re-launching the LS
-	 * process; settings-only changes should use
-	 * {@code SnykExtendedLanguageClient.updateConfiguration()} instead.
+	 * Restarts the Snyk language server wrapper(s) so the next start picks up
+	 * fresh settings (CLI path, custom env, etc.).
 	 *
-	 * <p>If no wrappers are running yet (e.g. the LS never started), this is a
-	 * no-op; the next normal startup will pick up the new settings.
+	 * <p>Three cases the implementation handles:
+	 * <ul>
+	 * <li>One or more wrappers are alive and healthy → restart each.</li>
+	 * <li>A wrapper exists but its previous startup failed (e.g. CLI path was
+	 * empty at boot) → restart still works because
+	 * {@link org.eclipse.lsp4e.LanguageServerWrapper#restart()} stops then
+	 * starts, even from a failed state. lsp4e excludes failed wrappers from
+	 * {@code getStartedWrappers}, so we also look them up per-project via
+	 * {@code getLSWrapper}.</li>
+	 * <li>No wrapper exists yet → call {@code startLanguageServer} which
+	 * creates one.</li>
+	 * </ul>
 	 */
 	public static void restartSnykLanguageServer() {
 		try {
-			var wrappers = LanguageServiceAccessor.getStartedWrappers(null, true);
-			boolean restartedAny = false;
-			for (var wrapper : wrappers) {
-				var def = wrapper.serverDefinition;
-				if (def == null || !LANGUAGE_SERVER_ID.equals(def.id)) {
-					continue;
+			LanguageServerDefinition definition = LanguageServersRegistry.getInstance()
+					.getDefinition(LANGUAGE_SERVER_ID);
+			if (definition == null) {
+				SnykLogger.logInfo("Cannot restart Snyk LS: definition not registered");
+				return;
+			}
+
+			Set<LanguageServerWrapper> candidates = new HashSet<>();
+
+			for (LanguageServerWrapper wrapper : LanguageServiceAccessor.getStartedWrappers(null, true)) {
+				if (wrapper.serverDefinition != null && LANGUAGE_SERVER_ID.equals(wrapper.serverDefinition.id)) {
+					candidates.add(wrapper);
 				}
-				wrapper.restart();
-				restartedAny = true;
 			}
-			if (!restartedAny) {
+
+			// getStartedWrappers omits wrappers whose startup failed. Look them up
+			// per workspace project so a never-successfully-started LS can still
+			// be restarted after the offending setting (e.g. empty CLI path)
+			// has been corrected.
+			for (IProject project : ResourceUtils.getAccessibleTopLevelProjects()) {
+				LanguageServerWrapper wrapper = LanguageServiceAccessor.getLSWrapper(project, definition);
+				if (wrapper != null) {
+					candidates.add(wrapper);
+				}
+			}
+
+			if (candidates.isEmpty()) {
 				startSnykLanguageServer();
+			} else {
+				for (LanguageServerWrapper wrapper : candidates) {
+					wrapper.restart();
+				}
 			}
+
+			// lsp4e (re)start is fire-and-forget — give it a few seconds to
+			// stand the LS up, then prompt the user to restart Eclipse if it's
+			// still not active. Without this, a stuck/failed restart leaves the
+			// user with a silently dead LS.
+			schedulePostRestartCheck();
 		} catch (Exception e) { // NOPMD - lsp4e can throw various unchecked errors; log and continue
 			SnykLogger.logError(e);
+			promptUserToRestartEclipse();
 		}
 	}
+
+	private static void schedulePostRestartCheck() {
+		CompletableFuture.delayedExecutor(POST_RESTART_CHECK_DELAY_SECONDS, TimeUnit.SECONDS).execute(() -> {
+			try {
+				if (!isAnySnykWrapperActive()) {
+					promptUserToRestartEclipse();
+				}
+			} catch (Exception e) { // NOPMD
+				SnykLogger.logError(e);
+			}
+		});
+	}
+
+	private static boolean isAnySnykWrapperActive() {
+		for (LanguageServerWrapper wrapper : LanguageServiceAccessor.getStartedWrappers(null, true)) {
+			if (wrapper.serverDefinition != null
+					&& LANGUAGE_SERVER_ID.equals(wrapper.serverDefinition.id)
+					&& wrapper.isActive()
+					&& !wrapper.startupFailed()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static void promptUserToRestartEclipse() {
+		SnykLogger.logAndShow(
+				"Snyk: could not reload the language server automatically with the new CLI binary. "
+				+ "Please restart Eclipse for the change to take effect.");
+	}
+
+	private static final int POST_RESTART_CHECK_DELAY_SECONDS = 5;
 
 	@Override
 	protected ProcessBuilder createProcessBuilder() {
