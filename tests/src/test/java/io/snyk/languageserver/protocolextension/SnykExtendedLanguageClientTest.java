@@ -963,6 +963,62 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		}
 	}
 
+	// file:// URIs must be handled by our own openFileInEclipse, not super.showDocument.
+	// In test mode, openFileInEclipse returns false (isTest() guard) without delegating to
+	// LSP4E's default which can route to the OS (Windsurf) for unknown file extensions.
+	@Test
+	void showDocument_withFileUri_returnsFalseInTestMode() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		ShowDocumentParams params = new ShowDocumentParams();
+		params.setUri("file:///some/path/secret.key");
+
+		ShowDocumentResult result = cut.showDocument(params).get(5, TimeUnit.SECONDS);
+
+		// test mode: isTest() guard skips actual editor open, returns false without OS delegation
+		assertFalse(result.isSuccess());
+	}
+
+	@Test
+	void showDocument_withFileUriAndRange_returnsFalseInTestMode() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		ShowDocumentParams params = new ShowDocumentParams();
+		params.setUri("file:///some/path/config.md");
+		org.eclipse.lsp4j.Range range = new org.eclipse.lsp4j.Range(
+				new org.eclipse.lsp4j.Position(2, 0),
+				new org.eclipse.lsp4j.Position(2, 10));
+		params.setSelection(range);
+
+		ShowDocumentResult result = cut.showDocument(params).get(5, TimeUnit.SECONDS);
+
+		assertFalse(result.isSuccess());
+	}
+
+	@Test
+	void showDocument_withUnsupportedScheme_returnsFalse() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		ShowDocumentParams params = new ShowDocumentParams();
+		params.setUri("vscode://extension/something");
+
+		ShowDocumentResult result = cut.showDocument(params).get(5, TimeUnit.SECONDS);
+
+		assertFalse(result.isSuccess());
+	}
+
+	@Test
+	void showDocument_withUnsupportedSnykAction_returnsFalse() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		ShowDocumentParams params = new ShowDocumentParams();
+		params.setUri("snyk:///test?product=code&action=unknownAction&issueId=abc");
+
+		ShowDocumentResult result = cut.showDocument(params).get(5, TimeUnit.SECONDS);
+
+		assertFalse(result.isSuccess());
+	}
+
 	// Fix 2: normalizeProductCodename must map SCAN_PARAMS_* constants to DIAGNOSTIC_SOURCE_* constants
 	@Test
 	void normalizeProductCodename_oss_returnsDiagnosticSourceSnykOss() {
