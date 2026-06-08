@@ -26,6 +26,7 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -61,6 +62,9 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     container.setLayout(new FillLayout());
 
     browser = new Browser(container, SWT.WEBKIT);
+    browser.addTraverseListener(e -> {
+      if (e.detail == SWT.TRAVERSE_ESCAPE) e.doit = false;
+    });
     initializeBrowserFunctions();
     loadContent();
 
