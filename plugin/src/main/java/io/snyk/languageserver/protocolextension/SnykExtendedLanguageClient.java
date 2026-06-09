@@ -71,10 +71,12 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -531,9 +533,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		} else if (FILE_SCHEME.equals(uriDetails.scheme())) {
 			return openFileInEclipse(uri, params.getSelection());
 		} else {
-			SnykLogger.logInfo(String.format("Unsupported URI: scheme=%s, product=%s, action=%s, issue=%s",
-					uriDetails.scheme(), uriDetails.product(), uriDetails.action(), uriDetails.issueId()));
-			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
+			return super.showDocument(params);
 		}
 
 		if (issue == null) {
@@ -564,7 +564,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			boolean[] success = { false };
 			Display.getDefault().syncExec(() -> {
 				try {
-					IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+					IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+					if (window == null) {
+						return;
+					}
+					IWorkbenchPage page = window.getActivePage();
 					if (page == null) {
 						return;
 					}
@@ -585,6 +589,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private IEditorPart openEditorForUri(IWorkbenchPage page, URI uri) throws PartInitException, CoreException {
+		uri = uri.normalize();
+		if (uri.getPath() != null && uri.getPath().contains("..")) {
+			SnykLogger.logInfo("Rejected URI with path traversal: " + uri);
+			return null;
+		}
 		String editorId = resolveInternalEditorId(uri);
 		IFile workspaceFile = LSPEclipseUtils.getFileHandle(uri.toString());
 		if (workspaceFile != null && workspaceFile.exists()) {
@@ -607,7 +616,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private void revealRange(ITextEditor textEditor, Range range) {
-		IDocument doc = textEditor.getDocumentProvider().getDocument(textEditor.getEditorInput());
+		IDocumentProvider provider = textEditor.getDocumentProvider();
+		if (provider == null) {
+			return;
+		}
+		IDocument doc = provider.getDocument(textEditor.getEditorInput());
 		if (doc == null) {
 			return;
 		}
