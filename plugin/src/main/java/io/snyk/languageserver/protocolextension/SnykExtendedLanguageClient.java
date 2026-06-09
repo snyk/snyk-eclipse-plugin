@@ -532,8 +532,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			issue = getIssueFromCache(uriDetails.product(), uriDetails.issueId());
 		} else if (FILE_SCHEME.equals(uriDetails.scheme())) {
 			return openFileInEclipse(uri, params.getSelection());
-		} else {
+		} else if ("http".equals(uriDetails.scheme()) || "https".equals(uriDetails.scheme())) {
 			return super.showDocument(params);
+		} else {
+			SnykLogger.logInfo(String.format("Unsupported URI: scheme=%s, product=%s, action=%s, issue=%s",
+					uriDetails.scheme(), uriDetails.product(), uriDetails.action(), uriDetails.issueId()));
+			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
 		}
 
 		if (issue == null) {
