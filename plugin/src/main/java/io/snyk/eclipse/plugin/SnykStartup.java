@@ -25,7 +25,6 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
-import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.download.ChecksumVerificationException;
@@ -55,7 +54,7 @@ public class SnykStartup implements IStartup {
 				monitor.subTask("Starting Language Server...");
 
 				try {
-					boolean started = SnykLanguageServer.startSnykLanguageServer();
+				boolean started = SnykLanguageServer.startSnykLanguageServer();
 
 					if (started) {
 						PlatformUI.getWorkbench().getDisplay().syncExec(() -> {

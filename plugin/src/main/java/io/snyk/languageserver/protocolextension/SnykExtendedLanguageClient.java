@@ -4,14 +4,11 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_ERROR;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -19,7 +16,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -67,9 +63,9 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.eclipse.plugin.utils.TrustedFoldersHelper;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
-import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.CommandHandler;
 import io.snyk.languageserver.FeatureFlagConstants;
 import io.snyk.languageserver.LsConfigurationUpdater;
@@ -102,6 +98,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private CommandHandler commandHandler;
 
 	private static SnykExtendedLanguageClient instance;
+	private volatile CompletableFuture<Object> loginFuture;
 
 	public SnykExtendedLanguageClient() {
 		super();
@@ -184,7 +181,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void triggerScan(Path projectPath) {
 		CompletableFuture.runAsync(() -> {
 			if (!Preferences.getInstance().isAuthenticated()) {
-				SnykWizard.createAndLaunch();
+				return;
 			} else {
 				var folderConfigSettings = FolderConfigSettings.getInstance();
 				updateConfiguration();
@@ -216,7 +213,29 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public CompletableFuture<Object> triggerAuthentication() {
-		return executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
+		loginFuture = executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
+		return loginFuture;
+	}
+
+	public void cancelLogin() {
+		CompletableFuture<Object> f = loginFuture;
+		if (f != null) {
+			f.cancel(true);
+		}
+	}
+
+	public String getAuthLink() {
+		try {
+			Object result = executeCommand(LsConstants.COMMAND_COPY_AUTH_LINK, new ArrayList<>())
+					.get(10, TimeUnit.SECONDS);
+			return result != null ? result.toString() : "";
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			return "";
+		} catch (ExecutionException | TimeoutException e) {
+			SnykLogger.logError(e);
+			return "";
+		}
 	}
 
 	public void ensureLanguageServerRunning() {
@@ -327,6 +346,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		if (differentToken && !newToken.isBlank()) {
+			if (toolView != null) {
+				toolView.refreshBrowser(null);
+			}
 			if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
 				triggerScan(null);
 			}
@@ -340,13 +362,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@JsonNotification(value = LsConstants.SNYK_ADD_TRUSTED_FOLDERS)
 	public void addTrustedPaths(SnykTrustedFoldersParams param) {
-		var prefs = Preferences.getInstance();
-		var storedTrustedPaths = prefs.getPref(Preferences.TRUSTED_FOLDERS, "");
-		var trustedPaths = storedTrustedPaths.split(File.pathSeparator);
-		var pathSet = new HashSet<>(Arrays.asList(trustedPaths));
-		pathSet.addAll(Arrays.asList(param.getTrustedFolders()));
-		Preferences.getInstance().store(Preferences.TRUSTED_FOLDERS, pathSet.stream().filter(s -> !s.isBlank())
-				.map(s -> s.trim()).distinct().collect(Collectors.joining(File.pathSeparator)));
+		TrustedFoldersHelper.addTrustedFolders(param.getTrustedFolders());
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN)
