@@ -42,12 +42,18 @@ import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4e.LanguageClientImpl;
 import org.eclipse.lsp4j.ProgressParams;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ShowDocumentParams;
 import org.eclipse.lsp4j.ShowDocumentResult;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
@@ -58,9 +64,16 @@ import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorDescriptor;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.FileStoreEditorInput;
+import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.texteditor.IDocumentProvider;
+import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -109,6 +122,7 @@ import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue
 @SuppressWarnings({"restriction", "PMD.AvoidCatchingGenericException"})
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private static final String MARKER_TYPE = "io.snyk.languageserver.marker";
+	private static final String FILE_SCHEME = "file";
 
 	private ProgressManager progressManager = new ProgressManager(this);
 	private final ObjectMapper om = new ObjectMapper();
@@ -532,9 +546,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		Issue issue;
 		if (uriDetails.isValid()) {
 			issue = getIssueFromCache(uriDetails.product(), uriDetails.issueId());
+		} else if (FILE_SCHEME.equals(uriDetails.scheme())) {
+			return openFileInEclipse(uri, params.getSelection());
 		} else {
-			SnykLogger.logInfo(String.format("Invalid URI: scheme=%s, product=%s, action=%s, issue=%s",
-					uriDetails.scheme(), uriDetails.product(), uriDetails.action(), uriDetails.issueId()));
 			return super.showDocument(params);
 		}
 
@@ -554,6 +568,85 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			view.selectTreeNode(issue, displayProduct);
 			return new ShowDocumentResult(true);
 		});
+	}
+
+	// Opens a file:// URI inside Eclipse, forcing the default text editor for
+	// unknown file types to avoid routing through macOS LaunchServices (e.g. Windsurf).
+	private CompletableFuture<ShowDocumentResult> openFileInEclipse(URI uri, Range range) {
+		if (Preferences.getInstance().isTest()) {
+			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
+		}
+		return CompletableFuture.supplyAsync(() -> {
+			boolean[] success = { false };
+			Display.getDefault().syncExec(() -> {
+				try {
+					IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+					if (window == null) {
+						return;
+					}
+					IWorkbenchPage page = window.getActivePage();
+					if (page == null) {
+						return;
+					}
+					IEditorPart editor = openEditorForUri(page, uri);
+					if (editor == null) {
+						return;
+					}
+					if (range != null && editor instanceof ITextEditor) {
+						revealRange((ITextEditor) editor, range);
+					}
+					success[0] = true;
+				} catch (Exception e) {
+					SnykLogger.logError(e);
+				}
+			});
+			return new ShowDocumentResult(success[0]);
+		});
+	}
+
+	private IEditorPart openEditorForUri(IWorkbenchPage page, URI uri) throws PartInitException, CoreException {
+		URI normalizedUri = uri.normalize();
+		if (normalizedUri.getPath() != null && normalizedUri.getPath().contains("..")) {
+			SnykLogger.logInfo("Rejected URI with path traversal: " + normalizedUri);
+			return null;
+		}
+		String editorId = resolveInternalEditorId(normalizedUri);
+		IFile workspaceFile = LSPEclipseUtils.getFileHandle(normalizedUri.toString());
+		if (workspaceFile != null && workspaceFile.exists()) {
+			return page.openEditor(new org.eclipse.ui.part.FileEditorInput(workspaceFile), editorId);
+		}
+		IFileStore fileStore = EFS.getStore(normalizedUri);
+		return page.openEditor(new FileStoreEditorInput(fileStore), editorId);
+	}
+
+	private String resolveInternalEditorId(URI uri) {
+		try {
+			IEditorDescriptor descriptor = IDE.getEditorDescriptor(uri.getPath(), true, false);
+			if (descriptor != null && !descriptor.isOpenExternal()) {
+				return descriptor.getId();
+			}
+		} catch (PartInitException e) {
+			SnykLogger.logError(e);
+		}
+		return "org.eclipse.ui.DefaultTextEditor";
+	}
+
+	private void revealRange(ITextEditor textEditor, Range range) {
+		IDocumentProvider provider = textEditor.getDocumentProvider();
+		if (provider == null) {
+			return;
+		}
+		IDocument doc = provider.getDocument(textEditor.getEditorInput());
+		if (doc == null) {
+			return;
+		}
+		try {
+			int startOffset = doc.getLineOffset(range.getStart().getLine()) + range.getStart().getCharacter();
+			int endOffset = doc.getLineOffset(range.getEnd().getLine()) + range.getEnd().getCharacter();
+			textEditor.selectAndReveal(startOffset, endOffset - startOffset);
+		} catch (BadLocationException e) {
+			SnykLogger.logError(e);
+		}
 	}
 
 	private Issue getIssueFromCache(String product, String issueId) {

@@ -2,10 +2,14 @@ package io.snyk.eclipse.plugin.views.snyktoolview;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.eclipse.jface.viewers.TreeViewer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -91,6 +95,55 @@ class SnykToolViewTest {
 				.store(Preferences.USE_HTML_TREE_VIEW, "true");
 		SnykToolView view = new SnykToolView();
 		assertDoesNotThrow(() -> view.selectTreeNode(null, "Snyk Code"));
+	}
+
+	@Test
+	void selectTreeNode_withHtmlTreeViewEnabled_updatesContentPanel() throws Exception {
+		Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore())
+				.store(Preferences.USE_HTML_TREE_VIEW, "true");
+
+		Issue issue = new Issue("issue-id", "Test Issue", "high", "/some/path/File.java",
+				null, false, false, "Code Security", null, null);
+
+		// Build a product-like tree node without going through ProductTreeNode's
+		// constructor (which calls SnykIcons and Activator — unavailable headlessly).
+		// findIssueTreeNode accepts TreeNode, and the cast in selectTreeNode is
+		// (TreeNode) productNode, so a BaseTreeNode subclass suffices.
+		IssueTreeNode issueNode = new IssueTreeNode(issue);
+		ProductTreeNode mockProductNode = mock(ProductTreeNode.class);
+		when(mockProductNode.getChildren()).thenReturn(new IssueTreeNode[] { issueNode });
+
+		BrowserHandler mockBrowserHandler = mock(BrowserHandler.class);
+		TreeViewer mockTreeViewer = mock(TreeViewer.class);
+
+		// Subclass overrides:
+		// - getProductNode: returns our mock tree with the IssueTreeNode child
+		// - runOnDisplay: runs the runnable synchronously so verify() sees the call
+		SnykToolView view = new SnykToolView() {
+			@Override
+			public ProductTreeNode getProductNode(String product, String folderPath) {
+				return mockProductNode;
+			}
+
+			@Override
+			protected void runOnDisplay(Runnable runnable) {
+				runnable.run();
+			}
+		};
+
+		// Inject mock browserHandler via reflection.
+		Field browserHandlerField = SnykToolView.class.getDeclaredField("browserHandler");
+		browserHandlerField.setAccessible(true);
+		browserHandlerField.set(view, mockBrowserHandler);
+
+		// Inject mock treeViewer so the treeViewer == null guard does not short-circuit.
+		Field treeViewerField = SnykToolView.class.getDeclaredField("treeViewer");
+		treeViewerField.setAccessible(true);
+		treeViewerField.set(view, mockTreeViewer);
+
+		view.selectTreeNode(issue, "Snyk Code");
+
+		verify(mockBrowserHandler).updateBrowserContent(issueNode);
 	}
 
 	@SuppressWarnings("unchecked")
