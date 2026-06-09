@@ -555,8 +555,11 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			if (productNode != null) {
 				IssueTreeNode issueNode = findIssueTreeNode((TreeNode) productNode, issue.id());
 				if (issueNode != null) {
-					selectedNode = issueNode;
-					Display.getDefault().asyncExec(() -> browserHandler.updateBrowserContent(issueNode));
+					final IssueTreeNode finalNode = issueNode;
+					runOnDisplay(() -> {
+						selectedNode = finalNode;
+						browserHandler.updateBrowserContent(finalNode);
+					});
 				}
 			}
 			return;
@@ -580,18 +583,12 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	private void selectTreenodeForIssue(TreeNode currentParent, Issue issue) {
-		for (Object child : currentParent.getChildren()) {
-			TreeNode childNode = (TreeNode) child;
+		IssueTreeNode node = findIssueTreeNode(currentParent, issue.id());
+		if (node != null) updateSelection(node);
+	}
 
-			if (childNode instanceof IssueTreeNode && ((IssueTreeNode) childNode).getIssue().id().equals(issue.id())) {
-				updateSelection((IssueTreeNode) childNode);
-				return; // Exit the function as we've found a match
-			}
-
-			if (childNode.getChildren() != null && childNode.getChildren().length != 0) {
-				selectTreenodeForIssue(childNode, issue);
-			}
-		}
+	protected void runOnDisplay(Runnable runnable) {
+		Display.getDefault().asyncExec(runnable);
 	}
 
 	private void updateSelection(IssueTreeNode issueTreeNode) {
