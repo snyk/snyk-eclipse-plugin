@@ -589,17 +589,17 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	private IEditorPart openEditorForUri(IWorkbenchPage page, URI uri) throws PartInitException, CoreException {
-		uri = uri.normalize();
-		if (uri.getPath() != null && uri.getPath().contains("..")) {
-			SnykLogger.logInfo("Rejected URI with path traversal: " + uri);
+		URI normalizedUri = uri.normalize();
+		if (normalizedUri.getPath() != null && normalizedUri.getPath().contains("..")) {
+			SnykLogger.logInfo("Rejected URI with path traversal: " + normalizedUri);
 			return null;
 		}
-		String editorId = resolveInternalEditorId(uri);
-		IFile workspaceFile = LSPEclipseUtils.getFileHandle(uri.toString());
+		String editorId = resolveInternalEditorId(normalizedUri);
+		IFile workspaceFile = LSPEclipseUtils.getFileHandle(normalizedUri.toString());
 		if (workspaceFile != null && workspaceFile.exists()) {
 			return page.openEditor(new org.eclipse.ui.part.FileEditorInput(workspaceFile), editorId);
 		}
-		IFileStore fileStore = EFS.getStore(uri);
+		IFileStore fileStore = EFS.getStore(normalizedUri);
 		return page.openEditor(new FileStoreEditorInput(fileStore), editorId);
 	}
 
