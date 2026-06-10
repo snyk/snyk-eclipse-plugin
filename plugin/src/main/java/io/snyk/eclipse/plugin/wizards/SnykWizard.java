@@ -2,7 +2,10 @@ package io.snyk.eclipse.plugin.wizards;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -36,7 +39,8 @@ public class SnykWizard extends Wizard implements INewWizard {
 	protected IWorkbench workbench;
 	protected IStructuredSelection selection;
 
-	private WizardDialog wizardDialog;
+	// volatile: written on Display thread (createAndLaunch), read on Job thread (doRun).
+	private volatile WizardDialog wizardDialog;
 
 	public SnykWizard() {
 		super();
@@ -104,7 +108,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 					}
 					lc = SnykExtendedLanguageClient.getInstance();
 				}
-				if (monitor.isCanceled()) {
+				if (monitor.isCanceled() || lc == null) {
 					return Status.CANCEL_STATUS;
 				}
 				monitor.worked(1);
@@ -150,9 +154,13 @@ public class SnykWizard extends Wizard implements INewWizard {
 				try {
 					loginFuture.get(5, TimeUnit.MINUTES);
 					success = true;
-				} catch (java.util.concurrent.CancellationException | java.util.concurrent.TimeoutException e) {
-					LOG.info("Authentication cancelled or timed out", e);
-				} catch (Exception e) { // NOPMD
+				} catch (CancellationException e) {
+					LOG.info("Authentication cancelled", e);
+				} catch (TimeoutException e) {
+					LOG.info("Authentication timed out", e);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} catch (ExecutionException e) {
 					LOG.error("Authentication failed", e);
 				}
 
@@ -185,27 +193,27 @@ public class SnykWizard extends Wizard implements INewWizard {
 			return;
 		}
 		String[] paths = projects.stream()
-				.filter(p -> p.getLocation() != null)
-				.map(p -> {
-					File f = p.getLocation().toFile();
-					return f != null ? f.getAbsolutePath() : null;
-				})
-				.filter(path -> path != null)
+				.filter(p -> p.getLocation() != null && p.getLocation().toFile() != null)
+				.map(p -> p.getLocation().toFile().getAbsolutePath())
 				.collect(Collectors.toList())
 				.toArray(new String[0]);
 		TrustedFoldersHelper.addTrustedFolders(paths);
 	}
 
 	private void closeWizard() {
+		// Reset synchronously so IN_FLIGHT is correct even if Display is disposed.
 		IN_FLIGHT.set(false);
-		Display.getDefault().asyncExec(() -> {
-			if (wizardDialog != null) {
-				Shell shell = wizardDialog.getShell();
-				if (shell != null && !shell.isDisposed()) {
-					wizardDialog.close();
+		Display display = Display.getDefault();
+		if (display != null && !display.isDisposed()) {
+			display.asyncExec(() -> {
+				if (wizardDialog != null) {
+					Shell shell = wizardDialog.getShell();
+					if (shell != null && !shell.isDisposed()) {
+						wizardDialog.close();
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 
 	public static void createAndLaunch() {
