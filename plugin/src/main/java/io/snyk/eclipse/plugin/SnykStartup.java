@@ -159,6 +159,12 @@ public class SnykStartup implements IStartup {
 			lsFile.getParentFile().mkdirs();
 			lsDownloader.download(monitor);
 			lsFile.setExecutable(true);
+			// Persist the effective path so it shows up in the preference page when the
+			// stored value was empty (and we fell back to the default location).
+			String stored = Preferences.getInstance().getPref(Preferences.CLI_PATH, "");
+			if (stored == null || stored.isBlank()) {
+				Preferences.getInstance().store(Preferences.CLI_PATH, cliPath);
+			}
 		} catch (RuntimeException | IOException | URISyntaxException | ChecksumVerificationException e) { // NOPMD - intentional catch-all of runtime exceptions for download errors
 			return Status.error("Download of Snyk Language Server failed", e);
 		}
