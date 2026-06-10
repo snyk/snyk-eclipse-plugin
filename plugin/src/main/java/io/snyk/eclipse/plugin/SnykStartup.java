@@ -91,11 +91,15 @@ public class SnykStartup implements IStartup {
 			}
 
 			private void logDownloadFailure(IStatus status) {
-				String errorMessage = status.getMessage();
-				if (status.getException() != null) {
-					errorMessage += ": " + status.getException().getMessage();
+				StringBuilder errorMessage = new StringBuilder(status.getMessage());
+				Throwable t = status.getException();
+				while (t != null) {
+					errorMessage.append("\n  caused by: ").append(t.getClass().getName())
+							.append(": ").append(t.getMessage());
+					Throwable next = t.getCause();
+					t = (next == t) ? null : next;
 				}
-				logDownloadFailure(errorMessage);
+				logDownloadFailure(errorMessage.toString());
 			}
 
 			private void logDownloadFailure(String errorMessage) {
@@ -158,12 +162,19 @@ public class SnykStartup implements IStartup {
 	}
 
 	public static IStatus download(IProgressMonitor monitor) {
-		final File lsFile = new File(Preferences.getInstance().getCliPath());
+		final String cliPath = Preferences.getInstance().getCliPath();
+		final File lsFile = new File(cliPath);
 		try {
 			LsDownloader lsDownloader = getLsDownloader();
 			lsFile.getParentFile().mkdirs();
 			lsDownloader.download(monitor);
 			lsFile.setExecutable(true);
+			// Persist the effective path so it shows up in the preference page when the
+			// stored value was empty (and we fell back to the default location).
+			String stored = Preferences.getInstance().getPref(Preferences.CLI_PATH, "");
+			if (stored == null || stored.isBlank()) {
+				Preferences.getInstance().store(Preferences.CLI_PATH, cliPath);
+			}
 		} catch (RuntimeException | IOException | URISyntaxException | ChecksumVerificationException e) { // NOPMD - intentional catch-all of runtime exceptions for download errors
 			return Status.error("Download of Snyk Language Server failed", e);
 		}

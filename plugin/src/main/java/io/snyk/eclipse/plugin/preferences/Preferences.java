@@ -302,7 +302,11 @@ public class Preferences {
 	}
 
 	public final String getCliPath() {
-		return getPref(CLI_PATH, getDefaultCliPath());
+		String stored = getPref(CLI_PATH, getDefaultCliPath());
+		if (stored == null || stored.isBlank()) {
+			return getDefaultCliPath();
+		}
+		return stored;
 	}
 
 	public final boolean isInsecure() {
