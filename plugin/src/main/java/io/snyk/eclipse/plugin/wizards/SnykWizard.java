@@ -170,7 +170,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 		};
 		try {
 			job.schedule();
-		} catch (RuntimeException e) {
+		} catch (RuntimeException e) { // NOPMD
 			IN_FLIGHT.set(false);
 			LOG.error("Failed to schedule authentication job", e);
 		}
