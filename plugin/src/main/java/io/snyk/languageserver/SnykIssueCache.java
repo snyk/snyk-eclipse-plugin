@@ -20,6 +20,7 @@ public class SnykIssueCache {
 	private final Map<String, Collection<Issue>> codeSecurityIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> ossIssues = new ConcurrentHashMap<>();
 	private final Map<String, Collection<Issue>> iacIssues = new ConcurrentHashMap<>();
+	private final Map<String, Collection<Issue>> secretsIssues = new ConcurrentHashMap<>();
 
 	private Predicate<? super Issue> fixablePredicate = new Predicate<Issue>() {
 		@Override
@@ -47,6 +48,7 @@ public class SnykIssueCache {
 		codeSecurityIssues.clear();
 		ossIssues.clear();
 		iacIssues.clear();
+		secretsIssues.clear();
 	}
 
 	/**
@@ -58,6 +60,7 @@ public class SnykIssueCache {
 		codeSecurityIssues.remove(path);
 		ossIssues.remove(path);
 		iacIssues.remove(path);
+		secretsIssues.remove(path);
 	}
 
 	private Collection<Issue> getIssuesForPath(String path, Map<String, Collection<Issue>> cache) {
@@ -210,6 +213,28 @@ public class SnykIssueCache {
 		iacIssues.remove(path);
 	}
 
+	// ----- Methods for Snyk Secrets Issues -----
+
+	public void addSecretsIssues(String path, Collection<Issue> issues) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF + basePath);
+		}
+		if (!issues.isEmpty()) {
+			var treeSet = new TreeSet<Issue>(new IssueComparator());
+			treeSet.addAll(issues);
+			secretsIssues.put(path, treeSet);
+		} else {
+			secretsIssues.remove(path);
+		}
+	}
+
+	public void removeSecretsIssuesForPath(String path) {
+		if (!Paths.get(path).startsWith(basePath)) {
+			throw new IllegalArgumentException(path + IS_NOT_A_SUBPATH_OF + basePath);
+		}
+		secretsIssues.remove(path);
+	}
+
 	/**
 	 * Return the total count
 	 *
@@ -236,6 +261,9 @@ public class SnykIssueCache {
 		case ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE:
 			collectionsToSearch = new ArrayList<>();
 			collectionsToSearch.addAll(codeSecurityIssues.values());
+			break;
+		case ProductConstants.DIAGNOSTIC_SOURCE_SNYK_SECRETS:
+			collectionsToSearch = secretsIssues.values();
 			break;
 		default:
 			return null;

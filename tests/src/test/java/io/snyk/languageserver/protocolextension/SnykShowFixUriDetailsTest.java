@@ -3,6 +3,7 @@ package io.snyk.languageserver.protocolextension;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_SECRETS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_IAC;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_OSS;
@@ -10,6 +11,7 @@ import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_TY
 import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_CODE_SECURITY;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_INFRASTRUCTURE_AS_CODE;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_OPEN_SOURCE;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_SECRETS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -37,6 +39,12 @@ public class SnykShowFixUriDetailsTest {
 	@Test
 	void isValid_acceptsIacProduct() throws URISyntaxException {
 		URI uri = new URI("snyk:///file?product=Snyk+IaC&action=showInDetailPanel&issueId=abc");
+		assertTrue(SnykShowFixUriDetails.fromURI(uri).isValid());
+	}
+
+	@Test
+	void isValid_acceptsSecretsProduct() throws URISyntaxException {
+		URI uri = new URI("snyk:///file?product=Snyk+Secrets&action=showInDetailPanel&issueId=abc");
 		assertTrue(SnykShowFixUriDetails.fromURI(uri).isValid());
 	}
 
@@ -78,6 +86,12 @@ public class SnykShowFixUriDetailsTest {
 	@Test
 	void normalizeProductCodename_iac() {
 		assertEquals(DIAGNOSTIC_SOURCE_SNYK_IAC, SnykExtendedLanguageClient.normalizeProductCodename("iac"));
+	}
+
+	@Test
+	void normalizeProductCodename_secrets() {
+		assertEquals(DIAGNOSTIC_SOURCE_SNYK_SECRETS,
+				SnykExtendedLanguageClient.normalizeProductCodename(SCAN_PARAMS_SECRETS));
 	}
 
 	@Test
