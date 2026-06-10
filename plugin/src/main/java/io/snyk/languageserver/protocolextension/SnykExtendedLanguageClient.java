@@ -135,7 +135,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	private CommandHandler commandHandler;
 
 	private static SnykExtendedLanguageClient instance;
-	private volatile CompletableFuture<Object> loginFuture;
+	// Completes when hasAuthenticated fires, not when snyk.login is acked.
+	private volatile CompletableFuture<Void> authCompleteFuture;
 
 	public SnykExtendedLanguageClient() {
 		super();
@@ -249,14 +250,16 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return commandHandler.executeCommand(cmd, args);
 	}
 
-	public CompletableFuture<Object> triggerAuthentication() {
-		CompletableFuture<Object> f = executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
-		loginFuture = f;
-		return f;
+	public CompletableFuture<Void> triggerAuthentication() {
+		CompletableFuture<Void> waitForAuth = new CompletableFuture<>();
+		authCompleteFuture = waitForAuth;
+		// snyk.login is acknowledged quickly; actual auth completion arrives via hasAuthenticated notification.
+		executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
+		return waitForAuth;
 	}
 
 	public void cancelLogin() {
-		CompletableFuture<Object> f = loginFuture;
+		CompletableFuture<Void> f = authCompleteFuture;
 		if (f != null) {
 			f.cancel(true);
 		}
@@ -354,6 +357,11 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
+		CompletableFuture<Void> f = authCompleteFuture;
+		if (f != null) {
+			f.complete(null);
+		}
+
 		var prefs = Preferences.getInstance();
 
 		var oldToken = prefs.getAuthToken();
@@ -1130,7 +1138,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return null;
 	}
 
-	public void logout() {
-		executeCommand(LsConstants.COMMAND_LOGOUT, new ArrayList<>());
+	public CompletableFuture<Object> logout() {
+		return executeCommand(LsConstants.COMMAND_LOGOUT, new ArrayList<>());
 	}
 }

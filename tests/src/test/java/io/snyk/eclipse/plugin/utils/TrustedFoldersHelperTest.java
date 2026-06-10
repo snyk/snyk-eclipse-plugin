@@ -63,4 +63,14 @@ class TrustedFoldersHelperTest {
 		TrustedFoldersHelper.addTrustedFolders("/existing/path");
 		assertEquals("/existing/path", prefs.getPref(Preferences.TRUSTED_FOLDERS, ""));
 	}
+
+	@Test
+	void ignoresNullElements() {
+		TrustedFoldersHelper.addTrustedFolders("/valid/path", null, "/other/path");
+		String stored = prefs.getPref(Preferences.TRUSTED_FOLDERS, "");
+		var paths = new HashSet<>(Arrays.asList(stored.split(File.pathSeparator)));
+		assertTrue(paths.contains("/valid/path"));
+		assertTrue(paths.contains("/other/path"));
+		assertEquals(2, paths.size());
+	}
 }
