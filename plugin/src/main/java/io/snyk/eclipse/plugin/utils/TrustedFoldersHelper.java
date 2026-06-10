@@ -19,10 +19,10 @@ public final class TrustedFoldersHelper {
 		var pathSet = stored.isBlank() ? new HashSet<String>()
 				: new HashSet<>(Arrays.asList(stored.split(File.pathSeparator)));
 		pathSet.addAll(Arrays.asList(paths));
+		// pathSet is a HashSet — already deduplicated; no .distinct() needed.
 		prefs.store(Preferences.TRUSTED_FOLDERS, pathSet.stream()
 				.filter(s -> !s.isBlank())
 				.map(String::trim)
-				.distinct()
 				.collect(Collectors.joining(File.pathSeparator)));
 	}
 }
