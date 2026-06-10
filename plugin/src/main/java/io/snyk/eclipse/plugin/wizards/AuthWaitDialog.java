@@ -29,7 +29,6 @@ public class AuthWaitDialog extends Dialog {
 
 	public AuthWaitDialog(Shell parentShell) {
 		super(parentShell);
-		setShellStyle(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
 	}
 
 	public void setOnCancel(Runnable onCancel) {
@@ -38,6 +37,7 @@ public class AuthWaitDialog extends Dialog {
 
 	@Override
 	protected void configureShell(Shell shell) {
+		setShellStyle(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
 		super.configureShell(shell);
 		shell.setText("Authenticating Snyk Plugin");
 	}
@@ -82,10 +82,17 @@ public class AuthWaitDialog extends Dialog {
 						if (copyUrlButton != null && !copyUrlButton.isDisposed()) {
 							copyUrlButton.setEnabled(true);
 						}
+						Shell shell = getShell();
+						if (shell == null || shell.isDisposed()) {
+							return;
+						}
 						if (!url.isBlank()) {
 							Clipboard clipboard = new Clipboard(display);
-							clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
-							clipboard.dispose();
+							try {
+								clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
+							} finally {
+								clipboard.dispose();
+							}
 						}
 					}));
 			return;
