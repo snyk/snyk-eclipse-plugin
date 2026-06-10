@@ -3,7 +3,6 @@ package io.snyk.eclipse.plugin.utils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -51,7 +50,7 @@ class TrustedFoldersHelperTest {
 		prefs.store(Preferences.TRUSTED_FOLDERS, "/existing/path");
 		TrustedFoldersHelper.addTrustedFolders("/new/path");
 		String stored = prefs.getPref(Preferences.TRUSTED_FOLDERS, "");
-		var paths = new HashSet<>(Arrays.asList(stored.split(File.pathSeparator)));
+		var paths = new HashSet<>(Arrays.asList(stored.split(",")));
 		assertTrue(paths.contains("/existing/path"));
 		assertTrue(paths.contains("/new/path"));
 	}
