@@ -68,7 +68,7 @@ public class CodeHtmlProvider extends BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("var(--example-line-added-color)",
 				super.getColorAsHex("ADDITION_COLOR", "#00ff00"));
 		htmlStyled = htmlStyled.replace("var(--button-background-color)",
-				super.getColorAsHex("BUTTON_COLOR", "#375578"));
+				super.getColorAsHex("org.eclipse.ui.editors.hyperlinkColor", "#4C8DEF"));
 		htmlStyled = htmlStyled.replace("var(--button-text-color)",
 				super.getColorAsHex("org.eclipse.ui.workbench.ACTIVE_TAB_SELECTED_TEXT_COLOR", "#F5F5F5"));
 		htmlStyled = htmlStyled.replace("var(--disabled-background-color)",

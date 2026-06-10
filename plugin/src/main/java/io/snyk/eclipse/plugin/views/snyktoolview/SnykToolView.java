@@ -548,12 +548,18 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			if (treeBrowserHandler != null) {
 				Display.getDefault().asyncExec(() -> treeBrowserHandler.selectNode(issue.id()));
 			}
-			// selectTreenodeForIssue triggers selectionChanged on the hidden SWT tree,
-			// which updates the detail browser panel via browserHandler.updateBrowserContent.
-			if (treeViewer != null) {
-				ProductTreeNode productNode = getProductNode(product, issue.filePath());
-				if (productNode != null) {
-					selectTreenodeForIssue((TreeNode) productNode, issue);
+			// treeViewer.setSelection on a hidden StackLayout control does not fire
+			// ISelectionChangedListener, so drive the detail panel update directly.
+			if (treeViewer == null) return;
+			ProductTreeNode productNode = getProductNode(product, issue.filePath());
+			if (productNode != null) {
+				IssueTreeNode issueNode = findIssueTreeNode((TreeNode) productNode, issue.id());
+				if (issueNode != null) {
+					final IssueTreeNode finalNode = issueNode;
+					runOnDisplay(() -> {
+						selectedNode = finalNode;
+						browserHandler.updateBrowserContent(finalNode);
+					});
 				}
 			}
 			return;
@@ -563,19 +569,26 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		selectTreenodeForIssue((TreeNode) productNode, issue);
 	}
 
-	private void selectTreenodeForIssue(TreeNode currentParent, Issue issue) {
-		for (Object child : currentParent.getChildren()) {
-			TreeNode childNode = (TreeNode) child;
-
-			if (childNode instanceof IssueTreeNode && ((IssueTreeNode) childNode).getIssue().id().equals(issue.id())) {
-				updateSelection((IssueTreeNode) childNode);
-				return; // Exit the function as we've found a match
+	private IssueTreeNode findIssueTreeNode(TreeNode parent, String issueId) {
+		if (parent == null || parent.getChildren() == null) return null;
+		for (Object child : parent.getChildren()) {
+			TreeNode node = (TreeNode) child;
+			if (node instanceof IssueTreeNode && ((IssueTreeNode) node).getIssue().id().equals(issueId)) {
+				return (IssueTreeNode) node;
 			}
-
-			if (childNode.getChildren() != null && childNode.getChildren().length != 0) {
-				selectTreenodeForIssue(childNode, issue);
-			}
+			IssueTreeNode found = findIssueTreeNode(node, issueId);
+			if (found != null) return found;
 		}
+		return null;
+	}
+
+	private void selectTreenodeForIssue(TreeNode currentParent, Issue issue) {
+		IssueTreeNode node = findIssueTreeNode(currentParent, issue.id());
+		if (node != null) updateSelection(node);
+	}
+
+	protected void runOnDisplay(Runnable runnable) {
+		Display.getDefault().asyncExec(runnable);
 	}
 
 	private void updateSelection(IssueTreeNode issueTreeNode) {
