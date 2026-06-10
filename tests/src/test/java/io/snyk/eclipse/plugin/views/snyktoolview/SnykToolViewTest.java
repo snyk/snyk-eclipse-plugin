@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
 import io.snyk.eclipse.plugin.preferences.InMemorySecurePreferenceStore;
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 class SnykToolViewTest {
 
@@ -22,17 +21,15 @@ class SnykToolViewTest {
 	}
 
 	@Test
-	void selectTreeNode_withUnknownProduct_doesNotThrow() {
+	void selectTreeNode_withIssueId_doesNotThrow() {
 		SnykToolView view = new SnykToolView();
-		Issue issue = new Issue("issue-id", "Test Issue", "high", "/some/path/File.java",
-				null, false, false, "Code Security", null, null);
-		assertDoesNotThrow(() -> view.selectTreeNode(issue, "unknownProduct"));
+		assertDoesNotThrow(() -> view.selectTreeNode("issue-id"));
 	}
 
 	@Test
-	void selectTreeNode_withNullIssue_doesNotThrow() {
+	void selectTreeNode_withNullIssueId_doesNotThrow() {
 		SnykToolView view = new SnykToolView();
-		assertDoesNotThrow(() -> view.selectTreeNode(null, "Snyk Open Source"));
+		assertDoesNotThrow(() -> view.selectTreeNode(null));
 	}
 
 	// Regression: HTML arriving before createPartControl (treeBrowserHandler == null)
@@ -62,15 +59,7 @@ class SnykToolViewTest {
 	@Test
 	void selectTreeNode_withNullHandler_doesNotThrow() {
 		SnykToolView view = new SnykToolView();
-		Issue issue = new Issue("issue-id", "Test Issue", "high", "/some/path/File.java",
-				null, false, false, "Code Security", null, null);
-		assertDoesNotThrow(() -> view.selectTreeNode(issue, "Snyk Code"));
-	}
-
-	@Test
-	void selectTreeNode_withNullIssueAndNullHandler_doesNotThrow() {
-		SnykToolView view = new SnykToolView();
-		assertDoesNotThrow(() -> view.selectTreeNode(null, "Snyk Code"));
+		assertDoesNotThrow(() -> view.selectTreeNode("some-issue-id"));
 	}
 
 	@SuppressWarnings("unchecked")

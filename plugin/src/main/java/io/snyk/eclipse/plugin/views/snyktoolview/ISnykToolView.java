@@ -1,7 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
-
 /**
  * This interface captures the externally used methods with the tool window.
  * Having it, should allow for easier testing of the business logic apart from
@@ -51,7 +49,7 @@ public interface ISnykToolView {
 	 */
 	abstract void disableDelta();
 
-	abstract void selectTreeNode(Issue issue, String product);
+	abstract void selectTreeNode(String issueId);
 
 	abstract void updateTreeViewHtml(String html);
 }

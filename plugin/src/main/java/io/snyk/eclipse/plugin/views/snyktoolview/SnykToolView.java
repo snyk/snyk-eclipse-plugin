@@ -23,7 +23,6 @@ import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
-import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 public class SnykToolView extends ViewPart implements ISnykToolView {
 	public SnykToolView() {
@@ -153,15 +152,15 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void selectTreeNode(Issue issue, String product) {
-		if (issue == null) return;
+	public void selectTreeNode(String issueId) {
+		if (issueId == null || issueId.isEmpty()) return;
 		try {
 			Display display = Display.getDefault();
 			if (display == null || display.isDisposed()) return;
 			if (treeBrowserHandler != null) {
-				display.asyncExec(() -> treeBrowserHandler.selectNode(issue.id()));
+				display.asyncExec(() -> treeBrowserHandler.selectNode(issueId));
 			}
-			display.asyncExec(() -> browserHandler.updateBrowserContent(issue));
+			display.asyncExec(() -> browserHandler.updateBrowserContent(issueId));
 		} catch (SWTError | SWTException | UnsatisfiedLinkError | NoClassDefFoundError e) {
 			SnykLogger.logInfo("No SWT Display available for selectTreeNode: " + e.getMessage());
 		}

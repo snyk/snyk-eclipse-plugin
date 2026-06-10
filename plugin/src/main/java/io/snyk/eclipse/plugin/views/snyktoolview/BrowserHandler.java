@@ -24,7 +24,6 @@ import org.eclipse.ui.handlers.IHandlerService;
 
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.StaticPageHtmlProvider;
-import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
@@ -161,10 +160,11 @@ public class BrowserHandler {
 	}
 
 
-	public void updateBrowserContent(Issue issue) {
-		CompletableFuture.supplyAsync(() -> issue.additionalData().customUIContent()).thenAccept(htmlContent -> {
+	public void updateBrowserContent(String issueId) {
+		CompletableFuture.runAsync(() -> {
 			BaseHtmlProvider htmlProvider = new BaseHtmlProvider();
 			initScript = htmlProvider.getInitScript();
+			String htmlContent = SnykExtendedLanguageClient.getInstance().getIssueDescription(issueId);
 			if (isEmpty(htmlContent)) {
 				htmlContent = htmlProvider.getNoDescriptionHtml();
 			}
