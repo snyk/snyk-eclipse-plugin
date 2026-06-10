@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.wizards;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
@@ -28,6 +29,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 	protected IStructuredSelection selection;
 
 	private WizardDialog wizardDialog;
+	private final AtomicBoolean inFlight = new AtomicBoolean(false);
 
 	public SnykWizard() {
 		super();
@@ -53,7 +55,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean canFinish() {
-		return true;
+		return !inFlight.get();
 	}
 
 	@Override
@@ -63,11 +65,11 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performFinish() {
-		// Disable Finish immediately to prevent double-click spawning two auth Jobs.
-		if (getContainer().getCurrentPage() != null) {
-			getContainer().updateButtons();
+		// Guard against double-click: only one auth Job may run at a time.
+		if (!inFlight.compareAndSet(false, true)) {
+			return false;
 		}
-		authenticatePage.setPageComplete(false);
+		getContainer().updateButtons();
 
 		new Job("Authenticating with Snyk...") {
 			@Override
@@ -77,7 +79,8 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 				monitor.subTask("Waiting for language server...");
 				SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-				while (SnykStartup.isDownloading() || lc == null) {
+				// Item 4: include cancel check so the user can abort if LS download stalls.
+				while ((SnykStartup.isDownloading() || lc == null) && !monitor.isCanceled()) {
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
@@ -86,16 +89,25 @@ public class SnykWizard extends Wizard implements INewWizard {
 					}
 					lc = SnykExtendedLanguageClient.getInstance();
 				}
+				if (monitor.isCanceled()) {
+					inFlight.set(false);
+					return Status.CANCEL_STATUS;
+				}
 				monitor.worked(1);
 
 				monitor.subTask("Logging out...");
+				// logout() sends the command synchronously via executeCommand; the LS
+				// processes LSP requests in order, so logout is guaranteed to complete
+				// before the login command sent by triggerAuthentication() is handled.
 				lc.logout();
 				monitor.worked(1);
 
 				monitor.subTask("Opening browser for authentication...");
 				final SnykExtendedLanguageClient finalLc = lc;
-				var loginFuture = lc.triggerAuthentication();
 
+				// Item 3: open the dialog BEFORE calling triggerAuthentication() so that
+				// if the LS responds immediately, closeDialog() is never called on a null
+				// reference and the dialog doesn't get left open permanently.
 				AuthWaitDialog[] dialogHolder = new AuthWaitDialog[1];
 				Display.getDefault().syncExec(() -> {
 					Shell shell = wizardDialog != null ? wizardDialog.getShell() : null;
@@ -110,6 +122,8 @@ public class SnykWizard extends Wizard implements INewWizard {
 				});
 
 				AuthWaitDialog waitDialog = dialogHolder[0];
+
+				var loginFuture = lc.triggerAuthentication();
 
 				if (waitDialog != null) {
 					waitDialog.setCopyUrlEnabled(true);
@@ -159,6 +173,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 	}
 
 	private void closeWizard() {
+		inFlight.set(false);
 		Display.getDefault().asyncExec(() -> {
 			if (wizardDialog != null) {
 				Shell shell = wizardDialog.getShell();
