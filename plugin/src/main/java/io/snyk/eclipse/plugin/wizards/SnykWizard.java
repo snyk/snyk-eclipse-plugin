@@ -79,7 +79,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 		}
 		getContainer().updateButtons();
 
-		new Job("Authenticating with Snyk...") {
+		Job job = new Job("Authenticating with Snyk...") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
@@ -167,7 +167,13 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 				return Status.OK_STATUS;
 			}
-		}.schedule();
+		};
+		try {
+			job.schedule();
+		} catch (RuntimeException e) {
+			IN_FLIGHT.set(false);
+			LOG.error("Failed to schedule authentication job", e);
+		}
 
 		// Return false so JFace does not auto-close the wizard.
 		return false;
