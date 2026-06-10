@@ -39,8 +39,9 @@ public class SnykWizard extends Wizard implements INewWizard {
 	protected IWorkbench workbench;
 	protected IStructuredSelection selection;
 
-	// volatile: written on Display thread (createAndLaunch), read on Job thread (doRun).
-	private volatile WizardDialog wizardDialog;
+	// Snapshot of the container shell captured on the UI thread before the Job starts.
+	// getContainer() is not thread-safe; we snapshot the Shell so the Job thread can use it.
+	private volatile Shell wizardShell;
 
 	public SnykWizard() {
 		super();
@@ -81,6 +82,8 @@ public class SnykWizard extends Wizard implements INewWizard {
 		if (!IN_FLIGHT.compareAndSet(false, true)) {
 			return false;
 		}
+		// Snapshot shell on UI thread — getContainer() is not safe to call from Job thread.
+		wizardShell = getContainer().getShell();
 		getContainer().updateButtons();
 
 		Job job = new Job("Authenticating with Snyk...") {
@@ -133,7 +136,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 				AuthWaitDialog[] dialogHolder = new AuthWaitDialog[1];
 				Display.getDefault().syncExec(() -> {
 					try {
-						Shell shell = wizardDialog != null ? wizardDialog.getShell() : null;
+						Shell shell = wizardShell;
 						if (shell == null || shell.isDisposed()) {
 							LOG.warn("Wizard shell unavailable; auth dialog will not be shown");
 							return;
@@ -221,11 +224,9 @@ public class SnykWizard extends Wizard implements INewWizard {
 		if (display != null && !display.isDisposed()) {
 			display.asyncExec(() -> {
 				try {
-					if (wizardDialog != null) {
-						Shell shell = wizardDialog.getShell();
-						if (shell != null && !shell.isDisposed()) {
-							wizardDialog.close();
-						}
+					Shell shell = wizardShell;
+					if (shell != null && !shell.isDisposed()) {
+						shell.close();
 					}
 				} catch (RuntimeException e) { // NOPMD
 					LOG.error("Failed to close wizard dialog", e);
@@ -246,7 +247,6 @@ public class SnykWizard extends Wizard implements INewWizard {
 					LOG.warn("No active workbench window; auth wizard will open without parent shell");
 				}
 				WizardDialog dialog = new WizardDialog(shell, wizard);
-				wizard.wizardDialog = dialog;
 				dialog.setBlockOnOpen(false);
 				dialog.open();
 			} catch (RuntimeException e) { // NOPMD
