@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
@@ -96,6 +97,8 @@ public class AuthWaitDialog extends Dialog {
 					Clipboard clipboard = new Clipboard(display);
 					try {
 						clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
+					} catch (SWTException e) {
+						LOG.error("Failed to copy auth URL to clipboard", e);
 					} finally {
 						clipboard.dispose();
 					}
