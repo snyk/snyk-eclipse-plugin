@@ -79,14 +79,15 @@ public class AuthWaitDialog extends Dialog {
 			// Fetch auth link off the UI thread to avoid blocking SWT event dispatch.
 			CompletableFuture.supplyAsync(() -> SnykExtendedLanguageClient.getInstance().getAuthLink())
 					.thenAccept(url -> display.asyncExec(() -> {
-						if (copyUrlButton != null && !copyUrlButton.isDisposed()) {
-							copyUrlButton.setEnabled(true);
+						if (copyUrlButton == null || copyUrlButton.isDisposed()) {
+							return;
 						}
-						Shell shell = getShell();
+						Shell shell = copyUrlButton.getShell();
 						if (shell == null || shell.isDisposed()) {
 							return;
 						}
-						if (!url.isBlank()) {
+						copyUrlButton.setEnabled(true);
+						if (url != null && !url.isBlank()) {
 							Clipboard clipboard = new Clipboard(display);
 							try {
 								clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
