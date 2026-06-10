@@ -5,8 +5,6 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.commands.IElementUpdater;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
-import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
-import io.snyk.eclipse.plugin.views.snyktoolview.filters.FixableFilter;
 
 public class FilterFixableIssuesHandler extends BaseHandler implements IElementUpdater {
 
@@ -18,9 +16,6 @@ public class FilterFixableIssuesHandler extends BaseHandler implements IElementU
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		super.execute(event);
-
-		new FixableFilter(TreeFilterManager.getInstance()).applyFilter();
-
 		return null;
 	}
 

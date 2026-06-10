@@ -1,7 +1,5 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
-import org.eclipse.jface.viewers.TreeViewer;
-
 import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 /**
@@ -24,64 +22,6 @@ public interface ISnykToolView {
 	public String NODE_TEXT_ERROR = "(error)";
 
 	/**
-	 * Updates the text of the given node
-	 *
-	 * @param node
-	 * @param text
-	 */
-	abstract void setNodeText(BaseTreeNode node, String text);
-
-	/**
-	 * Adds an issue node to the parent (usually a file node)
-	 *
-	 * @param parent
-	 * @param toBeAdded
-	 */
-	abstract void addIssueNode(FileTreeNode parent, IssueTreeNode toBeAdded);
-
-	/**
-	 * Adds a file node (usually below the product node)
-	 *
-	 * @param parent
-	 * @param toBeAdded
-	 */
-	abstract void addFileNode(ProductTreeNode parent, FileTreeNode toBeAdded);
-
-	/**
-	 * Adds an info node (usually below the product node)
-	 *
-	 * @param parent
-	 * @param toBeAdded
-	 */
-	abstract void addInfoNode(ProductTreeNode parent, InfoTreeNode toBeAdded);
-
-	/**
-	 * Returns the product node
-	 *
-	 * @param product    the product. ProductConstants#DISPLAY_
-	 * @param folderPath TODO*
-	 * @return
-	 */
-	abstract ProductTreeNode getProductNode(String product, String folderPath);
-
-	/**
-	 * Resets a product node
-	 */
-	abstract void resetNode(BaseTreeNode node);
-
-	/**
-	 * Remove all info nodes from the product tree node
-	 *
-	 * @param node
-	 */
-	abstract void removeInfoNodes(ProductTreeNode node);
-
-	/**
-	 * Refreshes the tree display
-	 */
-	abstract void refreshTree();
-
-	/**
 	 * Refreshes the delta reference labels
 	 */
 	abstract void refreshDeltaReference();
@@ -97,39 +37,17 @@ public interface ISnykToolView {
 	abstract void updateSummary(String status);
 
 	/**
-	 * Returns the tree root
-	 *
-	 * @return
-	 */
-	abstract BaseTreeNode getRoot();
-
-	/**
-	 * Clears all nodes in the tree
-	 *
-	 * @return
-	 */
-	abstract void clearTree();
-
-	abstract TreeViewer getTreeViewer();
-
-	/**
 	 * Hides or shows the Ignore buttons.
-	 *
-	 * @return
 	 */
 	abstract void toggleIgnoresButtons();
 
 	/**
 	 * Enables the net new issues scans.
-	 *
-	 * @return
 	 */
 	abstract void enableDelta();
 
 	/**
 	 * Disable the net new issues scans.
-	 *
-	 * @return
 	 */
 	abstract void disableDelta();
 

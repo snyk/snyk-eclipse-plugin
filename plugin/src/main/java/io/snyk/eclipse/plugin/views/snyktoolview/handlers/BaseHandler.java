@@ -23,7 +23,6 @@ import org.eclipse.ui.menus.UIElement;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
-import io.snyk.eclipse.plugin.views.snyktoolview.TreeFilterManager;
 
 public class BaseHandler extends AbstractHandler implements IElementUpdater, IHandlerCommands {
 	protected ImageDescriptor iconEnabled;
@@ -101,12 +100,10 @@ public class BaseHandler extends AbstractHandler implements IElementUpdater, IHa
 			allEnabled &= preferences.getBooleanPref(p);
 		}
 	
-		for (String p : prefs) {			
+		for (String p : prefs) {
 			preferences.storeAndTrackChange(p, Boolean.toString(!allEnabled));
 			updateUIForCommand(getCommandByPref(p));
-
 		}
-		TreeFilterManager.getInstance().reset();
 	}
 
 }

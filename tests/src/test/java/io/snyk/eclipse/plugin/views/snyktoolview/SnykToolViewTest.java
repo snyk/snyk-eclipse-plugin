@@ -18,34 +18,20 @@ class SnykToolViewTest {
 
 	@BeforeEach
 	void setUp() {
-		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
-		prefs.store(Preferences.USE_HTML_TREE_VIEW, "false");
+		Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 	}
 
 	@Test
 	void selectTreeNode_withUnknownProduct_doesNotThrow() {
-		SnykToolView view = new SnykToolView() {
-			@Override
-			public ProductTreeNode getProductNode(String product, String folderPath) {
-				return null;
-			}
-		};
-
+		SnykToolView view = new SnykToolView();
 		Issue issue = new Issue("issue-id", "Test Issue", "high", "/some/path/File.java",
 				null, false, false, "Code Security", null, null);
-
 		assertDoesNotThrow(() -> view.selectTreeNode(issue, "unknownProduct"));
 	}
 
 	@Test
 	void selectTreeNode_withNullIssue_doesNotThrow() {
-		SnykToolView view = new SnykToolView() {
-			@Override
-			public ProductTreeNode getProductNode(String product, String folderPath) {
-				return null;
-			}
-		};
-
+		SnykToolView view = new SnykToolView();
 		assertDoesNotThrow(() -> view.selectTreeNode(null, "Snyk Open Source"));
 	}
 
@@ -73,22 +59,16 @@ class SnykToolViewTest {
 		assertEquals("<html>second</html>", pendingHtml.get());
 	}
 
-	// Fix 4: HTML tree view enabled — selectTreeNode should not throw when handler is null
 	@Test
-	void selectTreeNode_withHtmlTreeViewEnabled_andNullHandler_doesNotThrow() {
-		Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore())
-				.store(Preferences.USE_HTML_TREE_VIEW, "true");
+	void selectTreeNode_withNullHandler_doesNotThrow() {
 		SnykToolView view = new SnykToolView();
 		Issue issue = new Issue("issue-id", "Test Issue", "high", "/some/path/File.java",
 				null, false, false, "Code Security", null, null);
 		assertDoesNotThrow(() -> view.selectTreeNode(issue, "Snyk Code"));
 	}
 
-	// Fix 4: HTML tree view enabled — selectTreeNode with null issue should not throw
 	@Test
-	void selectTreeNode_withHtmlTreeViewEnabled_andNullIssue_doesNotThrow() {
-		Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore())
-				.store(Preferences.USE_HTML_TREE_VIEW, "true");
+	void selectTreeNode_withNullIssueAndNullHandler_doesNotThrow() {
 		SnykToolView view = new SnykToolView();
 		assertDoesNotThrow(() -> view.selectTreeNode(null, "Snyk Code"));
 	}
