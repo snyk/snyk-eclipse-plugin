@@ -1,5 +1,7 @@
 package io.snyk.eclipse.plugin.wizards;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
@@ -74,19 +76,18 @@ public class AuthWaitDialog extends Dialog {
 		if (buttonId == COPY_URL_BUTTON_ID) {
 			copyUrlButton.setEnabled(false);
 			Display display = Display.getDefault();
-			display.asyncExec(() -> {
-				String url = SnykExtendedLanguageClient.getInstance().getAuthLink();
-				display.asyncExec(() -> {
-					if (copyUrlButton != null && !copyUrlButton.isDisposed()) {
-						copyUrlButton.setEnabled(true);
-					}
-					if (!url.isBlank()) {
-						Clipboard clipboard = new Clipboard(display);
-						clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
-						clipboard.dispose();
-					}
-				});
-			});
+			// Fetch auth link off the UI thread to avoid blocking SWT event dispatch.
+			CompletableFuture.supplyAsync(() -> SnykExtendedLanguageClient.getInstance().getAuthLink())
+					.thenAccept(url -> display.asyncExec(() -> {
+						if (copyUrlButton != null && !copyUrlButton.isDisposed()) {
+							copyUrlButton.setEnabled(true);
+						}
+						if (!url.isBlank()) {
+							Clipboard clipboard = new Clipboard(display);
+							clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
+							clipboard.dispose();
+						}
+					}));
 			return;
 		}
 		if (buttonId == IDialogConstants.CANCEL_ID) {
