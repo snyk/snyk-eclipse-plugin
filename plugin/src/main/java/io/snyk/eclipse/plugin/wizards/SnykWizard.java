@@ -1,12 +1,16 @@
 package io.snyk.eclipse.plugin.wizards;
 
+import java.io.File;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -24,12 +28,15 @@ import io.snyk.eclipse.plugin.utils.TrustedFoldersHelper;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class SnykWizard extends Wizard implements INewWizard {
+	private static final ILog LOG = Platform.getLog(SnykWizard.class);
+	// Class-level guard: prevents concurrent auth across multiple SnykWizard instances.
+	private static final AtomicBoolean IN_FLIGHT = new AtomicBoolean(false);
+
 	protected SnykWizardAuthenticatePage authenticatePage;
 	protected IWorkbench workbench;
 	protected IStructuredSelection selection;
 
 	private WizardDialog wizardDialog;
-	private final AtomicBoolean inFlight = new AtomicBoolean(false);
 
 	public SnykWizard() {
 		super();
@@ -55,7 +62,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean canFinish() {
-		return !inFlight.get();
+		return !IN_FLIGHT.get();
 	}
 
 	@Override
@@ -65,8 +72,8 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performFinish() {
-		// Guard against double-click: only one auth Job may run at a time.
-		if (!inFlight.compareAndSet(false, true)) {
+		// Guard against double-click: class-level so multiple wizard instances are also blocked.
+		if (!IN_FLIGHT.compareAndSet(false, true)) {
 			return false;
 		}
 		getContainer().updateButtons();
@@ -90,7 +97,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 					lc = SnykExtendedLanguageClient.getInstance();
 				}
 				if (monitor.isCanceled()) {
-					inFlight.set(false);
+					IN_FLIGHT.set(false);
 					return Status.CANCEL_STATUS;
 				}
 				monitor.worked(1);
@@ -134,10 +141,12 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 				boolean success = false;
 				try {
-					loginFuture.get();
+					loginFuture.get(5, TimeUnit.MINUTES);
 					success = true;
+				} catch (java.util.concurrent.CancellationException | java.util.concurrent.TimeoutException e) {
+					LOG.info("Authentication cancelled or timed out", e);
 				} catch (Exception e) { // NOPMD
-					// cancelled or failed — close below
+					LOG.error("Authentication failed", e);
 				}
 
 				if (success) {
@@ -166,14 +175,18 @@ public class SnykWizard extends Wizard implements INewWizard {
 		}
 		String[] paths = projects.stream()
 				.filter(p -> p.getLocation() != null)
-				.map(p -> p.getLocation().toFile().getAbsolutePath())
+				.map(p -> {
+					File f = p.getLocation().toFile();
+					return f != null ? f.getAbsolutePath() : null;
+				})
+				.filter(path -> path != null)
 				.collect(Collectors.toList())
 				.toArray(new String[0]);
 		TrustedFoldersHelper.addTrustedFolders(paths);
 	}
 
 	private void closeWizard() {
-		inFlight.set(false);
+		IN_FLIGHT.set(false);
 		Display.getDefault().asyncExec(() -> {
 			if (wizardDialog != null) {
 				Shell shell = wizardDialog.getShell();

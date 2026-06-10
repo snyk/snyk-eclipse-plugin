@@ -12,12 +12,12 @@ public class SnykWizardAuthenticatePage extends WizardPage {
 
 	public SnykWizardAuthenticatePage() {
 		super("Snyk Wizard");
-		setTitle("Welcome to Snyk for Eclipse!");
-		setDescription("Clicking 'Finish' will open a browser to authenticate with Snyk.");
 	}
 
 	@Override
 	public void createControl(Composite parent) {
+		setTitle("Welcome to Snyk for Eclipse!");
+		setDescription("Clicking 'Finish' will open a browser to authenticate with Snyk.");
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout(1, false));
 

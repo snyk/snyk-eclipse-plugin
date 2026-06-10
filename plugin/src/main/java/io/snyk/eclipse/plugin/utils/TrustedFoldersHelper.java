@@ -18,11 +18,8 @@ public final class TrustedFoldersHelper {
 		var stored = prefs.getPref(Preferences.TRUSTED_FOLDERS, "");
 		var pathSet = stored.isBlank() ? new HashSet<String>()
 				: new HashSet<>(Arrays.asList(stored.split(File.pathSeparator)));
-		pathSet.addAll(Arrays.asList(paths));
-		// pathSet is a HashSet — already deduplicated; no .distinct() needed.
+		Arrays.stream(paths).map(String::trim).filter(s -> !s.isBlank()).forEach(pathSet::add);
 		prefs.store(Preferences.TRUSTED_FOLDERS, pathSet.stream()
-				.filter(s -> !s.isBlank())
-				.map(String::trim)
 				.collect(Collectors.joining(File.pathSeparator)));
 	}
 }
