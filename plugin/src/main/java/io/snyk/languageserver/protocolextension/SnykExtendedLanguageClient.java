@@ -252,9 +252,19 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public CompletableFuture<Void> triggerAuthentication() {
 		CompletableFuture<Void> waitForAuth = new CompletableFuture<>();
+		CompletableFuture<Void> prev = authCompleteFuture;
 		authCompleteFuture = waitForAuth;
+		if (prev != null && !prev.isDone()) {
+			prev.cancel(true);
+		}
 		// snyk.login is acknowledged quickly; actual auth completion arrives via hasAuthenticated notification.
-		executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
+		// If the command itself fails (LS not ready, broken channel), fail fast rather than hanging 5 minutes.
+		executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>())
+				.exceptionally(ex -> {
+					SnykLogger.logError(new RuntimeException("snyk.login command failed", ex));
+					waitForAuth.completeExceptionally(ex);
+					return null;
+				});
 		return waitForAuth;
 	}
 

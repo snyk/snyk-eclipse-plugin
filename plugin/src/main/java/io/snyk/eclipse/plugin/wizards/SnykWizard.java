@@ -1,6 +1,5 @@
 package io.snyk.eclipse.plugin.wizards;
 
-import java.io.File;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -136,6 +135,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 					try {
 						Shell shell = wizardDialog != null ? wizardDialog.getShell() : null;
 						if (shell == null || shell.isDisposed()) {
+							LOG.warn("Wizard shell unavailable; auth dialog will not be shown");
 							return;
 						}
 						AuthWaitDialog dialog = new AuthWaitDialog(shell);
@@ -198,16 +198,20 @@ public class SnykWizard extends Wizard implements INewWizard {
 	}
 
 	private void trustWorkspaceFoldersClientSide() {
-		List<IProject> projects = ResourceUtils.getAccessibleTopLevelProjects();
-		if (projects == null || projects.isEmpty()) {
-			return;
+		try {
+			List<IProject> projects = ResourceUtils.getAccessibleTopLevelProjects();
+			if (projects == null || projects.isEmpty()) {
+				return;
+			}
+			String[] paths = projects.stream()
+					.filter(p -> p.getLocation() != null && p.getLocation().toFile() != null)
+					.map(p -> p.getLocation().toFile().getAbsolutePath())
+					.collect(Collectors.toList())
+					.toArray(new String[0]);
+			TrustedFoldersHelper.addTrustedFolders(paths);
+		} catch (RuntimeException e) { // NOPMD
+			LOG.error("Failed to trust workspace folders after authentication", e);
 		}
-		String[] paths = projects.stream()
-				.filter(p -> p.getLocation() != null && p.getLocation().toFile() != null)
-				.map(p -> p.getLocation().toFile().getAbsolutePath())
-				.collect(Collectors.toList())
-				.toArray(new String[0]);
-		TrustedFoldersHelper.addTrustedFolders(paths);
 	}
 
 	private void closeWizard() {
@@ -238,6 +242,8 @@ public class SnykWizard extends Wizard implements INewWizard {
 				IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 				if (window != null) {
 					shell = window.getShell();
+				} else {
+					LOG.warn("No active workbench window; auth wizard will open without parent shell");
 				}
 				WizardDialog dialog = new WizardDialog(shell, wizard);
 				wizard.wizardDialog = dialog;
