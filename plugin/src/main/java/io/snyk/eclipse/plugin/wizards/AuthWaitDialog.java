@@ -2,6 +2,8 @@ package io.snyk.eclipse.plugin.wizards;
 
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
@@ -22,6 +24,7 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class AuthWaitDialog extends Dialog {
 
+	private static final ILog LOG = Platform.getLog(AuthWaitDialog.class);
 	private static final int COPY_URL_BUTTON_ID = IDialogConstants.CLIENT_ID + 1;
 
 	private Button copyUrlButton;
@@ -77,30 +80,44 @@ public class AuthWaitDialog extends Dialog {
 			copyUrlButton.setEnabled(false);
 			Display display = Display.getDefault();
 			// Fetch auth link off the UI thread to avoid blocking SWT event dispatch.
-			CompletableFuture.supplyAsync(() -> SnykExtendedLanguageClient.getInstance().getAuthLink())
-					.thenAccept(url -> display.asyncExec(() -> {
-						if (copyUrlButton == null || copyUrlButton.isDisposed()) {
-							return;
-						}
-						Shell shell = copyUrlButton.getShell();
-						if (shell == null || shell.isDisposed()) {
-							return;
-						}
+			CompletableFuture.supplyAsync(() -> {
+				SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+				return lc != null ? lc.getAuthLink() : "";
+			}).thenAccept(url -> display.asyncExec(() -> {
+				if (copyUrlButton == null || copyUrlButton.isDisposed()) {
+					return;
+				}
+				Shell shell = copyUrlButton.getShell();
+				if (shell == null || shell.isDisposed()) {
+					return;
+				}
+				copyUrlButton.setEnabled(true);
+				if (url != null && !url.isBlank()) {
+					Clipboard clipboard = new Clipboard(display);
+					try {
+						clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
+					} finally {
+						clipboard.dispose();
+					}
+				}
+			})).exceptionally(ex -> {
+				LOG.error("Failed to fetch auth link", ex);
+				display.asyncExec(() -> {
+					if (copyUrlButton != null && !copyUrlButton.isDisposed()) {
 						copyUrlButton.setEnabled(true);
-						if (url != null && !url.isBlank()) {
-							Clipboard clipboard = new Clipboard(display);
-							try {
-								clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
-							} finally {
-								clipboard.dispose();
-							}
-						}
-					}));
+					}
+				});
+				return null;
+			});
 			return;
 		}
 		if (buttonId == IDialogConstants.CANCEL_ID) {
 			if (onCancel != null) {
-				onCancel.run();
+				try {
+					onCancel.run();
+				} catch (RuntimeException e) { // NOPMD
+					LOG.error("Error during auth cancellation", e);
+				}
 			}
 			cancelPressed();
 			return;

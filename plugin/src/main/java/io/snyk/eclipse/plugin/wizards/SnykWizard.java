@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.SnykStartup;
@@ -98,7 +99,6 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 				monitor.subTask("Waiting for language server...");
 				SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
-				// Item 4: include cancel check so the user can abort if LS download stalls.
 				while ((SnykStartup.isDownloading() || lc == null) && !monitor.isCanceled()) {
 					try {
 						Thread.sleep(1000);
@@ -114,34 +114,43 @@ public class SnykWizard extends Wizard implements INewWizard {
 				monitor.worked(1);
 
 				monitor.subTask("Logging out...");
-				// logout() sends the command synchronously via executeCommand; the LS
-				// processes LSP requests in order, so logout is guaranteed to complete
-				// before the login command sent by triggerAuthentication() is handled.
-				lc.logout();
+				try {
+					// Block until LS acknowledges logout so the subsequent login command
+					// is not processed before the session is cleared.
+					lc.logout().get(15, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return Status.CANCEL_STATUS;
+				} catch (ExecutionException | TimeoutException e) {
+					LOG.warn("Logout did not complete cleanly; proceeding with login", e);
+				}
 				monitor.worked(1);
 
 				monitor.subTask("Opening browser for authentication...");
 				final SnykExtendedLanguageClient finalLc = lc;
 
-				// Item 3: open the dialog BEFORE calling triggerAuthentication() so that
-				// if the LS responds immediately, closeDialog() is never called on a null
-				// reference and the dialog doesn't get left open permanently.
+				// Open the dialog BEFORE triggerAuthentication() so the dialog is always
+				// present when hasAuthenticated fires and closes it.
 				AuthWaitDialog[] dialogHolder = new AuthWaitDialog[1];
 				Display.getDefault().syncExec(() -> {
-					Shell shell = wizardDialog != null ? wizardDialog.getShell() : null;
-					if (shell == null || shell.isDisposed()) {
-						return;
+					try {
+						Shell shell = wizardDialog != null ? wizardDialog.getShell() : null;
+						if (shell == null || shell.isDisposed()) {
+							return;
+						}
+						AuthWaitDialog dialog = new AuthWaitDialog(shell);
+						dialog.setOnCancel(finalLc::cancelLogin);
+						dialog.setBlockOnOpen(false);
+						dialog.open();
+						dialogHolder[0] = dialog;
+					} catch (RuntimeException e) {
+						LOG.error("Failed to open auth dialog", e);
 					}
-					AuthWaitDialog dialog = new AuthWaitDialog(shell);
-					dialog.setOnCancel(finalLc::cancelLogin);
-					dialog.setBlockOnOpen(false);
-					dialog.open();
-					dialogHolder[0] = dialog;
 				});
 
 				AuthWaitDialog waitDialog = dialogHolder[0];
 
-				var loginFuture = lc.triggerAuthentication();
+				var authFuture = lc.triggerAuthentication();
 
 				if (waitDialog != null) {
 					waitDialog.setCopyUrlEnabled(true);
@@ -152,7 +161,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 				boolean success = false;
 				try {
-					loginFuture.get(5, TimeUnit.MINUTES);
+					authFuture.get(5, TimeUnit.MINUTES);
 					success = true;
 				} catch (CancellationException e) {
 					LOG.info("Authentication cancelled", e);
@@ -160,20 +169,21 @@ public class SnykWizard extends Wizard implements INewWizard {
 					LOG.info("Authentication timed out", e);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
+					LOG.info("Authentication interrupted");
 				} catch (ExecutionException e) {
 					LOG.error("Authentication failed", e);
-				}
-
-				if (success) {
-					trustWorkspaceFoldersClientSide();
-					finalLc.updateConfiguration();
 				}
 
 				if (waitDialog != null) {
 					waitDialog.closeDialog();
 				}
 
-				return Status.OK_STATUS;
+				if (success) {
+					trustWorkspaceFoldersClientSide();
+					finalLc.updateConfiguration();
+					return Status.OK_STATUS;
+				}
+				return Status.CANCEL_STATUS;
 			}
 		};
 		try {
@@ -206,11 +216,15 @@ public class SnykWizard extends Wizard implements INewWizard {
 		Display display = Display.getDefault();
 		if (display != null && !display.isDisposed()) {
 			display.asyncExec(() -> {
-				if (wizardDialog != null) {
-					Shell shell = wizardDialog.getShell();
-					if (shell != null && !shell.isDisposed()) {
-						wizardDialog.close();
+				try {
+					if (wizardDialog != null) {
+						Shell shell = wizardDialog.getShell();
+						if (shell != null && !shell.isDisposed()) {
+							wizardDialog.close();
+						}
 					}
+				} catch (RuntimeException e) { // NOPMD
+					LOG.error("Failed to close wizard dialog", e);
 				}
 			});
 		}
@@ -218,12 +232,20 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	public static void createAndLaunch() {
 		Display.getDefault().asyncExec(() -> {
-			SnykWizard wizard = new SnykWizard();
-			Shell shell = PlatformUI.getWorkbench().getDisplay().getActiveShell();
-			WizardDialog dialog = new WizardDialog(shell, wizard);
-			wizard.wizardDialog = dialog;
-			dialog.setBlockOnOpen(false);
-			dialog.open();
+			try {
+				SnykWizard wizard = new SnykWizard();
+				Shell shell = null;
+				IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+				if (window != null) {
+					shell = window.getShell();
+				}
+				WizardDialog dialog = new WizardDialog(shell, wizard);
+				wizard.wizardDialog = dialog;
+				dialog.setBlockOnOpen(false);
+				dialog.open();
+			} catch (RuntimeException e) { // NOPMD
+				LOG.error("Failed to open authentication wizard", e);
+			}
 		});
 	}
 }

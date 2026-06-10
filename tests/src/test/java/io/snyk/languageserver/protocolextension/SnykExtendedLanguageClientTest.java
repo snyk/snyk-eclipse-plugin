@@ -659,4 +659,51 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		verify(toolWindowMock).refreshBrowser(param);
 	}
+
+	@Test
+	void showDocument_withPathTraversalUri_returnsFalse() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		ShowDocumentParams params = new ShowDocumentParams();
+		params.setUri("file:///some/../../../etc/passwd");
+
+		ShowDocumentResult result = cut.showDocument(params).get(5, java.util.concurrent.TimeUnit.SECONDS);
+
+		assertFalse(result.isSuccess(), "Path traversal URI must be rejected");
+	}
+
+	@Test
+	void cancelLogin_withNoActiveLogin_doesNotThrow() {
+		cut = new SnykExtendedLanguageClient();
+		// cancelLogin() when authCompleteFuture is null must not throw
+		assertDoesNotThrow(() -> cut.cancelLogin());
+	}
+
+	@Test
+	void cancelLogin_cancelsAuthFuture() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		java.util.concurrent.CompletableFuture<Void> authFuture = cut.triggerAuthentication();
+		assertFalse(authFuture.isDone(), "Future must not be done before cancel");
+
+		cut.cancelLogin();
+
+		assertTrue(authFuture.isCancelled(), "Future must be cancelled after cancelLogin()");
+	}
+
+	@Test
+	void hasAuthenticated_completesAuthFuture() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		java.util.concurrent.CompletableFuture<Void> authFuture = cut.triggerAuthentication();
+		assertFalse(authFuture.isDone());
+
+		HasAuthenticatedParam param = new HasAuthenticatedParam();
+		param.setToken("test-token");
+		param.setApiUrl("https://api.snyk.io");
+		cut.hasAuthenticated(param);
+
+		assertTrue(authFuture.isDone(), "authFuture must complete when hasAuthenticated fires");
+		assertFalse(authFuture.isCompletedExceptionally());
+	}
 }
