@@ -67,6 +67,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performCancel() {
+		IN_FLIGHT.set(false);
 		return true;
 	}
 
@@ -80,8 +81,15 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 		new Job("Authenticating with Snyk...") {
 			@Override
-			@SuppressWarnings("PMD.AvoidCatchingGenericException")
 			protected IStatus run(IProgressMonitor monitor) {
+				try {
+					return doRun(monitor);
+				} finally {
+					closeWizard();
+				}
+			}
+
+			private IStatus doRun(IProgressMonitor monitor) {
 				monitor.beginTask("Starting", 3);
 
 				monitor.subTask("Waiting for language server...");
@@ -97,7 +105,6 @@ public class SnykWizard extends Wizard implements INewWizard {
 					lc = SnykExtendedLanguageClient.getInstance();
 				}
 				if (monitor.isCanceled()) {
-					IN_FLIGHT.set(false);
 					return Status.CANCEL_STATUS;
 				}
 				monitor.worked(1);
@@ -157,8 +164,6 @@ public class SnykWizard extends Wizard implements INewWizard {
 				if (waitDialog != null) {
 					waitDialog.closeDialog();
 				}
-
-				closeWizard();
 
 				return Status.OK_STATUS;
 			}
