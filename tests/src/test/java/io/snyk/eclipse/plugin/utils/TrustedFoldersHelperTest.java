@@ -9,6 +9,8 @@ import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import io.snyk.eclipse.plugin.preferences.InMemoryPreferenceStore;
+import io.snyk.eclipse.plugin.preferences.InMemorySecurePreferenceStore;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 
 class TrustedFoldersHelperTest {
@@ -17,8 +19,7 @@ class TrustedFoldersHelperTest {
 
 	@BeforeEach
 	void setUp() {
-		prefs = Preferences.getInstance();
-		prefs.store(Preferences.TRUSTED_FOLDERS, "");
+		prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
 	}
 
 	@Test
