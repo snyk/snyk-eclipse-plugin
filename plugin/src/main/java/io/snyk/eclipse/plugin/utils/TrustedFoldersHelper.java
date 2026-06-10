@@ -17,7 +17,7 @@ public final class TrustedFoldersHelper {
 	public static void addTrustedFolders(String... paths) {
 		var prefs = Preferences.getInstance();
 		var stored = prefs.getPref(Preferences.TRUSTED_FOLDERS, "");
-		Set<String> pathSet = stored.isBlank() ? new HashSet<>()
+		Set<String> pathSet = (stored == null || stored.isBlank()) ? new HashSet<>()
 				: new HashSet<>(Arrays.asList(stored.split(SEPARATOR)));
 		for (String path : paths) {
 			String trimmed = path.trim();
