@@ -143,7 +143,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 						dialog.setBlockOnOpen(false);
 						dialog.open();
 						dialogHolder[0] = dialog;
-					} catch (RuntimeException e) {
+					} catch (RuntimeException e) { // NOPMD
 						LOG.error("Failed to open auth dialog", e);
 					}
 				});
