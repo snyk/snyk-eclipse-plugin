@@ -213,8 +213,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public CompletableFuture<Object> triggerAuthentication() {
-		loginFuture = executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
-		return loginFuture;
+		CompletableFuture<Object> f = executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>());
+		loginFuture = f;
+		return f;
 	}
 
 	public void cancelLogin() {
