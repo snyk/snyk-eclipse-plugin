@@ -136,7 +136,7 @@ public final class LsSettingsRegistry {
         entries.put(LsKey.MANAGE_BINARIES_AUTOMATICALLY, Entry.boolFallback(LsKey.MANAGE_BINARIES_AUTOMATICALLY, Preferences.MANAGE_BINARIES_AUTOMATICALLY, true));
         entries.put(LsKey.CLI_PATH,               Entry.fallback(LsKey.CLI_PATH, Preferences.CLI_PATH, ""));
         entries.put(LsKey.USER_SETTINGS_PATH,     Entry.simple(LsKey.USER_SETTINGS_PATH, Preferences.PATH_KEY, ""));
-        entries.put(LsKey.CLI_BASE_DOWNLOAD_URL,  Entry.fallback(LsKey.CLI_BASE_DOWNLOAD_URL, Preferences.CLI_BASE_URL, "https://downloads.snyk.io"));
+        entries.put(LsKey.CLI_BASE_DOWNLOAD_URL,  Entry.fallback(LsKey.CLI_BASE_DOWNLOAD_URL, Preferences.CLI_BASE_URL, Preferences.DEFAULT_CLI_BASE_URL));
         entries.put(LsKey.INSECURE,               Entry.boolFallback(LsKey.INSECURE, Preferences.INSECURE_KEY, false));
         entries.put(LsKey.ADDITIONAL_PARAMS,      Entry.simple(LsKey.ADDITIONAL_PARAMS, Preferences.ADDITIONAL_PARAMETERS, ""));
         entries.put(LsKey.ENABLE_TRUSTED_FOLDERS_FEATURE, Entry.fixed(LsKey.ENABLE_TRUSTED_FOLDERS_FEATURE, Boolean.TRUE.toString()));

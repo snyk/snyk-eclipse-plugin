@@ -161,7 +161,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           .replace("{{MANAGE_BINARIES_CHECKED}}", prefs.isManagedBinaries() ? "checked" : "")
           .replace(
               "{{CLI_BASE_DOWNLOAD_URL}}",
-              htmlAttr(prefs.getPref(Preferences.CLI_BASE_URL, "https://downloads.snyk.io")))
+              htmlAttr(prefs.getPref(Preferences.CLI_BASE_URL, Preferences.DEFAULT_CLI_BASE_URL)))
           .replace("{{CLI_PATH}}", htmlAttr(prefs.getCliPath()))
           .replace(
               "{{CHANNEL_STABLE_SELECTED}}",
