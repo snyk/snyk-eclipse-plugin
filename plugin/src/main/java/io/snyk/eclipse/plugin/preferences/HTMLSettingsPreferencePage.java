@@ -11,6 +11,7 @@ import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.LsSettingsRegistry;
 import io.snyk.languageserver.LsSettingsRegistry.Entry;
+import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
 import java.io.IOException;
@@ -77,7 +78,9 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       public Object function(Object[] arguments) {
         if (arguments.length > 0 && arguments[0] instanceof String) {
           String jsonString = (String) arguments[0];
-          parseAndSaveConfig(jsonString);
+          if (parseAndSaveConfig(jsonString)) {
+            SnykLanguageServer.promptToRestartEclipseForNewCli();
+          }
         }
         return null;
       }
@@ -161,7 +164,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           .replace("{{MANAGE_BINARIES_CHECKED}}", prefs.isManagedBinaries() ? "checked" : "")
           .replace(
               "{{CLI_BASE_DOWNLOAD_URL}}",
-              htmlAttr(prefs.getPref(Preferences.CLI_BASE_URL, "https://downloads.snyk.io")))
+              htmlAttr(prefs.getPref(Preferences.CLI_BASE_URL, Preferences.DEFAULT_CLI_BASE_URL)))
           .replace("{{CLI_PATH}}", htmlAttr(prefs.getCliPath()))
           .replace(
               "{{CHANNEL_STABLE_SELECTED}}",
@@ -188,10 +191,17 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     }
   }
 
-  private void parseAndSaveConfig(String jsonString) {
+  /**
+   * Parses and persists settings JSON from the HTML page. Returns {@code true}
+   * if the CLI binary path changed and the caller should prompt the user to
+   * restart Eclipse — kept out of this method so the data path stays
+   * workbench-free (and unit-testable headless).
+   */
+  boolean parseAndSaveConfig(String jsonString) {
     try {
       JsonNode root = objectMapper.readTree(jsonString);
       Preferences prefs = Preferences.getInstance();
+      String previousCliPath = prefs.getCliPath();
 
       JsonNode fallbackNode = root.get("isFallbackForm");
       boolean isFallback = fallbackNode != null && fallbackNode.booleanValue();
@@ -227,8 +237,19 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
 
       // Refresh toolbar UI to reflect changes made in HTML settings.
       refreshToolbarUI();
+
+      // If the user changed the CLI binary path, the running LS process is
+      // still bound to the old binary. In-process restart via lsp4e is too
+      // unreliable (cached connection providers, stuck failed wrappers,
+      // protocol-version probes against the wrong CLI), so signal the caller
+      // to prompt for an Eclipse restart — letting normal startup pick up the
+      // new binary. We don't invoke the UI prompt here so this method stays
+      // headless-safe for unit tests.
+      String newCliPath = prefs.getCliPath();
+      return !java.util.Objects.equals(previousCliPath, newCliPath);
     } catch (JsonProcessingException e) {
       SnykLogger.logError(e);
+      return false;
     }
   }
 

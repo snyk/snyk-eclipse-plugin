@@ -131,11 +131,11 @@ public class LsDownloader {
 
 	String getVersion(String releaseChannel) {
 		String response;
+		var req = new LsVersionRequest(releaseChannel);
 		try {
-			var req = new LsVersionRequest(releaseChannel);
 			response = httpClient.execute(req, new LsMetadataResponseHandler(), context);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("Version fetch failed for " + req.getURI(), e);
 		}
 		return response;
 	}
@@ -156,7 +156,7 @@ public class LsDownloader {
 				return lines.get(0).split(" ")[0];
 			}
 		} catch (UnsupportedOperationException | IOException e) {
-			throw new ChecksumVerificationException(e);
+			throw new ChecksumVerificationException("Sha fetch failed for " + shaRequest.getURI(), e);
 		}
 	}
 
