@@ -74,7 +74,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 	@Override
 	public boolean performCancel() {
 		// Cancel any in-flight auth future so the Job thread unblocks immediately
-		// instead of waiting up to 5 minutes for the timeout.
+		// instead of waiting up to 30 seconds for the timeout.
 		// Do NOT touch IN_FLIGHT — the Job's finally block (closeWizard) owns that reset.
 		SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 		if (lc != null) {
@@ -179,7 +179,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 				boolean success = false;
 				try {
-					authFuture.get(5, TimeUnit.MINUTES);
+					authFuture.get(30, TimeUnit.SECONDS);
 					// Double-check: hasAuthenticated fires on logout (empty token) too; the future
 					// guard above blocks that, but verify the token is actually set as a safety net.
 					success = !Preferences.getInstance().getAuthToken().isBlank();
@@ -253,6 +253,16 @@ public class SnykWizard extends Wizard implements INewWizard {
 				LOG.error("Failed to close wizard dialog", e);
 			} finally {
 				IN_FLIGHT.set(false);
+				// Re-enable Finish in case the same wizard dialog is still open
+				// (e.g. shell.close() threw, or this runs before close completes).
+				try {
+					Shell shell = wizardShell;
+					if (shell != null && !shell.isDisposed() && getContainer() != null) {
+						getContainer().updateButtons();
+					}
+				} catch (RuntimeException e) { // NOPMD
+					// Wizard already torn down — ignore.
+				}
 			}
 		});
 	}
