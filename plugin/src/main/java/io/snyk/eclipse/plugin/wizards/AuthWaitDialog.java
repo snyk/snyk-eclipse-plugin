@@ -78,7 +78,9 @@ public class AuthWaitDialog extends Dialog {
 	@Override
 	protected void buttonPressed(int buttonId) {
 		if (buttonId == COPY_URL_BUTTON_ID) {
-			copyUrlButton.setEnabled(false);
+			if (copyUrlButton != null && !copyUrlButton.isDisposed()) {
+				copyUrlButton.setEnabled(false);
+			}
 			Display display = Display.getDefault();
 			// Fetch auth link off the UI thread to avoid blocking SWT event dispatch.
 			CompletableFuture.supplyAsync(() -> {
@@ -96,6 +98,7 @@ public class AuthWaitDialog extends Dialog {
 					}
 					copyUrlButton.setEnabled(true);
 					if (url != null && url.startsWith("https://")) {
+						shell.setText("Authenticating Snyk Plugin");
 						Clipboard clipboard = new Clipboard(display);
 						try {
 							clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
@@ -104,6 +107,8 @@ public class AuthWaitDialog extends Dialog {
 						} finally {
 							clipboard.dispose();
 						}
+					} else {
+						shell.setText("Authenticating Snyk Plugin — URL unavailable, try again");
 					}
 				});
 			}).exceptionally(ex -> {
@@ -134,7 +139,9 @@ public class AuthWaitDialog extends Dialog {
 	}
 
 	public void setCopyUrlEnabled(boolean enabled) {
-		Display.getDefault().asyncExec(() -> {
+		Display display = Display.getDefault();
+		if (display == null || display.isDisposed()) return;
+		display.asyncExec(() -> {
 			if (copyUrlButton != null && !copyUrlButton.isDisposed()) {
 				copyUrlButton.setEnabled(enabled);
 			}
@@ -142,7 +149,9 @@ public class AuthWaitDialog extends Dialog {
 	}
 
 	public void closeDialog() {
-		Display.getDefault().asyncExec(() -> {
+		Display display = Display.getDefault();
+		if (display == null || display.isDisposed()) return;
+		display.asyncExec(() -> {
 			Shell shell = getShell();
 			if (shell != null && !shell.isDisposed()) {
 				close();
