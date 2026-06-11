@@ -367,11 +367,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
-		CompletableFuture<Void> f = authCompleteFuture;
-		if (f != null) {
-			f.complete(null);
-		}
-
 		var prefs = Preferences.getInstance();
 
 		var oldToken = prefs.getAuthToken();
@@ -392,6 +387,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		if (differentToken) {
 			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
+		}
+
+		// Complete after persisting token so SnykWizard.updateConfiguration() reads the new token.
+		CompletableFuture<Void> f = authCompleteFuture;
+		if (f != null) {
+			f.complete(null);
 		}
 
 		if (!Preferences.getInstance().isTest()) {
