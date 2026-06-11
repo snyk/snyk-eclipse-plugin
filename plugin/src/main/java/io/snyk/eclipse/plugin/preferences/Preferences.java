@@ -83,6 +83,7 @@ public class Preferences {
 	public static final String ORGANIZATION_KEY = EnvironmentConstants.ENV_SNYK_ORG;
 	public static final String SCANNING_MODE_AUTOMATIC = "scanningMode";
 	public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
+	public static final String DEFAULT_CLI_BASE_URL = "https://downloads.snyk.io";
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
 	public static final String USE_LS_HTML_CONFIG_DIALOG = "useLsHtmlConfigDialog";
@@ -302,7 +303,11 @@ public class Preferences {
 	}
 
 	public final String getCliPath() {
-		return getPref(CLI_PATH, getDefaultCliPath());
+		String stored = getPref(CLI_PATH, getDefaultCliPath());
+		if (stored == null || stored.isBlank()) {
+			return getDefaultCliPath();
+		}
+		return stored;
 	}
 
 	public final boolean isInsecure() {

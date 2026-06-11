@@ -11,10 +11,18 @@ public class LsBinaries {
   public static final String REQUIRED_LS_PROTOCOL_VERSION = "25";
 
   public static URI getBaseUri() {
-    return URI.create(PREFERENCES.getPref(CLI_BASE_URL));
+    return URI.create(resolveBaseUrl());
   }
 
   public static URI getAssetUri(String assetName, String version) {
-    return URI.create(String.format("%s/cli/%s/%s", PREFERENCES.getPref(CLI_BASE_URL), version, assetName));
+    return URI.create(String.format("%s/cli/%s/%s", resolveBaseUrl(), version, assetName));
+  }
+
+  private static String resolveBaseUrl() {
+    String configured = PREFERENCES.getPref(CLI_BASE_URL, Preferences.DEFAULT_CLI_BASE_URL);
+    if (configured == null || configured.isBlank()) {
+      return Preferences.DEFAULT_CLI_BASE_URL;
+    }
+    return configured;
   }
 }

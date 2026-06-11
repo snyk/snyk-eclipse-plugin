@@ -23,7 +23,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 class LsRuntimeEnvironmentTest extends LsBaseTest {
@@ -40,10 +42,36 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 	@Test
 	void testDownloadBinaryNameConstructions() {
 		var actual = environment.getDownloadBinaryName();
-		String expected = "snyk-" + environment.getOs() + environment.getArch();
+		String os = environment.getOs();
+		String arch = environment.getArch();
+		// Mirror the Windows-ARM fallback: no snyk-win-arm64.exe is published
+		if ("win".equals(os) && "-arm64".equals(arch)) {
+			arch = "";
+		}
+		String expected = "snyk-" + os + arch;
 		if (expected.contains("win"))
 			expected += ".exe";
 		assertEquals(expected, actual);
+	}
+
+	@Test
+	void testDownloadBinaryNameFallsBackToWindowsX64OnArm() {
+		// Snyk CLI does not publish a win-arm64 build; Windows-on-ARM emulates x64,
+		// so we should download the x64 binary instead of a non-existent arm64 one.
+		LsRuntimeEnvironment spyEnv = spy(new LsRuntimeEnvironment());
+		doReturn("win").when(spyEnv).getOs();
+		doReturn("-arm64").when(spyEnv).getArch();
+
+		assertEquals("snyk-win.exe", spyEnv.getDownloadBinaryName());
+	}
+
+	@Test
+	void testDownloadBinaryNameKeepsArmSuffixOnMacAndLinux() {
+		LsRuntimeEnvironment spyEnv = spy(new LsRuntimeEnvironment());
+		doReturn("macos").when(spyEnv).getOs();
+		doReturn("-arm64").when(spyEnv).getArch();
+
+		assertEquals("snyk-macos-arm64", spyEnv.getDownloadBinaryName());
 	}
 
 	// @Test
