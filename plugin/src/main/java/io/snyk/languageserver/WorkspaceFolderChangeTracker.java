@@ -45,14 +45,15 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
 
     public static synchronized void register() {
         if (instance != null) return;
-        instance = new WorkspaceFolderChangeTracker();
-        ResourcesPlugin.getWorkspace().addResourceChangeListener(instance, CHANGE_MASK);
+        WorkspaceFolderChangeTracker tracker = new WorkspaceFolderChangeTracker();
+        ResourcesPlugin.getWorkspace().addResourceChangeListener(tracker, CHANGE_MASK);
+        instance = tracker;
     }
 
     public static synchronized void unregister() {
         if (instance == null) return;
         ResourcesPlugin.getWorkspace().removeResourceChangeListener(instance);
-        instance = null;
+        instance = null; // NOPMD - intentional singleton reset
     }
 
     @Override
@@ -70,8 +71,9 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
     private void recomputeAndNotify() {
         List<WorkspaceFolder> added;
         List<WorkspaceFolder> removed;
+        Map<String, WorkspaceFolder> currentFolders;
         synchronized (lock) {
-            Map<String, WorkspaceFolder> currentFolders = currentFolderMap();
+            currentFolders = currentFolderMap();
             added = new ArrayList<>();
             for (Map.Entry<String, WorkspaceFolder> e : currentFolders.entrySet()) {
                 if (!knownFolders.containsKey(e.getKey())) added.add(e.getValue());
@@ -83,10 +85,13 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
             if (added.isEmpty() && removed.isEmpty()) {
                 return;
             }
-            knownFolders.clear();
-            knownFolders.putAll(currentFolders);
         }
-        sendDidChange(added, removed);
+        if (sendDidChange(added, removed)) {
+            synchronized (lock) {
+                knownFolders.clear();
+                knownFolders.putAll(currentFolders);
+            }
+        }
     }
 
     private void snapshot() {
@@ -107,21 +112,23 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
         return map;
     }
 
-    private static void sendDidChange(List<WorkspaceFolder> added, List<WorkspaceFolder> removed) {
+    private static boolean sendDidChange(List<WorkspaceFolder> added, List<WorkspaceFolder> removed) {
         SnykExtendedLanguageClient client = SnykExtendedLanguageClient.getInstance();
         if (client == null) {
-            return;
+            return false;
         }
         LanguageServer ls = client.getConnectedLanguageServer();
         if (ls == null) {
-            return;
+            return false;
         }
         WorkspaceFoldersChangeEvent change = new WorkspaceFoldersChangeEvent(added, removed);
         DidChangeWorkspaceFoldersParams params = new DidChangeWorkspaceFoldersParams(change);
         try {
             ls.getWorkspaceService().didChangeWorkspaceFolders(params);
+            return true;
         } catch (Exception e) { // NOPMD - lsp4j can throw on transport errors
             SnykLogger.logError(e);
+            return false;
         }
     }
 }
