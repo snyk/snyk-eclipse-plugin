@@ -14,7 +14,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.swt.SWTException;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -80,7 +79,7 @@ public class SnykStartup implements IStartup {
 						downloading = true;
 						IStatus status = download(monitor);
 						if (!status.isOK()) {
-							logDownloadFailure(status);
+							logDownloadFailure(status.getException());
 						}
 					}
 					// Persist the resolved path once the binary is confirmed present — covers
@@ -91,32 +90,15 @@ public class SnykStartup implements IStartup {
 						Preferences.getInstance().store(Preferences.CLI_PATH, cliPath);
 					}
 				} catch (Exception e) { // NOPMD - intentional catch-all for download failures
-					logDownloadFailure(e.getMessage());
+					logDownloadFailure(e);
 				} finally {
 					downloading = false;
 				}
 			}
 
-			private void logDownloadFailure(IStatus status) {
-				StringBuilder errorMessage = new StringBuilder(status.getMessage());
-				Throwable t = status.getException();
-				while (t != null) {
-					errorMessage.append("\n  caused by: ").append(t.getClass().getName())
-							.append(": ").append(t.getMessage());
-					Throwable next = t.getCause();
-					if (t.equals(next)) {
-						break;
-					}
-					t = next;
-				}
-				logDownloadFailure(errorMessage.toString());
-			}
-
-			private void logDownloadFailure(String errorMessage) {
+			private void logDownloadFailure(Throwable err) {
 				// Log the error - user may just be offline but have an existing binary. We show a user-facing error later if binary is missing.
-				String message = "Failed to download Snyk CLI: " + errorMessage
-						+ ". Will try to start with existing binary if available.";
-				logger.error(message);
+				logger.error("Failed to download Snyk CLI. Will try to start with existing binary if available. Expand Details for more information.", err);
 			}
 		};
 		initJob.setPriority(Job.LONG);

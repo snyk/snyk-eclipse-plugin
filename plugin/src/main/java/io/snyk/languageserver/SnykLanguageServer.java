@@ -79,13 +79,13 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		File cliBinary = new File(cliPath);
 		if (!cliBinary.exists()) {
 			var sb = new StringBuilder(200);
-			sb.append("Snyk CLI binary not found at: '").append(cliPath).append("'. \n");
+			sb.append("Snyk CLI binary not found at: '").append(cliPath).append("'. Expand Details for more information.\n");
 			if (prefs.isManagedBinaries()) {
 				sb.append("'Manage Binaries Automatically' is enabled - check the Error Log for download details. \n");
 			}
 			sb.append("You can also specify a custom CLI path in Snyk Preferences.");
 			String message = sb.toString();
-			SnykLogger.logAndShow(message);
+			SnykLogger.logAndShowError(message);
 			throw new IOException(message);
 		}
 		return cliPath;
