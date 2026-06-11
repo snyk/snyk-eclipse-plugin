@@ -78,7 +78,9 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       public Object function(Object[] arguments) {
         if (arguments.length > 0 && arguments[0] instanceof String) {
           String jsonString = (String) arguments[0];
-          parseAndSaveConfig(jsonString);
+          if (parseAndSaveConfig(jsonString)) {
+            SnykLanguageServer.promptToRestartEclipseForNewCli();
+          }
         }
         return null;
       }
@@ -189,7 +191,13 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     }
   }
 
-  private void parseAndSaveConfig(String jsonString) {
+  /**
+   * Parses and persists settings JSON from the HTML page. Returns {@code true}
+   * if the CLI binary path changed and the caller should prompt the user to
+   * restart Eclipse — kept out of this method so the data path stays
+   * workbench-free (and unit-testable headless).
+   */
+  boolean parseAndSaveConfig(String jsonString) {
     try {
       JsonNode root = objectMapper.readTree(jsonString);
       Preferences prefs = Preferences.getInstance();
@@ -233,14 +241,15 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       // If the user changed the CLI binary path, the running LS process is
       // still bound to the old binary. In-process restart via lsp4e is too
       // unreliable (cached connection providers, stuck failed wrappers,
-      // protocol-version probes against the wrong CLI), so prompt the user
-      // to restart Eclipse and let normal startup pick up the new binary.
+      // protocol-version probes against the wrong CLI), so signal the caller
+      // to prompt for an Eclipse restart — letting normal startup pick up the
+      // new binary. We don't invoke the UI prompt here so this method stays
+      // headless-safe for unit tests.
       String newCliPath = prefs.getCliPath();
-      if (!java.util.Objects.equals(previousCliPath, newCliPath)) {
-        SnykLanguageServer.promptToRestartEclipseForNewCli();
-      }
+      return !java.util.Objects.equals(previousCliPath, newCliPath);
     } catch (JsonProcessingException e) {
       SnykLogger.logError(e);
+      return false;
     }
   }
 
