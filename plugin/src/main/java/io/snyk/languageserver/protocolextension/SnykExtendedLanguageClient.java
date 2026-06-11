@@ -137,8 +137,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private static SnykExtendedLanguageClient instance;
 	// Completes when hasAuthenticated fires, not when snyk.login is acked.
+	// Static so that if the LS restarts and creates a new SnykExtendedLanguageClient instance,
+	// hasAuthenticated() on the new instance still completes the future the wizard is waiting on.
 	// AtomicReference so triggerAuthentication()'s getAndSet() and cancelLogin()'s get() are race-free.
-	private final AtomicReference<CompletableFuture<Void>> authCompleteFuture = new AtomicReference<>();
+	private static final AtomicReference<CompletableFuture<Void>> authCompleteFuture = new AtomicReference<>();
 
 	public SnykExtendedLanguageClient() {
 		super();
@@ -404,9 +406,18 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 		// Complete only when a real token arrived — logout sends hasAuthenticated with an empty token
 		// and must not be mistaken for a successful login by a waiting wizard.
-		CompletableFuture<Void> f = authCompleteFuture.get();
-		if (f != null && normalizedNew != null) {
-			f.complete(null);
+		if (normalizedNew != null) {
+			CompletableFuture<Void> f = authCompleteFuture.get();
+			if (f == null || f.isDone()) {
+				// hasAuthenticated fired before triggerAuthentication() created a future, or fired
+				// on a different instance than the one the wizard holds (LS restart race). Store a
+				// pre-completed future so that the next triggerAuthentication() call returns immediately.
+				CompletableFuture<Void> preCompleted = new CompletableFuture<>();
+				preCompleted.complete(null);
+				authCompleteFuture.compareAndSet(f, preCompleted);
+			} else {
+				f.complete(null);
+			}
 		}
 
 		if (!Preferences.getInstance().isTest()) {
