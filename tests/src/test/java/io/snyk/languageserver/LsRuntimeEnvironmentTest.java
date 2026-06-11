@@ -42,7 +42,13 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 	@Test
 	void testDownloadBinaryNameConstructions() {
 		var actual = environment.getDownloadBinaryName();
-		String expected = "snyk-" + environment.getOs() + environment.getArch();
+		String os = environment.getOs();
+		String arch = environment.getArch();
+		// Mirror the Windows-ARM fallback: no snyk-win-arm64.exe is published
+		if ("win".equals(os) && "-arm64".equals(arch)) {
+			arch = "";
+		}
+		String expected = "snyk-" + os + arch;
 		if (expected.contains("win"))
 			expected += ".exe";
 		assertEquals(expected, actual);
