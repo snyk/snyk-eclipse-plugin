@@ -14,6 +14,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.swt.SWTException;
 import org.eclipse.ui.IStartup;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -79,26 +80,36 @@ public class SnykStartup implements IStartup {
 						downloading = true;
 						IStatus status = download(monitor);
 						if (!status.isOK()) {
-							logDownloadFailure(status.getException());
+							logDownloadFailure(status);
 						}
 					}
-					// Persist the resolved path once the binary is confirmed present — covers
-					// both fresh downloads and users who disabled managed-binary downloads.
-					String cliPath = Preferences.getInstance().getCliPath();
-					String stored = Preferences.getInstance().getPref(Preferences.CLI_PATH, "");
-					if ((stored == null || stored.isBlank()) && new File(cliPath).exists()) {
-						Preferences.getInstance().store(Preferences.CLI_PATH, cliPath);
-					}
 				} catch (Exception e) { // NOPMD - intentional catch-all for download failures
-					logDownloadFailure(e);
+					logDownloadFailure(e.getMessage());
 				} finally {
 					downloading = false;
 				}
 			}
 
-			private void logDownloadFailure(Throwable err) {
+			private void logDownloadFailure(IStatus status) {
+				StringBuilder errorMessage = new StringBuilder(status.getMessage());
+				Throwable t = status.getException();
+				while (t != null) {
+					errorMessage.append("\n  caused by: ").append(t.getClass().getName())
+							.append(": ").append(t.getMessage());
+					Throwable next = t.getCause();
+					if (t.equals(next)) {
+						break;
+					}
+					t = next;
+				}
+				logDownloadFailure(errorMessage.toString());
+			}
+
+			private void logDownloadFailure(String errorMessage) {
 				// Log the error - user may just be offline but have an existing binary. We show a user-facing error later if binary is missing.
-				logger.error("Failed to download Snyk CLI. Will try to start with existing binary if available. Expand Details for more information.", err);
+				String message = "Failed to download Snyk CLI: " + errorMessage
+						+ ". Will try to start with existing binary if available.";
+				logger.error(message);
 			}
 		};
 		initJob.setPriority(Job.LONG);
@@ -159,6 +170,12 @@ public class SnykStartup implements IStartup {
 			lsFile.getParentFile().mkdirs();
 			lsDownloader.download(monitor);
 			lsFile.setExecutable(true);
+			// Persist the effective path so it shows up in the preference page when the
+			// stored value was empty (and we fell back to the default location).
+			String stored = Preferences.getInstance().getPref(Preferences.CLI_PATH, "");
+			if (stored == null || stored.isBlank()) {
+				Preferences.getInstance().store(Preferences.CLI_PATH, cliPath);
+			}
 		} catch (RuntimeException | IOException | URISyntaxException | ChecksumVerificationException e) { // NOPMD - intentional catch-all of runtime exceptions for download errors
 			return Status.error("Download of Snyk Language Server failed", e);
 		}
