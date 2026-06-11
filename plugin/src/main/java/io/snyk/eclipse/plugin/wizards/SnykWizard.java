@@ -26,6 +26,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.SnykStartup;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.TrustedFoldersHelper;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
@@ -72,7 +73,13 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean performCancel() {
-		IN_FLIGHT.set(false);
+		// Cancel any in-flight auth future so the Job thread unblocks immediately
+		// instead of waiting up to 5 minutes for the timeout.
+		// Do NOT touch IN_FLIGHT — the Job's finally block (closeWizard) owns that reset.
+		SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+		if (lc != null) {
+			lc.cancelLogin();
+		}
 		return true;
 	}
 
@@ -123,7 +130,10 @@ public class SnykWizard extends Wizard implements INewWizard {
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 					return Status.CANCEL_STATUS;
-				} catch (ExecutionException | TimeoutException e) {
+				} catch (TimeoutException e) {
+					LOG.error("Logout timed out; aborting login to avoid session state corruption", e);
+					return Status.CANCEL_STATUS;
+				} catch (ExecutionException e) {
 					LOG.warn("Logout did not complete cleanly; proceeding with login", e);
 				}
 				monitor.worked(1);
@@ -134,7 +144,12 @@ public class SnykWizard extends Wizard implements INewWizard {
 				// Open the dialog BEFORE triggerAuthentication() so the dialog is always
 				// present when hasAuthenticated fires and closes it.
 				AuthWaitDialog[] dialogHolder = new AuthWaitDialog[1];
-				Display.getDefault().syncExec(() -> {
+				Display display = Display.getDefault();
+				if (display == null || display.isDisposed()) {
+					LOG.warn("Display unavailable; cannot open auth dialog");
+					return Status.CANCEL_STATUS;
+				}
+				display.syncExec(() -> {
 					try {
 						Shell shell = wizardShell;
 						if (shell == null || shell.isDisposed()) {
@@ -165,7 +180,9 @@ public class SnykWizard extends Wizard implements INewWizard {
 				boolean success = false;
 				try {
 					authFuture.get(5, TimeUnit.MINUTES);
-					success = true;
+					// Double-check: hasAuthenticated fires on logout (empty token) too; the future
+					// guard above blocks that, but verify the token is actually set as a safety net.
+					success = !Preferences.getInstance().getAuthToken().isBlank();
 				} catch (CancellationException e) {
 					LOG.info("Authentication cancelled", e);
 				} catch (TimeoutException e) {
@@ -218,21 +235,26 @@ public class SnykWizard extends Wizard implements INewWizard {
 	}
 
 	private void closeWizard() {
-		// Reset synchronously so IN_FLIGHT is correct even if Display is disposed.
-		IN_FLIGHT.set(false);
 		Display display = Display.getDefault();
-		if (display != null && !display.isDisposed()) {
-			display.asyncExec(() -> {
-				try {
-					Shell shell = wizardShell;
-					if (shell != null && !shell.isDisposed()) {
-						shell.close();
-					}
-				} catch (RuntimeException e) { // NOPMD
-					LOG.error("Failed to close wizard dialog", e);
-				}
-			});
+		if (display == null || display.isDisposed()) {
+			// Display gone — safe to reset immediately.
+			IN_FLIGHT.set(false);
+			return;
 		}
+		// Reset IN_FLIGHT inside asyncExec so a second wizard cannot enter
+		// performFinish() while this wizard's shell is still being closed.
+		display.asyncExec(() -> {
+			try {
+				Shell shell = wizardShell;
+				if (shell != null && !shell.isDisposed()) {
+					shell.close();
+				}
+			} catch (RuntimeException e) { // NOPMD
+				LOG.error("Failed to close wizard dialog", e);
+			} finally {
+				IN_FLIGHT.set(false);
+			}
+		});
 	}
 
 	public static void createAndLaunch() {

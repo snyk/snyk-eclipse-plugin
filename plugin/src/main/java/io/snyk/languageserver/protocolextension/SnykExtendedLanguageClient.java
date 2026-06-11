@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
@@ -99,7 +100,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	private static SnykExtendedLanguageClient instance;
 	// Completes when hasAuthenticated fires, not when snyk.login is acked.
-	private volatile CompletableFuture<Void> authCompleteFuture;
+	// AtomicReference so triggerAuthentication()'s getAndSet() and cancelLogin()'s get() are race-free.
+	private final AtomicReference<CompletableFuture<Void>> authCompleteFuture = new AtomicReference<>();
 
 	public SnykExtendedLanguageClient() {
 		super();
@@ -215,14 +217,22 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	public CompletableFuture<Void> triggerAuthentication() {
 		CompletableFuture<Void> waitForAuth = new CompletableFuture<>();
-		CompletableFuture<Void> prev = authCompleteFuture;
-		authCompleteFuture = waitForAuth;
+		CompletableFuture<Void> prev = authCompleteFuture.getAndSet(waitForAuth);
 		if (prev != null && !prev.isDone()) {
 			prev.cancel(true);
 		}
-		// snyk.login is acknowledged quickly; actual auth completion arrives via hasAuthenticated notification.
-		// If the command itself fails (LS not ready, broken channel), fail fast rather than hanging 5 minutes.
+		// snyk.login blocks in the LS until OAuth completes or the user cancels in the browser.
+		// On success: LS sends hasAuthenticated notification (which completes waitForAuth) and returns the token.
+		// On browser-cancel: LS returns ("", nil) — no error, no hasAuthenticated. Detect empty token and cancel.
+		// On broken channel: exceptionally() fires and fails waitForAuth so the wizard doesn't hang 5 min.
 		executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>())
+				.thenAccept(result -> {
+					if (result == null || result.toString().isBlank()) {
+						// User closed the browser without authorising — no hasAuthenticated will arrive.
+						waitForAuth.cancel(true);
+					}
+					// Non-empty result means auth succeeded; hasAuthenticated already completed waitForAuth.
+				})
 				.exceptionally(ex -> {
 					SnykLogger.logError(new RuntimeException("snyk.login command failed", ex));
 					waitForAuth.completeExceptionally(ex);
@@ -232,7 +242,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	}
 
 	public void cancelLogin() {
-		CompletableFuture<Void> f = authCompleteFuture;
+		CompletableFuture<Void> f = authCompleteFuture.get();
 		if (f != null) {
 			f.cancel(true);
 		}
@@ -338,12 +348,15 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		var oldApi = prefs.getEndpoint();
 
 		String newToken = param.getToken();
-		boolean differentToken = !Objects.equals(newToken, oldToken);
+		// Treat null and blank as equivalent to avoid storing "" which breaks null-based auth checks.
+		String normalizedNew = (newToken != null && !newToken.isBlank()) ? newToken : null;
+		String normalizedOld = (oldToken != null && !oldToken.isBlank()) ? oldToken : null;
+		boolean differentToken = !Objects.equals(normalizedNew, normalizedOld);
 		boolean differentApi = param.getApiUrl() != null && !param.getApiUrl().isBlank() && !param.getApiUrl().equals(oldApi);
 
 		// Update UIs first, then persist to storage (avoids race conditions)
 		if (differentToken) {
-			HTMLSettingsPreferencePage.notifyAuthTokenChanged(newToken, param.getApiUrl());
+			HTMLSettingsPreferencePage.notifyAuthTokenChanged(normalizedNew, param.getApiUrl());
 		}
 
 		if (differentApi) {
@@ -351,12 +364,13 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 
 		if (differentToken) {
-			prefs.store(Preferences.AUTH_TOKEN_KEY, newToken);
+			prefs.store(Preferences.AUTH_TOKEN_KEY, normalizedNew != null ? normalizedNew : "");
 		}
 
-		// Complete after persisting token so SnykWizard.updateConfiguration() reads the new token.
-		CompletableFuture<Void> f = authCompleteFuture;
-		if (f != null) {
+		// Complete only when a real token arrived — logout sends hasAuthenticated with an empty token
+		// and must not be mistaken for a successful login by a waiting wizard.
+		CompletableFuture<Void> f = authCompleteFuture.get();
+		if (f != null && normalizedNew != null) {
 			f.complete(null);
 		}
 
@@ -365,7 +379,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			refreshFeatureFlags();
 		}
 
-		if (differentToken && !newToken.isBlank()) {
+		if (differentToken && normalizedNew != null) {
 			if (toolView != null) {
 				toolView.refreshBrowser(null);
 			}
