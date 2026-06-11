@@ -1098,10 +1098,11 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		assertFalse(future.isCompletedExceptionally());
 	}
 
+	@SuppressWarnings("unchecked")
 	private static void setAuthCompleteFuture(SnykExtendedLanguageClient lc,
 			java.util.concurrent.CompletableFuture<Void> future) throws Exception {
 		java.lang.reflect.Field f = SnykExtendedLanguageClient.class.getDeclaredField("authCompleteFuture");
 		f.setAccessible(true);
-		f.set(lc, future);
+		((java.util.concurrent.atomic.AtomicReference<java.util.concurrent.CompletableFuture<Void>>) f.get(lc)).set(future);
 	}
 }

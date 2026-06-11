@@ -84,32 +84,37 @@ public class AuthWaitDialog extends Dialog {
 			CompletableFuture.supplyAsync(() -> {
 				SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 				return lc != null ? lc.getAuthLink() : "";
-			}).thenAccept(url -> display.asyncExec(() -> {
-				if (copyUrlButton == null || copyUrlButton.isDisposed()) {
-					return;
-				}
-				Shell shell = copyUrlButton.getShell();
-				if (shell == null || shell.isDisposed()) {
-					return;
-				}
-				copyUrlButton.setEnabled(true);
-				if (url != null && !url.isBlank()) {
-					Clipboard clipboard = new Clipboard(display);
-					try {
-						clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
-					} catch (SWTException e) {
-						LOG.error("Failed to copy auth URL to clipboard", e);
-					} finally {
-						clipboard.dispose();
-					}
-				}
-			})).exceptionally(ex -> {
-				LOG.error("Failed to fetch auth link", ex);
+			}).thenAccept(url -> {
+				if (display.isDisposed()) return;
 				display.asyncExec(() -> {
-					if (copyUrlButton != null && !copyUrlButton.isDisposed()) {
-						copyUrlButton.setEnabled(true);
+					if (copyUrlButton == null || copyUrlButton.isDisposed()) {
+						return;
+					}
+					Shell shell = copyUrlButton.getShell();
+					if (shell == null || shell.isDisposed()) {
+						return;
+					}
+					copyUrlButton.setEnabled(true);
+					if (url != null && url.startsWith("https://")) {
+						Clipboard clipboard = new Clipboard(display);
+						try {
+							clipboard.setContents(new Object[]{url}, new Transfer[]{TextTransfer.getInstance()});
+						} catch (SWTException e) {
+							LOG.error("Failed to copy auth URL to clipboard", e);
+						} finally {
+							clipboard.dispose();
+						}
 					}
 				});
+			}).exceptionally(ex -> {
+				LOG.error("Failed to fetch auth link", ex);
+				if (!display.isDisposed()) {
+					display.asyncExec(() -> {
+						if (copyUrlButton != null && !copyUrlButton.isDisposed()) {
+							copyUrlButton.setEnabled(true);
+						}
+					});
+				}
 				return null;
 			});
 			return;
