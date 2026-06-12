@@ -80,9 +80,8 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		} catch (NumberFormatException e) {
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			showIncompatibleCliDialog(expected, -1);
-			String truncated = output.length() > 40 ? output.substring(0, 40) + "..." : output;
-			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible: "
-					+ "'--protocolVersion' gave unexpected output (got: '" + truncated + "'). Please update the Snyk CLI.";
+			SnykLogger.logDebug("verifyCliProtocolVersion: unexpected output: " + output);
+			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible with this version of the Eclipse plugin. Please update the Snyk CLI.";
 			throw new IOException(msg, e);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
