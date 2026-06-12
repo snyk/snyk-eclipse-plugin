@@ -35,8 +35,12 @@ import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.languageserver.LsBaseTest;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.LspConfigurationParam;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
+
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
+import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
 
 class SnykExtendedLanguageClientTest extends LsBaseTest {
 	private SnykExtendedLanguageClient cut;
@@ -628,5 +632,31 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		assertTrue(result.isSuccess());
 		verify(toolWindowMock).selectTreeNode("secrets-issue-id", "Snyk Secrets");
+	}
+
+	@Test
+	void snykScan_inProgress_callsRefreshBrowserWithInProgressStatus() {
+		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
+
+		SnykScanParam param = new SnykScanParam();
+		param.setStatus(SCAN_STATE_IN_PROGRESS);
+
+		cut.snykScan(param);
+
+		verify(toolWindowMock).refreshBrowser(SCAN_STATE_IN_PROGRESS);
+	}
+
+	@Test
+	void snykScan_success_callsRefreshBrowserWithSuccessStatus() {
+		cut = new SnykExtendedLanguageClient();
+		cut.setToolWindow(toolWindowMock);
+
+		SnykScanParam param = new SnykScanParam();
+		param.setStatus(SCAN_STATE_SUCCESS);
+
+		cut.snykScan(param);
+
+		verify(toolWindowMock).refreshBrowser(SCAN_STATE_SUCCESS);
 	}
 }
