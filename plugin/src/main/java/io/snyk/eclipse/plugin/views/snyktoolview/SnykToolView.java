@@ -558,7 +558,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 					final IssueTreeNode finalNode = issueNode;
 					runOnDisplay(() -> {
 						selectedNode = finalNode;
-						browserHandler.updateBrowserContent(finalNode);
+						if (browserHandler != null) {
+							browserHandler.updateBrowserContent(finalNode);
+						}
 					});
 				}
 			}

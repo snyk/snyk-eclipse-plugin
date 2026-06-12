@@ -25,7 +25,6 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
-import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.download.ChecksumVerificationException;
@@ -56,14 +55,6 @@ public class SnykStartup implements IStartup {
 
 				try {
 					SnykLanguageServer.startSnykLanguageServer();
-
-					PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-						Preferences prefs = Preferences.getInstance();
-						if (!prefs.isAuthenticated() && !prefs.isTest()) {
-							monitor.subTask("Starting Snyk Wizard to configure initial settings...");
-							SnykWizard.createAndLaunch();
-						}
-					});
 				} catch (RuntimeException e) { // NOPMD - intentional catch-all of runtime exceptions for UI initialization
 					SnykLogger.logError(e);
 				}

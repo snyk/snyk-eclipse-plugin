@@ -2,101 +2,63 @@ package io.snyk.eclipse.plugin.wizards;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
 
-public class SnykWizardAuthenticatePage extends WizardPage implements Listener {
-	private Text endpoint;
-	private Button unknownCerts;
-	private String trustMessage = "⚠️ When scanning folder files, Snyk may automatically execute code such as invoking the package manager to get dependency information. "
-			+ "You should only scan projects you trust. <a href=\"https://docs.snyk.io/ide-tools/eclipse-plugin/folder-trust\">More Info</a>"
-			+ "\n\nOn finishing the wizard, the plugin will open a browser to authenticate you, trust the current workspace projects and trigger a scan.";
-	private Color blackColor;
+public class SnykWizardAuthenticatePage extends WizardPage {
 
 	public SnykWizardAuthenticatePage() {
 		super("Snyk Wizard");
-		setTitle("Authenticate"); // NOPMD by bdoetsch on 3/11/25, 2:33 PM
-		setDescription( // NOPMD by bdoetsch on 3/11/25, 2:33 PM
-				"Review the endpoint configuration, clicking 'Finish' will authenticate with Snyk; this will open a new browser window.");
 	}
 
 	@Override
 	public void createControl(Composite parent) {
+		setTitle("Welcome to Snyk for Eclipse!");
+		setDescription("Clicking 'Finish' will open a browser to authenticate with Snyk.");
 		Composite composite = new Composite(parent, SWT.NONE);
-		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		composite.setLayout(new GridLayout(1, false));
 
-		GridLayout gl = new GridLayout();
-		int ncol = 2;
-		gl.numColumns = ncol;
-		composite.setLayout(gl);
+		Label steps = new Label(composite, SWT.NONE);
+		steps.setText(
+				"1. Authenticate to Snyk.io\n"
+				+ "2. Analyze code for issues and vulnerabilities\n"
+				+ "3. Improve your code and upgrade dependencies");
+		steps.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
-		Group endpointGroup = SWTWidgetHelper.createGroup(composite, "");
+		new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL)
+				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-		Label endpointLabel = new Label(endpointGroup, SWT.NONE);
-		endpointLabel.setText("Endpoint:");
-		endpoint = new Text(endpointGroup, SWT.BORDER | SWT.READ_ONLY);
-		getEndpoint().setLayoutData(gd);
-
-		Label unknownCertsLabel = new Label(endpointGroup, SWT.NONE);
-		unknownCertsLabel.setText("Allow unknown certificate authorities:");
-
-		unknownCerts = new Button(endpointGroup, SWT.CHECK);
-		getUnknownCerts().setLayoutData(gd);
-
-		Group trustGroup = SWTWidgetHelper.createGroup(composite, "");
-
-		Link trustText = new Link(trustGroup, SWT.NONE);
-		trustText.setText(trustMessage);
-		gd = new GridData(GridData.FILL_BOTH);
-		trustText.setLayoutData(gd);
-		this.blackColor = new Color(0, 0, 0, 0);
-		trustText.setBackground(blackColor);
+		Link trustText = new Link(composite, SWT.WRAP);
+		trustText.setText(
+				"When scanning project files, Snyk may automatically execute code "
+				+ "such as invoking the package manager to get dependency information. "
+				+ "You should only scan projects you trust. "
+				+ "<a href=\"https://docs.snyk.io/ide-tools/eclipse-plugin/folder-trust\">More info</a>");
+		GridData trustData = new GridData(SWT.FILL, SWT.FILL, true, true);
+		trustData.widthHint = 400;
+		trustText.setLayoutData(trustData);
 		trustText.addListener(SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
 
-		// required to avoid an error in the system
+		new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL)
+				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+		Link policyText = new Link(composite, SWT.WRAP);
+		policyText.setText(
+				"By connecting your account with Snyk, you agree to the "
+				+ "Snyk <a href=\"https://snyk.io/policies/privacy/\">Privacy Policy</a> and the "
+				+ "Snyk <a href=\"https://snyk.io/policies/terms-of-service/\">Terms of Service</a>.");
+		policyText.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+		policyText.addListener(SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
+
 		setControl(composite);
-		setPageComplete(false);
-	}
-
-	@Override
-	public void dispose() {
-		this.blackColor.dispose();
-		this.blackColor = null; // NOPMD by bdoetsch on 3/11/25, 2:33 PM
-		super.dispose();
-	}
-
-	@Override
-	public void handleEvent(Event e) {
-		getWizard().getContainer().updateButtons();
+		setPageComplete(true);
 	}
 
 	@Override
 	public boolean isPageComplete() {
 		return true;
-	}
-
-	public void setEndpoint(String text) {
-		this.getEndpoint().setText(text);
-	}
-
-	public void setUnknownCerts(boolean selection) {
-		this.getUnknownCerts().setSelection(selection);
-	}
-
-	public Text getEndpoint() {
-		return endpoint;
-	}
-
-	public Button getUnknownCerts() {
-		return unknownCerts;
 	}
 }
