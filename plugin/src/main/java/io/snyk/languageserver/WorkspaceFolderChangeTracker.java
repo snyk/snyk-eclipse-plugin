@@ -8,6 +8,7 @@ import java.util.Map;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
+import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
@@ -30,8 +31,7 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 @SuppressWarnings("restriction")
 public final class WorkspaceFolderChangeTracker implements IResourceChangeListener {
 
-    private static final int CHANGE_MASK =
-            IResourceChangeEvent.POST_CHANGE | IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.PRE_DELETE;
+    private static final int CHANGE_MASK = IResourceChangeEvent.POST_CHANGE;
 
     private static volatile WorkspaceFolderChangeTracker instance;
 
@@ -59,13 +59,23 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
     @Override
     public void resourceChanged(IResourceChangeEvent event) {
         try {
-            // PRE_CLOSE / PRE_DELETE fire before the workspace state changes, but
-            // by the time the LS notification flushes the project is no longer
-            // accessible, so re-snapshotting still produces the correct diff.
+            if (!affectsProjectSet(event.getDelta())) return;
             recomputeAndNotify();
         } catch (Exception e) { // NOPMD - listener must not throw back into Eclipse
             SnykLogger.logError(e);
         }
+    }
+
+    // POST_CHANGE fires for every resource event (file saves, compilations, etc).
+    // Only proceed when top-level projects are added, removed, or opened/closed.
+    private static boolean affectsProjectSet(IResourceDelta rootDelta) {
+        if (rootDelta == null) return false;
+        for (IResourceDelta delta : rootDelta.getAffectedChildren()) {
+            int kind = delta.getKind();
+            if (kind == IResourceDelta.ADDED || kind == IResourceDelta.REMOVED) return true;
+            if ((delta.getFlags() & IResourceDelta.OPEN) != 0) return true;
+        }
+        return false;
     }
 
     private void recomputeAndNotify() {
