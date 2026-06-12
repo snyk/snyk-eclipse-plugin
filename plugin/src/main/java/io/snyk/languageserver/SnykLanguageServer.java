@@ -14,7 +14,12 @@ import org.eclipse.lsp4e.LanguageServersRegistry.LanguageServerDefinition;
 import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.program.Program;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.ui.PlatformUI;
 
 import com.google.gson.Gson;
@@ -67,9 +72,9 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 			int actual = Integer.parseInt(firstLine);
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			if (actual != expected) {
+				showVersionMismatchDialog(expected, actual);
 				String msg = "Snyk CLI protocol version mismatch: expected " + expected + ", got " + actual
 						+ ". Please update the Snyk CLI.";
-				SnykLogger.logAndShowError(msg);
 				throw new IOException(msg);
 			}
 		} catch (NumberFormatException e) {
@@ -135,6 +140,25 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		LanguageServerDefinition definition = LanguageServersRegistry.getInstance()
 				.getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
 		LanguageServiceAccessor.startLanguageServer(definition);
+	}
+
+	static void showVersionMismatchDialog(int expected, int actual) {
+		if (!PlatformUI.isWorkbenchRunning()) return;
+		Display display = PlatformUI.getWorkbench().getDisplay();
+		display.asyncExec(() -> new MessageDialog(display.getActiveShell(),
+				"Snyk CLI version incompatible", null,
+				"Plugin protocol version: " + expected + ". CLI protocol version: " + actual + ".",
+				MessageDialog.ERROR, new String[] { "OK" }, 0) {
+			@Override
+			protected Control createCustomArea(Composite parent) {
+				Link link = new Link(parent, SWT.NONE);
+				link.setText("See the <a href=\"https://docs.snyk.io/scm-ide-and-ci-cd-integrations"
+						+ "/snyk-ide-plugins-and-extensions/eclipse-plugin\">compatibility matrix</a>"
+						+ " for supported versions.");
+				link.addListener(SWT.Selection, event -> Program.launch(event.text));
+				return link;
+			}
+		}.open());
 	}
 
 	/**
