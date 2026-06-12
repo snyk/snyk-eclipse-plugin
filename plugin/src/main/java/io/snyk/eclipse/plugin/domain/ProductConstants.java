@@ -40,6 +40,7 @@ public final class ProductConstants {
 	public static final Map<String, String> PRODUCT_TO_DISPLAYED = Map.of(
 			"code", DISPLAYED_CODE_SECURITY,
 			"Snyk Code", DISPLAYED_CODE_SECURITY,
+			// Secrets uses the Code HTML provider (shared JS runtime, no separate provider exists)
 			"secrets", DISPLAYED_CODE_SECURITY,
 			"Snyk Secrets", DISPLAYED_CODE_SECURITY,
 			"oss", DISPLAYED_OSS,
