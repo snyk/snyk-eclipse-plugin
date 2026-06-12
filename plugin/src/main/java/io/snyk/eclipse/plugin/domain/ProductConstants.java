@@ -13,11 +13,6 @@ public final class ProductConstants {
 	public static final String SCAN_PARAMS_IAC = "iac";
 	public static final String SCAN_PARAMS_SECRETS = "secrets";
 
-	public static final String DIAGNOSTIC_SOURCE_SNYK_OSS = "Snyk Open Source";
-	public static final String DIAGNOSTIC_SOURCE_SNYK_CODE = "Snyk Code";
-	public static final String DIAGNOSTIC_SOURCE_SNYK_IAC = "Snyk IaC";
-	public static final String DIAGNOSTIC_SOURCE_SNYK_SECRETS = "Snyk Secrets";
-
 	public static final String DISPLAYED_OSS = "Snyk Open Source";
 	public static final String DISPLAYED_CODE_SECURITY = "Code Security";
 	public static final String DISPLAYED_IAC = "Configuration";
