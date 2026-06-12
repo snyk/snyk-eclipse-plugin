@@ -73,10 +73,9 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 				throw new IOException(msg);
 			}
 		} catch (NumberFormatException e) {
-			String truncated = output.length() > 80 ? output.substring(0, 80) + "..." : output;
+			String truncated = output.length() > 40 ? output.substring(0, 40) + "..." : output;
 			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible: "
-					+ "'snyk language-server --protocolVersion' did not return a version number "
-					+ "(got: '" + truncated + "'). Please update the Snyk CLI.";
+					+ "'--protocolVersion' gave unexpected output (got: '" + truncated + "'). Please update the Snyk CLI.";
 			SnykLogger.logAndShowError(msg);
 			throw new IOException(msg, e);
 		} catch (InterruptedException e) {
