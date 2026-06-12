@@ -147,15 +147,17 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		Display display = PlatformUI.getWorkbench().getDisplay();
 		display.asyncExec(() -> new MessageDialog(display.getActiveShell(),
 				"Snyk CLI version incompatible", null,
-				"This plugin requires Snyk CLI protocol version " + expected
-						+ ". Your CLI reports protocol version " + actual + ".",
+				"",
 				MessageDialog.ERROR, new String[] { "OK" }, 0) {
 			@Override
 			protected Control createCustomArea(Composite parent) {
-				Link link = new Link(parent, SWT.NONE);
-				link.setText("Use the <a href=\"https://docs.snyk.io/scm-ide-and-ci-cd-integrations"
-						+ "/snyk-ide-plugins-and-extensions/eclipse-plugin\">IDE Plugin Compatibility Matrix</a>"
-						+ " to find a compatible CLI version.");
+				Link link = new Link(parent, SWT.WRAP);
+				link.setText("Your Snyk CLI version is incompatible with this Snyk plugin. "
+						+ "This Snyk plugin requires expected: " + expected + " vs actual: " + actual + ". "
+						+ "Upgrade the Snyk CLI or enable automatic updates in Snyk plugin settings. "
+						+ "For a list of compatible CLI versions, visit the "
+						+ "<a href=\"https://docs.snyk.io/developer-tools/snyk-ide-plugins-and-extensions"
+						+ "/compatibility-matrix\">IDE Plugin Compatibility Matrix</a>.");
 				link.addListener(SWT.Selection, event -> Program.launch(event.text));
 				return link;
 			}
