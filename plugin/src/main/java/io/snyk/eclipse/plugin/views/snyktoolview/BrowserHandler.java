@@ -28,7 +28,7 @@ import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
 import io.snyk.eclipse.plugin.html.StaticPageHtmlProvider;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
+import io.snyk.eclipse.plugin.views.snyktoolview.handlers.HandlerCommands;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
@@ -89,7 +89,7 @@ public class BrowserHandler {
 						.getService(IHandlerService.class);
 
 				try {
-					handlerService.executeCommand(IHandlerCommands.STOP_SCAN, null);
+					handlerService.executeCommand(HandlerCommands.STOP_SCAN, null);
 				} catch (CommandException e) {
 					SnykLogger.logError(e);
 				}
