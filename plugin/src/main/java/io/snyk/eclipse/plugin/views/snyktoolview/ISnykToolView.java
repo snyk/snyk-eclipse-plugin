@@ -1,5 +1,7 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
+
 /**
  * This interface captures the externally used methods with the tool window.
  * Having it, should allow for easier testing of the business logic apart from
@@ -14,7 +16,7 @@ public interface ISnykToolView {
 	/**
 	 * Refreshes the browser
 	 */
-	abstract void refreshBrowser(String status);
+	abstract void refreshBrowser(SnykScanParam param);
 
 	/**
 	 * Refreshes the SummaryPanel

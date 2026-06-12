@@ -635,7 +635,7 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void snykScan_inProgress_callsRefreshBrowserWithInProgressStatus() {
+	void snykScan_inProgress_callsRefreshBrowserWithParam() {
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 
@@ -644,11 +644,11 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		cut.snykScan(param);
 
-		verify(toolWindowMock).refreshBrowser(SCAN_STATE_IN_PROGRESS);
+		verify(toolWindowMock).refreshBrowser(param);
 	}
 
 	@Test
-	void snykScan_success_callsRefreshBrowserWithSuccessStatus() {
+	void snykScan_success_callsRefreshBrowserWithParam() {
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 
@@ -657,6 +657,6 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 
 		cut.snykScan(param);
 
-		verify(toolWindowMock).refreshBrowser(SCAN_STATE_SUCCESS);
+		verify(toolWindowMock).refreshBrowser(param);
 	}
 }

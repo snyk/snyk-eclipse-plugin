@@ -196,4 +196,10 @@ public class BrowserHandler {
 	public void setScanningBrowserText() {
 		browser.setText(StaticPageHtmlProvider.getInstance().getScanningHtml());
 	}
+
+	public void setBrowserText(String html) {
+		if (!browser.isDisposed()) {
+			browser.setText(html);
+		}
+	}
 }

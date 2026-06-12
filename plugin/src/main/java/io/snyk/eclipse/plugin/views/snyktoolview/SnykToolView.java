@@ -17,8 +17,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 
+import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 
 public class SnykToolView extends ViewPart implements ISnykToolView {
 	public SnykToolView() {
@@ -72,10 +74,13 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	@Override
-	public void refreshBrowser(String status) {
+	public void refreshBrowser(SnykScanParam param) {
 		Display.getDefault().asyncExec(() -> {
-			if (SCAN_STATE_IN_PROGRESS.equals(status)) {
+			if (SCAN_STATE_IN_PROGRESS.equals(param.getStatus())) {
 				this.browserHandler.setScanningBrowserText();
+			} else if (param.getPresentableError() != null) {
+				String errorHtml = new BaseHtmlProvider().getErrorHtml(param.getPresentableError());
+				this.browserHandler.setBrowserText(errorHtml);
 			} else {
 				this.browserHandler.setDefaultBrowserText();
 			}

@@ -351,7 +351,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	public void snykScan(SnykScanParam param) {
 		openToolView();
 		if (this.toolView != null) {
-			this.toolView.refreshBrowser(param.getStatus());
+			this.toolView.refreshBrowser(param);
 		}
 	}
 
