@@ -72,16 +72,17 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 			int actual = Integer.parseInt(firstLine);
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			if (actual != expected) {
-				showVersionMismatchDialog(expected, actual);
+				showIncompatibleCliDialog(expected, actual);
 				String msg = "Snyk CLI protocol version mismatch: expected " + expected + ", got " + actual
 						+ ". Please update the Snyk CLI.";
 				throw new IOException(msg);
 			}
 		} catch (NumberFormatException e) {
+			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
+			showIncompatibleCliDialog(expected, -1);
 			String truncated = output.length() > 40 ? output.substring(0, 40) + "..." : output;
 			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible: "
 					+ "'--protocolVersion' gave unexpected output (got: '" + truncated + "'). Please update the Snyk CLI.";
-			SnykLogger.logAndShowError(msg);
 			throw new IOException(msg, e);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
@@ -142,18 +143,19 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		LanguageServiceAccessor.startLanguageServer(definition);
 	}
 
-	static void showVersionMismatchDialog(int expected, int actual) {
+	static void showIncompatibleCliDialog(int expected, int actual) {
 		if (!PlatformUI.isWorkbenchRunning()) return;
 		Display display = PlatformUI.getWorkbench().getDisplay();
+		String actualStr = actual >= 0 ? String.valueOf(actual) : "unknown";
 		display.asyncExec(() -> new MessageDialog(display.getActiveShell(),
 				"Snyk CLI version incompatible", null,
 				"",
-				MessageDialog.ERROR, new String[] { "OK" }, 0) {
+				MessageDialog.WARNING, new String[] { "OK" }, 0) {
 			@Override
 			protected Control createCustomArea(Composite parent) {
 				Link link = new Link(parent, SWT.WRAP);
 				link.setText("Your Snyk CLI version is incompatible with this Snyk plugin. "
-						+ "This Snyk plugin requires expected: " + expected + " vs actual: " + actual + ". "
+						+ "This Snyk plugin requires expected: " + expected + " vs actual: " + actualStr + ". "
 						+ "Upgrade the Snyk CLI or enable automatic updates in Snyk plugin settings. "
 						+ "For a list of compatible CLI versions, visit the "
 						+ "<a href=\"https://docs.snyk.io/developer-tools/snyk-ide-plugins-and-extensions"
