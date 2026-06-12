@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.core.commands.common.CommandException;
-import org.eclipse.jface.viewers.TreeNode;
 import org.eclipse.lsp4e.LSPEclipseUtils;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -23,8 +22,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import io.snyk.eclipse.plugin.domain.ProductConstants;
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.HtmlProviderFactory;
 import io.snyk.eclipse.plugin.html.StaticPageHtmlProvider;
@@ -164,68 +162,25 @@ public class BrowserHandler {
 	}
 
 
-	public CompletableFuture<Void> updateBrowserContent(TreeNode node) {
-		// Generate HTML content based on the selected node
-		var htmlProvider = getHtmlProvider(node);
-		initScript = htmlProvider.getInitScript();
-		boolean shouldShowDefaultMessage = true;
-		if (node instanceof ProductTreeNode) {
-			var ptn = (ProductTreeNode) node;
-			var presentableError = ptn.getPresentableError();
-			if (presentableError != null && presentableError.getError() != null) {
-				shouldShowDefaultMessage = false;
-				String errorHTML = htmlProvider.getErrorHtml(presentableError);
-				Display.getDefault().syncExec(() -> {
-					browser.setText(errorHTML);
-				});
+	public void updateBrowserContent(String issueId, String product) {
+		CompletableFuture.runAsync(() -> {
+			String displayed = ProductConstants.PRODUCT_TO_DISPLAYED.get(product);
+			BaseHtmlProvider htmlProvider = displayed != null ? HtmlProviderFactory.GetHtmlProvider(displayed) : null;
+			if (htmlProvider == null) {
+				htmlProvider = new BaseHtmlProvider();
 			}
-		}
-
-		if (!(node instanceof IssueTreeNode)) {
-			if (shouldShowDefaultMessage) {
-				setDefaultBrowserText();
-			}
-			return CompletableFuture.completedFuture(null);
-		}
-
-		return CompletableFuture.supplyAsync(() -> {
-			return generateHtmlContent(node);
-		}).thenAccept(htmlContent -> {
+			initScript = htmlProvider.getInitScript();
+			String htmlContent = SnykExtendedLanguageClient.getInstance().getIssueDescription(issueId);
 			if (isEmpty(htmlContent)) {
 				htmlContent = htmlProvider.getNoDescriptionHtml();
 			}
-
 			final var browserContent = htmlProvider.replaceCssVariables(htmlContent);
-
 			Display.getDefault().syncExec(() -> {
-				browser.setText(browserContent);
+				if (!browser.isDisposed()) {
+					browser.setText(browserContent);
+				}
 			});
 		});
-	}
-
-	private BaseHtmlProvider getHtmlProvider(TreeNode node) {
-		String product;
-		if (node instanceof IssueTreeNode) {
-			product = ((ProductTreeNode) node.getParent().getParent()).getProduct();
-		} else if (node instanceof ProductTreeNode) {
-			product = ((ProductTreeNode) node).getProduct();
-		} else {
-			return new BaseHtmlProvider();
-		}
-
-		var htmlProvider = HtmlProviderFactory.GetHtmlProvider(product);
-		return htmlProvider;
-	}
-
-	public String generateHtmlContent(TreeNode node) {
-		if (node instanceof BaseTreeNode) {
-			return ((BaseTreeNode) node).getDetails();
-		}
-		return "";
-	}
-
-	public String generateHtmlContent(String text) {
-		return "<html><body<p>" + text + "</p></body></html>";
 	}
 
 	public void setDefaultBrowserText() {

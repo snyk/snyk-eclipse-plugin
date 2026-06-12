@@ -48,7 +48,6 @@ class TreeViewNotificationTest extends LsBaseTest {
 	// T-I-001: snykTreeView notification dispatches html to ISnykToolView.updateTreeViewHtml
 	@Test
 	void testSnykTreeViewDispatchesHtmlToToolView() {
-		Preferences.getInstance().store(Preferences.USE_HTML_TREE_VIEW, "true");
 		TreeViewParams params = new TreeViewParams();
 		params.setTreeViewHtml("<html>issues</html>");
 
@@ -72,24 +71,9 @@ class TreeViewNotificationTest extends LsBaseTest {
 	// Null html in params must not call toolView
 	@Test
 	void testSnykTreeViewWithNullHtmlIsNoOp() {
-		Preferences.getInstance().store(Preferences.USE_HTML_TREE_VIEW, "true");
 		cut = new SnykExtendedLanguageClient();
 		cut.setToolWindow(toolWindowMock);
 		cut.snykTreeView(new TreeViewParams());
-
-		verify(toolWindowMock, after(500).never()).updateTreeViewHtml(any());
-	}
-
-	// Preference disabled: notification must be silently dropped
-	@Test
-	void testSnykTreeViewSkipsWhenPreferenceDisabled() {
-		Preferences.getInstance().store(Preferences.USE_HTML_TREE_VIEW, "false");
-		TreeViewParams params = new TreeViewParams();
-		params.setTreeViewHtml("<html>issues</html>");
-
-		cut = new SnykExtendedLanguageClient();
-		cut.setToolWindow(toolWindowMock);
-		cut.snykTreeView(params);
 
 		verify(toolWindowMock, after(500).never()).updateTreeViewHtml(any());
 	}
