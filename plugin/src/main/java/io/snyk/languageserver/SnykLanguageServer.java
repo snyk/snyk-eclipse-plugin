@@ -78,7 +78,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 					+ "'snyk language-server --protocolVersion' did not return a version number "
 					+ "(got: '" + truncated + "'). Please update the Snyk CLI.";
 			SnykLogger.logAndShowError(msg);
-			throw new IOException(msg);
+			throw new IOException(msg, e);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			SnykLogger.logInfo("CLI protocol version check interrupted.");
