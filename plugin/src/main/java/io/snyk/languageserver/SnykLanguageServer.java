@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.lsp4e.LanguageServersRegistry;
 import org.eclipse.lsp4e.LanguageServersRegistry.LanguageServerDefinition;
 import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 
 import com.google.gson.Gson;
 
@@ -79,13 +82,13 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		File cliBinary = new File(cliPath);
 		if (!cliBinary.exists()) {
 			var sb = new StringBuilder(200);
-			sb.append("Snyk CLI binary not found at: '").append(cliPath).append("'. \n");
+			sb.append("Snyk CLI binary not found at: '").append(cliPath).append("'. Expand Details for more information.\n");
 			if (prefs.isManagedBinaries()) {
 				sb.append("'Manage Binaries Automatically' is enabled - check the Error Log for download details. \n");
 			}
 			sb.append("You can also specify a custom CLI path in Snyk Preferences.");
 			String message = sb.toString();
-			SnykLogger.logAndShow(message);
+			SnykLogger.logAndShowError(message);
 			throw new IOException(message);
 		}
 		return cliPath;
@@ -122,6 +125,31 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		LanguageServerDefinition definition = LanguageServersRegistry.getInstance()
 				.getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
 		LanguageServiceAccessor.startLanguageServer(definition);
+	}
+
+	/**
+	 * Asks the user whether to restart Eclipse so the new CLI binary takes
+	 * effect, and triggers the restart on confirmation.
+	 *
+	 * <p>Restarting the language server in-process is not reliable because
+	 * lsp4e caches the {@code StreamConnectionProvider} per definition and
+	 * because a wrapper whose previous startup failed (e.g. CLI path was empty
+	 * at boot) doesn't recover even after {@code wrapper.restart()}. The
+	 * cheapest correct UX is to restart Eclipse, which picks the new CLI path
+	 * up on the next normal startup path.
+	 */
+	public static void promptToRestartEclipseForNewCli() {
+		Display display = PlatformUI.getWorkbench().getDisplay();
+		display.asyncExec(() -> {
+			boolean confirmed = MessageDialog.openQuestion(
+					display.getActiveShell(),
+					"Restart Eclipse",
+					"The Snyk CLI binary has changed. Restart Eclipse now so the new CLI "
+					+ "takes effect?");
+			if (confirmed) {
+				PlatformUI.getWorkbench().restart();
+			}
+		});
 	}
 
 	@Override

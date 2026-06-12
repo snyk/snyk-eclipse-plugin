@@ -23,10 +23,12 @@ import io.snyk.eclipse.plugin.Activator;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 
 public class LsRuntimeEnvironment {
+  private static final String OS_WINDOWS = "win";
+  private static final String ARCH_ARM64 = "-arm64";
   public static final Map<String, String> map = new HashMap<>();
 
   static {
-    map.put("win", "win");
+    map.put(OS_WINDOWS, OS_WINDOWS);
     map.put("lin", "linux");
     map.put("mac", "macos");
     map.put("dar", "macos");
@@ -37,9 +39,9 @@ public class LsRuntimeEnvironment {
     map.put("x86_64", "");
     map.put("x64", "");
 
-    map.put("aarch_64", "-arm64");
-    map.put("aarch64", "-arm64");
-    map.put("arm64", "-arm64");
+    map.put("aarch_64", ARCH_ARM64);
+    map.put("aarch64", ARCH_ARM64);
+    map.put("arm64", ARCH_ARM64);
   }
 
   public LsRuntimeEnvironment() {
@@ -48,8 +50,15 @@ public class LsRuntimeEnvironment {
   public String getDownloadBinaryName() {
     String base = "snyk-%s%s";
     String os = getOs();
-    String executable = String.format(base, os, getArch());
-    if (executable.toLowerCase(Locale.getDefault()).contains("win"))
+    String arch = getArch();
+    // Snyk CLI does not publish a Windows ARM64 build; Windows 11 on ARM
+    // transparently runs x64 binaries via emulation, so fall back to the x64
+    // download rather than 404-ing the install on first launch.
+    if (OS_WINDOWS.equals(os) && ARCH_ARM64.equals(arch)) {
+      arch = "";
+    }
+    String executable = String.format(base, os, arch);
+    if (executable.toLowerCase(Locale.getDefault()).contains(OS_WINDOWS))
       executable += ".exe";
     return executable;
   }
