@@ -55,22 +55,33 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 	}
 
 	static void verifyCliProtocolVersion(String cliPath) throws IOException {
+		String output = "";
 		try {
 			ProcessBuilder pb = new ProcessBuilder(cliPath, "language-server", "--protocolVersion");
 			pb.redirectErrorStream(true);
 			Process proc = pb.start();
-			String output = new String(proc.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+			output = new String(proc.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
 			proc.waitFor(5, TimeUnit.SECONDS);
-			int actual = Integer.parseInt(output);
+			// Use first line only: some CLI builds print version + trailing warnings.
+			String firstLine = output.split("\\n", 2)[0].trim();
+			int actual = Integer.parseInt(firstLine);
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			if (actual != expected) {
 				String msg = "Snyk CLI protocol version mismatch: expected " + expected + ", got " + actual
 						+ ". Please update the Snyk CLI.";
-				SnykLogger.logAndShow(msg);
+				SnykLogger.logAndShowError(msg);
 				throw new IOException(msg);
 			}
-		} catch (NumberFormatException | InterruptedException e) {
-			SnykLogger.logError(e);
+		} catch (NumberFormatException e) {
+			String truncated = output.length() > 80 ? output.substring(0, 80) + "..." : output;
+			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible: "
+					+ "'snyk language-server --protocolVersion' did not return a version number "
+					+ "(got: '" + truncated + "'). Please update the Snyk CLI.";
+			SnykLogger.logAndShowError(msg);
+			throw new IOException(msg);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			SnykLogger.logInfo("CLI protocol version check interrupted.");
 		}
 	}
 
