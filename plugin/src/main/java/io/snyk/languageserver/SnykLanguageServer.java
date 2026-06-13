@@ -14,7 +14,12 @@ import org.eclipse.lsp4e.LanguageServersRegistry.LanguageServerDefinition;
 import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.program.Program;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.ui.PlatformUI;
 
 import com.google.gson.Gson;
@@ -55,22 +60,33 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 	}
 
 	static void verifyCliProtocolVersion(String cliPath) throws IOException {
+		String output = "";
 		try {
 			ProcessBuilder pb = new ProcessBuilder(cliPath, "language-server", "--protocolVersion");
 			pb.redirectErrorStream(true);
 			Process proc = pb.start();
-			String output = new String(proc.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+			output = new String(proc.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
 			proc.waitFor(5, TimeUnit.SECONDS);
-			int actual = Integer.parseInt(output);
+			// Use first line only: some CLI builds print version + trailing warnings.
+			String firstLine = output.split("\\n", 2)[0].trim();
+			int actual = Integer.parseInt(firstLine);
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			if (actual != expected) {
+				showIncompatibleCliDialog(expected, actual);
 				String msg = "Snyk CLI protocol version mismatch: expected " + expected + ", got " + actual
 						+ ". Please update the Snyk CLI.";
-				SnykLogger.logAndShow(msg);
 				throw new IOException(msg);
 			}
-		} catch (NumberFormatException | InterruptedException e) {
-			SnykLogger.logError(e);
+		} catch (NumberFormatException e) {
+			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
+			showIncompatibleCliDialog(expected, -1);
+			String truncated = output.length() > 40 ? output.substring(0, 40) + "..." : output;
+			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible: "
+					+ "'--protocolVersion' gave unexpected output (got: '" + truncated + "'). Please update the Snyk CLI.";
+			throw new IOException(msg, e);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			SnykLogger.logInfo("CLI protocol version check interrupted.");
 		}
 	}
 
@@ -125,6 +141,29 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		LanguageServerDefinition definition = LanguageServersRegistry.getInstance()
 				.getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
 		LanguageServiceAccessor.startLanguageServer(definition);
+	}
+
+	static void showIncompatibleCliDialog(int expected, int actual) {
+		if (!PlatformUI.isWorkbenchRunning()) return;
+		Display display = PlatformUI.getWorkbench().getDisplay();
+		String actualStr = actual >= 0 ? String.valueOf(actual) : "unknown";
+		display.asyncExec(() -> new MessageDialog(display.getActiveShell(),
+				"Snyk CLI version incompatible", null,
+				"",
+				MessageDialog.WARNING, new String[] { "OK" }, 0) {
+			@Override
+			protected Control createCustomArea(Composite parent) {
+				Link link = new Link(parent, SWT.WRAP);
+				link.setText("Your Snyk CLI version is incompatible with this Snyk plugin. "
+						+ "This Snyk plugin requires expected: " + expected + " vs actual: " + actualStr + ". "
+						+ "Upgrade the Snyk CLI or enable automatic updates in Snyk plugin settings. "
+						+ "For a list of compatible CLI versions, visit the "
+						+ "<a href=\"https://docs.snyk.io/developer-tools/snyk-ide-plugins-and-extensions"
+						+ "/compatibility-matrix\">IDE Plugin Compatibility Matrix</a>.");
+				link.addListener(SWT.Selection, event -> Program.launch(event.text));
+				return link;
+			}
+		}.open());
 	}
 
 	/**

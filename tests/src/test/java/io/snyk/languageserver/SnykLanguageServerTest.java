@@ -1,6 +1,7 @@
 package io.snyk.languageserver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -158,19 +159,55 @@ class SnykLanguageServerTest extends LsBaseTest {
   }
 
   @Test
-  void verifyCliProtocolVersion_doesNotThrowOnUnparseableOutput() throws Exception {
+  void verifyCliProtocolVersion_throwsWithClearMessageOnUnparseableOutput() throws Exception {
     assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
         "Shell script not supported on Windows");
     File script = createCliStub("not-a-number");
 
+    IOException ex = assertThrows(IOException.class,
+        () -> SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
+
+    assertTrue(ex.getMessage().contains("not compatible"), "Should say binary is not compatible");
+    assertFalse(ex.getMessage().contains("NumberFormatException"), "Should not expose internal exception type");
+  }
+
+  @Test
+  void verifyCliProtocolVersion_throwsWithTruncatedOutputNotFullHelpText() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    // Simulate an old CLI that outputs a very long message (90+ chars) instead of a version number.
+    // Using a simple safe string to avoid shell escaping issues.
+    String longOutput = "This is not a version number and it is deliberately very long output text here abcdefghijklmno";
+    File script = createCliStub(longOutput);
+
+    IOException ex = assertThrows(IOException.class,
+        () -> SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
+
+    assertTrue(ex.getMessage().length() < 300, "Error message should be short, not dump full help text");
+    assertTrue(ex.getMessage().contains("..."), "Long output should be truncated with ellipsis");
+  }
+
+  @Test
+  void verifyCliProtocolVersion_parsesVersionFromFirstLineIgnoringTrailingOutput() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    // Simulate a CLI that prints version on first line then a warning on the second line.
+    File script = File.createTempFile("snyk-cli-stub", ".sh");
+    script.deleteOnExit();
+    Files.writeString(script.toPath(),
+        "#!/bin/sh\nprintf '" + LsBinaries.REQUIRED_LS_PROTOCOL_VERSION + "\\nWarning: something deprecated\\n'\n");
+    Files.setPosixFilePermissions(script.toPath(),
+        Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+            PosixFilePermission.OWNER_EXECUTE));
+
+    // Should succeed — version is on the first line and matches.
     SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
   }
 
   @Test
   @Tag("smoke")
-  // The --protocolVersion flag is not yet in released CLI builds, so the real binary
-  // returns unparseable output. verifyCliProtocolVersion() must treat that as non-fatal.
-  void verifyCliProtocolVersion_withRealCliDownload_doesNotThrowWhenFlagUnknown() throws Exception {
+  // The real downloaded CLI supports --protocolVersion; verify the check passes against it.
+  void verifyCliProtocolVersion_withRealCliDownload_passesWhenVersionSupported() throws Exception {
     assumeTrue(isNetworkAvailable(), "Network not available — skipping smoke test");
 
     File tempBinary = File.createTempFile("snyk-cli-smoke", "");
@@ -181,6 +218,7 @@ class SnykLanguageServerTest extends LsBaseTest {
       LsRuntimeEnvironment realEnv = new LsRuntimeEnvironment();
       LsDownloader downloader = new LsDownloader(HttpClientFactory.getInstance(), realEnv, null);
       downloader.download(new NullProgressMonitor());
+      // The downloaded CLI must support --protocolVersion and return the required version.
       SnykLanguageServer.verifyCliProtocolVersion(tempBinary.getAbsolutePath());
     } finally {
       prefs.store(Preferences.CLI_PATH, originalCliPath);
