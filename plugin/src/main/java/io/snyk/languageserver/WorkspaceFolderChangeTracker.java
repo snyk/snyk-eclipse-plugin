@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -38,8 +40,19 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
     // Keyed by URI string for a stable identity that survives IProject re-creation.
     private final Map<String, WorkspaceFolder> knownFolders = new HashMap<>();
     private final Object lock = new Object();
+    private final Supplier<Map<String, WorkspaceFolder>> folderSource;
+    private final BiFunction<List<WorkspaceFolder>, List<WorkspaceFolder>, Boolean> sender;
 
     private WorkspaceFolderChangeTracker() {
+        this(WorkspaceFolderChangeTracker::currentFolderMap, WorkspaceFolderChangeTracker::sendDidChange);
+    }
+
+    // Package-private for testing.
+    WorkspaceFolderChangeTracker(
+            Supplier<Map<String, WorkspaceFolder>> folderSource,
+            BiFunction<List<WorkspaceFolder>, List<WorkspaceFolder>, Boolean> sender) {
+        this.folderSource = folderSource;
+        this.sender = sender;
         snapshot();
     }
 
@@ -82,12 +95,13 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
         return false;
     }
 
-    private void recomputeAndNotify() {
+    // Package-private for testing.
+    void recomputeAndNotify() {
         List<WorkspaceFolder> added;
         List<WorkspaceFolder> removed;
         Map<String, WorkspaceFolder> currentFolders;
         synchronized (lock) {
-            currentFolders = currentFolderMap();
+            currentFolders = folderSource.get();
             added = new ArrayList<>();
             for (Map.Entry<String, WorkspaceFolder> e : currentFolders.entrySet()) {
                 if (!knownFolders.containsKey(e.getKey())) added.add(e.getValue());
@@ -100,7 +114,7 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
                 return;
             }
         }
-        if (sendDidChange(added, removed)) {
+        if (sender.apply(added, removed)) {
             synchronized (lock) {
                 knownFolders.clear();
                 knownFolders.putAll(currentFolders);
@@ -111,7 +125,7 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
     private void snapshot() {
         synchronized (lock) {
             knownFolders.clear();
-            knownFolders.putAll(currentFolderMap());
+            knownFolders.putAll(folderSource.get());
         }
     }
 
