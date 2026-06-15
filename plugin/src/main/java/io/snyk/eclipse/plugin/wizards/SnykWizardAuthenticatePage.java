@@ -1,64 +1,132 @@
 package io.snyk.eclipse.plugin.wizards;
 
+import io.snyk.eclipse.plugin.preferences.AuthConstants;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Text;
 
 public class SnykWizardAuthenticatePage extends WizardPage {
 
-	public SnykWizardAuthenticatePage() {
-		super("Snyk Wizard");
-	}
+    private Combo authMethodCombo;
+    private Text endpointText;
+    private Button insecureCheck;
 
-	@Override
-	public void createControl(Composite parent) {
-		setTitle("Welcome to Snyk for Eclipse!");
-		setDescription("Clicking 'Finish' will open a browser to authenticate with Snyk.");
-		Composite composite = new Composite(parent, SWT.NONE);
-		composite.setLayout(new GridLayout(1, false));
+    public SnykWizardAuthenticatePage() {
+        super("Snyk Wizard");
+    }
 
-		Label steps = new Label(composite, SWT.NONE);
-		steps.setText(
-				"1. Authenticate to Snyk.io\n"
-				+ "2. Analyze code for issues and vulnerabilities\n"
-				+ "3. Improve your code and upgrade dependencies");
-		steps.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+    @Override
+    public void createControl(Composite parent) {
+        setTitle("Welcome to Snyk for Eclipse!");
+        setDescription("Configure authentication settings, then click 'Finish' to authenticate with Snyk.");
+        Composite composite = new Composite(parent, SWT.NONE);
+        composite.setLayout(new GridLayout(2, false));
 
-		new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL)
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+        // Auth method
+        Label authMethodLabel = new Label(composite, SWT.NONE);
+        authMethodLabel.setText("Authentication method:");
+        authMethodLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 
-		Link trustText = new Link(composite, SWT.WRAP);
-		trustText.setText(
-				"When scanning project files, Snyk may automatically execute code "
-				+ "such as invoking the package manager to get dependency information. "
-				+ "You should only scan projects you trust. "
-				+ "<a href=\"https://docs.snyk.io/ide-tools/eclipse-plugin/folder-trust\">More info</a>");
-		GridData trustData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		trustData.widthHint = 400;
-		trustText.setLayoutData(trustData);
-		trustText.addListener(SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
+        authMethodCombo = new Combo(composite, SWT.DROP_DOWN | SWT.READ_ONLY);
+        for (AuthConstants.AuthOptionData option : AuthConstants.OPTION_DEFINITIONS) {
+            authMethodCombo.add(option.displayName());
+        }
+        authMethodCombo.select(0); // default: OAuth2
+        authMethodCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-		new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL)
-				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+        // API endpoint
+        Label endpointLabel = new Label(composite, SWT.NONE);
+        endpointLabel.setText("Snyk API endpoint:");
+        endpointLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 
-		Link policyText = new Link(composite, SWT.WRAP);
-		policyText.setText(
-				"By connecting your account with Snyk, you agree to the "
-				+ "Snyk <a href=\"https://snyk.io/policies/privacy/\">Privacy Policy</a> and the "
-				+ "Snyk <a href=\"https://snyk.io/policies/terms-of-service/\">Terms of Service</a>.");
-		policyText.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
-		policyText.addListener(SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
+        String initialEndpoint = Preferences.getInstance().getEndpoint();
+        String endpointValue = (initialEndpoint == null || initialEndpoint.isBlank())
+                ? Preferences.DEFAULT_ENDPOINT
+                : initialEndpoint;
 
-		setControl(composite);
-		setPageComplete(true);
-	}
+        endpointText = new Text(composite, SWT.BORDER);
+        endpointText.setText(endpointValue);
+        endpointText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-	@Override
-	public boolean isPageComplete() {
-		return true;
-	}
+        // Insecure checkbox (spans both columns)
+        new Label(composite, SWT.NONE); // filler
+        insecureCheck = new Button(composite, SWT.CHECK);
+        insecureCheck.setText("Disable certificate checks (insecure)");
+        insecureCheck.setSelection(Preferences.getInstance().isInsecure());
+        insecureCheck.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+        new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL)
+                .setLayoutData(newHSpan2(SWT.FILL, SWT.CENTER, true, false));
+
+        Label steps = new Label(composite, SWT.NONE);
+        steps.setText(
+                "1. Authenticate to Snyk.io\n"
+                + "2. Analyze code for issues and vulnerabilities\n"
+                + "3. Improve your code and upgrade dependencies");
+        steps.setLayoutData(newHSpan2(SWT.FILL, SWT.TOP, true, false));
+
+        new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL)
+                .setLayoutData(newHSpan2(SWT.FILL, SWT.CENTER, true, false));
+
+        Link trustText = new Link(composite, SWT.WRAP);
+        trustText.setText(
+                "When scanning project files, Snyk may automatically execute code "
+                + "such as invoking the package manager to get dependency information. "
+                + "You should only scan projects you trust. "
+                + "<a href=\"https://docs.snyk.io/ide-tools/eclipse-plugin/folder-trust\">More info</a>");
+        GridData trustData = newHSpan2(SWT.FILL, SWT.FILL, true, true);
+        trustData.widthHint = 400;
+        trustText.setLayoutData(trustData);
+        trustText.addListener(SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
+
+        new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL)
+                .setLayoutData(newHSpan2(SWT.FILL, SWT.CENTER, true, false));
+
+        Link policyText = new Link(composite, SWT.WRAP);
+        policyText.setText(
+                "By connecting your account with Snyk, you agree to the "
+                + "Snyk <a href=\"https://snyk.io/policies/privacy/\">Privacy Policy</a> and the "
+                + "Snyk <a href=\"https://snyk.io/policies/terms-of-service/\">Terms of Service</a>.");
+        policyText.setLayoutData(newHSpan2(SWT.FILL, SWT.BOTTOM, true, false));
+        policyText.addListener(SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
+
+        setControl(composite);
+        setPageComplete(true);
+    }
+
+    private static GridData newHSpan2(int hAlign, int vAlign, boolean hGrab, boolean vGrab) {
+        GridData gd = new GridData(hAlign, vAlign, hGrab, vGrab);
+        gd.horizontalSpan = 2;
+        return gd;
+    }
+
+    public String getAuthMethod() {
+        int idx = authMethodCombo.getSelectionIndex();
+        if (idx < 0 || idx >= AuthConstants.OPTION_DEFINITIONS.size()) {
+            return AuthConstants.AUTH_OAUTH2;
+        }
+        return AuthConstants.OPTION_DEFINITIONS.get(idx).value();
+    }
+
+    public String getEndpoint() {
+        String text = endpointText.getText().trim();
+        return text.isBlank() ? Preferences.DEFAULT_ENDPOINT : text;
+    }
+
+    public boolean isInsecure() {
+        return insecureCheck.getSelection();
+    }
+
+    @Override
+    public boolean isPageComplete() {
+        return true;
+    }
 }

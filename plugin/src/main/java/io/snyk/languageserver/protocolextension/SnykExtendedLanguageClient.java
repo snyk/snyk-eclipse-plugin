@@ -243,6 +243,26 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return waitForAuth;
 	}
 
+	public CompletableFuture<Void> triggerAuthentication(String authMethod, String endpoint, boolean insecure) {
+		CompletableFuture<Void> waitForAuth = new CompletableFuture<>();
+		CompletableFuture<Void> prev = authCompleteFuture.getAndSet(waitForAuth);
+		if (prev != null && !prev.isDone()) {
+			prev.cancel(true);
+		}
+		executeCommand(LsConstants.COMMAND_LOGIN, List.of(authMethod, endpoint, String.valueOf(insecure)))
+				.thenAccept(result -> {
+					if (result == null || result.toString().isBlank()) {
+						waitForAuth.cancel(true);
+					}
+				})
+				.exceptionally(ex -> {
+					SnykLogger.logError(new RuntimeException("snyk.login command failed", ex));
+					waitForAuth.completeExceptionally(ex);
+					return null;
+				});
+		return waitForAuth;
+	}
+
 	public void cancelLogin() {
 		CompletableFuture<Void> f = authCompleteFuture.get();
 		if (f != null) {
@@ -392,10 +412,12 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			refreshFeatureFlags();
 		}
 
-		if (differentToken && normalizedNew != null) {
+		if (differentToken) {
 			if (toolView != null) {
 				toolView.refreshBrowser(null);
 			}
+		}
+		if (differentToken && normalizedNew != null) {
 			if (Preferences.getInstance().getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC)) {
 				triggerScan(null);
 			}

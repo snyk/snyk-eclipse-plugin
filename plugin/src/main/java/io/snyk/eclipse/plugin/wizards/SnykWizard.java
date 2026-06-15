@@ -56,7 +56,6 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void addPages() {
-		addPage(new SnykWizardConfigureAPIPage());
 		authenticatePage = new SnykWizardAuthenticatePage();
 		addPage(authenticatePage);
 		setNeedsProgressMonitor(false);
@@ -91,8 +90,11 @@ public class SnykWizard extends Wizard implements INewWizard {
 		if (!IN_FLIGHT.compareAndSet(false, true)) {
 			return false;
 		}
-		// Snapshot shell on UI thread — getContainer() is not safe to call from Job thread.
+		// Snapshot shell and page values on UI thread — SWT widgets not safe to read from Job thread.
 		wizardShell = getContainer().getShell();
+		final String authMethod = authenticatePage.getAuthMethod();
+		final String endpoint = authenticatePage.getEndpoint();
+		final boolean insecure = authenticatePage.isInsecure();
 		getContainer().updateButtons();
 
 		Job job = new Job("Authenticating with Snyk...") {
@@ -171,11 +173,13 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 				AuthWaitDialog waitDialog = dialogHolder[0];
 
-				// Push any endpoint/insecure changes from the configure page to the LS before
-				// triggering login — LS needs the endpoint to resolve the OAuth provider.
-				lc.updateConfiguration();
+				// Persist auth settings from wizard page before pushing to LS.
+				Preferences prefs = Preferences.getInstance();
+				prefs.store(Preferences.ENDPOINT_KEY, endpoint);
+				prefs.setIsInsecure(insecure);
+				prefs.store(Preferences.AUTHENTICATION_METHOD, authMethod);
 
-				var authFuture = lc.triggerAuthentication();
+				var authFuture = lc.triggerAuthentication(authMethod, endpoint, insecure);
 
 				if (waitDialog != null) {
 					waitDialog.setCopyUrlEnabled(true);
