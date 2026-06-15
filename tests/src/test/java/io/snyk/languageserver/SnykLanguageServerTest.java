@@ -172,19 +172,16 @@ class SnykLanguageServerTest extends LsBaseTest {
   }
 
   @Test
-  void verifyCliProtocolVersion_throwsWithTruncatedOutputNotFullHelpText() throws Exception {
+  void verifyCliProtocolVersion_throwsWithoutRawOutputInMessage() throws Exception {
     assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
         "Shell script not supported on Windows");
-    // Simulate an old CLI that outputs a very long message (90+ chars) instead of a version number.
-    // Using a simple safe string to avoid shell escaping issues.
     String longOutput = "This is not a version number and it is deliberately very long output text here abcdefghijklmno";
     File script = createCliStub(longOutput);
 
     IOException ex = assertThrows(IOException.class,
         () -> SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
 
-    assertTrue(ex.getMessage().length() < 300, "Error message should be short, not dump full help text");
-    assertTrue(ex.getMessage().contains("..."), "Long output should be truncated with ellipsis");
+    assertFalse(ex.getMessage().contains("This is not a version number"), "Raw output must not appear in user-facing message");
   }
 
   @Test
@@ -202,6 +199,27 @@ class SnykLanguageServerTest extends LsBaseTest {
 
     // Should succeed — version is on the first line and matches.
     SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+  }
+
+  @Test
+  void startSnykLanguageServer_returnsFalse_whenCliNotFound() {
+    this.prefs.store(Preferences.CLI_PATH, NON_EXISTENT_CLI_PATH);
+
+    boolean result = SnykLanguageServer.startSnykLanguageServer();
+
+    assertFalse(result, "Should return false when CLI binary does not exist");
+  }
+
+  @Test
+  void startSnykLanguageServer_returnsFalse_whenProtocolVersionMismatches() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    File script = createCliStub("999");
+    this.prefs.store(Preferences.CLI_PATH, script.getAbsolutePath());
+
+    boolean result = SnykLanguageServer.startSnykLanguageServer();
+
+    assertFalse(result, "Should return false when CLI protocol version mismatches");
   }
 
   @Test

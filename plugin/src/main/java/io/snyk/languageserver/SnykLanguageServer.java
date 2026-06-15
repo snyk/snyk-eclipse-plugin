@@ -15,6 +15,7 @@ import org.eclipse.lsp4e.LanguageServiceAccessor;
 import org.eclipse.lsp4e.server.ProcessStreamConnectionProvider;
 import org.eclipse.lsp4e.server.StreamConnectionProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -45,7 +46,6 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		waitForInit();
 
 		String cliPath = getCliPathOrThrow(prefs);
-		verifyCliProtocolVersion(cliPath);
 
 		List<String> commands = Lists.of(cliPath, "language-server", "-l", "info");
 		String workingDir = SystemUtils.USER_DIR;
@@ -80,10 +80,9 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		} catch (NumberFormatException e) {
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			showIncompatibleCliDialog(expected, -1);
-			String truncated = output.length() > 40 ? output.substring(0, 40) + "..." : output;
-			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible: "
-					+ "'--protocolVersion' gave unexpected output (got: '" + truncated + "'). Please update the Snyk CLI.";
-			throw new IOException(msg, e);
+			SnykLogger.logDebug("verifyCliProtocolVersion: unexpected output: " + output + " (" + e.getMessage() + ")");
+			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible with this version of the Eclipse plugin. Please update the Snyk CLI.";
+			throw new IOException(msg); //NOPMD - PreserveStackTrace: NFE cause intentionally dropped to keep raw CLI output out of lsp4e's "Problem Occurred" dialog (IDE-2112)
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			SnykLogger.logInfo("CLI protocol version check interrupted.");
@@ -137,10 +136,19 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		}
 	}
 
-	public static void startSnykLanguageServer() {
+	public static boolean startSnykLanguageServer() {
+		Preferences prefs = Preferences.getInstance();
+		try {
+			String cliPath = getCliPathOrThrow(prefs);
+			verifyCliProtocolVersion(cliPath);
+		} catch (IOException e) {
+			SnykLogger.logInfo("Not starting Snyk Language Server: " + e.getMessage());
+			return false;
+		}
 		LanguageServerDefinition definition = LanguageServersRegistry.getInstance()
 				.getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
 		LanguageServiceAccessor.startLanguageServer(definition);
+		return true;
 	}
 
 	static void showIncompatibleCliDialog(int expected, int actual) {
@@ -154,8 +162,11 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 			@Override
 			protected Control createCustomArea(Composite parent) {
 				Link link = new Link(parent, SWT.WRAP);
+				GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
+				gd.widthHint = 500;
+				link.setLayoutData(gd);
 				link.setText("Your Snyk CLI version is incompatible with this Snyk plugin. "
-						+ "This Snyk plugin requires expected: " + expected + " vs actual: " + actualStr + ". "
+						+ "This plugin requires protocol version " + expected + ", but the installed CLI reports version " + actualStr + ". "
 						+ "Upgrade the Snyk CLI or enable automatic updates in Snyk plugin settings. "
 						+ "For a list of compatible CLI versions, visit the "
 						+ "<a href=\"https://docs.snyk.io/developer-tools/snyk-ide-plugins-and-extensions"
