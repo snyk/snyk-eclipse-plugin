@@ -1,42 +1,19 @@
 package io.snyk.languageserver.protocolextension;
 
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_IAC;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DIAGNOSTIC_SOURCE_SNYK_OSS;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.DISPLAYED_CODE_SECURITY;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.FILTERABLE_ISSUE_TYPE_TO_DISPLAY;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.LSP_SOURCE_TO_SCAN_PARAMS;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_CODE;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_IAC;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_OSS;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_PARAMS_TO_DISPLAYED;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_ERROR;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_IN_PROGRESS;
 import static io.snyk.eclipse.plugin.domain.ProductConstants.SCAN_STATE_SUCCESS;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_CRITICAL;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_HIGH;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_LOW;
-import static io.snyk.eclipse.plugin.domain.ProductConstants.SEVERITY_MEDIUM;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_ISSUES_FOUND;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.CONGRATS_NO_OPEN_ISSUES_FOUND;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NODE_TEXT_SCANNING;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_FIXABLE_ISSUES;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.NO_IGNORED_ISSUES;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.OPEN_AND_IGNORED_ISSUES_ARE_DISABLED;
-import static io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView.OPEN_ISSUES_ARE_DISABLED;
 
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +27,6 @@ import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -91,41 +67,28 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.ResourceUtils;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.views.snyktoolview.FileTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
-import io.snyk.eclipse.plugin.views.snyktoolview.InfoTreeNode;
-import io.snyk.eclipse.plugin.views.snyktoolview.IssueTreeNode;
-import io.snyk.eclipse.plugin.views.snyktoolview.ProductTreeNode;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.CommandHandler;
 import io.snyk.languageserver.FeatureFlagConstants;
-import io.snyk.languageserver.IssueCacheHolder;
 import io.snyk.languageserver.LsConfigurationUpdater;
 import io.snyk.languageserver.LsConstants;
-import io.snyk.languageserver.ScanInProgressKey;
-import io.snyk.languageserver.ScanState;
-import io.snyk.languageserver.SnykIssueCache;
 import io.snyk.languageserver.SnykLanguageServer;
-import io.snyk.languageserver.protocolextension.messageObjects.Diagnostic316;
 import io.snyk.languageserver.protocolextension.messageObjects.FeatureFlagStatus;
 import io.snyk.languageserver.protocolextension.messageObjects.ConfigSetting;
 import io.snyk.languageserver.protocolextension.messageObjects.LspConfigurationParam;
 import io.snyk.languageserver.protocolextension.messageObjects.HasAuthenticatedParam;
 import io.snyk.languageserver.protocolextension.messageObjects.LsSdk;
-import io.snyk.languageserver.protocolextension.messageObjects.PublishDiagnostics316Param;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykIsAvailableCliParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykTrustedFoldersParams;
 import io.snyk.languageserver.protocolextension.messageObjects.SummaryPanelParams;
-import io.snyk.languageserver.LsKey;
 import io.snyk.languageserver.LsSettingsRegistry;
 import io.snyk.languageserver.protocolextension.messageObjects.TreeViewParams;
-import io.snyk.languageserver.protocolextension.messageObjects.scanResults.Issue;
 
 @SuppressWarnings({"restriction", "PMD.AvoidCatchingGenericException"})
 public class SnykExtendedLanguageClient extends LanguageClientImpl {
-	private static final String MARKER_TYPE = "io.snyk.languageserver.marker";
 	private static final String FILE_SCHEME = "file";
 
 	private ProgressManager progressManager = new ProgressManager(this);
@@ -333,7 +296,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		executeCommand(LsConstants.COMMAND_SUBMIT_IGNORE_REQUEST,
 				List.of(workflow, issueId, ignoreType, ignoreReason, ignoreExpirationDate));
 	}
-	
+
 	@JsonNotification(value = LsConstants.SNYK_HAS_AUTHENTICATED)
 	public void hasAuthenticated(HasAuthenticatedParam param) {
 		var prefs = Preferences.getInstance();
@@ -388,49 +351,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 
 	@JsonNotification(value = LsConstants.SNYK_SCAN)
 	public void snykScan(SnykScanParam param) {
-		var inProgressKey = new ScanInProgressKey(param.getFolderPath(), param.getProduct());
-		var scanState = ScanState.getInstance();
-		SnykIssueCache issueCache = null;
-		if (!param.getFolderPath().isBlank()) {
-			issueCache = IssueCacheHolder.getInstance().getCacheInstance(param.getFolderPath());
-		}
 		openToolView();
-
-		var productTreeNode = getAffectedProductNode(param.getProduct(), param.getFolderPath());
-
-		if (productTreeNode == null) {
-			if (toolView != null && toolView.getRoot() != null) {
-				toolView.getRoot().reset();
-				productTreeNode = getAffectedProductNode(param.getProduct(), param.getFolderPath());
-			}
+		if (this.toolView != null) {
+			this.toolView.refreshBrowser(param);
 		}
-
-		switch (param.getStatus()) {
-		case SCAN_STATE_IN_PROGRESS:
-			scanState.setScanInProgress(inProgressKey, true);
-			if (productTreeNode != null) {
-				toolView.setNodeText(productTreeNode, ISnykToolView.NODE_TEXT_SCANNING);
-			}
-			break;
-		case SCAN_STATE_SUCCESS:
-			scanState.setScanInProgress(inProgressKey, false);
-			if (productTreeNode != null) {
-				this.toolView.resetNode(productTreeNode);
-				addInfoNodes(productTreeNode, param.getFolderPath(), issueCache);
-				populateFileAndIssueNodes(productTreeNode, issueCache);
-			}
-			break;
-		case SCAN_STATE_ERROR:
-			scanState.setScanInProgress(inProgressKey, false);
-			if (productTreeNode != null) {
-				productTreeNode.setPresentableError(param.getPresentableError());
-			}
-			break;
-		default:
-			break;
-		}
-		setNodeState(param.getStatus(), productTreeNode, issueCache);
-		this.toolView.refreshBrowser(param.getStatus());
 	}
 
 	@JsonNotification(value = LsConstants.SNYK_CONFIGURATION)
@@ -462,7 +386,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private void persistGlobalSettings(java.util.Map<String, ConfigSetting> settings) {
+	private void persistGlobalSettings(Map<String, ConfigSetting> settings) {
 		var prefs = Preferences.getInstance();
 		for (var entry : settings.entrySet()) {
 			try {
@@ -493,9 +417,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 	@JsonNotification(value = LsConstants.SNYK_TREE_VIEW)
 	public void snykTreeView(TreeViewParams params) {
 		if (params == null || params.getTreeViewHtml() == null) {
-			return;
-		}
-		if (!Preferences.getInstance().getBooleanPref(Preferences.USE_HTML_TREE_VIEW)) {
 			return;
 		}
 		String html = params.getTreeViewHtml();
@@ -529,31 +450,23 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
 		}
 
-		Issue issue;
 		if (uriDetails.isValid()) {
-			issue = getIssueFromCache(uriDetails.product(), uriDetails.issueId());
+			String issueId = uriDetails.issueId();
+			String product = uriDetails.product();
+			return CompletableFuture.supplyAsync(() -> new ShowDocumentResult(selectIssueNode(issueId, product)));
 		} else if (FILE_SCHEME.equals(uriDetails.scheme())) {
 			return openFileInEclipse(uri, params.getSelection());
 		} else {
 			return super.showDocument(params);
 		}
+	}
 
-		if (issue == null) {
-			SnykLogger.logInfo(String.format("Issue not found in the issueCache; issueId: %s", uriDetails.issueId()));
-			return CompletableFuture.completedFuture(new ShowDocumentResult(false));
-		}
-
-		return CompletableFuture.supplyAsync(() -> {
-			openToolView();
-			ISnykToolView view = this.toolView;
-			if (view == null) {
-				return new ShowDocumentResult(false);
-			}
-			String displayProduct = FILTERABLE_ISSUE_TYPE_TO_DISPLAY.getOrDefault(issue.filterableIssueType(),
-					issue.filterableIssueType());
-			view.selectTreeNode(issue, displayProduct);
-			return new ShowDocumentResult(true);
-		});
+	private boolean selectIssueNode(String issueId, String product) {
+		openToolView();
+		ISnykToolView view = this.toolView;
+		if (view == null) return false;
+		view.selectTreeNode(issueId, product);
+		return true;
 	}
 
 	// Opens a file:// URI inside Eclipse, forcing the default text editor for
@@ -635,37 +548,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		}
 	}
 
-	private Issue getIssueFromCache(String product, String issueId) {
-		Issue issue = null;
-		IssueCacheHolder issueCacheHolder = IssueCacheHolder.getInstance();
-		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
-		String normalizedProduct = normalizeProductCodename(product);
-		for (IProject iProject : openProjects) {
-			issue = issueCacheHolder.getCacheInstance(iProject).getIssueByDiagnosticProductAndKey(normalizedProduct,
-					issueId);
-			if (issue != null) {
-				return issue;
-			}
-		}
-		return issue;
-	}
-
-	static String normalizeProductCodename(String product) {
-		if (product == null) {
-			return null;
-		}
-		switch (product) {
-		case SCAN_PARAMS_OSS:
-			return DIAGNOSTIC_SOURCE_SNYK_OSS;
-		case SCAN_PARAMS_CODE:
-			return DIAGNOSTIC_SOURCE_SNYK_CODE;
-		case SCAN_PARAMS_IAC:
-			return DIAGNOSTIC_SOURCE_SNYK_IAC;
-		default:
-			return product;
-		}
-	}
-
 	private ISnykToolView openToolView() {
 		// we don't want to use the UI in tests usually
 		if (this.toolView != null || Preferences.getInstance().isTest()) {
@@ -681,299 +563,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 		});
 		return toolView;
-	}
-
-	private ProductTreeNode getAffectedProductNode(String snykScanProduct, String folderPath) {
-		var displayProduct = SCAN_PARAMS_TO_DISPLAYED.get(snykScanProduct);
-		ProductTreeNode productNode = toolView.getProductNode(displayProduct, folderPath);
-		return productNode;
-	}
-
-	private void setNodeState(String status, ProductTreeNode node, SnykIssueCache cache) {
-		if (node == null) {
-			return;
-		}
-		String nodeText;
-		if (SCAN_STATE_IN_PROGRESS.equals(status)) {
-			nodeText = NODE_TEXT_SCANNING;
-			node.setText(nodeText);
-		} else if (SCAN_STATE_ERROR.equals(status)) {
-			var presentableError = node.getPresentableError();
-			if (presentableError != null && presentableError.getTreeNodeSuffix() != null) {
-				nodeText = presentableError.getTreeNodeSuffix();
-			} else {
-				nodeText = ISnykToolView.NODE_TEXT_ERROR;
-			}
-			node.setText(nodeText);
-			toolView.refreshTree();
-		} else if (SCAN_STATE_SUCCESS.equals(status)) {
-			var displayCounts = getCountsSuffix(node, cache);
-			node.setText(displayCounts);
-			toolView.refreshTree();
-		}
-	}
-
-	public String getCountsSuffix(ProductTreeNode productTreeNode, SnykIssueCache issueCache) {
-		String product = productTreeNode.getProduct();
-		var critical = issueCache.getIssueCountBySeverity(product, SEVERITY_CRITICAL);
-		var high = issueCache.getIssueCountBySeverity(product, SEVERITY_HIGH);
-		var medium = issueCache.getIssueCountBySeverity(product, SEVERITY_MEDIUM);
-		var low = issueCache.getIssueCountBySeverity(product, SEVERITY_LOW);
-		var total = issueCache.getTotalCount(product);
-		return String.format("%d unique vulnerabilities: %d critical, %d high, %d medium, %d low", total, critical,
-				high, medium, low);
-	}
-
-	private SnykIssueCache getIssueCache(String filePath) {
-		final var path = Paths.get(filePath);
-		if (path == null) {
-			throw new RuntimeException("cannot resolve path "+filePath);
-		}
-		var issueCache = IssueCacheHolder.getInstance().getCacheInstance(path);
-		if (issueCache == null) {
-			SnykLogger.logInfo("cannot retrieve issue cache for "+path);
-		}
-		return issueCache;
-	}
-
-	private void addInfoNodes(ProductTreeNode productNode, String folderPath, SnykIssueCache issueCache) {
-		if (productNode == null) {
-			SnykLogger.logInfo("given product node is null, not adding info nodes. folderPath: " + folderPath);
-			return;
-		}
-		toolView.removeInfoNodes(productNode);
-
-		long totalIssueCount = issueCache.getTotalCount(productNode.getProduct());
-		long ignoredIssueCount = issueCache.getIgnoredCount(productNode.getProduct());
-		// Depending on Issue View Options, ignored issues might be pre-filtered by the and so ignoredIssueCount may be 0.
-		// In this case, openIssueCount is the total issue count returned by the LS.
-		long openIssueCount = totalIssueCount - ignoredIssueCount;
-		boolean isCodeNode = DISPLAYED_CODE_SECURITY.equals(productNode.getProduct());
-
-		String text;
-		if (!isCodeNode) {
-			text = getIssueFoundText(totalIssueCount);
-		} else {
-			text = getIssueFoundTextForCode(totalIssueCount, openIssueCount, ignoredIssueCount);
-		}
-
-		toolView.addInfoNode(productNode, new InfoTreeNode(text));
-		if (totalIssueCount == 0) {
-			InfoTreeNode ivoNode;
-			if (!isCodeNode) {
-				ivoNode = getNoIssueViewOptionsSelectedTreeNode();
-			} else {
-				ivoNode = getNoIssueViewOptionsSelectedTreeNodeForCode();
-			}
-
-			if (ivoNode != null) {
-				toolView.addInfoNode(productNode, ivoNode);
-			}
-		} else {
-			long fixableIssueCount = issueCache.getFixableCount(productNode.getProduct());
-			var fixableText = !isCodeNode ? getFixableIssuesText(fixableIssueCount, false)
-					: getFixableIssuesTextForCode(fixableIssueCount);
-			if (fixableText != null) {
-				toolView.addInfoNode(productNode, new InfoTreeNode(fixableText));
-			}
-		}
-	}
-
-	private String getIssueFoundText(long issueCount) {
-		var pref = Preferences.getInstance();
-		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
-		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
-
-		if (isIgnoresEnabled && !showingOpen) {
-			return OPEN_ISSUES_ARE_DISABLED;
-		}
-		if (issueCount == 0) {
-			return CONGRATS_NO_ISSUES_FOUND;
-		} else {
-			return "✋ " + issueCount + " issue" + (issueCount == 1 ? "" : "s");
-		}
-	}
-
-	private String getIssueFoundTextForCode(long totalIssueCount, long openIssueCount, long ignoredIssueCount) {
-		var pref = Preferences.getInstance();
-		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
-		if (!isIgnoresEnabled) {
-			return getIssueFoundText(totalIssueCount);
-		}
-
-		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
-		boolean showingIgnored = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES);
-
-		String openIssuesText = openIssueCount + " open issue" + (openIssueCount == 1 ? "" : "s");
-		String ignoredIssuesText = ignoredIssueCount + " ignored issue" + (ignoredIssueCount == 1 ? "" : "s");
-
-		if (showingOpen && showingIgnored) {
-			if (totalIssueCount == 0) {
-				return CONGRATS_NO_ISSUES_FOUND;
-			} else {
-                if (ignoredIssueCount == 0) {
-                    return "✋ " + openIssuesText;
-                }
-				return "✋ " + openIssuesText + " & " + ignoredIssuesText;
-			}
-		}
-		if (showingOpen) {
-			if (openIssueCount == 0) {
-				return CONGRATS_NO_OPEN_ISSUES_FOUND;
-			} else {
-				return "✋ " + openIssuesText;
-			}
-		}
-		if (showingIgnored) {
-			if (ignoredIssueCount == 0) {
-				return NO_IGNORED_ISSUES;
-			} else {
-				return "✋ " + ignoredIssuesText + ", open issues are disabled";
-			}
-		}
-		return OPEN_AND_IGNORED_ISSUES_ARE_DISABLED;
-	}
-
-	private InfoTreeNode getNoIssueViewOptionsSelectedTreeNode() {
-		var pref = Preferences.getInstance();
-		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
-		if (!isIgnoresEnabled) {
-			return null;
-		}
-
-		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
-		if (!showingOpen) {
-			return new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE);
-		}
-
-		return null;
-	}
-
-	private InfoTreeNode getNoIssueViewOptionsSelectedTreeNodeForCode() {
-		var pref = Preferences.getInstance();
-		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
-		if (!isIgnoresEnabled) {
-			return null;
-		}
-
-		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
-		boolean showingIgnored = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES);
-
-		if (!showingOpen && !showingIgnored) {
-			return new InfoTreeNode(ISnykToolView.ALL_ISSUES_FILTERED_BUT_AVAILABLE);
-		}
-
-		if (!showingOpen) {
-			return new InfoTreeNode(ISnykToolView.OPEN_ISSUES_FILTERED_BUT_AVAILABLE);
-		}
-
-		if (!showingIgnored) {
-			return new InfoTreeNode(ISnykToolView.IGNORED_ISSUES_FILTERED_BUT_AVAILABLE);
-		}
-
-		return null;
-	}
-
-	private String getFixableIssuesText(long fixableIssueCount, boolean isIgnoresEnabled) {
-		if (fixableIssueCount > 0) {
-			final var classifyIssueForIgnoresText = isIgnoresEnabled ? " open" : "";
-			final var issue = " issue" + (fixableIssueCount == 1 ? " is" : "s are");
-			return "⚡️ " + fixableIssueCount + classifyIssueForIgnoresText + issue + " fixable automatically.";
-		}
-		return NO_FIXABLE_ISSUES;
-	}
-
-	private String getFixableIssuesTextForCode(long fixableIssueCount) {
-		var pref = Preferences.getInstance();
-		boolean isIgnoresEnabled = pref.getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
-		boolean showingOpen = pref.getBooleanPref(Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES);
-
-		if (isIgnoresEnabled && !showingOpen) {
-			return null;
-		}
-		return getFixableIssuesText(fixableIssueCount, isIgnoresEnabled);
-	}
-
-	@JsonNotification(value = LsConstants.SNYK_PUBLISH_DIAGNOSTICS_316)
-	public void publishDiagnostics316(PublishDiagnostics316Param param) {
-		var uri = param.getUri();
-		if (StringUtils.isEmpty(uri)) {
-			SnykLogger.logInfo("uri for PublishDiagnosticsParams is empty");
-			return;
-		}
-		var filePath = LSPEclipseUtils.fromUri(URI.create(uri)).getAbsolutePath();
-		if (filePath == null) {
-			SnykLogger.logError(new InvalidPathException(uri, "couldn't resolve uri " + uri + " to file"));
-			return;
-		}
-
-		populateIssueCache(param, filePath);
-	}
-
-	private void populateFileAndIssueNodes(ProductTreeNode productTreeNode, SnykIssueCache issueCache) {
-		var cacheHashMap = issueCache.getCacheByDisplayProduct(productTreeNode.getProduct());
-		List<Issue> issuesList = new ArrayList<>();
-		for (var kv : cacheHashMap.entrySet()) {
-			var fileName = kv.getKey();
-			issuesList.clear(); // Clear the list instead of creating a new one
-			issuesList.addAll(kv.getValue());
-
-			if (issuesList.isEmpty())
-				continue;
-
-			FileTreeNode fileNode = new FileTreeNode(fileName); // NOPMD
-			toolView.addFileNode(productTreeNode, fileNode);
-			for (Issue issue : issuesList) {
-				toolView.addIssueNode(fileNode, new IssueTreeNode(issue)); // NOPMD
-			}
-		}
-	}
-
-	private void populateIssueCache(PublishDiagnostics316Param param, String filePath) {
-		if (filePath == null || filePath.isBlank()) {
-			return;
-		}
-		var issueCache = getIssueCache(filePath);
-		if (issueCache == null) {
-			SnykLogger.logInfo("Issue cache is null for file path: " + filePath + ", skipping cache population");
-			return;
-		}
-		Diagnostic316[] diagnostics = param.getDiagnostics();
-		if (diagnostics == null || diagnostics.length == 0) {
-			issueCache.removeAllIssuesForPath(filePath);
-			return;
-		}
-		var source = diagnostics[0].getSource();
-		if (StringUtils.isEmpty(source)) {
-			return;
-		}
-		var snykProduct = LSP_SOURCE_TO_SCAN_PARAMS.get(source);
-		List<Issue> issueList = new ArrayList<>();
-		var isIgnoresEnabled = Preferences.getInstance().getBooleanPref(Preferences.IS_GLOBAL_IGNORES_FEATURE_ENABLED);
-		for (var diagnostic : diagnostics) {
-			if (diagnostic.getData() == null) {
-				continue;
-			}
-			if (!isIgnoresEnabled && diagnostic.getData().isIgnored()) {
-				toggleIgnores(true);
-				isIgnoresEnabled = true;
-			}
-			issueList.add(diagnostic.getData());
-		}
-
-		switch (snykProduct) {
-		case SCAN_PARAMS_CODE:
-			issueCache.addCodeIssues(filePath, issueList);
-			break;
-		case SCAN_PARAMS_OSS:
-			issueCache.addOssIssues(filePath, issueList);
-			break;
-		case SCAN_PARAMS_IAC:
-			issueCache.addIacIssues(filePath, issueList);
-			break;
-		default:
-			break;
-		}
 	}
 
 	public void reportAnalytics(AbstractTask event) {
@@ -1056,19 +645,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		} catch (ClassCastException e) {
 			return null;
 		}
-	}
-
-	public void clearCache() {
-		List<IProject> openProjects = ResourceUtils.getAccessibleTopLevelProjects();
-		for (IProject iProject : openProjects) {
-			IssueCacheHolder.getInstance().getCacheInstance(iProject).clearAll();
-			try {
-				iProject.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
-			} catch (CoreException e) {
-				SnykLogger.logError(e);
-			}
-		}
-
 	}
 
 	@JsonRequest(value = "workspace/snyk.sdks")
