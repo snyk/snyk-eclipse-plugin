@@ -168,7 +168,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 				gd.widthHint = 500;
 				link.setLayoutData(gd);
 				link.setText("Your Snyk CLI version is incompatible with this Snyk plugin. "
-						+ "This Snyk plugin requires expected: " + expected + " vs actual: " + actualStr + ". "
+						+ "This plugin requires protocol version " + expected + ", but the installed CLI reports version " + actualStr + ". "
 						+ "Upgrade the Snyk CLI or enable automatic updates in Snyk plugin settings. "
 						+ "For a list of compatible CLI versions, visit the "
 						+ "<a href=\"https://docs.snyk.io/developer-tools/snyk-ide-plugins-and-extensions"
