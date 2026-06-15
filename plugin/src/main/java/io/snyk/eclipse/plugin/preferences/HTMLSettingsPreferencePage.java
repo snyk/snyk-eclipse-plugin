@@ -7,7 +7,6 @@ import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
 import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.LsSettingsRegistry;
 import io.snyk.languageserver.LsSettingsRegistry.Entry;
@@ -34,8 +33,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.commands.ICommandService;
 
 public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
@@ -235,9 +232,6 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         }
       }
 
-      // Refresh toolbar UI to reflect changes made in HTML settings.
-      refreshToolbarUI();
-
       // If the user changed the CLI binary path, the running LS process is
       // still bound to the old binary. In-process restart via lsp4e is too
       // unreliable (cached connection providers, stuck failed wrappers,
@@ -326,35 +320,6 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     return v.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;");
   }
   
-  private void refreshToolbarUI() {
-    Display display = Display.getCurrent();
-    if (display == null) {
-      SnykLogger.logInfo("refreshToolbarUI: No display available, skipping UI refresh");
-      return;
-    }
-    display.asyncExec(
-        () -> {
-          ICommandService commandService =
-              PlatformUI.getWorkbench().getService(ICommandService.class);
-          if (commandService != null) {
-            // Refresh severity filter commands
-            commandService.refreshElements(IHandlerCommands.SHOW_CRITICAL, null);
-            commandService.refreshElements(IHandlerCommands.SHOW_HIGH, null);
-            commandService.refreshElements(IHandlerCommands.SHOW_MEDIUM, null);
-            commandService.refreshElements(IHandlerCommands.SHOW_LOW, null);
-            // Refresh product filter commands
-            commandService.refreshElements(IHandlerCommands.ENABLE_OSS, null);
-            commandService.refreshElements(IHandlerCommands.ENABLE_CODE_SECURITY, null);
-            commandService.refreshElements(IHandlerCommands.ENABLE_IAC, null);
-            // Refresh issue view options commands
-            commandService.refreshElements(IHandlerCommands.IGNORES_SHOW_OPEN, null);
-            commandService.refreshElements(IHandlerCommands.IGNORES_SHOW_IGNORED, null);
-            // Refresh delta findings command
-            commandService.refreshElements(IHandlerCommands.ENABLE_DELTA, null);
-          }
-        });
-  }
-
   @Override
   public boolean performOk() {
     browser.evaluate(
