@@ -202,6 +202,27 @@ class SnykLanguageServerTest extends LsBaseTest {
   }
 
   @Test
+  void startSnykLanguageServer_returnsFalse_whenCliNotFound() {
+    this.prefs.store(Preferences.CLI_PATH, NON_EXISTENT_CLI_PATH);
+
+    boolean result = SnykLanguageServer.startSnykLanguageServer();
+
+    assertFalse(result, "Should return false when CLI binary does not exist");
+  }
+
+  @Test
+  void startSnykLanguageServer_returnsFalse_whenProtocolVersionMismatches() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    File script = createCliStub("999");
+    this.prefs.store(Preferences.CLI_PATH, script.getAbsolutePath());
+
+    boolean result = SnykLanguageServer.startSnykLanguageServer();
+
+    assertFalse(result, "Should return false when CLI protocol version mismatches");
+  }
+
+  @Test
   @Tag("smoke")
   // The real downloaded CLI supports --protocolVersion; verify the check passes against it.
   void verifyCliProtocolVersion_withRealCliDownload_passesWhenVersionSupported() throws Exception {
