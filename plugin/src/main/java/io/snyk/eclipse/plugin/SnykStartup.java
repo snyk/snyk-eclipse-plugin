@@ -55,15 +55,17 @@ public class SnykStartup implements IStartup {
 				monitor.subTask("Starting Language Server...");
 
 				try {
-					SnykLanguageServer.startSnykLanguageServer();
+					boolean started = SnykLanguageServer.startSnykLanguageServer();
 
-					PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-						Preferences prefs = Preferences.getInstance();
-						if (!prefs.isAuthenticated() && !prefs.isTest()) {
-							monitor.subTask("Starting Snyk Wizard to configure initial settings...");
-							SnykWizard.createAndLaunch();
-						}
-					});
+					if (started) {
+						PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
+							Preferences prefs = Preferences.getInstance();
+							if (!prefs.isAuthenticated() && !prefs.isTest()) {
+								monitor.subTask("Starting Snyk Wizard to configure initial settings...");
+								SnykWizard.createAndLaunch();
+							}
+						});
+					}
 				} catch (RuntimeException e) { // NOPMD - intentional catch-all of runtime exceptions for UI initialization
 					SnykLogger.logError(e);
 				}

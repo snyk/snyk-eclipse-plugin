@@ -138,18 +138,19 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		}
 	}
 
-	public static void startSnykLanguageServer() {
+	public static boolean startSnykLanguageServer() {
 		Preferences prefs = Preferences.getInstance();
 		try {
 			String cliPath = getCliPathOrThrow(prefs);
 			verifyCliProtocolVersion(cliPath);
 		} catch (IOException e) {
 			SnykLogger.logInfo("Not starting Snyk Language Server: " + e.getMessage());
-			return;
+			return false;
 		}
 		LanguageServerDefinition definition = LanguageServersRegistry.getInstance()
 				.getDefinition(SnykLanguageServer.LANGUAGE_SERVER_ID);
 		LanguageServiceAccessor.startLanguageServer(definition);
+		return true;
 	}
 
 	static void showIncompatibleCliDialog(int expected, int actual) {
