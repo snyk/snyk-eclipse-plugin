@@ -77,11 +77,9 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 						+ ". Please update the Snyk CLI.";
 				throw new IOException(msg);
 			}
-		} catch (NumberFormatException e) {
+		} catch (NumberFormatException e) { //NOPMD - PreserveStackTrace: NFE cause intentionally dropped; passing it would surface "For input string: ..." in lsp4e's "Problem Occurred" dialog (IDE-2112)
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			showIncompatibleCliDialog(expected, -1);
-			// Log raw output at debug only — don't pass NFE as cause or lsp4e will
-			// surface "For input string: ..." in the "Problem Occurred" dialog.
 			SnykLogger.logDebug("verifyCliProtocolVersion: unexpected output: " + output + " (" + e.getMessage() + ")");
 			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible with this version of the Eclipse plugin. Please update the Snyk CLI.";
 			throw new IOException(msg);
