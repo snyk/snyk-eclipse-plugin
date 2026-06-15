@@ -18,6 +18,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.INewWizard;
@@ -55,6 +56,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void addPages() {
+		addPage(new SnykWizardConfigureAPIPage());
 		authenticatePage = new SnykWizardAuthenticatePage();
 		addPage(authenticatePage);
 		setNeedsProgressMonitor(false);
@@ -134,7 +136,8 @@ public class SnykWizard extends Wizard implements INewWizard {
 					LOG.error("Logout timed out; aborting login to avoid session state corruption", e);
 					return Status.CANCEL_STATUS;
 				} catch (ExecutionException e) {
-					LOG.warn("Logout did not complete cleanly; proceeding with login", e);
+					LOG.error("Logout failed; aborting login to avoid session state corruption", e);
+					return Status.CANCEL_STATUS;
 				}
 				monitor.worked(1);
 
@@ -187,6 +190,9 @@ public class SnykWizard extends Wizard implements INewWizard {
 					LOG.info("Authentication cancelled", e);
 				} catch (TimeoutException e) {
 					LOG.info("Authentication timed out", e);
+					// hasAuthenticated persists the token before completing the future. If auth
+					// landed just after the 30s window, honour the stored token.
+					success = !Preferences.getInstance().getAuthToken().isBlank();
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 					LOG.info("Authentication interrupted");
@@ -243,6 +249,10 @@ public class SnykWizard extends Wizard implements INewWizard {
 		}
 		// Reset IN_FLIGHT inside asyncExec so a second wizard cannot enter
 		// performFinish() while this wizard's shell is still being closed.
+		// Wrap in try-catch: Display can be disposed between the isDisposed() check
+		// above and this call (TOCTOU at shutdown). If it throws, reset IN_FLIGHT here
+		// so the guard is never permanently stuck.
+		try {
 		display.asyncExec(() -> {
 			try {
 				Shell shell = wizardShell;
@@ -265,6 +275,12 @@ public class SnykWizard extends Wizard implements INewWizard {
 				}
 			}
 		});
+		} catch (SWTException e) {
+			// Display was disposed between the isDisposed() check and asyncExec —
+			// TOCTOU window at shutdown. Reset the guard so auth can be retried.
+			IN_FLIGHT.set(false);
+			LOG.warn("Display disposed during wizard close; IN_FLIGHT reset", e);
+		}
 	}
 
 	public static void createAndLaunch() {

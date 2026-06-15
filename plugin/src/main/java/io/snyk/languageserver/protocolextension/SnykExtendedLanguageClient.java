@@ -379,7 +379,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				// pre-completed future so that the next triggerAuthentication() call returns immediately.
 				CompletableFuture<Void> preCompleted = new CompletableFuture<>();
 				preCompleted.complete(null);
-				authCompleteFuture.compareAndSet(f, preCompleted);
+				if (!authCompleteFuture.compareAndSet(f, preCompleted)) {
+					SnykLogger.logInfo("hasAuthenticated: compareAndSet missed — triggerAuthentication() raced; real-token completion delivered separately");
+				}
 			} else {
 				f.complete(null);
 			}
