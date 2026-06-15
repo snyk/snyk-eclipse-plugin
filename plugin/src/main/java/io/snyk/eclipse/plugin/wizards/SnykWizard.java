@@ -171,6 +171,10 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 				AuthWaitDialog waitDialog = dialogHolder[0];
 
+				// Push any endpoint/insecure changes from the configure page to the LS before
+				// triggering login — LS needs the endpoint to resolve the OAuth provider.
+				lc.updateConfiguration();
+
 				var authFuture = lc.triggerAuthentication();
 
 				if (waitDialog != null) {

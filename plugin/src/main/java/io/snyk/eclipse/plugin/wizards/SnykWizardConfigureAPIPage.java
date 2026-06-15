@@ -70,9 +70,8 @@ public class SnykWizardConfigureAPIPage extends WizardPage implements Listener {
 
 		unknownCerts.setSelection(Preferences.getInstance().isInsecure());
 
-		// required to avoid an error in the system
 		setControl(composite);
-		setPageComplete(false);
+		setPageComplete(true);
 	}
 
 	@Override
