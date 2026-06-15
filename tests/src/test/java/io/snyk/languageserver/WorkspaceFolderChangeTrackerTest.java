@@ -241,8 +241,9 @@ class WorkspaceFolderChangeTrackerTest {
         WorkspaceFolderChangeTracker tracker = trackerWith(source, sentAdded, sentRemoved, true);
         source.set(Map.of("file:///a", a, "file:///b", b));
 
+        IResourceDelta addedDelta = rootDelta(child(IResourceDelta.ADDED, 0));
         IResourceChangeEvent event = mock(IResourceChangeEvent.class);
-        when(event.getDelta()).thenReturn(rootDelta(child(IResourceDelta.ADDED, 0)));
+        when(event.getDelta()).thenReturn(addedDelta);
         tracker.resourceChanged(event);
 
         assertEquals(1, sentAdded.size());
@@ -267,8 +268,9 @@ class WorkspaceFolderChangeTrackerTest {
         WorkspaceFolderChangeTracker tracker = trackerWith(source, sentAdded, sentRemoved, true);
         source.set(Map.of("file:///a", a));
 
+        IResourceDelta removedDelta = rootDelta(child(IResourceDelta.REMOVED, 0));
         IResourceChangeEvent event = mock(IResourceChangeEvent.class);
-        when(event.getDelta()).thenReturn(rootDelta(child(IResourceDelta.REMOVED, 0)));
+        when(event.getDelta()).thenReturn(removedDelta);
         tracker.resourceChanged(event);
 
         assertEquals(1, sentRemoved.size());
@@ -294,8 +296,9 @@ class WorkspaceFolderChangeTrackerTest {
         WorkspaceFolder b = folder("file:///b");
         source.set(Map.of("file:///a", a, "file:///b", b));
 
+        IResourceDelta unrelatedDelta = rootDelta(child(IResourceDelta.CHANGED, IResourceDelta.CONTENT));
         IResourceChangeEvent event = mock(IResourceChangeEvent.class);
-        when(event.getDelta()).thenReturn(rootDelta(child(IResourceDelta.CHANGED, IResourceDelta.CONTENT)));
+        when(event.getDelta()).thenReturn(unrelatedDelta);
         tracker.resourceChanged(event);
 
         assertTrue(sentAdded.isEmpty(), "unrelated delta must not trigger notification");
