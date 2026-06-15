@@ -68,11 +68,15 @@ public final class WorkspaceFolderChangeTracker implements IResourceChangeListen
 
     // POST_CHANGE fires for every resource event (file saves, compilations, etc).
     // Only proceed when top-level projects are added, removed, or opened/closed.
-    private static boolean affectsProjectSet(IResourceDelta rootDelta) {
+    // Visible for testing.
+    static boolean affectsProjectSet(IResourceDelta rootDelta) {
         if (rootDelta == null) return false;
         for (IResourceDelta delta : rootDelta.getAffectedChildren()) {
             int kind = delta.getKind();
             if (kind == IResourceDelta.ADDED || kind == IResourceDelta.REMOVED) return true;
+            // IResourceDelta.OPEN fires for both open and close: the flag means the
+            // project's open state changed, not that it was opened. Closing a project
+            // sets this flag too, which is counterintuitive but matches Eclipse behaviour.
             if ((delta.getFlags() & IResourceDelta.OPEN) != 0) return true;
         }
         return false;
