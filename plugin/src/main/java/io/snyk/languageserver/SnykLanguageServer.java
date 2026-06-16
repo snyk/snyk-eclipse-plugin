@@ -153,6 +153,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 	}
 
 	static void showIncompatibleCliDialog(int expected, int actual) {
+		if (Preferences.getInstance().isTest()) return;
 		if (!PlatformUI.isWorkbenchRunning()) return;
 		Display display = PlatformUI.getWorkbench().getDisplay();
 		String actualStr = actual >= 0 ? String.valueOf(actual) : "unknown";
