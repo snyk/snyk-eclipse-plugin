@@ -20,7 +20,8 @@ class SnykToolViewTest {
 
 	@BeforeEach
 	void setUp() {
-		Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
+		Preferences prefs = Preferences.getTestInstance(new InMemoryPreferenceStore(), new InMemorySecurePreferenceStore());
+		prefs.setTest(true);
 	}
 
 	@Test
