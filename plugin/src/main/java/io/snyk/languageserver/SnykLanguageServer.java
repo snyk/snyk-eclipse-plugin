@@ -71,7 +71,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 			Process proc = pb.start();
 			output = new String(proc.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
 			proc.waitFor(5, TimeUnit.SECONDS);
-			// Use first line only: some CLI builds print version + trailing warnings.
+			// Use first line only: some CLI builds print version + trailing warnings, e.g. "Warning: something deprecated".
 			String firstLine = output.split("\\n", 2)[0].trim();
 			int actual = Integer.parseInt(firstLine);
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
