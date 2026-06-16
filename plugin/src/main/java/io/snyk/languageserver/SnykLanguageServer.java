@@ -47,6 +47,9 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		waitForInit();
 
 		String cliPath = getCliPathOrThrow(prefs);
+		if (!verifyCliProtocolVersion(cliPath)) {
+			throw new IOException("Snyk CLI version is incompatible with this plugin. Please update the Snyk CLI.");
+		}
 
 		List<String> commands = Lists.of(cliPath, "language-server", "-l", "info");
 		String workingDir = SystemUtils.USER_DIR;
