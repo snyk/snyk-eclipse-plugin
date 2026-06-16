@@ -81,7 +81,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		} catch (NumberFormatException e) {
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			showIncompatibleCliDialog(expected, -1);
-			SnykLogger.logDebug("verifyCliProtocolVersion: unexpected output: " + output + " (" + e.getMessage() + ")");
+			SnykLogger.logInfo("verifyCliProtocolVersion: unexpected output: " + output + " (" + e.getMessage() + ")");
 			return false;
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();

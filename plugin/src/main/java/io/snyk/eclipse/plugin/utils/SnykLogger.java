@@ -15,12 +15,6 @@ public class SnykLogger {
 		StatusManager.getManager().handle(status, StatusManager.SHOW | StatusManager.LOG);
 	}
 
-	public static void logDebug(String message) {
-		Status status = new Status(IStatus.INFO, Activator.PLUGIN_ID, message);
-
-		StatusManager.getManager().handle(status, StatusManager.LOG);
-	}
-
 	public static void logInfo(String message) {
 		Status status = new Status(IStatus.INFO, Activator.PLUGIN_ID, message);
 
