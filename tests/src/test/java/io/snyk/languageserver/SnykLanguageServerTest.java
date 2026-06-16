@@ -141,47 +141,36 @@ class SnykLanguageServerTest extends LsBaseTest {
         "Shell script not supported on Windows");
     File script = createCliStub(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 
-    SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+    assertTrue(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
   }
 
   @Test
-  void verifyCliProtocolVersion_throwsWhenVersionMismatches() throws Exception {
+  void verifyCliProtocolVersion_returnsFalseWhenVersionMismatches() throws Exception {
     assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
         "Shell script not supported on Windows");
     File script = createCliStub("999");
 
-    IOException ex = assertThrows(IOException.class,
-        () -> SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
-
-    assertTrue(ex.getMessage().contains("protocol version mismatch"));
-    assertTrue(ex.getMessage().contains("999"));
-    assertTrue(ex.getMessage().contains(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION));
+    assertFalse(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
   }
 
   @Test
-  void verifyCliProtocolVersion_throwsWithClearMessageOnUnparseableOutput() throws Exception {
+  void verifyCliProtocolVersion_returnsFalseOnUnparseableOutput() throws Exception {
     assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
         "Shell script not supported on Windows");
     File script = createCliStub("not-a-number");
 
-    IOException ex = assertThrows(IOException.class,
-        () -> SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
-
-    assertTrue(ex.getMessage().contains("not compatible"), "Should say binary is not compatible");
-    assertFalse(ex.getMessage().contains("NumberFormatException"), "Should not expose internal exception type");
+    assertFalse(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
   }
 
   @Test
-  void verifyCliProtocolVersion_throwsWithoutRawOutputInMessage() throws Exception {
+  void verifyCliProtocolVersion_returnsFalseWithoutThrowingOnUnparseableOutput() throws Exception {
     assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
         "Shell script not supported on Windows");
     String longOutput = "This is not a version number and it is deliberately very long output text here abcdefghijklmno";
     File script = createCliStub(longOutput);
 
-    IOException ex = assertThrows(IOException.class,
-        () -> SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
-
-    assertFalse(ex.getMessage().contains("This is not a version number"), "Raw output must not appear in user-facing message");
+    // Must return false without throwing — raw output must never surface to lsp4e's "Problem Occurred" dialog.
+    assertFalse(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
   }
 
   @Test
@@ -198,7 +187,7 @@ class SnykLanguageServerTest extends LsBaseTest {
             PosixFilePermission.OWNER_EXECUTE));
 
     // Should succeed — version is on the first line and matches.
-    SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+    assertTrue(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
   }
 
   @Test
@@ -236,8 +225,8 @@ class SnykLanguageServerTest extends LsBaseTest {
       LsRuntimeEnvironment realEnv = new LsRuntimeEnvironment();
       LsDownloader downloader = new LsDownloader(HttpClientFactory.getInstance(), realEnv, null);
       downloader.download(new NullProgressMonitor());
-      // The downloaded CLI must support --protocolVersion and return the required version.
-      SnykLanguageServer.verifyCliProtocolVersion(tempBinary.getAbsolutePath());
+        // The downloaded CLI must support --protocolVersion and return the required version.
+      assertTrue(SnykLanguageServer.verifyCliProtocolVersion(tempBinary.getAbsolutePath()));
     } finally {
       prefs.store(Preferences.CLI_PATH, originalCliPath);
       tempBinary.delete();

@@ -60,7 +60,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		}
 	}
 
-	static void verifyCliProtocolVersion(String cliPath) throws IOException {
+	static boolean verifyCliProtocolVersion(String cliPath) throws IOException {
 		String output = "";
 		try {
 			ProcessBuilder pb = new ProcessBuilder(cliPath, "language-server", "--protocolVersion");
@@ -74,19 +74,19 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			if (actual != expected) {
 				showIncompatibleCliDialog(expected, actual);
-				String msg = "Snyk CLI protocol version mismatch: expected " + expected + ", got " + actual
-						+ ". Please update the Snyk CLI.";
-				throw new IOException(msg);
+				SnykLogger.logInfo("CLI protocol version mismatch: expected " + expected + ", got " + actual + ". Not starting Language Server.");
+				return false;
 			}
+			return true;
 		} catch (NumberFormatException e) {
 			int expected = Integer.parseInt(io.snyk.languageserver.download.LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 			showIncompatibleCliDialog(expected, -1);
 			SnykLogger.logDebug("verifyCliProtocolVersion: unexpected output: " + output + " (" + e.getMessage() + ")");
-			String msg = "Snyk CLI binary at '" + cliPath + "' is not compatible with this version of the Eclipse plugin. Please update the Snyk CLI.";
-			throw new IOException(msg); //NOPMD - PreserveStackTrace: NFE cause intentionally dropped to keep raw CLI output out of lsp4e's "Problem Occurred" dialog (IDE-2112)
+			return false;
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			throw new IOException("CLI protocol version check was interrupted — not starting Language Server.", e);
+			SnykLogger.logInfo("CLI protocol version check interrupted — not starting Language Server.");
+			return false;
 		}
 	}
 
@@ -141,7 +141,9 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 		Preferences prefs = Preferences.getInstance();
 		try {
 			String cliPath = getCliPathOrThrow(prefs);
-			verifyCliProtocolVersion(cliPath);
+			if (!verifyCliProtocolVersion(cliPath)) {
+				return false;
+			}
 		} catch (IOException e) {
 			SnykLogger.logInfo("Not starting Snyk Language Server: " + e.getMessage());
 			return false;
