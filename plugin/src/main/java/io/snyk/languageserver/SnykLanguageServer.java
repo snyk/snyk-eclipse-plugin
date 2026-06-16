@@ -86,7 +86,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 			throw new IOException(msg); //NOPMD - PreserveStackTrace: NFE cause intentionally dropped to keep raw CLI output out of lsp4e's "Problem Occurred" dialog (IDE-2112)
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			SnykLogger.logInfo("CLI protocol version check interrupted.");
+			throw new IOException("CLI protocol version check was interrupted — not starting Language Server.", e);
 		}
 	}
 
