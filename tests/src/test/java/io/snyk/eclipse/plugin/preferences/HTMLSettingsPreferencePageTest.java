@@ -289,11 +289,17 @@ class HTMLSettingsPreferencePageTest {
 		String folderPath = "/work/reset-project";
 		// Org-scope folder fields sent as JSON null are resets; the IDE must emit
 		// {value:null, changed:true} so snyk-ls Unsets the override.
+		// additional_parameters (array), additional_environment (array) and scan_command_config
+		// (object) are non-scalar fields; a JSON null must still hit the reset branch and emit
+		// {value:null, changed:true}, not be skipped by any type-specific handling.
 		String json = "{\"folderConfigs\": [{"
 				+ "\"folderPath\": \"" + folderPath + "\","
 				+ "\"snyk_code_enabled\": null,"
 				+ "\"preferred_org\": null,"
-				+ "\"risk_score_threshold\": null"
+				+ "\"risk_score_threshold\": null,"
+				+ "\"additional_parameters\": null,"
+				+ "\"additional_environment\": null,"
+				+ "\"scan_command_config\": null"
 				+ "}]}";
 
 		invokeParseAndSaveConfig(json);
@@ -302,6 +308,9 @@ class HTMLSettingsPreferencePageTest {
 		assertResetSetting(stored, "snyk_code_enabled");
 		assertResetSetting(stored, "preferred_org");
 		assertResetSetting(stored, "risk_score_threshold");
+		assertResetSetting(stored, "additional_parameters");
+		assertResetSetting(stored, "additional_environment");
+		assertResetSetting(stored, "scan_command_config");
 	}
 
 	@Test

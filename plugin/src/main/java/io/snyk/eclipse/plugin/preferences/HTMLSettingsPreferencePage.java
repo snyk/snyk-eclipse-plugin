@@ -61,7 +61,10 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       LsKey.ISSUE_VIEW_OPEN_ISSUES.key,
       LsKey.ISSUE_VIEW_IGNORED_ISSUES.key,
       LsKey.RISK_SCORE_THRESHOLD.key,
-      LsFolderSettingsKeys.PREFERRED_ORG);
+      LsFolderSettingsKeys.PREFERRED_ORG,
+      LsFolderSettingsKeys.ADDITIONAL_PARAMETERS,
+      LsFolderSettingsKeys.ADDITIONAL_ENVIRONMENT,
+      LsFolderSettingsKeys.SCAN_COMMAND_CONFIG);
 
   private static volatile HTMLSettingsPreferencePage instance;
   private Browser browser;
