@@ -232,7 +232,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 			}
 
 			try {
-				SnykLanguageServer.startSnykLanguageServer();
+				if (!SnykLanguageServer.startSnykLanguageServer()) {
+					break;
+				}
 			} catch (Exception e) {
 				SnykLogger.logError(e);
 			}
