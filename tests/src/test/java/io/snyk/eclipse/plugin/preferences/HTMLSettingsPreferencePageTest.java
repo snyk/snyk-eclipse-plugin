@@ -2,6 +2,8 @@ package io.snyk.eclipse.plugin.preferences;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
@@ -10,7 +12,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
+import io.snyk.languageserver.protocolextension.messageObjects.ConfigSetting;
+import io.snyk.languageserver.protocolextension.messageObjects.LspFolderConfig;
 
 class HTMLSettingsPreferencePageTest {
 
@@ -276,6 +281,71 @@ class HTMLSettingsPreferencePageTest {
 		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
 		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
 		assertEquals("new-org", prefs.getPref(Preferences.ORGANIZATION_KEY));
+	}
+
+	@Test
+	void parseAndSaveConfig_folderFieldSentAsNullBecomesReset() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderPath = "/work/reset-project";
+		// Org-scope folder fields sent as JSON null are resets; the IDE must emit
+		// {value:null, changed:true} so snyk-ls Unsets the override.
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"snyk_code_enabled\": null,"
+				+ "\"preferred_org\": null,"
+				+ "\"risk_score_threshold\": null"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+		assertResetSetting(stored, "snyk_code_enabled");
+		assertResetSetting(stored, "preferred_org");
+		assertResetSetting(stored, "risk_score_threshold");
+	}
+
+	@Test
+	void parseAndSaveConfig_folderNonNullFieldIsNotAReset() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderPath = "/work/noreset-project";
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"snyk_code_enabled\": false"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+		ConfigSetting setting = stored.getSettings().get("snyk_code_enabled");
+		assertNotNull(setting);
+		assertEquals(Boolean.FALSE, setting.getValue());
+		assertEquals(Boolean.TRUE, setting.getChanged());
+	}
+
+	@Test
+	void parseAndSaveConfig_nonResetFolderFieldNullStaysNoOp() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderPath = "/work/basebranch-project";
+		// base_branch is not in the reset set (no fallback layer); a null must remain a no-op.
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"base_branch\": null"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+		if (stored.getSettings() != null) {
+			assertNull(stored.getSettings().get("base_branch"));
+		}
+	}
+
+	private static void assertResetSetting(LspFolderConfig stored, String key) {
+		assertNotNull(stored.getSettings(), "folder settings should exist");
+		ConfigSetting setting = stored.getSettings().get(key);
+		assertNotNull(setting, key + " reset setting should be present");
+		assertNull(setting.getValue(), key + " reset value should be null");
+		assertEquals(Boolean.TRUE, setting.getChanged(), key + " reset changed should be true");
 	}
 
 	private void invokeParseAndSaveConfig(String json) throws Exception {

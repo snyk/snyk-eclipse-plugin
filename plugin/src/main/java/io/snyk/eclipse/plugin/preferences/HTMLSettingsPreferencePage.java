@@ -8,6 +8,7 @@ import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
 import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.LsFolderSettingsKeys;
+import io.snyk.languageserver.LsKey;
 import io.snyk.languageserver.LsSettingsRegistry;
 import io.snyk.languageserver.LsSettingsRegistry.Entry;
 import io.snyk.languageserver.SnykLanguageServer;
@@ -19,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -37,6 +39,30 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
   private static final String SELECTED = "selected";
+
+  /**
+   * Org-scope folder fields the dialog's "Reset overrides" button clears (sent as JSON null). For
+   * these, a null means "remove the user override" → emit {value:null, changed:true} so snyk-ls
+   * Unsets the override (fallback to org/LDX/default). preferred_org is included; its LS reset also
+   * clears org_set_by_user. Other folder fields (e.g. base_branch) have no fallback, so a null on
+   * them stays a no-op. Must stay in sync with the JS FOLDER_RESET_FIELDS list in snyk-ls.
+   */
+  private static final Set<String> FOLDER_RESET_KEYS = Set.of(
+      LsKey.SCANNING_MODE.key,
+      LsKey.ENABLE_DELTA_FINDINGS.key,
+      LsKey.SEVERITY_FILTER_CRITICAL.key,
+      LsKey.SEVERITY_FILTER_HIGH.key,
+      LsKey.SEVERITY_FILTER_MEDIUM.key,
+      LsKey.SEVERITY_FILTER_LOW.key,
+      LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key,
+      LsKey.ACTIVATE_SNYK_CODE.key,
+      LsKey.ACTIVATE_SNYK_IAC.key,
+      LsKey.ACTIVATE_SNYK_SECRETS.key,
+      LsKey.ISSUE_VIEW_OPEN_ISSUES.key,
+      LsKey.ISSUE_VIEW_IGNORED_ISSUES.key,
+      LsKey.RISK_SCORE_THRESHOLD.key,
+      LsFolderSettingsKeys.PREFERRED_ORG);
+
   private static volatile HTMLSettingsPreferencePage instance;
   private Browser browser;
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -273,7 +299,16 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         var field = fields.next();
         String key = field.getKey();
         JsonNode node = field.getValue();
-        if ("folderPath".equals(key) || node.isNull()) {
+        if ("folderPath".equals(key)) {
+          continue;
+        }
+        if (node.isNull()) {
+          // A folder field sent as JSON null is a reset for the org-scope keys: emit
+          // {value:null, changed:true} so snyk-ls Unsets the override (fallback to org/LDX/default).
+          // Null on any other folder field has no fallback layer, so it stays a no-op.
+          if (FOLDER_RESET_KEYS.contains(key)) {
+            config = config.withSetting(key, null, true);
+          }
           continue;
         }
         if (LsFolderSettingsKeys.SCAN_COMMAND_CONFIG.equals(key)) {
