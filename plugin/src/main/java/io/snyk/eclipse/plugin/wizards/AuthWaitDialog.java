@@ -1,6 +1,7 @@
 package io.snyk.eclipse.plugin.wizards;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.eclipse.core.runtime.ILog;
@@ -84,10 +85,11 @@ public class AuthWaitDialog extends Dialog {
 			}
 			Display display = Display.getDefault();
 			// Use a dedicated thread so the blocking getAuthLink() call does not occupy ForkJoinPool.commonPool.
+			ExecutorService executor = Executors.newSingleThreadExecutor();
 			CompletableFuture.supplyAsync(() -> {
 				SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
 				return lc != null ? lc.getAuthLink() : "";
-			}, Executors.newSingleThreadExecutor()).thenAccept(url -> {
+			}, executor).whenComplete((r, t) -> executor.shutdown()).thenAccept(url -> {
 				if (display.isDisposed()) return;
 				display.asyncExec(() -> {
 					if (copyUrlButton == null || copyUrlButton.isDisposed()) {
