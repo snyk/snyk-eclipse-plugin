@@ -129,6 +129,7 @@ class WorkspaceFolderChangeTrackerTest {
         tracker.recomputeAndNotify();
 
         assertTrue(sentAdded.isEmpty(), "no send when nothing changed");
+        assertTrue(sentRemoved.isEmpty(), "no send when nothing changed");
     }
 
     @Test
@@ -151,8 +152,10 @@ class WorkspaceFolderChangeTrackerTest {
 
         // State updated: second recompute with same source must not send again.
         sentAdded.clear();
+        sentRemoved.clear();
         tracker.recomputeAndNotify();
         assertTrue(sentAdded.isEmpty(), "state should be updated after successful send");
+        assertTrue(sentRemoved.isEmpty(), "no send when nothing changed");
     }
 
     @Test
@@ -174,8 +177,10 @@ class WorkspaceFolderChangeTrackerTest {
         assertEquals(List.of(), sentAdded.get(0));
 
         sentRemoved.clear();
+        sentAdded.clear();
         tracker.recomputeAndNotify();
         assertTrue(sentRemoved.isEmpty(), "state should be updated after successful send");
+        assertTrue(sentAdded.isEmpty(), "no send when nothing changed");
     }
 
     @Test
@@ -252,8 +257,10 @@ class WorkspaceFolderChangeTrackerTest {
 
         // Second event with same source — state already updated, nothing sent.
         sentAdded.clear();
+        sentRemoved.clear();
         tracker.resourceChanged(event);
         assertTrue(sentAdded.isEmpty(), "state updated after first event");
+        assertTrue(sentRemoved.isEmpty(), "no send when nothing changed");
     }
 
     @Test
@@ -278,8 +285,10 @@ class WorkspaceFolderChangeTrackerTest {
         assertEquals(List.of(), sentAdded.get(0));
 
         sentRemoved.clear();
+        sentAdded.clear();
         tracker.resourceChanged(event);
         assertTrue(sentRemoved.isEmpty(), "state updated after removal event");
+        assertTrue(sentAdded.isEmpty(), "no send when nothing changed");
     }
 
     @Test
@@ -302,5 +311,6 @@ class WorkspaceFolderChangeTrackerTest {
         tracker.resourceChanged(event);
 
         assertTrue(sentAdded.isEmpty(), "unrelated delta must not trigger notification");
+        assertTrue(sentRemoved.isEmpty(), "no send when nothing changed");
     }
 }
