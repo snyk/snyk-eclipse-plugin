@@ -23,6 +23,7 @@ import org.eclipse.ui.PlatformUI;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
+import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
 import io.snyk.languageserver.LsRuntimeEnvironment;
