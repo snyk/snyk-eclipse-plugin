@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
+import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.SnykScanParam;
@@ -123,6 +124,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void selectTreeNode(String issueId, String product) {
 		if (issueId == null || issueId.isEmpty()) return;
+		if (Preferences.getInstance().isTest()) return;
 		try {
 			Display display = Display.getDefault();
 			if (display == null || display.isDisposed()) return;
@@ -153,6 +155,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	private void drainPendingHtmlAsync() {
+		if (Preferences.getInstance().isTest()) return;
 		try {
 			Display display = Display.getDefault();
 			if (display != null && !display.isDisposed()) {
