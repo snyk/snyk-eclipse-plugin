@@ -332,10 +332,12 @@ class HTMLSettingsPreferencePageTest {
 	}
 
 	@Test
-	void parseAndSaveConfig_nonResetFolderFieldNullStaysNoOp() throws Exception {
+	void parseAndSaveConfig_anyFolderFieldNullIsForwardedAsReset() throws Exception {
 		FolderConfigSettings.setInstance(new FolderConfigSettings());
 		String folderPath = "/work/basebranch-project";
-		// base_branch is not in the reset set (no fallback layer); a null must remain a no-op.
+		// The IDE no longer maintains a reset whitelist: every folder field sent as JSON null is
+		// forwarded as {value:null, changed:true}. snyk-ls is authoritative and ignores nulls on
+		// keys with no fallback layer, so forwarding e.g. base_branch is a safe no-op there.
 		String json = "{\"folderConfigs\": [{"
 				+ "\"folderPath\": \"" + folderPath + "\","
 				+ "\"base_branch\": null"
@@ -344,9 +346,7 @@ class HTMLSettingsPreferencePageTest {
 		invokeParseAndSaveConfig(json);
 
 		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
-		if (stored.getSettings() != null) {
-			assertNull(stored.getSettings().get("base_branch"));
-		}
+		assertResetSetting(stored, "base_branch");
 	}
 
 	private static void assertResetSetting(LspFolderConfig stored, String key) {
