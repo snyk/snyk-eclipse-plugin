@@ -217,32 +217,6 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		return commandHandler.executeCommand(cmd, args);
 	}
 
-	public CompletableFuture<Void> triggerAuthentication() {
-		CompletableFuture<Void> waitForAuth = new CompletableFuture<>();
-		CompletableFuture<Void> prev = authCompleteFuture.getAndSet(waitForAuth);
-		if (prev != null && !prev.isDone()) {
-			prev.cancel(true);
-		}
-		// snyk.login blocks in the LS until OAuth completes or the user cancels in the browser.
-		// On success: LS sends hasAuthenticated notification (which completes waitForAuth) and returns the token.
-		// On browser-cancel: LS returns ("", nil) — no error, no hasAuthenticated. Detect empty token and cancel.
-		// On broken channel: exceptionally() fires and fails waitForAuth so the wizard doesn't hang 5 min.
-		executeCommand(LsConstants.COMMAND_LOGIN, new ArrayList<>())
-				.thenAccept(result -> {
-					if (result == null || result.toString().isBlank()) {
-						// User closed the browser without authorising — no hasAuthenticated will arrive.
-						waitForAuth.cancel(true);
-					}
-					// Non-empty result means auth succeeded; hasAuthenticated already completed waitForAuth.
-				})
-				.exceptionally(ex -> {
-					SnykLogger.logError(new RuntimeException("snyk.login command failed", ex));
-					waitForAuth.completeExceptionally(ex);
-					return null;
-				});
-		return waitForAuth;
-	}
-
 	public CompletableFuture<Void> triggerAuthentication(String authMethod, String endpoint, boolean insecure) {
 		CompletableFuture<Void> waitForAuth = new CompletableFuture<>();
 		CompletableFuture<Void> prev = authCompleteFuture.getAndSet(waitForAuth);
@@ -394,14 +368,8 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 		if (normalizedNew != null) {
 			CompletableFuture<Void> f = authCompleteFuture.get();
 			if (f == null || f.isDone()) {
-				// hasAuthenticated fired before triggerAuthentication() created a future, or fired
-				// on a different instance than the one the wizard holds (LS restart race). Store a
-				// pre-completed future so that the next triggerAuthentication() call returns immediately.
-				CompletableFuture<Void> preCompleted = new CompletableFuture<>();
-				preCompleted.complete(null);
-				if (!authCompleteFuture.compareAndSet(f, preCompleted)) {
-					SnykLogger.logInfo("hasAuthenticated: compareAndSet missed — triggerAuthentication() raced; real-token completion delivered separately");
-				}
+				// No wizard is waiting — normal on startup token restore or out-of-band auth.
+				// triggerAuthentication() always allocates a fresh future, so nothing to do here.
 			} else {
 				f.complete(null);
 			}

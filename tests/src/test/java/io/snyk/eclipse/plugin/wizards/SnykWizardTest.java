@@ -26,14 +26,25 @@ class SnykWizardTest {
 	}
 
 	@Test
-	void inFlight_startsAtFalse() {
-		assertFalse(inFlight.get());
+	void canFinish_returnsFalse_whenInFlight() {
+		inFlight.set(true);
+		SnykWizard wizard = new SnykWizard();
+		assertFalse(wizard.canFinish(), "canFinish() must return false while auth is in flight");
 	}
 
 	@Test
-	void inFlight_compareAndSet_blocksSecondCaller() {
-		assertTrue(inFlight.compareAndSet(false, true), "First caller must acquire guard");
-		assertFalse(inFlight.compareAndSet(false, true), "Second caller must be blocked");
+	void canFinish_returnsTrue_whenNotInFlight() {
+		inFlight.set(false);
+		SnykWizard wizard = new SnykWizard();
+		assertTrue(wizard.canFinish(), "canFinish() must return true when no auth is in flight");
+	}
+
+	@Test
+	void performFinish_returnsFalse_whenInFlight() {
+		inFlight.set(true);
+		SnykWizard wizard = new SnykWizard();
+		assertFalse(wizard.performFinish(), "performFinish() must be blocked while auth is in flight");
+		assertTrue(inFlight.get(), "IN_FLIGHT must remain true — guard must not be reset on early return");
 	}
 
 	@Test

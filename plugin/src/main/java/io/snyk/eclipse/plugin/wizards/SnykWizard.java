@@ -174,10 +174,12 @@ public class SnykWizard extends Wizard implements INewWizard {
 				AuthWaitDialog waitDialog = dialogHolder[0];
 
 				// Persist auth settings from wizard page before pushing to LS.
+				// Use storeAndTrackChange so LsConfigurationUpdater sends changed=true for these
+				// keys — plain store() leaves isAlwaysChanged=false entries unmarked.
 				Preferences prefs = Preferences.getInstance();
-				prefs.store(Preferences.ENDPOINT_KEY, endpoint);
-				prefs.setIsInsecure(insecure);
-				prefs.store(Preferences.AUTHENTICATION_METHOD, authMethod);
+				prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, endpoint);
+				prefs.storeAndTrackChange(Preferences.INSECURE_KEY, Boolean.toString(insecure));
+				prefs.storeAndTrackChange(Preferences.AUTHENTICATION_METHOD, authMethod);
 
 				var authFuture = lc.triggerAuthentication(authMethod, endpoint, insecure);
 
