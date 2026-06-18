@@ -291,7 +291,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   }
 
   private void processFolderConfig(JsonNode folderNode) {
-    JsonNode pathNode = folderNode.get("folderPath");
+    JsonNode pathNode = folderNode.get(LsFolderSettingsKeys.FOLDER_PATH);
     if (pathNode == null || pathNode.isNull()) {
       return;
     }
@@ -302,7 +302,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         var field = fields.next();
         String key = field.getKey();
         JsonNode node = field.getValue();
-        if ("folderPath".equals(key)) {
+        if (LsFolderSettingsKeys.FOLDER_PATH.equals(key)) {
           continue;
         }
         if (node.isNull()) {

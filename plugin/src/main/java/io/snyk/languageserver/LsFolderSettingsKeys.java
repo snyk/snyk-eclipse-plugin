@@ -20,4 +20,5 @@ public final class LsFolderSettingsKeys {
 	public static final String ORG_SET_BY_USER = "org_set_by_user";
 	public static final String AUTO_DETERMINED_ORG = "auto_determined_org";
 	public static final String SCAN_COMMAND_CONFIG = "scan_command_config";
+	public static final String FOLDER_PATH = "folderPath";
 }
