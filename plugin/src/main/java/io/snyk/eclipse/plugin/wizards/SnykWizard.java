@@ -69,7 +69,7 @@ public class SnykWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean canFinish() {
-		return !IN_FLIGHT.get();
+		return !IN_FLIGHT.get() && super.canFinish();
 	}
 
 	@Override

@@ -113,7 +113,7 @@ public class SnykWizardAuthenticatePage extends WizardPage {
             setErrorMessage(null);
             setPageComplete(true);
         } else {
-            setErrorMessage("Invalid Snyk API endpoint. Expected format: https://api.snyk.io");
+            setErrorMessage("Must be a Snyk API URL, e.g. https://api.snyk.io or https://api.eu.snyk.io");
             setPageComplete(false);
         }
     }

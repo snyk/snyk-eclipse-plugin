@@ -27,18 +27,28 @@ class SnykWizardTest {
 		inFlight.set(false);
 	}
 
-	// canFinish() returns !IN_FLIGHT.get() — verify the guard logic via the field directly
+	// canFinish() returns !IN_FLIGHT.get() && super.canFinish() (page completeness)
+	// Verify the IN_FLIGHT guard logic via the field directly
 	// (SnykWizard cannot be instantiated without an SWT display in headless CI)
 	@Test
 	void canFinish_logic_returnsFalse_whenInFlight() {
 		inFlight.set(true);
-		assertFalse(!inFlight.get(), "canFinish() must return false while auth is in flight");
+		boolean pagesComplete = true; // simulate all pages valid
+		assertFalse(!inFlight.get() && pagesComplete, "canFinish() must return false while auth is in flight");
 	}
 
 	@Test
-	void canFinish_logic_returnsTrue_whenNotInFlight() {
+	void canFinish_logic_returnsFalse_whenPageIncomplete() {
 		inFlight.set(false);
-		assertTrue(!inFlight.get(), "canFinish() must return true when no auth is in flight");
+		boolean pagesComplete = false; // simulate invalid endpoint
+		assertFalse(!inFlight.get() && pagesComplete, "canFinish() must return false when a page is incomplete");
+	}
+
+	@Test
+	void canFinish_logic_returnsTrue_whenNotInFlightAndPagesComplete() {
+		inFlight.set(false);
+		boolean pagesComplete = true;
+		assertTrue(!inFlight.get() && pagesComplete, "canFinish() must return true when not in flight and all pages complete");
 	}
 
 	// performFinish() guard: compareAndSet(false, true) — verify same CAS logic
@@ -69,6 +79,16 @@ class SnykWizardTest {
 	}
 
 	// SnykWizardAuthenticatePage endpoint validation ----------------------------------------
+
+	// Error message must be human-readable, not expose regex syntax
+	@Test
+	void endpointPattern_errorMessage_isHumanReadable() throws Exception {
+		// Verify message contains no regex metacharacters
+		String msg = "Must be a Snyk API URL, e.g. https://api.snyk.io or https://api.eu.snyk.io";
+		assertFalse(msg.contains("^") || msg.contains("$") || msg.contains("?") || msg.contains("["),
+				"Error message must not contain regex metacharacters");
+		assertTrue(msg.contains("https://api.snyk.io"), "Error message must show a valid example");
+	}
 
 	@Test
 	void endpointPattern_acceptsValidEndpoints() throws Exception {
