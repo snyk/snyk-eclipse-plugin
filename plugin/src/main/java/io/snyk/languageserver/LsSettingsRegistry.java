@@ -139,6 +139,7 @@ public final class LsSettingsRegistry {
         entries.put(LsKey.CLI_BASE_DOWNLOAD_URL,  Entry.fallback(LsKey.CLI_BASE_DOWNLOAD_URL, Preferences.CLI_BASE_URL, Preferences.DEFAULT_CLI_BASE_URL));
         entries.put(LsKey.INSECURE,               Entry.boolFallback(LsKey.INSECURE, Preferences.INSECURE_KEY, false));
         entries.put(LsKey.ADDITIONAL_PARAMS,      Entry.simple(LsKey.ADDITIONAL_PARAMS, Preferences.ADDITIONAL_PARAMETERS, ""));
+        entries.put(LsKey.ADDITIONAL_ENV,         Entry.simple(LsKey.ADDITIONAL_ENV, Preferences.ADDITIONAL_ENVIRONMENT, ""));
         entries.put(LsKey.ENABLE_TRUSTED_FOLDERS_FEATURE, Entry.fixed(LsKey.ENABLE_TRUSTED_FOLDERS_FEATURE, Boolean.TRUE.toString()));
         entries.put(LsKey.ISSUE_VIEW_OPEN_ISSUES, Entry.bool(LsKey.ISSUE_VIEW_OPEN_ISSUES, Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true));
         entries.put(LsKey.ISSUE_VIEW_IGNORED_ISSUES, Entry.bool(LsKey.ISSUE_VIEW_IGNORED_ISSUES, Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false));
