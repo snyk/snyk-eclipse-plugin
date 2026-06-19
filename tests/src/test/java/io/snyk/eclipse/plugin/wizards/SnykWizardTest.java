@@ -27,28 +27,19 @@ class SnykWizardTest {
 		inFlight.set(false);
 	}
 
-	// canFinish() returns !IN_FLIGHT.get() && super.canFinish() (page completeness)
-	// Verify the IN_FLIGHT guard logic via the field directly
-	// (SnykWizard cannot be instantiated without an SWT display in headless CI)
+	// canFinish() = !IN_FLIGHT.get() && super.canFinish()
+	// Tests verify the IN_FLIGHT half of the expression via the static field directly.
+	// super.canFinish() (page-completeness delegation) requires an SWT display — not testable headlessly.
 	@Test
-	void canFinish_logic_returnsFalse_whenInFlight() {
+	void inFlight_blocksFinish() {
 		inFlight.set(true);
-		boolean pagesComplete = true; // simulate all pages valid
-		assertFalse(!inFlight.get() && pagesComplete, "canFinish() must return false while auth is in flight");
+		assertFalse(!inFlight.get(), "IN_FLIGHT=true must prevent canFinish()");
 	}
 
 	@Test
-	void canFinish_logic_returnsFalse_whenPageIncomplete() {
+	void inFlight_doesNotBlockFinish_whenClear() {
 		inFlight.set(false);
-		boolean pagesComplete = false; // simulate invalid endpoint
-		assertFalse(!inFlight.get() && pagesComplete, "canFinish() must return false when a page is incomplete");
-	}
-
-	@Test
-	void canFinish_logic_returnsTrue_whenNotInFlightAndPagesComplete() {
-		inFlight.set(false);
-		boolean pagesComplete = true;
-		assertTrue(!inFlight.get() && pagesComplete, "canFinish() must return true when not in flight and all pages complete");
+		assertTrue(!inFlight.get(), "IN_FLIGHT=false must allow canFinish() when pages are complete");
 	}
 
 	// performFinish() guard: compareAndSet(false, true) — verify same CAS logic
@@ -114,11 +105,16 @@ class SnykWizardTest {
 	void endpointPattern_rejectsInvalidEndpoints() throws Exception {
 		Pattern pattern = getEndpointPattern();
 		List<String> invalid = List.of(
-				"http://api.snyk.io",           // http not https
-				"https://snyk.io",              // missing api. prefix
-				"api.snyk.io",                  // no scheme
-				"https://api.snyk.io/",         // trailing slash
-				"https://api.snyk.io.evil.com"  // subdomain hijack
+				"http://api.snyk.io",                    // http not https
+				"https://snyk.io",                       // missing api. prefix
+				"api.snyk.io",                           // no scheme
+				"https://api.snyk.io/",                  // trailing slash
+				"https://api.snyk.io.evil.com",          // subdomain hijack
+				"https://api.attacker@.snyk.io",         // @ in subdomain — userinfo injection
+				"https://api.x%40y.snyk.io",             // percent-encoded @ — decoded by URI parsers
+				"https://api.\r\n.snyk.io",              // CRLF injection
+				"https://api.\t.snyk.io",                // tab injection
+				"https://api.UPPER.snyk.io"              // uppercase not allowed (DNS is case-insensitive but pattern is strict)
 		);
 		for (String endpoint : invalid) {
 			assertFalse(pattern.matcher(endpoint).matches(), "Expected invalid endpoint to NOT match: " + endpoint);

@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.Text;
 public class SnykWizardAuthenticatePage extends WizardPage {
 
     private static final Pattern ENDPOINT_PATTERN =
-            Pattern.compile("^https://api\\.([^/]*\\.)?snyk(gov)?\\.io$");
+            Pattern.compile("^https://api\\.([a-z0-9-]+(\\.[a-z0-9-]+)*\\.)?snyk(gov)?\\.io$");
 
     private Combo authMethodCombo;
     private Text endpointText;

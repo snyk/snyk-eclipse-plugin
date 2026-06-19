@@ -55,8 +55,10 @@ public class SnykStartup implements IStartup {
 				monitor.subTask("Starting Language Server...");
 
 				try {
-					SnykLanguageServer.startSnykLanguageServer();
-					WorkspaceFolderChangeTracker.register();
+					boolean started = SnykLanguageServer.startSnykLanguageServer();
+					if (started) {
+						WorkspaceFolderChangeTracker.register();
+					}
 				} catch (RuntimeException e) { // NOPMD - intentional catch-all of runtime exceptions for UI initialization
 					SnykLogger.logError(e);
 				}

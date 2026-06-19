@@ -91,11 +91,21 @@ public class SnykWizard extends Wizard implements INewWizard {
 			return false;
 		}
 		// Snapshot shell and page values on UI thread — SWT widgets not safe to read from Job thread.
-		wizardShell = getContainer().getShell();
-		final String authMethod = authenticatePage.getAuthMethod();
-		final String endpoint = authenticatePage.getEndpoint();
-		final boolean insecure = authenticatePage.isInsecure();
-		getContainer().updateButtons();
+		// Wrap in try/finally so any SWTException or Error before job.schedule() resets IN_FLIGHT.
+		final String authMethod;
+		final String endpoint;
+		final boolean insecure;
+		try {
+			wizardShell = getContainer().getShell();
+			authMethod = authenticatePage.getAuthMethod();
+			endpoint = authenticatePage.getEndpoint();
+			insecure = authenticatePage.isInsecure();
+			getContainer().updateButtons();
+		} catch (RuntimeException e) { // NOPMD
+			IN_FLIGHT.set(false);
+			LOG.error("Failed to read wizard page values", e);
+			return false;
+		}
 
 		Job job = new Job("Authenticating with Snyk...") {
 			@Override
