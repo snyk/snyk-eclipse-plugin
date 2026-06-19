@@ -135,6 +135,26 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
+	void testBuildConfigurationParam_afterGlobalReset_doesNotReassertOverride() {
+		// Re-push guard: after an inbound global reset clears explicit-changed for an
+		// org-scope global key, the next outbound config must send changed=false so the
+		// IDE does not re-assert the (now removed) user:global override. This replaces
+		// the previous manual-restart verification.
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_CODE_SECURITY)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD)).thenReturn(false);
+
+		var settings = new LsConfigurationUpdater().buildConfigurationParam().getSettings();
+
+		assertFalse(settings.get(LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key).getChanged());
+		assertFalse(settings.get(LsKey.ACTIVATE_SNYK_CODE.key).getChanged());
+		assertFalse(settings.get(LsKey.SCANNING_MODE.key).getChanged());
+		assertFalse(settings.get(LsKey.RISK_SCORE_THRESHOLD.key).getChanged());
+	}
+
+	@Test
 	void testBuildConfigurationParam_unchangedSettingHasChangedFalse() {
 		setupPreferenceMock();
 		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, Preferences.DEFAULT_ENDPOINT)).thenReturn(Preferences.DEFAULT_ENDPOINT);

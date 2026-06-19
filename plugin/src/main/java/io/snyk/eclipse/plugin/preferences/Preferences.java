@@ -339,6 +339,21 @@ public class Preferences {
 		}
 	}
 
+	/**
+	 * Removes the stored value for {@code key} so that subsequent reads fall back
+	 * to the preference store default. Used by the inbound global-reset path: when
+	 * the language server pushes back {@code {value:null, changed:true}} for an
+	 * org-scope global setting, the persisted override must be dropped so the IDE
+	 * stops re-asserting it. No-op for encrypted keys (handled separately) and
+	 * unknown/null keys.
+	 */
+	public final void removePref(String key) {
+		if (key == null || encryptedPreferenceKeys.contains(key)) {
+			return;
+		}
+		insecurePreferences.remove(key);
+	}
+
 	public final boolean getBooleanPref(String key) {
 		return insecurePreferences.getBoolean(key, insecureStore.getDefaultBoolean(key));
 	}

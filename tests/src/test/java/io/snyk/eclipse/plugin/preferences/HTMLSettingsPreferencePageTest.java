@@ -249,6 +249,8 @@ class HTMLSettingsPreferencePageTest {
 		invokeParseAndSaveConfig(json);
 
 		assertFalse(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+		// Persisted override is also dropped, falling back to the default.
+		assertEquals("", prefs.getPref(Preferences.ORGANIZATION_KEY, ""));
 	}
 
 	@Test

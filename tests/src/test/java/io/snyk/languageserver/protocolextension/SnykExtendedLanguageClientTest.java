@@ -434,6 +434,66 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
+	void snykConfigurationGlobalResetClearsValueAndExplicitChange() {
+		var gson = new com.google.gson.Gson();
+
+		// Simulate a pre-existing user:global override for an org-scope global key.
+		pref.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "false");
+		pref.markExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE);
+		assertTrue(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+
+		// LS Unset the global override and pushes back {value:null, changed:true}.
+		String json = """
+				{
+					"settings": {
+						"snyk_oss_enabled": {
+							"value": null,
+							"changed": true,
+							"source": "cli",
+							"originScope": "org"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		// Persisted override dropped (falls back to registry default "true").
+		assertEquals("true", pref.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true"));
+		// Explicit-changed tracking cleared so it won't be re-asserted on next sync.
+		assertFalse(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+	}
+
+	@Test
+	void snykConfigurationNullValueWithoutChangedIsIgnored() {
+		var gson = new com.google.gson.Gson();
+
+		pref.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "false");
+		pref.markExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE);
+
+		// value:null but changed:false (or absent) is NOT a reset — leave it alone.
+		String json = """
+				{
+					"settings": {
+						"snyk_oss_enabled": {
+							"value": null,
+							"changed": false
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		assertEquals("false", pref.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true"));
+		assertTrue(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+	}
+
+	@Test
 	void snykConfigurationHandlesEmptyPayload() {
 		var gson = new com.google.gson.Gson();
 		LspConfigurationParam param = gson.fromJson("{}", LspConfigurationParam.class);
