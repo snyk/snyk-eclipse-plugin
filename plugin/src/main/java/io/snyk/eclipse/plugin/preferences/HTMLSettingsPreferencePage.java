@@ -211,6 +211,10 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         if (n == null) {
           // absent — form didn't send this key, leave tracking untouched
         } else if (n.isNull()) {
+          // Global reset from the form: drop the persisted override and clear
+          // explicit-changed tracking so the next outbound sync sends changed=false
+          // (no override re-asserted) and the dialog shows the effective default.
+          prefs.removePref(entry.prefKey);
           prefs.clearExplicitlyChangedNoFlush(entry.prefKey);
         } else if (entry.formDeserializer != null) {
           prefs.store(entry.prefKey, entry.formDeserializer.apply(n));

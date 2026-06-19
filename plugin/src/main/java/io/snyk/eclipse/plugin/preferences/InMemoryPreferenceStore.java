@@ -241,8 +241,7 @@ public class InMemoryPreferenceStore implements IPreferenceStore, IEclipsePrefer
 
 	@Override
 	public void remove(String key) {
-		// TODO Auto-generated method stub
-
+		store.remove(key);
 	}
 
 	@Override
