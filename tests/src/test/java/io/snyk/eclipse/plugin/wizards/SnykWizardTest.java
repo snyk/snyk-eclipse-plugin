@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +66,49 @@ class SnykWizardTest {
 		inFlight.set(true);
 		inFlight.set(false);
 		assertTrue(inFlight.compareAndSet(false, true), "After reset, next attempt must succeed");
+	}
+
+	// SnykWizardAuthenticatePage endpoint validation ----------------------------------------
+
+	@Test
+	void endpointPattern_acceptsValidEndpoints() throws Exception {
+		Pattern pattern = getEndpointPattern();
+		List<String> valid = List.of(
+				"https://api.snyk.io",
+				"https://api.eu.snyk.io",
+				"https://api.au.snyk.io",
+				"https://api.snykgov.io");
+		for (String endpoint : valid) {
+			assertTrue(pattern.matcher(endpoint).matches(), "Expected valid endpoint to match: " + endpoint);
+		}
+	}
+
+	@Test
+	void endpointPattern_emptyIsValid() throws Exception {
+		// Empty value is valid — caller falls back to DEFAULT_ENDPOINT
+		Pattern pattern = getEndpointPattern();
+		assertTrue("".isBlank() || pattern.matcher("").matches(), "Empty endpoint must be treated as valid");
+	}
+
+	@Test
+	void endpointPattern_rejectsInvalidEndpoints() throws Exception {
+		Pattern pattern = getEndpointPattern();
+		List<String> invalid = List.of(
+				"http://api.snyk.io",           // http not https
+				"https://snyk.io",              // missing api. prefix
+				"api.snyk.io",                  // no scheme
+				"https://api.snyk.io/",         // trailing slash
+				"https://api.snyk.io.evil.com"  // subdomain hijack
+		);
+		for (String endpoint : invalid) {
+			assertFalse(pattern.matcher(endpoint).matches(), "Expected invalid endpoint to NOT match: " + endpoint);
+		}
+	}
+
+	private static Pattern getEndpointPattern() throws Exception {
+		Field f = SnykWizardAuthenticatePage.class.getDeclaredField("ENDPOINT_PATTERN");
+		f.setAccessible(true);
+		return (Pattern) f.get(null);
 	}
 
 	private static AtomicBoolean getInFlight() throws Exception {

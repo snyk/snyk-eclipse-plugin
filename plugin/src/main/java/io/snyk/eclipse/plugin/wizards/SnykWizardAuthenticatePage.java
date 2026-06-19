@@ -2,6 +2,7 @@ package io.snyk.eclipse.plugin.wizards;
 
 import io.snyk.eclipse.plugin.preferences.AuthConstants;
 import io.snyk.eclipse.plugin.preferences.Preferences;
+import java.util.regex.Pattern;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -14,6 +15,9 @@ import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 
 public class SnykWizardAuthenticatePage extends WizardPage {
+
+    private static final Pattern ENDPOINT_PATTERN =
+            Pattern.compile("^https://api\\.([^/]*\\.)?snyk(gov)?\\.io$");
 
     private Combo authMethodCombo;
     private Text endpointText;
@@ -55,6 +59,7 @@ public class SnykWizardAuthenticatePage extends WizardPage {
         endpointText = new Text(composite, SWT.BORDER);
         endpointText.setText(endpointValue);
         endpointText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+        endpointText.addModifyListener(e -> validateEndpoint());
 
         // Insecure checkbox (spans both columns)
         new Label(composite, SWT.NONE); // filler
@@ -99,7 +104,18 @@ public class SnykWizardAuthenticatePage extends WizardPage {
         policyText.addListener(SWT.Selection, event -> org.eclipse.swt.program.Program.launch(event.text));
 
         setControl(composite);
-        setPageComplete(true);
+        validateEndpoint();
+    }
+
+    private void validateEndpoint() {
+        String v = endpointText.getText().trim();
+        if (v.isBlank() || ENDPOINT_PATTERN.matcher(v).matches()) {
+            setErrorMessage(null);
+            setPageComplete(true);
+        } else {
+            setErrorMessage("Invalid Snyk API endpoint. Expected format: https://api.snyk.io");
+            setPageComplete(false);
+        }
     }
 
     private static GridData newHSpan2(int hAlign, int vAlign, boolean hGrab, boolean vGrab) {
@@ -125,8 +141,4 @@ public class SnykWizardAuthenticatePage extends WizardPage {
         return insecureCheck.getSelection();
     }
 
-    @Override
-    public boolean isPageComplete() {
-        return true;
-    }
 }
