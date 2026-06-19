@@ -198,6 +198,24 @@ class HTMLSettingsPreferencePageTest {
 	}
 
 	@Test
+	void parseAndSaveConfig_savesGlobalAdditionalParameters() throws Exception {
+		String json = "{\"additional_parameters\": \"--severity-threshold=high --debug\"}";
+
+		invokeParseAndSaveConfig(json);
+
+		assertEquals("--severity-threshold=high --debug", prefs.getPref(Preferences.ADDITIONAL_PARAMETERS));
+	}
+
+	@Test
+	void parseAndSaveConfig_savesGlobalAdditionalEnvironment() throws Exception {
+		String json = "{\"additional_environment\": \"VAR1=value1;VAR2=value2\"}";
+
+		invokeParseAndSaveConfig(json);
+
+		assertEquals("VAR1=value1;VAR2=value2", prefs.getPref(Preferences.ADDITIONAL_ENVIRONMENT));
+	}
+
+	@Test
 	void parseAndSaveConfig_handlesMultipleSettings() throws Exception {
 		String json = "{\"cli_path\": \"/custom/path\", \"organization\": \"test-org\", \"proxy_insecure\": true}";
 
