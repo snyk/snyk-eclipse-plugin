@@ -30,6 +30,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
+import io.snyk.eclipse.plugin.preferences.HTMLSettingsPreferencePage;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.languageserver.LsBaseTest;
@@ -717,5 +718,40 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		java.lang.reflect.Field f = SnykExtendedLanguageClient.class.getDeclaredField("authCompleteFuture");
 		f.setAccessible(true);
 		((java.util.concurrent.atomic.AtomicReference<java.util.concurrent.CompletableFuture<Void>>) f.get(lc)).set(future);
+	}
+
+	@Test
+	void snykConfigurationReloadsOpenSettingsPage() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"api_endpoint": {
+							"value": "https://reload-test.snyk.io"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		try (MockedStatic<HTMLSettingsPreferencePage> mockedPage = mockStatic(HTMLSettingsPreferencePage.class)) {
+			cut = new SnykExtendedLanguageClient();
+			cut.snykConfiguration(param);
+
+			mockedPage.verify(() -> HTMLSettingsPreferencePage.reloadIfOpen(), Mockito.times(1));
+		}
+	}
+
+	@Test
+	void snykConfigurationReloadsEvenWithEmptyPayload() {
+		var gson = new com.google.gson.Gson();
+		LspConfigurationParam param = gson.fromJson("{}", LspConfigurationParam.class);
+
+		try (MockedStatic<HTMLSettingsPreferencePage> mockedPage = mockStatic(HTMLSettingsPreferencePage.class)) {
+			cut = new SnykExtendedLanguageClient();
+			assertDoesNotThrow(() -> cut.snykConfiguration(param));
+
+			mockedPage.verify(() -> HTMLSettingsPreferencePage.reloadIfOpen(), Mockito.times(1));
+		}
 	}
 }

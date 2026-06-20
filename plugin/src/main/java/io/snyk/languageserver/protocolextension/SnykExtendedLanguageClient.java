@@ -434,6 +434,7 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 					this.toolView.refreshDeltaReference();
 				}
 			}
+			HTMLSettingsPreferencePage.reloadIfOpen();
 		} catch (Exception e) {
 			SnykLogger.logError(e);
 		}
