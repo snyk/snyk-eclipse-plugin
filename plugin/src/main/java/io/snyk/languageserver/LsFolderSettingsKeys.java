@@ -9,11 +9,7 @@ public final class LsFolderSettingsKeys {
 	public static final String BASE_BRANCH = "base_branch";
 	public static final String PREFERRED_ORG = "preferred_org";
 	public static final String ADDITIONAL_PARAMETERS = "additional_parameters";
-	public static final String ADDITIONAL_ENV = "additional_env";
-	/**
-	 * Correct LS/JS wire key for the folder-scoped additional environment override. ADDITIONAL_ENV
-	 * above ("additional_env") is a stale/wrong value not used for folder scope; use this constant.
-	 */
+	/** LS/JS wire key for the folder-scoped additional environment override. */
 	public static final String ADDITIONAL_ENVIRONMENT = "additional_environment";
 	public static final String REFERENCE_FOLDER_PATH = "reference_folder_path";
 	public static final String LOCAL_BRANCHES = "local_branches";
