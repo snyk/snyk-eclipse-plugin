@@ -34,6 +34,7 @@ class HTMLSettingsPreferencePageTest {
 	@AfterEach
 	void tearDown() {
 		PreferencesUtils.setPreferences(null);
+		FolderConfigSettings.setInstance(null);
 	}
 
 	@Test
