@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +18,7 @@ import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
 import io.snyk.languageserver.protocolextension.messageObjects.ConfigSetting;
 import io.snyk.languageserver.protocolextension.messageObjects.LspFolderConfig;
+import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
 
 class HTMLSettingsPreferencePageTest {
 
@@ -348,6 +351,70 @@ class HTMLSettingsPreferencePageTest {
 
 		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
 		assertResetSetting(stored, "base_branch");
+	}
+
+	@Test
+	void parseAndSaveConfig_folderNonNullArrayAndObjectAreStored() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderPath = "/work/stored-project";
+		// Non-null array (:301-306): stored as List<String>, with the null element filtered out (:303).
+		// Non-null scan_command_config object (:288-300): deserialized to Map<String, ScanCommandConfig>.
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"additional_parameters\": [\"--all-projects\", null, \"--debug\"],"
+				+ "\"scan_command_config\": {\"oss\": {"
+				+ "\"preScanCommand\": \"echo pre\",\"preScanOnlyReferenceFolder\": true,"
+				+ "\"postScanCommand\": \"echo post\",\"postScanOnlyReferenceFolder\": false}}"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+
+		ConfigSetting params = stored.getSettings().get("additional_parameters");
+		assertNotNull(params, "additional_parameters should be stored");
+		assertEquals(Boolean.TRUE, params.getChanged());
+		assertEquals(List.of("--all-projects", "--debug"), params.getValue(), "null array element should be filtered out");
+
+		ConfigSetting scan = stored.getSettings().get("scan_command_config");
+		assertNotNull(scan, "scan_command_config should be stored");
+		assertEquals(Boolean.TRUE, scan.getChanged());
+		@SuppressWarnings("unchecked")
+		Map<String, ScanCommandConfig> scanMap = (Map<String, ScanCommandConfig>) scan.getValue();
+		ScanCommandConfig oss = scanMap.get("oss");
+		assertNotNull(oss, "oss scan command config should be deserialized");
+		assertEquals("echo pre", oss.preScanCommand());
+		assertTrue(oss.preScanOnlyReferenceFolder());
+		assertEquals("echo post", oss.postScanCommand());
+		assertFalse(oss.postScanOnlyReferenceFolder());
+	}
+
+	@Test
+	void parseAndSaveConfig_folderConfigWithoutPathIsIgnored() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		// folderPath absent -> processFolderConfig returns early (:266-269): nothing stored, no throw.
+		String json = "{\"folderConfigs\": [{\"snyk_code_enabled\": false}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		assertTrue(FolderConfigSettings.getInstance().getAll().isEmpty(), "no folder config should be stored for a pathless entry");
+	}
+
+	@Test
+	void parseAndSaveConfig_multipleFolderConfigsKeyedIndependently() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderA = "/work/project-a";
+		String folderB = "/work/project-b";
+		String json = "{\"folderConfigs\": ["
+				+ "{\"folderPath\": \"" + folderA + "\",\"snyk_code_enabled\": true},"
+				+ "{\"folderPath\": \"" + folderB + "\",\"snyk_code_enabled\": false}"
+				+ "]}";
+
+		invokeParseAndSaveConfig(json);
+
+		FolderConfigSettings settings = FolderConfigSettings.getInstance();
+		assertEquals(Boolean.TRUE, settings.getFolderConfig(folderA).getSettings().get("snyk_code_enabled").getValue());
+		assertEquals(Boolean.FALSE, settings.getFolderConfig(folderB).getSettings().get("snyk_code_enabled").getValue());
 	}
 
 	private static void assertResetSetting(LspFolderConfig stored, String key) {
