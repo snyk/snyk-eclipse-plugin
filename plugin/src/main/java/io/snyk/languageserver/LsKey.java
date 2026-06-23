@@ -11,7 +11,6 @@ public enum LsKey {
     INSECURE("proxy_insecure"),
     ADDITIONAL_PARAMS("additional_parameters"),
     SCANNING_MODE("scan_automatic"),
-    /** Not in ENTRIES — global scope not yet implemented; folder-scoped env uses LsFolderSettingsKeys.ADDITIONAL_ENVIRONMENT. */
     ADDITIONAL_ENV("additional_environment"),
     SEND_ERROR_REPORTS("send_error_reports"),
     /** Not in ENTRIES — superseded by SEND_ERROR_REPORTS; retained for backward compatibility with stored prefs. */
