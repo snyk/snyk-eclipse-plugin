@@ -1,0 +1,3 @@
+# Auto-switch Java when entering this repo (sdkman users with `sdkman_auto_env=true`).
+# Pinned to the JDK used by CI (.github/workflows/build.yml).
+java=17.0.13-tem
