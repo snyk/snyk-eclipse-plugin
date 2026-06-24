@@ -357,9 +357,8 @@ class HTMLSettingsPreferencePageTest {
 	void parseAndSaveConfig_anyFolderFieldNullIsForwardedAsReset() throws Exception {
 		FolderConfigSettings.setInstance(new FolderConfigSettings());
 		String folderPath = "/work/basebranch-project";
-		// The IDE no longer maintains a reset whitelist: every folder field sent as JSON null is
-		// forwarded as {value:null, changed:true}. snyk-ls is authoritative and ignores nulls on
-		// keys with no fallback layer, so forwarding e.g. base_branch is a safe no-op there.
+		// Any folder field sent as JSON null is forwarded as a reset ({value:null, changed:true}),
+		// regardless of key — snyk-ls decides which keys actually have a fallback to unset.
 		String json = "{\"folderConfigs\": [{"
 				+ "\"folderPath\": \"" + folderPath + "\","
 				+ "\"base_branch\": null"
@@ -375,8 +374,8 @@ class HTMLSettingsPreferencePageTest {
 	void parseAndSaveConfig_folderNonNullArrayAndObjectAreStored() throws Exception {
 		FolderConfigSettings.setInstance(new FolderConfigSettings());
 		String folderPath = "/work/stored-project";
-		// Non-null array (:301-306): stored as List<String>, with the null element filtered out (:303).
-		// Non-null scan_command_config object (:288-300): deserialized to Map<String, ScanCommandConfig>.
+		// A non-null array is stored as a List<String> with null elements filtered out;
+		// a non-null scan_command_config object is deserialized to Map<String, ScanCommandConfig>.
 		String json = "{\"folderConfigs\": [{"
 				+ "\"folderPath\": \"" + folderPath + "\","
 				+ "\"additional_parameters\": [\"--all-projects\", null, \"--debug\"],"
@@ -410,7 +409,7 @@ class HTMLSettingsPreferencePageTest {
 	@Test
 	void parseAndSaveConfig_folderConfigWithoutPathIsIgnored() throws Exception {
 		FolderConfigSettings.setInstance(new FolderConfigSettings());
-		// folderPath absent -> processFolderConfig returns early (:266-269): nothing stored, no throw.
+		// A folder entry without folderPath is ignored: nothing stored, no exception.
 		String json = "{\"folderConfigs\": [{\"snyk_code_enabled\": false}]}";
 
 		invokeParseAndSaveConfig(json);
