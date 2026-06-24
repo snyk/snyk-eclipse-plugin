@@ -37,6 +37,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
   private static final String SELECTED = "selected";
+
   private static volatile HTMLSettingsPreferencePage instance;
   private Browser browser;
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -262,7 +263,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   }
 
   private void processFolderConfig(JsonNode folderNode) {
-    JsonNode pathNode = folderNode.get("folderPath");
+    JsonNode pathNode = folderNode.get(LsFolderSettingsKeys.FOLDER_PATH);
     if (pathNode == null || pathNode.isNull()) {
       return;
     }
@@ -273,7 +274,15 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         var field = fields.next();
         String key = field.getKey();
         JsonNode node = field.getValue();
-        if ("folderPath".equals(key) || node.isNull()) {
+        if (LsFolderSettingsKeys.FOLDER_PATH.equals(key)) {
+          continue;
+        }
+        if (node.isNull()) {
+          // A folder field sent as JSON null is the dialog's "Reset overrides" signal:
+          // forward {value:null, changed:true} so snyk-ls Unsets the override (fallback to
+          // org/LDX/default). snyk-ls is authoritative over which folder keys are resettable
+          // and ignores nulls on keys with no fallback layer, so forwarding all nulls is safe.
+          config = config.withSetting(key, null, true);
           continue;
         }
         if (LsFolderSettingsKeys.SCAN_COMMAND_CONFIG.equals(key)) {
