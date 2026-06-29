@@ -85,7 +85,11 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           // auto-saves take effect without the user pressing Apply (matches IntelliJ/VS Code).
           SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
           if (lc != null) {
-            CompletableFuture.runAsync(lc::updateConfiguration);
+            CompletableFuture.runAsync(lc::updateConfiguration)
+                .exceptionally(e -> {
+                  SnykLogger.logError(new Exception("Failed to push settings to language server", e));
+                  return null;
+                });
           }
         }
         return null;
