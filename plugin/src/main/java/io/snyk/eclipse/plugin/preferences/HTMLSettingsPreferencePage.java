@@ -79,6 +79,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           if (parseAndSaveConfig(jsonString)) {
             SnykLanguageServer.promptToRestartEclipseForNewCli();
           }
+          // The dialog auto-saves through this bridge (e.g. "Reset overrides" is a commit point
+          // that fires immediately, not on Apply/OK). Persisting prefs is not enough — the LS only
+          // sees the change once didChangeConfiguration is sent. Push it now so resets and
+          // auto-saves take effect without the user pressing Apply (matches IntelliJ/VS Code).
+          SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+          if (lc != null) {
+            CompletableFuture.runAsync(lc::updateConfiguration);
+          }
         }
         return null;
       }
