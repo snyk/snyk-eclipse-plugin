@@ -130,7 +130,11 @@ public final class LsSettingsRegistry {
                 v -> Boolean.parseBoolean(v),
                 value -> String.valueOf(Boolean.TRUE.equals(value)),
                 false, false, new String[0],
-                node -> String.valueOf("auto".equals(node.asText())), false));
+                // The dialog's scanning-mode <select> is a data-bool control: it serializes as a
+                // JSON boolean (true=auto, false=manual), not the legacy "auto"/"manual" string.
+                // Accept the boolean; fall back to the "auto" string for older form payloads.
+                node -> String.valueOf(node.isBoolean() ? node.booleanValue() : "auto".equals(node.asText())),
+                false));
         entries.put(LsKey.ENABLE_DELTA_FINDINGS,  Entry.bool(LsKey.ENABLE_DELTA_FINDINGS, Preferences.ENABLE_DELTA, false));
         entries.put(LsKey.SEND_ERROR_REPORTS,     Entry.simple(LsKey.SEND_ERROR_REPORTS, Preferences.SEND_ERROR_REPORTS, ""));
         entries.put(LsKey.MANAGE_BINARIES_AUTOMATICALLY, Entry.boolFallback(LsKey.MANAGE_BINARIES_AUTOMATICALLY, Preferences.MANAGE_BINARIES_AUTOMATICALLY, true));
@@ -139,6 +143,7 @@ public final class LsSettingsRegistry {
         entries.put(LsKey.CLI_BASE_DOWNLOAD_URL,  Entry.fallback(LsKey.CLI_BASE_DOWNLOAD_URL, Preferences.CLI_BASE_URL, Preferences.DEFAULT_CLI_BASE_URL));
         entries.put(LsKey.INSECURE,               Entry.boolFallback(LsKey.INSECURE, Preferences.INSECURE_KEY, false));
         entries.put(LsKey.ADDITIONAL_PARAMS,      Entry.simple(LsKey.ADDITIONAL_PARAMS, Preferences.ADDITIONAL_PARAMETERS, ""));
+        entries.put(LsKey.ADDITIONAL_ENV,         Entry.simple(LsKey.ADDITIONAL_ENV, Preferences.ADDITIONAL_ENVIRONMENT, ""));
         entries.put(LsKey.ENABLE_TRUSTED_FOLDERS_FEATURE, Entry.fixed(LsKey.ENABLE_TRUSTED_FOLDERS_FEATURE, Boolean.TRUE.toString()));
         entries.put(LsKey.ISSUE_VIEW_OPEN_ISSUES, Entry.bool(LsKey.ISSUE_VIEW_OPEN_ISSUES, Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, true));
         entries.put(LsKey.ISSUE_VIEW_IGNORED_ISSUES, Entry.bool(LsKey.ISSUE_VIEW_IGNORED_ISSUES, Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, false));

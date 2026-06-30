@@ -77,9 +77,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void refreshBrowser(SnykScanParam param) {
 		Display.getDefault().asyncExec(() -> {
-			if (SCAN_STATE_IN_PROGRESS.equals(param.getStatus())) {
+			if (param != null && SCAN_STATE_IN_PROGRESS.equals(param.getStatus())) {
 				this.browserHandler.setScanningBrowserText();
-			} else if (param.getPresentableError() != null) {
+			} else if (param != null && param.getPresentableError() != null) {
 				String errorHtml = new BaseHtmlProvider().getErrorHtml(param.getPresentableError());
 				this.browserHandler.setBrowserText(errorHtml);
 			} else {

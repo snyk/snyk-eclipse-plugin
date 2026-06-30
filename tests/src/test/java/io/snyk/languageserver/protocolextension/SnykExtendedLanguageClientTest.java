@@ -30,6 +30,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
+import io.snyk.eclipse.plugin.preferences.HTMLSettingsPreferencePage;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.languageserver.LsBaseTest;
@@ -718,5 +719,99 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut.snykScan(param);
 
 		verify(toolWindowMock).refreshBrowser(param);
+	}
+
+	@Test
+	void showDocument_withPathTraversalUri_returnsFalse() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		ShowDocumentParams params = new ShowDocumentParams();
+		params.setUri("file:///some/../../../etc/passwd");
+
+		ShowDocumentResult result = cut.showDocument(params).get(5, java.util.concurrent.TimeUnit.SECONDS);
+
+		assertFalse(result.isSuccess(), "Path traversal URI must be rejected");
+	}
+
+	@Test
+	void cancelLogin_withNoActiveLogin_doesNotThrow() {
+		cut = new SnykExtendedLanguageClient();
+		// cancelLogin() when authCompleteFuture is null must not throw
+		assertDoesNotThrow(() -> cut.cancelLogin());
+	}
+
+	@Test
+	void cancelLogin_cancelsAuthFuture() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		// Set authCompleteFuture directly via reflection to avoid hitting executeCommand/LS
+		java.util.concurrent.CompletableFuture<Void> future = new java.util.concurrent.CompletableFuture<>();
+		setAuthCompleteFuture(cut, future);
+
+		assertFalse(future.isDone(), "Future must not be done before cancel");
+		cut.cancelLogin();
+		assertTrue(future.isCancelled(), "Future must be cancelled after cancelLogin()");
+	}
+
+	@Test
+	void hasAuthenticated_completesAuthFuture() throws Exception {
+		cut = new SnykExtendedLanguageClient();
+
+		// Set authCompleteFuture directly via reflection to avoid hitting executeCommand/LS
+		java.util.concurrent.CompletableFuture<Void> future = new java.util.concurrent.CompletableFuture<>();
+		setAuthCompleteFuture(cut, future);
+
+		assertFalse(future.isDone());
+
+		HasAuthenticatedParam param = new HasAuthenticatedParam();
+		param.setToken("test-token");
+		param.setApiUrl("https://api.snyk.io");
+		cut.hasAuthenticated(param);
+
+		assertTrue(future.isDone(), "authFuture must complete when hasAuthenticated fires");
+		assertFalse(future.isCompletedExceptionally());
+	}
+
+	@SuppressWarnings("unchecked")
+	private static void setAuthCompleteFuture(SnykExtendedLanguageClient lc,
+			java.util.concurrent.CompletableFuture<Void> future) throws Exception {
+		java.lang.reflect.Field f = SnykExtendedLanguageClient.class.getDeclaredField("authCompleteFuture");
+		f.setAccessible(true);
+		((java.util.concurrent.atomic.AtomicReference<java.util.concurrent.CompletableFuture<Void>>) f.get(lc)).set(future);
+	}
+
+	@Test
+	void snykConfigurationReloadsOpenSettingsPage() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"api_endpoint": {
+							"value": "https://reload-test.snyk.io"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		try (MockedStatic<HTMLSettingsPreferencePage> mockedPage = mockStatic(HTMLSettingsPreferencePage.class)) {
+			cut = new SnykExtendedLanguageClient();
+			cut.snykConfiguration(param);
+
+			mockedPage.verify(() -> HTMLSettingsPreferencePage.reloadIfOpen(), Mockito.times(1));
+		}
+	}
+
+	@Test
+	void snykConfigurationReloadsEvenWithEmptyPayload() {
+		var gson = new com.google.gson.Gson();
+		LspConfigurationParam param = gson.fromJson("{}", LspConfigurationParam.class);
+
+		try (MockedStatic<HTMLSettingsPreferencePage> mockedPage = mockStatic(HTMLSettingsPreferencePage.class)) {
+			cut = new SnykExtendedLanguageClient();
+			assertDoesNotThrow(() -> cut.snykConfiguration(param));
+
+			mockedPage.verify(() -> HTMLSettingsPreferencePage.reloadIfOpen(), Mockito.times(1));
+		}
 	}
 }
