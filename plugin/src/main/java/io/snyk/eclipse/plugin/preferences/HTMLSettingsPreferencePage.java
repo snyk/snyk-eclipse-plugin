@@ -367,6 +367,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     super.dispose();
   }
 
+  public static void reloadIfOpen() {
+    HTMLSettingsPreferencePage page = instance;
+    if (page == null || page.browser == null || page.browser.isDisposed()) {
+      return;
+    }
+    page.loadContent();
+  }
+
   public static void notifyAuthTokenChanged(String token, String apiUrl) {
     if (instance != null && instance.browser != null && !instance.browser.isDisposed()) {
       Display.getDefault()

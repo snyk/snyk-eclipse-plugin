@@ -326,6 +326,21 @@ class HTMLSettingsPreferencePageTest {
 	}
 
 	@Test
+	void reloadIfOpen_noOpWhenPageNeverOpened() throws Exception {
+		// Force instance to null by disposing the page created in setUp()
+		page.dispose();
+		// Now instance == null; reloadIfOpen() must not throw
+		org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> HTMLSettingsPreferencePage.reloadIfOpen());
+	}
+
+	@Test
+	void reloadIfOpen_noOpWhenBrowserNotCreated() {
+		// page was created in setUp() but createContents() was never called,
+		// so browser is null — reloadIfOpen() must not throw
+		org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> HTMLSettingsPreferencePage.reloadIfOpen());
+	}
+
+	@Test
 	void parseAndSaveConfig_folderFieldSentAsNullBecomesReset() throws Exception {
 		FolderConfigSettings.setInstance(new FolderConfigSettings());
 		String folderPath = "/work/reset-project";
