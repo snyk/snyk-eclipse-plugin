@@ -130,7 +130,11 @@ public final class LsSettingsRegistry {
                 v -> Boolean.parseBoolean(v),
                 value -> String.valueOf(Boolean.TRUE.equals(value)),
                 false, false, new String[0],
-                node -> String.valueOf("auto".equals(node.asText())), false));
+                // The dialog's scanning-mode <select> is a data-bool control: it serializes as a
+                // JSON boolean (true=auto, false=manual), not the legacy "auto"/"manual" string.
+                // Accept the boolean; fall back to the "auto" string for older form payloads.
+                node -> String.valueOf(node.isBoolean() ? node.booleanValue() : "auto".equals(node.asText())),
+                false));
         entries.put(LsKey.ENABLE_DELTA_FINDINGS,  Entry.bool(LsKey.ENABLE_DELTA_FINDINGS, Preferences.ENABLE_DELTA, false));
         entries.put(LsKey.SEND_ERROR_REPORTS,     Entry.simple(LsKey.SEND_ERROR_REPORTS, Preferences.SEND_ERROR_REPORTS, ""));
         entries.put(LsKey.MANAGE_BINARIES_AUTOMATICALLY, Entry.boolFallback(LsKey.MANAGE_BINARIES_AUTOMATICALLY, Preferences.MANAGE_BINARIES_AUTOMATICALLY, true));

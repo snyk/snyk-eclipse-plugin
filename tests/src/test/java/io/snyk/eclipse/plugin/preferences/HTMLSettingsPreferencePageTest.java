@@ -2,15 +2,23 @@ package io.snyk.eclipse.plugin.preferences;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.properties.preferences.PreferencesUtils;
+import io.snyk.languageserver.protocolextension.messageObjects.ConfigSetting;
+import io.snyk.languageserver.protocolextension.messageObjects.LspFolderConfig;
+import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
 
 class HTMLSettingsPreferencePageTest {
 
@@ -29,6 +37,7 @@ class HTMLSettingsPreferencePageTest {
 	@AfterEach
 	void tearDown() {
 		PreferencesUtils.setPreferences(null);
+		FolderConfigSettings.setInstance(null);
 	}
 
 	@Test
@@ -135,6 +144,26 @@ class HTMLSettingsPreferencePageTest {
 		String json = "{\"scan_automatic\": \"manual\"}";
 
 		invokeParseAndSaveConfig(json);
+
+		assertFalse(prefs.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC));
+	}
+
+	@Test
+	void parseAndSaveConfig_savesScanningModeAutoFromBoolean() throws Exception {
+		// The dialog's scanning-mode <select> is a data-bool control, so the form sends a JSON
+		// boolean (true=auto), not the legacy "auto" string. Default is auto; set manual first to
+		// prove the boolean true actually flips it back to auto.
+		prefs.store(Preferences.SCANNING_MODE_AUTOMATIC, "false");
+		assertFalse(prefs.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC));
+
+		invokeParseAndSaveConfig("{\"scan_automatic\": true}");
+
+		assertTrue(prefs.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC));
+	}
+
+	@Test
+	void parseAndSaveConfig_savesScanningModeManualFromBoolean() throws Exception {
+		invokeParseAndSaveConfig("{\"scan_automatic\": false}");
 
 		assertFalse(prefs.getBooleanPref(Preferences.SCANNING_MODE_AUTOMATIC));
 	}
@@ -294,6 +323,211 @@ class HTMLSettingsPreferencePageTest {
 		assertFalse(prefs.isExplicitlyChanged(Preferences.ENDPOINT_KEY));
 		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
 		assertEquals("new-org", prefs.getPref(Preferences.ORGANIZATION_KEY));
+	}
+
+	@Test
+	void parseAndSaveConfig_folderFieldSentAsNullBecomesReset() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderPath = "/work/reset-project";
+		// Org-scope folder fields sent as JSON null are resets; the IDE must emit
+		// {value:null, changed:true} so snyk-ls Unsets the override.
+		// additional_parameters (array), additional_environment (array) and scan_command_config
+		// (object) are non-scalar fields; a JSON null must still hit the reset branch and emit
+		// {value:null, changed:true}, not be skipped by any type-specific handling.
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"snyk_code_enabled\": null,"
+				+ "\"preferred_org\": null,"
+				+ "\"risk_score_threshold\": null,"
+				+ "\"additional_parameters\": null,"
+				+ "\"additional_environment\": null,"
+				+ "\"scan_command_config\": null"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+		assertResetSetting(stored, "snyk_code_enabled");
+		assertResetSetting(stored, "preferred_org");
+		assertResetSetting(stored, "risk_score_threshold");
+		assertResetSetting(stored, "additional_parameters");
+		assertResetSetting(stored, "additional_environment");
+		assertResetSetting(stored, "scan_command_config");
+	}
+
+	@Test
+	void parseAndSaveConfig_folderNonNullFieldIsNotAReset() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderPath = "/work/noreset-project";
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"snyk_code_enabled\": false"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+		ConfigSetting setting = stored.getSettings().get("snyk_code_enabled");
+		assertNotNull(setting);
+		assertEquals(Boolean.FALSE, setting.getValue());
+		assertEquals(Boolean.TRUE, setting.getChanged());
+	}
+
+	@Test
+	void parseAndSaveConfig_anyFolderFieldNullIsForwardedAsReset() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderPath = "/work/basebranch-project";
+		// Any folder field sent as JSON null is forwarded as a reset ({value:null, changed:true}),
+		// regardless of key — snyk-ls decides which keys actually have a fallback to unset.
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"base_branch\": null"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+		assertResetSetting(stored, "base_branch");
+	}
+
+	@Test
+	void parseAndSaveConfig_folderNonNullArrayAndObjectAreStored() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderPath = "/work/stored-project";
+		// A non-null array is stored as a List<String> with null elements filtered out;
+		// a non-null scan_command_config object is deserialized to Map<String, ScanCommandConfig>.
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"additional_parameters\": [\"--all-projects\", null, \"--debug\"],"
+				+ "\"scan_command_config\": {\"oss\": {"
+				+ "\"preScanCommand\": \"echo pre\",\"preScanOnlyReferenceFolder\": true,"
+				+ "\"postScanCommand\": \"echo post\",\"postScanOnlyReferenceFolder\": false}}"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+
+		ConfigSetting params = stored.getSettings().get("additional_parameters");
+		assertNotNull(params, "additional_parameters should be stored");
+		assertEquals(Boolean.TRUE, params.getChanged());
+		assertEquals(List.of("--all-projects", "--debug"), params.getValue(), "null array element should be filtered out");
+
+		ConfigSetting scan = stored.getSettings().get("scan_command_config");
+		assertNotNull(scan, "scan_command_config should be stored");
+		assertEquals(Boolean.TRUE, scan.getChanged());
+		@SuppressWarnings("unchecked")
+		Map<String, ScanCommandConfig> scanMap = (Map<String, ScanCommandConfig>) scan.getValue();
+		ScanCommandConfig oss = scanMap.get("oss");
+		assertNotNull(oss, "oss scan command config should be deserialized");
+		assertEquals("echo pre", oss.preScanCommand());
+		assertTrue(oss.preScanOnlyReferenceFolder());
+		assertEquals("echo post", oss.postScanCommand());
+		assertFalse(oss.postScanOnlyReferenceFolder());
+	}
+
+	@Test
+	void parseAndSaveConfig_folderConfigWithoutPathIsIgnored() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		// A folder entry without folderPath is ignored: nothing stored, no exception.
+		String json = "{\"folderConfigs\": [{\"snyk_code_enabled\": false}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		assertTrue(FolderConfigSettings.getInstance().getAll().isEmpty(), "no folder config should be stored for a pathless entry");
+	}
+
+	@Test
+	void parseAndSaveConfig_multipleFolderConfigsKeyedIndependently() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		String folderA = "/work/project-a";
+		String folderB = "/work/project-b";
+		String json = "{\"folderConfigs\": ["
+				+ "{\"folderPath\": \"" + folderA + "\",\"snyk_code_enabled\": true},"
+				+ "{\"folderPath\": \"" + folderB + "\",\"snyk_code_enabled\": false}"
+				+ "]}";
+
+		invokeParseAndSaveConfig(json);
+
+		FolderConfigSettings settings = FolderConfigSettings.getInstance();
+		assertEquals(Boolean.TRUE, settings.getFolderConfig(folderA).getSettings().get("snyk_code_enabled").getValue());
+		assertEquals(Boolean.FALSE, settings.getFolderConfig(folderB).getSettings().get("snyk_code_enabled").getValue());
+	}
+
+	@Test
+	void parseAndSaveConfig_folderResetDoesNotTouchGlobalDualScopeKeys() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		// User had global ("Project Defaults") overrides for dual-scope keys.
+		prefs.storeAndTrackChange(Preferences.ADDITIONAL_PARAMETERS, "--global-params");
+		prefs.storeAndTrackChange(Preferences.RISK_SCORE_THRESHOLD, "300");
+		prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_CODE_SECURITY, "true");
+
+		String folderPath = "/work/reset-project";
+		// A folder-only "Reset overrides": the dialog (form-handler.applyFolderResets)
+		// writes nulls ONLY inside folderConfigs[]; dual-scope keys never appear at top level.
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"snyk_code_enabled\": null,"
+				+ "\"risk_score_threshold\": null,"
+				+ "\"additional_parameters\": null,"
+				+ "\"additional_environment\": null"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		// Folder override recorded as reset.
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+		assertResetSetting(stored, "snyk_code_enabled");
+		assertResetSetting(stored, "risk_score_threshold");
+		assertResetSetting(stored, "additional_parameters");
+		assertResetSetting(stored, "additional_environment");
+
+		// Global state for the dual-scope keys must be UNCHANGED by a folder reset.
+		assertEquals("--global-params", prefs.getPref(Preferences.ADDITIONAL_PARAMETERS));
+		assertEquals("300", prefs.getPref(Preferences.RISK_SCORE_THRESHOLD));
+		assertEquals("true", prefs.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ADDITIONAL_PARAMETERS));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
+	}
+
+	@Test
+	void parseAndSaveConfig_folderChangeDoesNotPromoteGlobalDualScopeKeys() throws Exception {
+		FolderConfigSettings.setInstance(new FolderConfigSettings());
+		// No global override exists for these dual-scope keys (inherited/default).
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ADDITIONAL_PARAMETERS));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD));
+
+		String folderPath = "/work/change-project";
+		// A folder-only edit: dual-scope values sent ONLY inside folderConfigs[].
+		String json = "{\"folderConfigs\": [{"
+				+ "\"folderPath\": \"" + folderPath + "\","
+				+ "\"snyk_code_enabled\": false,"
+				+ "\"risk_score_threshold\": 700,"
+				+ "\"additional_parameters\": [\"--folder-only\"]"
+				+ "}]}";
+
+		invokeParseAndSaveConfig(json);
+
+		// Folder values recorded.
+		LspFolderConfig stored = FolderConfigSettings.getInstance().getFolderConfig(folderPath);
+		assertEquals(Boolean.FALSE, stored.getSettings().get("snyk_code_enabled").getValue());
+
+		// A folder edit must NOT create a global override for the dual-scope keys.
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ADDITIONAL_PARAMETERS),
+				"folder edit must not promote additional_parameters to a global override");
+		assertFalse(prefs.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD),
+				"folder edit must not promote risk_score_threshold to a global override");
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_CODE_SECURITY),
+				"folder edit must not promote snyk_code_enabled to a global override");
+	}
+
+	private static void assertResetSetting(LspFolderConfig stored, String key) {
+		assertNotNull(stored.getSettings(), "folder settings should exist");
+		ConfigSetting setting = stored.getSettings().get(key);
+		assertNotNull(setting, key + " reset setting should be present");
+		assertNull(setting.getValue(), key + " reset value should be null");
+		assertEquals(Boolean.TRUE, setting.getChanged(), key + " reset changed should be true");
 	}
 
 	private void invokeParseAndSaveConfig(String json) throws Exception {
