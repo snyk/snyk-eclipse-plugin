@@ -452,6 +452,9 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				if (setting.getValue() != null) {
 					prefs.store(registryEntry.prefKey, registryEntry.inboundDeserializer.apply(setting.getValue()));
 				}
+				// Inbound null values are skipped: global reset is not supported on the
+				// inbound path (product decision). Reset flows outbound only, via the
+				// form-save pending-reset queue in LsConfigurationUpdater.
 			} catch (Exception e) {
 				SnykLogger.logError(e);
 			}

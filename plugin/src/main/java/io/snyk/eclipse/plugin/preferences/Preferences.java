@@ -100,6 +100,10 @@ public class Preferences {
 	private boolean secureStorageReady;
 	private Map<String, String> prefSaveMap = new ConcurrentHashMap<>();
 	private final Set<String> explicitChanges = ConcurrentHashMap.newKeySet();
+	// One-shot global-reset queue (keyed by prefKey). Transient by design: the
+	// override is already dropped at save time, so on host restart the next push
+	// emits the default with changed=false, which still reflects the reset.
+	private final Set<String> pendingResets = ConcurrentHashMap.newKeySet();
 
 	public static synchronized Preferences getInstance() {
 		if (instance == null) {
@@ -339,6 +343,21 @@ public class Preferences {
 		}
 	}
 
+	/**
+	 * Removes the stored value for {@code key} so that subsequent reads fall back
+	 * to the preference store default. Used by the inbound global-reset path: when
+	 * the language server pushes back {@code {value:null, changed:true}} for an
+	 * org-scope global setting, the persisted override must be dropped so the IDE
+	 * stops re-asserting it. No-op for encrypted keys (handled separately) and
+	 * unknown/null keys.
+	 */
+	public final void removePref(String key) {
+		if (key == null || encryptedPreferenceKeys.contains(key)) {
+			return;
+		}
+		insecurePreferences.remove(key);
+	}
+
 	public final boolean getBooleanPref(String key) {
 		return insecurePreferences.getBoolean(key, insecureStore.getDefaultBoolean(key));
 	}
@@ -425,6 +444,25 @@ public class Preferences {
 
 	public void flushExplicitChanges() {
 		persistExplicitChanges();
+	}
+
+	/**
+	 * Queues a global reset for {@code key}. The next outbound config push emits
+	 * {@code {value:null, changed:true}} for it exactly once, which is the only
+	 * signal that makes snyk-ls Unset its user:global override.
+	 */
+	public void addPendingReset(String key) {
+		if (key == null) {
+			return;
+		}
+		pendingResets.add(key);
+	}
+
+	/** Returns and clears the queued resets so each is emitted exactly once. */
+	public Set<String> consumePendingResets() {
+		Set<String> snapshot = new HashSet<>(pendingResets);
+		pendingResets.clear();
+		return snapshot;
 	}
 
 	public boolean isExplicitlyChanged(String key) {

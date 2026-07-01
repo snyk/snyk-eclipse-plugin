@@ -296,6 +296,8 @@ class HTMLSettingsPreferencePageTest {
 		invokeParseAndSaveConfig(json);
 
 		assertFalse(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+		// Persisted override is also dropped, falling back to the default.
+		assertEquals("", prefs.getPref(Preferences.ORGANIZATION_KEY, ""));
 	}
 
 	@Test
@@ -543,6 +545,127 @@ class HTMLSettingsPreferencePageTest {
 		assertNotNull(setting, key + " reset setting should be present");
 		assertNull(setting.getValue(), key + " reset value should be null");
 		assertEquals(Boolean.TRUE, setting.getChanged(), key + " reset changed should be true");
+	}
+
+	@Test
+	void formResetQueuesPendingResetForOutboundPush() throws Exception {
+		// User had an override, then resets it via the form (JSON null). The save
+		// must queue a one-shot pending reset so the next outbound push emits
+		// {value:null, changed:true} — see LsConfigurationUpdaterTest for the emit.
+		prefs.storeAndTrackChange(Preferences.ENDPOINT_KEY, "https://user-override.snyk.io");
+		invokeParseAndSaveConfig("{\"api_endpoint\": null}");
+
+		var resets = prefs.consumePendingResets();
+		assertTrue(resets.contains(Preferences.ENDPOINT_KEY));
+		// Drained: a second consume is empty (exactly-once).
+		assertFalse(prefs.consumePendingResets().contains(Preferences.ENDPOINT_KEY));
+	}
+
+	// --- IDE-2149: full resettable org-scope key coverage for the outbound form reset path. ---
+	// Each resettable key, form-saved as JSON null, must: (a) drop the persisted override so reads
+	// fall back to the default, (b) clear explicit-changed tracking, (c) queue a one-shot pending
+	// reset (the signal LsConfigurationUpdater turns into {value:null, changed:true}).
+	// The updater emit + re-push guard is asserted in LsConfigurationUpdaterTest (Mockito-gated).
+	//
+	// Looped rather than @ParameterizedTest: junit-jupiter-params is not on the tests bundle's
+	// Import-Package, and a loop needs no extra dependency (each assertion carries its key in the
+	// message, so a failure still names the offending key).
+
+	/** {prefKey, form LS key, concrete override value, that override's default fallback}. */
+	private static final String[][] RESETTABLE_KEYS = {
+			{Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "snyk_oss_enabled", "false", "true"},
+			{Preferences.ACTIVATE_SNYK_CODE_SECURITY, "snyk_code_enabled", "true", "false"},
+			{Preferences.ACTIVATE_SNYK_IAC, "snyk_iac_enabled", "false", "true"},
+			{Preferences.ACTIVATE_SNYK_SECRETS, "snyk_secrets_enabled", "true", "false"},
+			{Preferences.SCANNING_MODE_AUTOMATIC, "scan_automatic", "false", "true"},
+			{Preferences.ENABLE_DELTA, "scan_net_new", "true", "false"},
+			{Preferences.FILTER_SHOW_CRITICAL, "severity_filter_critical", "false", "true"},
+			{Preferences.FILTER_SHOW_HIGH, "severity_filter_high", "false", "true"},
+			{Preferences.FILTER_SHOW_MEDIUM, "severity_filter_medium", "false", "true"},
+			{Preferences.FILTER_SHOW_LOW, "severity_filter_low", "false", "true"},
+			{Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, "issue_view_open_issues", "false", "true"},
+			{Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, "issue_view_ignored_issues", "true", "false"},
+			{Preferences.RISK_SCORE_THRESHOLD, "risk_score_threshold", "200", "0"},
+			{Preferences.ORGANIZATION_KEY, "organization", "my-org", ""},
+	};
+
+	@Test
+	void formResetOfEachResettableKey_dropsOverrideClearsTrackingAndQueuesReset() throws Exception {
+		for (String[] row : RESETTABLE_KEYS) {
+			// Fresh store per key so cross-key state can't leak.
+			setUp();
+			String prefKey = row[0], lsKey = row[1], overrideValue = row[2], defaultValue = row[3];
+
+			// User previously set an override for this org-scope key.
+			prefs.storeAndTrackChange(prefKey, overrideValue);
+			assertTrue(prefs.isExplicitlyChanged(prefKey), prefKey + " should be explicitly changed after override");
+
+			// Form sends JSON null for this key (Project Defaults reset).
+			invokeParseAndSaveConfig("{\"" + lsKey + "\": null}");
+
+			// (a) persisted override dropped -> reads fall back to default.
+			assertEquals(defaultValue, prefs.getPref(prefKey, defaultValue),
+					prefKey + " must fall back to its default after reset");
+			// (b) explicit-changed cleared.
+			assertFalse(prefs.isExplicitlyChanged(prefKey), prefKey + " must no longer be explicitly changed");
+			// (c) one-shot pending reset queued; drained exactly once.
+			var resets = prefs.consumePendingResets();
+			assertTrue(resets.contains(prefKey), prefKey + " must be queued for pending reset");
+			assertFalse(prefs.consumePendingResets().contains(prefKey), prefKey + " reset must drain exactly once");
+		}
+	}
+
+	@Test
+	void formResetAllSeveritiesTogether_queuesAllFourResets() throws Exception {
+		// Reset all four severity filters in one form-save (mirrors the all-or-nothing severity group).
+		prefs.storeAndTrackChange(Preferences.FILTER_SHOW_CRITICAL, "false");
+		prefs.storeAndTrackChange(Preferences.FILTER_SHOW_HIGH, "false");
+		prefs.storeAndTrackChange(Preferences.FILTER_SHOW_MEDIUM, "false");
+		prefs.storeAndTrackChange(Preferences.FILTER_SHOW_LOW, "false");
+
+		invokeParseAndSaveConfig(
+				"{\"severity_filter_critical\": null, \"severity_filter_high\": null, "
+						+ "\"severity_filter_medium\": null, \"severity_filter_low\": null}");
+
+		for (String k : new String[] {Preferences.FILTER_SHOW_CRITICAL, Preferences.FILTER_SHOW_HIGH,
+				Preferences.FILTER_SHOW_MEDIUM, Preferences.FILTER_SHOW_LOW}) {
+			assertFalse(prefs.isExplicitlyChanged(k), k + " must be cleared");
+		}
+
+		var resets = prefs.consumePendingResets();
+		assertTrue(resets.contains(Preferences.FILTER_SHOW_CRITICAL));
+		assertTrue(resets.contains(Preferences.FILTER_SHOW_HIGH));
+		assertTrue(resets.contains(Preferences.FILTER_SHOW_MEDIUM));
+		assertTrue(resets.contains(Preferences.FILTER_SHOW_LOW));
+	}
+
+	@Test
+	void formMixedBatch_resetsNullKeysAndPersistsConcreteKeys() throws Exception {
+		// One save with some resettable keys null and others set to concrete values:
+		// null keys queue resets + clear tracking; concrete keys persist + mark changed.
+		prefs.storeAndTrackChange(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "false");
+		prefs.storeAndTrackChange(Preferences.RISK_SCORE_THRESHOLD, "500");
+
+		invokeParseAndSaveConfig(
+				"{\"snyk_oss_enabled\": null, \"risk_score_threshold\": null, "
+						+ "\"snyk_code_enabled\": true, \"organization\": \"kept-org\"}");
+
+		// Reset keys: tracking cleared, queued for reset.
+		assertFalse(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+		assertFalse(prefs.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD));
+
+		// Concrete keys: persisted + marked explicitly changed.
+		assertEquals("true", prefs.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
+		assertEquals("kept-org", prefs.getPref(Preferences.ORGANIZATION_KEY));
+		assertTrue(prefs.isExplicitlyChanged(Preferences.ORGANIZATION_KEY));
+
+		var resets = prefs.consumePendingResets();
+		assertTrue(resets.contains(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+		assertTrue(resets.contains(Preferences.RISK_SCORE_THRESHOLD));
+		// Concrete keys must NOT be queued for reset.
+		assertFalse(resets.contains(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
+		assertFalse(resets.contains(Preferences.ORGANIZATION_KEY));
 	}
 
 	private void invokeParseAndSaveConfig(String json) throws Exception {

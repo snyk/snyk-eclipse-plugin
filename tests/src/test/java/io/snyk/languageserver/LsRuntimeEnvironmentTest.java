@@ -102,18 +102,18 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 	}
 
 	@Test
-	void testAddProductEnablementEnablesDisablesProducts() throws StorageException {
+	void testProductEnablementNotInjectedIntoEnv() {
+		// addProductEnablement was removed — product enablement goes via didChangeConfiguration.
+		// Verify no product keys appear when only the remaining env methods run.
 		HashMap<String, String> env = new HashMap<>();
+		when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("true");
+		when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("");
 
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC)).thenReturn("iac");
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)).thenReturn("code");
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn("oss");
+		environment.addAdditionalParamsAndEnv(env);
 
-		environment.addProductEnablement(env);
-
-		assertEquals("oss", env.get(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
-		assertEquals("iac", env.get(Preferences.ACTIVATE_SNYK_IAC));
-		assertEquals("code", env.get(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
+		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ACTIVATE_SNYK_IAC));
+		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
 	}
 
 	@Test
@@ -143,13 +143,16 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 	}
 
 	@Test
-	void testOrganizationIsAddedToEnvironment() throws StorageException {
+	void testOrganizationNotInjectedIntoEnv() {
+		// addOrganization was removed — org goes via didChangeConfiguration.
+		// Verify org key absent when only the remaining env methods run.
 		HashMap<String, String> env = new HashMap<>();
-		when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("org");
+		when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("");
+		when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("");
 
-		environment.addOrganization(env);
+		environment.addAdditionalParamsAndEnv(env);
 
-		assertEquals("org", env.get(Preferences.ORGANIZATION_KEY));
+		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ORGANIZATION_KEY));
 	}
 
 	@Test

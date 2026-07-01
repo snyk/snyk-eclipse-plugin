@@ -2,6 +2,7 @@ package io.snyk.languageserver;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 
@@ -29,7 +30,19 @@ public class LsConfigurationUpdater {
 		Preferences preferences = Preferences.getInstance();
 		Map<String, ConfigSetting> settings = new LinkedHashMap<>();
 
+		// Drain the one-shot reset queue once. For each queued key we emit
+		// {value:null, changed:true} — the only signal that makes snyk-ls Unset
+		// its user:global override — overriding the normal per-key emit below.
+		Set<String> pendingResets = preferences.consumePendingResets();
+		if (pendingResets == null) {
+			pendingResets = java.util.Collections.emptySet();
+		}
+
 		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
+			if (entry.prefKey != null && pendingResets.contains(entry.prefKey)) {
+				settings.put(entry.lsKey.key, ConfigSetting.outbound(null, true));
+				continue;
+			}
 			if (entry.prefKey == null) {
 				settings.put(entry.lsKey.key, ConfigSetting.outbound(entry.outboundDefault, entry.isAlwaysChanged));
 				continue;

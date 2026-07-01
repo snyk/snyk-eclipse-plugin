@@ -435,6 +435,70 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
+	void snykConfigurationInboundNullValueIsIgnored() {
+		var gson = new com.google.gson.Gson();
+
+		// Pre-existing user:global override for an org-scope global key.
+		pref.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "false");
+		pref.markExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE);
+
+		// Inbound reset is not supported: even {value:null, changed:true} is skipped
+		// on the inbound path. Reset flows outbound only (form-save pending-reset).
+		String json = """
+				{
+					"settings": {
+						"snyk_oss_enabled": {
+							"value": null,
+							"changed": true,
+							"source": "cli",
+							"originScope": "org"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		// Override untouched — not persisted, not cleared.
+		assertEquals("false", pref.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true"));
+		assertTrue(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+	}
+
+	@Test
+	void snykConfigurationInboundNullIgnoredForResettableSeverityKey() {
+		// IDE-2149: inbound reset is deliberately unsupported. {value:null, changed:true} for a
+		// concrete resettable org-scope key (severity_filter_high) must NOT drop the persisted
+		// override and must NOT clear explicit-changed. Inverse of the vscode inbound behaviour.
+		var gson = new com.google.gson.Gson();
+
+		pref.store(Preferences.FILTER_SHOW_HIGH, "false");
+		pref.markExplicitlyChanged(Preferences.FILTER_SHOW_HIGH);
+
+		String json = """
+				{
+					"settings": {
+						"severity_filter_high": {
+							"value": null,
+							"changed": true,
+							"source": "cli",
+							"originScope": "org"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		// Override untouched — not removed, not cleared.
+		assertEquals("false", pref.getPref(Preferences.FILTER_SHOW_HIGH, "true"));
+		assertTrue(pref.isExplicitlyChanged(Preferences.FILTER_SHOW_HIGH));
+	}
+
+	@Test
 	void snykConfigurationHandlesEmptyPayload() {
 		var gson = new com.google.gson.Gson();
 		LspConfigurationParam param = gson.fromJson("{}", LspConfigurationParam.class);
