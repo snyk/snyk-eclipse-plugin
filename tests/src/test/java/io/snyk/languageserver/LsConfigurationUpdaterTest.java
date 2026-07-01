@@ -155,6 +155,29 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
+	void testBuildConfigurationParam_pendingResetEmitsNullChangedTrueOnce() {
+		// Form-save queued a reset for ENDPOINT_KEY. First push must emit
+		// {value:null, changed:true} — the only signal that makes snyk-ls Unset its
+		// user:global override — overriding the normal per-key emit.
+		setupPreferenceMock();
+		when(preferenceMock.consumePendingResets())
+				.thenReturn(java.util.Set.of(Preferences.ENDPOINT_KEY))
+				.thenReturn(java.util.Set.of());
+
+		var first = new LsConfigurationUpdater().buildConfigurationParam()
+				.getSettings().get(LsKey.ENDPOINT.key);
+		assertNull(first.getValue());
+		assertTrue(first.getChanged());
+
+		// Re-push guard: queue drained, so the next push emits the normal value with
+		// changed=false (not explicitly changed), never re-asserting null/changed.
+		var second = new LsConfigurationUpdater().buildConfigurationParam()
+				.getSettings().get(LsKey.ENDPOINT.key);
+		assertEquals("endpoint", second.getValue());
+		assertFalse(second.getChanged());
+	}
+
+	@Test
 	void testBuildConfigurationParam_unchangedSettingHasChangedFalse() {
 		setupPreferenceMock();
 		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, Preferences.DEFAULT_ENDPOINT)).thenReturn(Preferences.DEFAULT_ENDPOINT);
@@ -479,6 +502,122 @@ class LsConfigurationUpdaterTest {
 		param = new LsConfigurationUpdater().buildConfigurationParam();
 		assertEquals(Boolean.FALSE, param.getSettings().get(LsKey.SCANNING_MODE.key).getValue(),
 				"scan_automatic false must serialize as Boolean.FALSE");
+	}
+
+	// --- IDE-2149: pending-reset emit + re-push guard for every resettable org-scope key. ---
+	// prefKey -> ls key. Mirrors the resettable set covered form-side in HTMLSettingsPreferencePageTest.
+	private static final String[][] RESETTABLE = {
+			{Preferences.ACTIVATE_SNYK_OPEN_SOURCE, LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key},
+			{Preferences.ACTIVATE_SNYK_CODE_SECURITY, LsKey.ACTIVATE_SNYK_CODE.key},
+			{Preferences.ACTIVATE_SNYK_IAC, LsKey.ACTIVATE_SNYK_IAC.key},
+			{Preferences.ACTIVATE_SNYK_SECRETS, LsKey.ACTIVATE_SNYK_SECRETS.key},
+			{Preferences.SCANNING_MODE_AUTOMATIC, LsKey.SCANNING_MODE.key},
+			{Preferences.ENABLE_DELTA, LsKey.ENABLE_DELTA_FINDINGS.key},
+			{Preferences.FILTER_SHOW_CRITICAL, LsKey.SEVERITY_FILTER_CRITICAL.key},
+			{Preferences.FILTER_SHOW_HIGH, LsKey.SEVERITY_FILTER_HIGH.key},
+			{Preferences.FILTER_SHOW_MEDIUM, LsKey.SEVERITY_FILTER_MEDIUM.key},
+			{Preferences.FILTER_SHOW_LOW, LsKey.SEVERITY_FILTER_LOW.key},
+			{Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, LsKey.ISSUE_VIEW_OPEN_ISSUES.key},
+			{Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, LsKey.ISSUE_VIEW_IGNORED_ISSUES.key},
+			{Preferences.RISK_SCORE_THRESHOLD, LsKey.RISK_SCORE_THRESHOLD.key},
+			{Preferences.ORGANIZATION_KEY, LsKey.ORGANIZATION.key},
+	};
+
+	@Test
+	void testBuildConfigurationParam_pendingResetEmitsNullChangedTrueOnce_forEachResettableKey() {
+		for (String[] row : RESETTABLE) {
+			String prefKey = row[0], lsKey = row[1];
+			setUp();
+			setupPreferenceMock();
+			// First push: this key is queued for reset; second push: queue drained.
+			when(preferenceMock.consumePendingResets())
+					.thenReturn(java.util.Set.of(prefKey))
+					.thenReturn(java.util.Set.of());
+			// After reset the override is gone and tracking cleared -> not explicitly changed.
+			when(preferenceMock.isExplicitlyChanged(prefKey)).thenReturn(false);
+
+			var first = new LsConfigurationUpdater().buildConfigurationParam().getSettings().get(lsKey);
+			assertNull(first.getValue(), lsKey + " reset must emit value=null");
+			assertTrue(first.getChanged(), lsKey + " reset must emit changed=true");
+
+			// Re-push guard: queue drained -> normal value, changed=false. Never re-asserts null/changed.
+			var second = new LsConfigurationUpdater().buildConfigurationParam().getSettings().get(lsKey);
+			assertNotNull(second.getValue(), lsKey + " second push must send the concrete default, not null");
+			assertFalse(second.getChanged(), lsKey + " second push must send changed=false");
+		}
+	}
+
+	@Test
+	void testBuildConfigurationParam_pendingResetAllSeveritiesTogether() {
+		setupPreferenceMock();
+		var all = java.util.Set.of(Preferences.FILTER_SHOW_CRITICAL, Preferences.FILTER_SHOW_HIGH,
+				Preferences.FILTER_SHOW_MEDIUM, Preferences.FILTER_SHOW_LOW);
+		when(preferenceMock.consumePendingResets()).thenReturn(all).thenReturn(java.util.Set.of());
+
+		var first = new LsConfigurationUpdater().buildConfigurationParam().getSettings();
+		for (LsKey k : new LsKey[] {LsKey.SEVERITY_FILTER_CRITICAL, LsKey.SEVERITY_FILTER_HIGH,
+				LsKey.SEVERITY_FILTER_MEDIUM, LsKey.SEVERITY_FILTER_LOW}) {
+			assertNull(first.get(k.key).getValue(), k.key + " must emit null on reset");
+			assertTrue(first.get(k.key).getChanged(), k.key + " must emit changed=true on reset");
+		}
+
+		// Second push: queue drained. No severity is explicitly changed -> all changed=false.
+		var second = new LsConfigurationUpdater().buildConfigurationParam().getSettings();
+		for (LsKey k : new LsKey[] {LsKey.SEVERITY_FILTER_CRITICAL, LsKey.SEVERITY_FILTER_HIGH,
+				LsKey.SEVERITY_FILTER_MEDIUM, LsKey.SEVERITY_FILTER_LOW}) {
+			assertFalse(second.get(k.key).getChanged(), k.key + " re-push must be changed=false");
+		}
+	}
+
+	@Test
+	void testBuildConfigurationParam_mixedBatch_resetsSomeKeepsOthers() {
+		setupPreferenceMock();
+		// oss + risk_score are reset; secrets stays a concrete explicit change.
+		when(preferenceMock.consumePendingResets())
+				.thenReturn(java.util.Set.of(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.RISK_SCORE_THRESHOLD))
+				.thenReturn(java.util.Set.of());
+		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_SECRETS)).thenReturn(true);
+
+		var first = new LsConfigurationUpdater().buildConfigurationParam().getSettings();
+		// Reset keys: null + changed=true.
+		assertNull(first.get(LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key).getValue());
+		assertTrue(first.get(LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key).getChanged());
+		assertNull(first.get(LsKey.RISK_SCORE_THRESHOLD.key).getValue());
+		assertTrue(first.get(LsKey.RISK_SCORE_THRESHOLD.key).getChanged());
+		// Concrete key: real value + changed=true.
+		assertNotNull(first.get(LsKey.ACTIVATE_SNYK_SECRETS.key).getValue());
+		assertTrue(first.get(LsKey.ACTIVATE_SNYK_SECRETS.key).getChanged());
+
+		var second = new LsConfigurationUpdater().buildConfigurationParam().getSettings();
+		// Reset keys now changed=false; concrete key still changed=true.
+		assertFalse(second.get(LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key).getChanged());
+		assertFalse(second.get(LsKey.RISK_SCORE_THRESHOLD.key).getChanged());
+		assertTrue(second.get(LsKey.ACTIVATE_SNYK_SECRETS.key).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_exactlyOnceAcrossAllResetKeys() {
+		setupPreferenceMock();
+		java.util.Set<String> allPrefKeys = new java.util.HashSet<>();
+		for (String[] row : RESETTABLE) {
+			allPrefKeys.add(row[0]);
+			when(preferenceMock.isExplicitlyChanged(row[0])).thenReturn(false);
+		}
+		when(preferenceMock.consumePendingResets()).thenReturn(allPrefKeys).thenReturn(java.util.Set.of());
+
+		var first = new LsConfigurationUpdater().buildConfigurationParam().getSettings();
+		for (String[] row : RESETTABLE) {
+			assertNull(first.get(row[1]).getValue(), row[1] + " must emit null on first push");
+			assertTrue(first.get(row[1]).getChanged(), row[1] + " must emit changed=true on first push");
+		}
+
+		// Exactly-once: after drain, EVERY reset key re-pushes changed=false in one go.
+		var second = new LsConfigurationUpdater().buildConfigurationParam().getSettings();
+		for (String[] row : RESETTABLE) {
+			assertFalse(second.get(row[1]).getChanged(), row[1] + " must not re-assert reset on second push");
+		}
 	}
 
 	private void setupPreferenceMock() {

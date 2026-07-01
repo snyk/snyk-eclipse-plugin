@@ -451,13 +451,10 @@ public class SnykExtendedLanguageClient extends LanguageClientImpl {
 				var setting = entry.getValue();
 				if (setting.getValue() != null) {
 					prefs.store(registryEntry.prefKey, registryEntry.inboundDeserializer.apply(setting.getValue()));
-				} else if (Boolean.TRUE.equals(setting.getChanged())) {
-					// Global reset: LS Unset the user:global override and pushed back
-					// {value:null, changed:true}. Drop the persisted override and clear
-					// explicit-changed tracking so we don't re-assert it on the next sync.
-					prefs.removePref(registryEntry.prefKey);
-					prefs.clearExplicitlyChanged(registryEntry.prefKey);
 				}
+				// Inbound null values are skipped: global reset is not supported on the
+				// inbound path (product decision). Reset flows outbound only, via the
+				// form-save pending-reset queue in LsConfigurationUpdater.
 			} catch (Exception e) {
 				SnykLogger.logError(e);
 			}

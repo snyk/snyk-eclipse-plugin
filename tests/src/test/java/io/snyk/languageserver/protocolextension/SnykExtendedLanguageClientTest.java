@@ -435,15 +435,15 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
-	void snykConfigurationGlobalResetClearsValueAndExplicitChange() {
+	void snykConfigurationInboundNullValueIsIgnored() {
 		var gson = new com.google.gson.Gson();
 
-		// Simulate a pre-existing user:global override for an org-scope global key.
+		// Pre-existing user:global override for an org-scope global key.
 		pref.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "false");
 		pref.markExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE);
-		assertTrue(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
 
-		// LS Unset the global override and pushes back {value:null, changed:true}.
+		// Inbound reset is not supported: even {value:null, changed:true} is skipped
+		// on the inbound path. Reset flows outbound only (form-save pending-reset).
 		String json = """
 				{
 					"settings": {
@@ -461,26 +461,29 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut = new SnykExtendedLanguageClient();
 		cut.snykConfiguration(param);
 
-		// Persisted override dropped (falls back to registry default "true").
-		assertEquals("true", pref.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true"));
-		// Explicit-changed tracking cleared so it won't be re-asserted on next sync.
-		assertFalse(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+		// Override untouched — not persisted, not cleared.
+		assertEquals("false", pref.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true"));
+		assertTrue(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
 	}
 
 	@Test
-	void snykConfigurationNullValueWithoutChangedIsIgnored() {
+	void snykConfigurationInboundNullIgnoredForResettableSeverityKey() {
+		// IDE-2149: inbound reset is deliberately unsupported. {value:null, changed:true} for a
+		// concrete resettable org-scope key (severity_filter_high) must NOT drop the persisted
+		// override and must NOT clear explicit-changed. Inverse of the vscode inbound behaviour.
 		var gson = new com.google.gson.Gson();
 
-		pref.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "false");
-		pref.markExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE);
+		pref.store(Preferences.FILTER_SHOW_HIGH, "false");
+		pref.markExplicitlyChanged(Preferences.FILTER_SHOW_HIGH);
 
-		// value:null but changed:false (or absent) is NOT a reset — leave it alone.
 		String json = """
 				{
 					"settings": {
-						"snyk_oss_enabled": {
+						"severity_filter_high": {
 							"value": null,
-							"changed": false
+							"changed": true,
+							"source": "cli",
+							"originScope": "org"
 						}
 					}
 				}
@@ -490,8 +493,9 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		cut = new SnykExtendedLanguageClient();
 		cut.snykConfiguration(param);
 
-		assertEquals("false", pref.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true"));
-		assertTrue(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+		// Override untouched — not removed, not cleared.
+		assertEquals("false", pref.getPref(Preferences.FILTER_SHOW_HIGH, "true"));
+		assertTrue(pref.isExplicitlyChanged(Preferences.FILTER_SHOW_HIGH));
 	}
 
 	@Test
