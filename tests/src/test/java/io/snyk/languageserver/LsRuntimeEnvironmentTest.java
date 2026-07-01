@@ -102,18 +102,25 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 	}
 
 	@Test
-	void testAddProductEnablementEnablesDisablesProducts() throws StorageException {
+	void testUpdateEnvironmentDoesNotInjectProductEnablement() {
 		HashMap<String, String> env = new HashMap<>();
+		LsRuntimeEnvironment spyEnv = spy(environment);
+		doReturn(null).when(spyEnv).getProxyService();
+		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn("true");
+		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC)).thenReturn("true");
+		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)).thenReturn("false");
+		when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("");
+		when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("");
+		when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "true")).thenReturn("true");
+		when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("false");
+		when(preferenceMock.getPath()).thenReturn(java.util.Optional.empty());
 
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC)).thenReturn("iac");
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)).thenReturn("code");
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn("oss");
+		spyEnv.updateEnvironment(env);
 
-		environment.addProductEnablement(env);
-
-		assertEquals("oss", env.get(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
-		assertEquals("iac", env.get(Preferences.ACTIVATE_SNYK_IAC));
-		assertEquals("code", env.get(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
+		// product enablement is passed via didChangeConfiguration, not process env
+		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ACTIVATE_SNYK_IAC));
+		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
 	}
 
 	@Test
@@ -143,13 +150,21 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 	}
 
 	@Test
-	void testOrganizationIsAddedToEnvironment() throws StorageException {
+	void testUpdateEnvironmentDoesNotInjectOrganization() {
 		HashMap<String, String> env = new HashMap<>();
-		when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("org");
+		LsRuntimeEnvironment spyEnv = spy(environment);
+		doReturn(null).when(spyEnv).getProxyService();
+		when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("my-org");
+		when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("");
+		when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("");
+		when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "true")).thenReturn("true");
+		when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("false");
+		when(preferenceMock.getPath()).thenReturn(java.util.Optional.empty());
 
-		environment.addOrganization(env);
+		spyEnv.updateEnvironment(env);
 
-		assertEquals("org", env.get(Preferences.ORGANIZATION_KEY));
+		// organization is passed via didChangeConfiguration, not process env
+		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ORGANIZATION_KEY));
 	}
 
 	@Test
