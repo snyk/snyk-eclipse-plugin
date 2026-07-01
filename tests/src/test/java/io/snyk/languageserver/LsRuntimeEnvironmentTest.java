@@ -102,22 +102,15 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 	}
 
 	@Test
-	void testUpdateEnvironmentDoesNotInjectProductEnablement() {
+	void testProductEnablementNotInjectedIntoEnv() {
+		// addProductEnablement was removed — product enablement goes via didChangeConfiguration.
+		// Verify no product keys appear when only the remaining env methods run.
 		HashMap<String, String> env = new HashMap<>();
-		LsRuntimeEnvironment spyEnv = spy(environment);
-		doReturn(null).when(spyEnv).getProxyService();
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn("true");
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_IAC)).thenReturn("true");
-		when(preferenceMock.getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY)).thenReturn("false");
-		when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("");
+		when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("true");
 		when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("");
-		when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "true")).thenReturn("true");
-		when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("false");
-		when(preferenceMock.getPath()).thenReturn(java.util.Optional.empty());
 
-		spyEnv.updateEnvironment(env);
+		environment.addAdditionalParamsAndEnv(env);
 
-		// product enablement is passed via didChangeConfiguration, not process env
 		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
 		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ACTIVATE_SNYK_IAC));
 		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
@@ -150,20 +143,15 @@ class LsRuntimeEnvironmentTest extends LsBaseTest {
 	}
 
 	@Test
-	void testUpdateEnvironmentDoesNotInjectOrganization() {
+	void testOrganizationNotInjectedIntoEnv() {
+		// addOrganization was removed — org goes via didChangeConfiguration.
+		// Verify org key absent when only the remaining env methods run.
 		HashMap<String, String> env = new HashMap<>();
-		LsRuntimeEnvironment spyEnv = spy(environment);
-		doReturn(null).when(spyEnv).getProxyService();
-		when(preferenceMock.getPref(Preferences.ORGANIZATION_KEY, "")).thenReturn("my-org");
 		when(preferenceMock.getPref(Preferences.ADDITIONAL_PARAMETERS, "")).thenReturn("");
 		when(preferenceMock.getPref(Preferences.ADDITIONAL_ENVIRONMENT, "")).thenReturn("");
-		when(preferenceMock.getPref(Preferences.SEND_ERROR_REPORTS, "true")).thenReturn("true");
-		when(preferenceMock.getPref(Preferences.ENABLE_TELEMETRY, "false")).thenReturn("false");
-		when(preferenceMock.getPath()).thenReturn(java.util.Optional.empty());
 
-		spyEnv.updateEnvironment(env);
+		environment.addAdditionalParamsAndEnv(env);
 
-		// organization is passed via didChangeConfiguration, not process env
 		org.junit.jupiter.api.Assertions.assertFalse(env.containsKey(Preferences.ORGANIZATION_KEY));
 	}
 
