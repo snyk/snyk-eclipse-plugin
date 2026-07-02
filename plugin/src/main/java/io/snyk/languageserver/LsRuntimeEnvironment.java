@@ -76,19 +76,8 @@ public class LsRuntimeEnvironment {
   public void updateEnvironment(Map<String, String> env) {
     addIntegrationInfoToEnv(env);
     addProxyToEnv(env);
-    addProductEnablement(env);
-    addOrganization(env);
     addAdditionalParamsAndEnv(env);
     addTelemetry(env);
-  }
-
-  void addOrganization(Map<String, String> env) {
-    // Pass the global organization setting to the Language Server
-    // The Language Server will handle all organization resolution logic
-    String globalOrg = Preferences.getInstance().getPref(Preferences.ORGANIZATION_KEY, "");
-    if (globalOrg != null && !globalOrg.isBlank()) {
-      env.put(Preferences.ORGANIZATION_KEY, globalOrg);
-    }
   }
 
 
@@ -114,12 +103,6 @@ public class LsRuntimeEnvironment {
         }
       }
     }
-  }
-
-  void addProductEnablement(Map<String, String> env) {
-    env.put(Preferences.ACTIVATE_SNYK_CODE_SECURITY, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_CODE_SECURITY));
-    env.put(Preferences.ACTIVATE_SNYK_IAC, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_IAC));
-    env.put(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.getInstance().getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
   }
 
   public void addPath(Map<String, String> env) {

@@ -146,4 +146,5 @@ class ConfigSettingTest {
 		assertNull(setting.getValue());
 		assertTrue(setting.getChanged());
 	}
+
 }
