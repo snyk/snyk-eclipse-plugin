@@ -20,23 +20,23 @@ public class LsConfigurationUpdater {
 		if (lc != null) {
 			lc.ensureLanguageServerRunning();
 			var languageServer = lc.getConnectedLanguageServer();
+			// Drain the reset queue here, after confirming we have a live server to send
+			// to. This prevents getInitializationOptions() from stealing the resets before
+			// the didChangeConfiguration push delivers them.
+			Set<String> pendingResets = Preferences.getInstance().consumePendingResets();
 			var params = new DidChangeConfigurationParams();
-			params.setSettings(buildConfigurationParam());
+			params.setSettings(buildConfigurationParam(pendingResets));
 			languageServer.getWorkspaceService().didChangeConfiguration(params);
 		}
 	}
 
-	LspConfigurationParam buildConfigurationParam() {
+	public LspConfigurationParam buildConfigurationParam() {
+		return buildConfigurationParam(java.util.Collections.emptySet());
+	}
+
+	public LspConfigurationParam buildConfigurationParam(Set<String> pendingResets) {
 		Preferences preferences = Preferences.getInstance();
 		Map<String, ConfigSetting> settings = new LinkedHashMap<>();
-
-		// Drain the one-shot reset queue once. For each queued key we emit
-		// {value:null, changed:true} — the only signal that makes snyk-ls Unset
-		// its user:global override — overriding the normal per-key emit below.
-		Set<String> pendingResets = preferences.consumePendingResets();
-		if (pendingResets == null) {
-			pendingResets = java.util.Collections.emptySet();
-		}
 
 		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
 			if (entry.prefKey != null && pendingResets.contains(entry.prefKey)) {

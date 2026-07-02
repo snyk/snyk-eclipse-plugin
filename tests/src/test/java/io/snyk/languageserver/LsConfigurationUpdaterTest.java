@@ -160,18 +160,17 @@ class LsConfigurationUpdaterTest {
 		// {value:null, changed:true} — the only signal that makes snyk-ls Unset its
 		// user:global override — overriding the normal per-key emit.
 		setupPreferenceMock();
-		when(preferenceMock.consumePendingResets())
-				.thenReturn(java.util.Set.of(Preferences.ENDPOINT_KEY))
-				.thenReturn(java.util.Set.of());
 
-		var first = new LsConfigurationUpdater().buildConfigurationParam()
+		var first = new LsConfigurationUpdater()
+				.buildConfigurationParam(java.util.Set.of(Preferences.ENDPOINT_KEY))
 				.getSettings().get(LsKey.ENDPOINT.key);
 		assertNull(first.getValue());
 		assertTrue(first.getChanged());
 
 		// Re-push guard: queue drained, so the next push emits the normal value with
 		// changed=false (not explicitly changed), never re-asserting null/changed.
-		var second = new LsConfigurationUpdater().buildConfigurationParam()
+		var second = new LsConfigurationUpdater()
+				.buildConfigurationParam(java.util.Set.of())
 				.getSettings().get(LsKey.ENDPOINT.key);
 		assertEquals("endpoint", second.getValue());
 		assertFalse(second.getChanged());

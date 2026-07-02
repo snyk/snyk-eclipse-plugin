@@ -345,17 +345,36 @@ public class Preferences {
 
 	/**
 	 * Removes the stored value for {@code key} so that subsequent reads fall back
-	 * to the preference store default. Used by the inbound global-reset path: when
-	 * the language server pushes back {@code {value:null, changed:true}} for an
-	 * org-scope global setting, the persisted override must be dropped so the IDE
-	 * stops re-asserting it. No-op for encrypted keys (handled separately) and
-	 * unknown/null keys.
+	 * to the preference store default. Called by the outbound form-save path: when
+	 * the HTML settings page queues a global reset, {@code LsConfigurationUpdater}
+	 * drains the pending-reset set and emits {@code {value:null, changed:true}} via
+	 * {@code didChangeConfiguration} — the only signal that makes snyk-ls Unset its
+	 * {@code user:global} override. No-op for encrypted keys (handled separately)
+	 * and unknown/null keys.
 	 */
 	public final void removePref(String key) {
 		if (key == null || encryptedPreferenceKeys.contains(key)) {
 			return;
 		}
 		insecurePreferences.remove(key);
+		// Re-seed from env var if this key was originally populated from the environment,
+		// so a global reset doesn't leave the session with an empty value when the env var is still set.
+		String envReseed = getEnvReseedValue(key);
+		if (envReseed != null) {
+			store(key, envReseed);
+		}
+	}
+
+	private String getEnvReseedValue(String key) {
+		if (ENDPOINT_KEY.equals(key)) {
+			String v = getEnvironmentVariable(ENV_SNYK_API, "");
+			return (v != null && !v.isBlank()) ? v : null;
+		}
+		if (ORGANIZATION_KEY.equals(key)) {
+			String v = getEnvironmentVariable(ENV_SNYK_ORG, "");
+			return (v != null && !v.isBlank()) ? v : null;
+		}
+		return null;
 	}
 
 	public final boolean getBooleanPref(String key) {
