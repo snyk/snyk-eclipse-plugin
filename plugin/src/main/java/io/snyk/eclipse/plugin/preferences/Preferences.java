@@ -83,10 +83,10 @@ public class Preferences {
 	public static final String ORGANIZATION_KEY = EnvironmentConstants.ENV_SNYK_ORG;
 	public static final String SCANNING_MODE_AUTOMATIC = "scanningMode";
 	public static final String DEFAULT_ENDPOINT = "https://api.snyk.io";
+	public static final String DEFAULT_CLI_BASE_URL = "https://downloads.snyk.io";
 	public static final String DEVICE_ID = "deviceId";
 	public static final String RELEASE_CHANNEL = "releaseChannel";
 	public static final String USE_LS_HTML_CONFIG_DIALOG = "useLsHtmlConfigDialog";
-	public static final String USE_HTML_TREE_VIEW = "useHtmlTreeView";
 	public static final String RELEASE_CHANNEL_STABLE = "stable";
 	public static final String RELEASE_CHANNEL_RC = "rc";
 	public static final String RELEASE_CHANNEL_PREVIEW = "preview";
@@ -100,6 +100,10 @@ public class Preferences {
 	private boolean secureStorageReady;
 	private Map<String, String> prefSaveMap = new ConcurrentHashMap<>();
 	private final Set<String> explicitChanges = ConcurrentHashMap.newKeySet();
+	// One-shot global-reset queue (keyed by prefKey). Transient by design: the
+	// override is already dropped at save time, so on host restart the next push
+	// emits the default with changed=false, which still reflects the reset.
+	private final Set<String> pendingResets = ConcurrentHashMap.newKeySet();
 
 	public static synchronized Preferences getInstance() {
 		if (instance == null) {
@@ -145,7 +149,6 @@ public class Preferences {
 		insecureStore.setDefault(DEVICE_ID, UUID.randomUUID().toString());
 		// TODO: move to LsSettingsRegistry once Entry supports Supplier<String> defaults (CLI_PATH is runtime-computed)
 		insecureStore.setDefault(USE_LS_HTML_CONFIG_DIALOG, TRUE);
-		insecureStore.setDefault(USE_HTML_TREE_VIEW, TRUE);
 		insecureStore.setDefault(CLI_PATH, getDefaultCliPath());
 
 		String savedExplicitChanges = insecure.get(EXPLICIT_CHANGES_KEY, "");
@@ -302,7 +305,11 @@ public class Preferences {
 	}
 
 	public final String getCliPath() {
-		return getPref(CLI_PATH, getDefaultCliPath());
+		String stored = getPref(CLI_PATH, getDefaultCliPath());
+		if (stored == null || stored.isBlank()) {
+			return getDefaultCliPath();
+		}
+		return stored;
 	}
 
 	public final boolean isInsecure() {
@@ -334,6 +341,40 @@ public class Preferences {
 		} else {
 			insecurePreferences.put(key, value);
 		}
+	}
+
+	/**
+	 * Removes the stored value for {@code key} so that subsequent reads fall back
+	 * to the preference store default. Called by the outbound form-save path: when
+	 * the HTML settings page queues a global reset, {@code LsConfigurationUpdater}
+	 * drains the pending-reset set and emits {@code {value:null, changed:true}} via
+	 * {@code didChangeConfiguration} — the only signal that makes snyk-ls Unset its
+	 * {@code user:global} override. No-op for encrypted keys (handled separately)
+	 * and unknown/null keys.
+	 */
+	public final void removePref(String key) {
+		if (key == null || encryptedPreferenceKeys.contains(key)) {
+			return;
+		}
+		insecurePreferences.remove(key);
+		// Re-seed from env var if this key was originally populated from the environment,
+		// so a global reset doesn't leave the session with an empty value when the env var is still set.
+		String envReseed = getEnvReseedValue(key);
+		if (envReseed != null) {
+			store(key, envReseed);
+		}
+	}
+
+	private String getEnvReseedValue(String key) {
+		if (ENDPOINT_KEY.equals(key)) {
+			String v = getEnvironmentVariable(ENV_SNYK_API, "");
+			return (v != null && !v.isBlank()) ? v : null;
+		}
+		if (ORGANIZATION_KEY.equals(key)) {
+			String v = getEnvironmentVariable(ENV_SNYK_ORG, "");
+			return (v != null && !v.isBlank()) ? v : null;
+		}
+		return null;
 	}
 
 	public final boolean getBooleanPref(String key) {
@@ -422,6 +463,25 @@ public class Preferences {
 
 	public void flushExplicitChanges() {
 		persistExplicitChanges();
+	}
+
+	/**
+	 * Queues a global reset for {@code key}. The next outbound config push emits
+	 * {@code {value:null, changed:true}} for it exactly once, which is the only
+	 * signal that makes snyk-ls Unset its user:global override.
+	 */
+	public void addPendingReset(String key) {
+		if (key == null) {
+			return;
+		}
+		pendingResets.add(key);
+	}
+
+	/** Returns and clears the queued resets so each is emitted exactly once. */
+	public Set<String> consumePendingResets() {
+		Set<String> snapshot = new HashSet<>(pendingResets);
+		pendingResets.clear();
+		return snapshot;
 	}
 
 	public boolean isExplicitlyChanged(String key) {

@@ -25,9 +25,9 @@ import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.eclipse.plugin.views.snyktoolview.SnykToolView;
-import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.LsRuntimeEnvironment;
 import io.snyk.languageserver.SnykLanguageServer;
+import io.snyk.languageserver.WorkspaceFolderChangeTracker;
 import io.snyk.languageserver.download.ChecksumVerificationException;
 import io.snyk.languageserver.download.HttpClientFactory;
 import io.snyk.languageserver.download.LsBinaries;
@@ -55,15 +55,10 @@ public class SnykStartup implements IStartup {
 				monitor.subTask("Starting Language Server...");
 
 				try {
-					SnykLanguageServer.startSnykLanguageServer();
-
-					PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-						Preferences prefs = Preferences.getInstance();
-						if (!prefs.isAuthenticated() && !prefs.isTest()) {
-							monitor.subTask("Starting Snyk Wizard to configure initial settings...");
-							SnykWizard.createAndLaunch();
-						}
-					});
+					boolean started = SnykLanguageServer.startSnykLanguageServer();
+					if (started) {
+						WorkspaceFolderChangeTracker.register();
+					}
 				} catch (RuntimeException e) { // NOPMD - intentional catch-all of runtime exceptions for UI initialization
 					SnykLogger.logError(e);
 				}
@@ -91,11 +86,18 @@ public class SnykStartup implements IStartup {
 			}
 
 			private void logDownloadFailure(IStatus status) {
-				String errorMessage = status.getMessage();
-				if (status.getException() != null) {
-					errorMessage += ": " + status.getException().getMessage();
+				StringBuilder errorMessage = new StringBuilder(status.getMessage());
+				Throwable t = status.getException();
+				while (t != null) {
+					errorMessage.append("\n  caused by: ").append(t.getClass().getName())
+							.append(": ").append(t.getMessage());
+					Throwable next = t.getCause();
+					if (t.equals(next)) {
+						break;
+					}
+					t = next;
 				}
-				logDownloadFailure(errorMessage);
+				logDownloadFailure(errorMessage.toString());
 			}
 
 			private void logDownloadFailure(String errorMessage) {
@@ -156,12 +158,19 @@ public class SnykStartup implements IStartup {
 	}
 
 	public static IStatus download(IProgressMonitor monitor) {
-		final File lsFile = new File(Preferences.getInstance().getCliPath());
+		final String cliPath = Preferences.getInstance().getCliPath();
+		final File lsFile = new File(cliPath);
 		try {
 			LsDownloader lsDownloader = getLsDownloader();
 			lsFile.getParentFile().mkdirs();
 			lsDownloader.download(monitor);
 			lsFile.setExecutable(true);
+			// Persist the effective path so it shows up in the preference page when the
+			// stored value was empty (and we fell back to the default location).
+			String stored = Preferences.getInstance().getPref(Preferences.CLI_PATH, "");
+			if (stored == null || stored.isBlank()) {
+				Preferences.getInstance().store(Preferences.CLI_PATH, cliPath);
+			}
 		} catch (RuntimeException | IOException | URISyntaxException | ChecksumVerificationException e) { // NOPMD - intentional catch-all of runtime exceptions for download errors
 			return Status.error("Download of Snyk Language Server failed", e);
 		}

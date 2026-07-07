@@ -9,6 +9,7 @@ import org.osgi.framework.BundleContext;
 
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.utils.SnykIcons;
+import io.snyk.languageserver.WorkspaceFolderChangeTracker;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -42,6 +43,7 @@ public class Activator extends AbstractUIPlugin {
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		WorkspaceFolderChangeTracker.unregister();
 		super.stop(context);
 	}
 

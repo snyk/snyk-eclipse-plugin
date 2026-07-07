@@ -1,6 +1,7 @@
 package io.snyk.languageserver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -140,37 +141,80 @@ class SnykLanguageServerTest extends LsBaseTest {
         "Shell script not supported on Windows");
     File script = createCliStub(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION);
 
-    SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+    assertTrue(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
   }
 
   @Test
-  void verifyCliProtocolVersion_throwsWhenVersionMismatches() throws Exception {
+  void verifyCliProtocolVersion_returnsFalseWhenVersionMismatches() throws Exception {
     assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
         "Shell script not supported on Windows");
     File script = createCliStub("999");
 
-    IOException ex = assertThrows(IOException.class,
-        () -> SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
-
-    assertTrue(ex.getMessage().contains("protocol version mismatch"));
-    assertTrue(ex.getMessage().contains("999"));
-    assertTrue(ex.getMessage().contains(LsBinaries.REQUIRED_LS_PROTOCOL_VERSION));
+    assertFalse(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
   }
 
   @Test
-  void verifyCliProtocolVersion_doesNotThrowOnUnparseableOutput() throws Exception {
+  void verifyCliProtocolVersion_returnsFalseOnUnparseableOutput() throws Exception {
     assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
         "Shell script not supported on Windows");
     File script = createCliStub("not-a-number");
 
-    SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath());
+    assertFalse(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
+  }
+
+  @Test
+  void verifyCliProtocolVersion_returnsFalseWithoutThrowingOnUnparseableOutput() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    String longOutput = "This is not a version number and it is deliberately very long output text here abcdefghijklmno";
+    File script = createCliStub(longOutput);
+
+    // Must return false without throwing — raw output must never surface to lsp4e's "Problem Occurred" dialog.
+    assertFalse(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
+  }
+
+  @Test
+  void verifyCliProtocolVersion_parsesVersionFromFirstLineIgnoringTrailingOutput() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    // Simulate a CLI that prints version on first line then a warning on the second line.
+    File script = File.createTempFile("snyk-cli-stub", ".sh");
+    script.deleteOnExit();
+    Files.writeString(script.toPath(),
+        "#!/bin/sh\nprintf '" + LsBinaries.REQUIRED_LS_PROTOCOL_VERSION + "\\nWarning: something deprecated\\n'\n");
+    Files.setPosixFilePermissions(script.toPath(),
+        Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+            PosixFilePermission.OWNER_EXECUTE));
+
+    // Should succeed — version is on the first line and matches.
+    assertTrue(SnykLanguageServer.verifyCliProtocolVersion(script.getAbsolutePath()));
+  }
+
+  @Test
+  void startSnykLanguageServer_returnsFalse_whenCliNotFound() {
+    this.prefs.store(Preferences.CLI_PATH, NON_EXISTENT_CLI_PATH);
+
+    boolean result = SnykLanguageServer.startSnykLanguageServer();
+
+    assertFalse(result, "Should return false when CLI binary does not exist");
+  }
+
+  @Test
+  void startSnykLanguageServer_returnsFalse_whenProtocolVersionMismatches() throws Exception {
+    assumeFalse(System.getProperty("os.name").toLowerCase().contains("win"),
+        "Shell script not supported on Windows");
+    File script = createCliStub("999");
+    this.prefs.store(Preferences.CLI_PATH, script.getAbsolutePath());
+
+    boolean result = SnykLanguageServer.startSnykLanguageServer();
+
+    assertFalse(result, "Should return false when CLI protocol version mismatches");
   }
 
   @Test
   @Tag("smoke")
-  // The --protocolVersion flag is not yet in released CLI builds, so the real binary
-  // returns unparseable output. verifyCliProtocolVersion() must treat that as non-fatal.
-  void verifyCliProtocolVersion_withRealCliDownload_doesNotThrowWhenFlagUnknown() throws Exception {
+  // The real downloaded CLI supports --protocolVersion; verify the check passes against it.
+  void verifyCliProtocolVersion_withRealCliDownload_passesWhenVersionSupported() throws Exception {
     assumeTrue(isNetworkAvailable(), "Network not available — skipping smoke test");
 
     File tempBinary = File.createTempFile("snyk-cli-smoke", "");
@@ -181,7 +225,8 @@ class SnykLanguageServerTest extends LsBaseTest {
       LsRuntimeEnvironment realEnv = new LsRuntimeEnvironment();
       LsDownloader downloader = new LsDownloader(HttpClientFactory.getInstance(), realEnv, null);
       downloader.download(new NullProgressMonitor());
-      SnykLanguageServer.verifyCliProtocolVersion(tempBinary.getAbsolutePath());
+        // The downloaded CLI must support --protocolVersion and return the required version.
+      assertTrue(SnykLanguageServer.verifyCliProtocolVersion(tempBinary.getAbsolutePath()));
     } finally {
       prefs.store(Preferences.CLI_PATH, originalCliPath);
       tempBinary.delete();

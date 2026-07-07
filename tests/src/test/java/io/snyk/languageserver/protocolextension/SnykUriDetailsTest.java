@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 
 import org.junit.jupiter.api.Test;
 
-import io.snyk.eclipse.plugin.domain.ProductConstants;
 
 public class SnykUriDetailsTest {
 
@@ -26,8 +25,7 @@ public class SnykUriDetailsTest {
 		assertTrue(details.scheme().equals("snyk"));
 		assertTrue(details.filePath().equals(
 				"/test_repos/project-with-vulns/routes/vulnCodeSnippet.ts"));
-		assertTrue(details.product()
-				.equals(ProductConstants.DIAGNOSTIC_SOURCE_SNYK_CODE));
+		assertTrue(details.product().equals("Snyk Code"));
 		assertTrue(details.action().equals("showInDetailPanel"));
 		assertTrue(details.issueId().equals("id"));
 	}

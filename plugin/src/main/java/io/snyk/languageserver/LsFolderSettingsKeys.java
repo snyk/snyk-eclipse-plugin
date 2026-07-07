@@ -9,10 +9,12 @@ public final class LsFolderSettingsKeys {
 	public static final String BASE_BRANCH = "base_branch";
 	public static final String PREFERRED_ORG = "preferred_org";
 	public static final String ADDITIONAL_PARAMETERS = "additional_parameters";
-	public static final String ADDITIONAL_ENV = "additional_env";
+	/** LS/JS wire key for the folder-scoped additional environment override. */
+	public static final String ADDITIONAL_ENVIRONMENT = "additional_environment";
 	public static final String REFERENCE_FOLDER_PATH = "reference_folder_path";
 	public static final String LOCAL_BRANCHES = "local_branches";
 	public static final String ORG_SET_BY_USER = "org_set_by_user";
 	public static final String AUTO_DETERMINED_ORG = "auto_determined_org";
 	public static final String SCAN_COMMAND_CONFIG = "scan_command_config";
+	public static final String FOLDER_PATH = "folderPath";
 }

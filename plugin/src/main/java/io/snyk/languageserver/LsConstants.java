@@ -9,6 +9,7 @@ public final class LsConstants {
 
 	public static final String COMMAND_LOGIN = "snyk.login";
 	public static final String COMMAND_LOGOUT = "snyk.logout";
+	public static final String COMMAND_COPY_AUTH_LINK = "snyk.copyAuthLink";
 	public static final String COMMAND_GET_ACTIVE_USER = "snyk.getActiveUser";
 	public static final String COMMAND_WORKSPACE_SCAN = "snyk.workspace.scan";
 	public static final String COMMAND_WORKSPACE_FOLDER_SCAN = "snyk.workspaceFolder.scan";

@@ -2,6 +2,7 @@ package io.snyk.languageserver;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 
@@ -19,17 +20,29 @@ public class LsConfigurationUpdater {
 		if (lc != null) {
 			lc.ensureLanguageServerRunning();
 			var languageServer = lc.getConnectedLanguageServer();
+			// Drain the reset queue here, after confirming we have a live server to send
+			// to. This prevents getInitializationOptions() from stealing the resets before
+			// the didChangeConfiguration push delivers them.
+			Set<String> pendingResets = Preferences.getInstance().consumePendingResets();
 			var params = new DidChangeConfigurationParams();
-			params.setSettings(buildConfigurationParam());
+			params.setSettings(buildConfigurationParam(pendingResets));
 			languageServer.getWorkspaceService().didChangeConfiguration(params);
 		}
 	}
 
-	LspConfigurationParam buildConfigurationParam() {
+	public LspConfigurationParam buildConfigurationParam() {
+		return buildConfigurationParam(java.util.Collections.emptySet());
+	}
+
+	public LspConfigurationParam buildConfigurationParam(Set<String> pendingResets) {
 		Preferences preferences = Preferences.getInstance();
 		Map<String, ConfigSetting> settings = new LinkedHashMap<>();
 
 		for (LsSettingsRegistry.Entry entry : LsSettingsRegistry.ENTRIES.values()) {
+			if (entry.prefKey != null && pendingResets.contains(entry.prefKey)) {
+				settings.put(entry.lsKey.key, ConfigSetting.outbound(null, true));
+				continue;
+			}
 			if (entry.prefKey == null) {
 				settings.put(entry.lsKey.key, ConfigSetting.outbound(entry.outboundDefault, entry.isAlwaysChanged));
 				continue;

@@ -58,8 +58,8 @@ public class BaseHtmlProvider {
 	private static final String CSS_VAR_FOCUS_COLOR = "var(--focus-color)";
 
 	// CSS variables used in LS-served HTML (styles.css from snyk-ls)
-	private static final String CSS_VAR_LS_BACKGROUND_COLOR = "var(--background-color)";
-	private static final String CSS_VAR_LS_TEXT_COLOR = "var(--text-color)";
+	// Note: --background-color and --text-color are intentionally absent here — Stage 1 literals above
+	// already replace those tokens before Stage 2 runs, so entries here would be dead no-ops.
 	private static final String CSS_VAR_LS_INPUT_FOREGROUND = "var(--input-foreground)";
 	private static final String CSS_VAR_LS_EDITOR_FOREGROUND = "var(--editor-foreground)";
 	private static final String CSS_VAR_LS_DISABLED_FOREGROUND = "var(--disabled-foreground)";
@@ -73,8 +73,7 @@ public class BaseHtmlProvider {
 	private static final String CSS_VAR_LS_BUTTON_SECONDARY_FOREGROUND = "var(--button-secondary-foreground)";
 	private static final String CSS_VAR_LS_BUTTON_SECONDARY_HOVER_BACKGROUND = "var(--button-secondary-hover-background)";
 	private static final String CSS_VAR_LS_LIST_HOVER_BACKGROUND = "var(--list-hover-background)";
-	private static final String CSS_VAR_LS_INPUT_BORDER = "var(--input-border)";
-	private static final String CSS_VAR_LS_BORDER_COLOR = "var(--border-color)";
+	// --input-border and --border-color omitted: Stage 1 replaces those tokens before Stage 2 runs.
 	private static final String CSS_VAR_LS_FOCUS_BORDER = "var(--focus-border)";
 	private static final String CSS_VAR_LS_SCROLLBAR_BACKGROUND = "var(--scrollbar-background)";
 	private static final String CSS_VAR_LS_SCROLLBAR_HOVER_BACKGROUND = "var(--scrollbar-hover-background)";
@@ -181,6 +180,8 @@ public class BaseHtmlProvider {
 			htmlStyled = htmlStyled.replace(CSS_VAR_MAIN_FONT_SIZE, "13px");
 		}
 
+		boolean dark = Boolean.TRUE.equals(isDarkTheme());
+
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace(CSS_VAR_TEXT_COLOR, getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000"));
 		htmlStyled = htmlStyled.replace(CSS_VAR_DIMMED_TEXT_COLOR, getColorAsHex(THEME_ACTIVE_TAB_TEXT, "#4F5456"));
@@ -197,7 +198,7 @@ public class BaseHtmlProvider {
 				getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR));
 		htmlStyled = htmlStyled.replace(CSS_VAR_INPUT_BORDER,
 				getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR));
-		htmlStyled = htmlStyled.replace(CSS_VAR_LINK_COLOR, getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0000FF"));
+		htmlStyled = htmlStyled.replace(CSS_VAR_LINK_COLOR, getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066cc"));
 		htmlStyled = htmlStyled.replace(CSS_VAR_HORIZONTAL_BORDER_COLOR,
 				getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR));
 
@@ -215,22 +216,33 @@ public class BaseHtmlProvider {
 		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
 		String focusColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066cc");
-		String sectionBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
+		// Section background must be visually distinct from the page background.
+		// Eclipse tab-bar keys (INACTIVE_TAB_BG_START / ACTIVE_TAB_BG_END) resolve to near-identical
+		// light grays in the default light theme — mirroring IntelliJ's approach of adjusting the base
+		// background slightly toward black (light) or white (dark) to create a visible card surface.
+		String sectionBgColor = adjustBrightness(bgColor, dark ? 1.05f : 0.92f);
+
+		// Error/warning foreground: #f48771 is dark-theme salmon (2.9:1 on white, fails AA).
+		// Use a darker red on light backgrounds to meet WCAG AA (7.1:1 on white).
+		String errorFg = dark ? "#f48771" : "#a31515";
+
+		// List hover: white-at-5% is invisible on light backgrounds; flip to black-at-5%.
+		String listHoverBg = dark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)";
 
 		// Button colors: Use Eclipse hyperlink color for primary, inactive tab for secondary
 		String buttonBgColor = getColorAsHex(THEME_HYPERLINK_COLOR, "#0000FF");
-		String buttonFgColor = DEFAULT_WHITE_COLOR;
-		String buttonHoverBgColor = adjustBrightness(buttonBgColor, 1.15f);
+		String buttonFgColor = pickReadableForeground(buttonBgColor);
+		String buttonHoverBgColor = adjustForHover(buttonBgColor, dark);
 		String buttonSecondaryBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
-		String buttonSecondaryHoverBgColor = adjustBrightness(buttonSecondaryBgColor, 1.15f);
+		String buttonSecondaryHoverBgColor = adjustForHover(buttonSecondaryBgColor, dark);
 
-		// Replace LS CSS variables with Eclipse theme values
-		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BACKGROUND_COLOR, bgColor);
-		htmlStyled = htmlStyled.replace(CSS_VAR_LS_TEXT_COLOR, textColor);
+		// Replace LS CSS variables with Eclipse theme values.
+		// Note: --background-color, --text-color, --border-color, --input-border are NOT replaced here
+		// because Stage 1 (literal replacements above) already consumed those tokens.
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_INPUT_FOREGROUND, textColor);
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_EDITOR_FOREGROUND, textColor);
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_DISABLED_FOREGROUND, "#808080");
-		htmlStyled = htmlStyled.replace(CSS_VAR_LS_ERROR_FOREGROUND, "#f48771");
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_ERROR_FOREGROUND, errorFg);
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_INPUT_BACKGROUND, inputBgColor);
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SECTION_BACKGROUND, sectionBgColor);
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_BACKGROUND_COLOR, buttonBgColor);
@@ -239,13 +251,11 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_SECONDARY_BACKGROUND, buttonSecondaryBgColor);
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_SECONDARY_FOREGROUND, textColor);
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BUTTON_SECONDARY_HOVER_BACKGROUND, buttonSecondaryHoverBgColor);
-		htmlStyled = htmlStyled.replace(CSS_VAR_LS_LIST_HOVER_BACKGROUND, "rgba(255, 255, 255, 0.05)");
-		htmlStyled = htmlStyled.replace(CSS_VAR_LS_INPUT_BORDER, borderColor);
-		htmlStyled = htmlStyled.replace(CSS_VAR_LS_BORDER_COLOR, borderColor);
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_LIST_HOVER_BACKGROUND, listHoverBg);
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_FOCUS_BORDER, focusColor);
 		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_BACKGROUND, inputBgColor);
-		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_HOVER_BACKGROUND, adjustBrightness(inputBgColor, 1.1f));
-		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_ACTIVE_BACKGROUND, adjustBrightness(inputBgColor, 1.2f));
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_HOVER_BACKGROUND, adjustForHover(inputBgColor, dark));
+		htmlStyled = htmlStyled.replace(CSS_VAR_LS_SCROLLBAR_ACTIVE_BACKGROUND, adjustBrightness(inputBgColor, dark ? 1.2f : 0.8f));
 
 		// Single-pass regex replacement for var(--vscode-*) tokens not handled by explicit replacements above.
 		// Mirrors IntelliJ's ThemeBasedStylingGenerator approach to ensure tokens without CSS fallbacks
@@ -255,15 +265,22 @@ public class BaseHtmlProvider {
 		// Overlapping keys would produce a no-op (the literal replacement already consumed the token before
 		// the regex runs). Review this map alongside snyk-ls styles.css whenever REQUIRED_LS_PROTOCOL_VERSION
 		// is bumped — token renames in the LS HTML silently leave unresolved vars if this map is not updated.
+		String dimmedTextColor = getColorAsHex(THEME_ACTIVE_TAB_TEXT, "#4F5456");
+		String inactiveSelectionBg = sectionBgColor;
+
 		Map<String, String> vsCodeVarMap = new HashMap<>();
 		vsCodeVarMap.put("vscode-editor-background", bgColor);
 		vsCodeVarMap.put("vscode-editor-foreground", textColor);
 		vsCodeVarMap.put("vscode-foreground", textColor);
+		vsCodeVarMap.put("vscode-descriptionForeground", dimmedTextColor);
 		vsCodeVarMap.put("vscode-panel-background", bgColor);
+		vsCodeVarMap.put("vscode-panel-border", borderColor);
 		vsCodeVarMap.put("vscode-sideBar-background", bgColor);
 		vsCodeVarMap.put("vscode-sideBar-foreground", textColor);
+		vsCodeVarMap.put("vscode-tab-activeBackground", bgColor);
 		vsCodeVarMap.put("vscode-input-background", inputBgColor);
 		vsCodeVarMap.put("vscode-input-foreground", textColor);
+		vsCodeVarMap.put("vscode-textLink-foreground", focusColor);
 		vsCodeVarMap.put("vscode-button-background", buttonBgColor);
 		vsCodeVarMap.put("vscode-button-foreground", buttonFgColor);
 		vsCodeVarMap.put("vscode-button-hoverBackground", buttonHoverBgColor);
@@ -271,15 +288,24 @@ public class BaseHtmlProvider {
 		vsCodeVarMap.put("vscode-button-secondaryForeground", textColor);
 		vsCodeVarMap.put("vscode-button-secondaryHoverBackground", buttonSecondaryHoverBgColor);
 		vsCodeVarMap.put("vscode-focusBorder", focusColor);
-		vsCodeVarMap.put("vscode-list-hoverBackground", "rgba(255, 255, 255, 0.05)");
+		vsCodeVarMap.put("vscode-list-hoverBackground", listHoverBg);
+		vsCodeVarMap.put("vscode-editor-inactiveSelectionBackground", inactiveSelectionBg);
+		vsCodeVarMap.put("vscode-checkbox-background", inputBgColor);
+		vsCodeVarMap.put("vscode-checkbox-foreground", textColor);
+		vsCodeVarMap.put("vscode-checkbox-selectBackground", buttonBgColor);
+		vsCodeVarMap.put("vscode-checkbox-border", borderColor);
+		vsCodeVarMap.put("vscode-badge-background", buttonBgColor);
+		vsCodeVarMap.put("vscode-badge-foreground", buttonFgColor);
 		vsCodeVarMap.put("vscode-scrollbarSlider-background", inputBgColor);
-		vsCodeVarMap.put("vscode-scrollbarSlider-hoverBackground", adjustBrightness(inputBgColor, 1.1f));
-		vsCodeVarMap.put("vscode-scrollbarSlider-activeBackground", adjustBrightness(inputBgColor, 1.2f));
+		vsCodeVarMap.put("vscode-scrollbarSlider-hoverBackground", adjustForHover(inputBgColor, dark));
+		vsCodeVarMap.put("vscode-scrollbarSlider-activeBackground", adjustBrightness(inputBgColor, dark ? 1.2f : 0.8f));
 		htmlStyled = replaceRemainingCssVars(htmlStyled, vsCodeVarMap);
 
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
 		htmlStyled = htmlStyled.replace("${nonce}", nonce);
-		htmlStyled = htmlStyled.replaceAll("ideNonce", nonce);
+		htmlStyled = htmlStyled.replace("nonce=\"ideNonce\"", "nonce=\"" + nonce + "\"");
+		htmlStyled = htmlStyled.replace("'nonce-ideNonce'", "'nonce-" + nonce + "'");
+		htmlStyled = htmlStyled.replace("nonce=ideNonce", "nonce=" + nonce);
 		htmlStyled = htmlStyled.replace("${ideScript}", "");
 
 		return htmlStyled;
@@ -366,6 +392,34 @@ public class BaseHtmlProvider {
 		} catch (NumberFormatException | IndexOutOfBoundsException e) {
 			SnykLogger.logError(new Exception("Failed to adjust brightness for color: " + hexColor, e));
 			return hexColor;
+		}
+	}
+
+	/**
+	 * Adjusts a color for a hover/active state in a theme-aware direction.
+	 * Light surfaces darken on hover (factor < 1); dark surfaces brighten (factor > 1).
+	 */
+	private String adjustForHover(String hexColor, boolean dark) {
+		return adjustBrightness(hexColor, dark ? 1.15f : 0.88f);
+	}
+
+	/**
+	 * Returns white or black foreground depending on the perceived luminance of the background.
+	 * Ensures button text meets WCAG AA contrast regardless of the resolved button background.
+	 */
+	private String pickReadableForeground(String bgHex) {
+		if (bgHex == null || bgHex.length() < 7 || !bgHex.startsWith("#")) {
+			return DEFAULT_WHITE_COLOR;
+		}
+		try {
+			int r = Integer.parseInt(bgHex.substring(1, 3), 16);
+			int g = Integer.parseInt(bgHex.substring(3, 5), 16);
+			int b = Integer.parseInt(bgHex.substring(5, 7), 16);
+			// Relative luminance per WCAG 2.1 (sRGB linearisation simplified to standard coefficients)
+			double luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0;
+			return luminance > 0.5 ? "#000000" : DEFAULT_WHITE_COLOR;
+		} catch (NumberFormatException | IndexOutOfBoundsException e) {
+			return DEFAULT_WHITE_COLOR;
 		}
 	}
 

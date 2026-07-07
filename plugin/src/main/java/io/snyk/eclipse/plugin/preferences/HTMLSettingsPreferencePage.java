@@ -7,10 +7,10 @@ import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
 import io.snyk.eclipse.plugin.properties.FolderConfigSettings;
 import io.snyk.eclipse.plugin.utils.SnykLogger;
-import io.snyk.eclipse.plugin.views.snyktoolview.handlers.IHandlerCommands;
 import io.snyk.languageserver.LsFolderSettingsKeys;
 import io.snyk.languageserver.LsSettingsRegistry;
 import io.snyk.languageserver.LsSettingsRegistry.Entry;
+import io.snyk.languageserver.SnykLanguageServer;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 import io.snyk.languageserver.protocolextension.messageObjects.ScanCommandConfig;
 import java.io.IOException;
@@ -26,18 +26,18 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.commands.ICommandService;
 
 public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
   private static final String SELECTED = "selected";
+
   private static volatile HTMLSettingsPreferencePage instance;
   private Browser browser;
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -61,6 +61,9 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     container.setLayout(new FillLayout());
 
     browser = new Browser(container, SWT.WEBKIT);
+    browser.addTraverseListener(e -> {
+      if (e.detail == SWT.TRAVERSE_ESCAPE) e.doit = false;
+    });
     initializeBrowserFunctions();
     loadContent();
 
@@ -73,7 +76,21 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       public Object function(Object[] arguments) {
         if (arguments.length > 0 && arguments[0] instanceof String) {
           String jsonString = (String) arguments[0];
-          parseAndSaveConfig(jsonString);
+          if (parseAndSaveConfig(jsonString)) {
+            SnykLanguageServer.promptToRestartEclipseForNewCli();
+          }
+          // The dialog auto-saves through this bridge (e.g. "Reset overrides" is a commit point
+          // that fires immediately, not on Apply/OK). Persisting prefs is not enough — the LS only
+          // sees the change once didChangeConfiguration is sent. Push it now so resets and
+          // auto-saves take effect without the user pressing Apply (matches IntelliJ/VS Code).
+          SnykExtendedLanguageClient lc = SnykExtendedLanguageClient.getInstance();
+          if (lc != null) {
+            CompletableFuture.runAsync(lc::updateConfiguration)
+                .exceptionally(e -> {
+                  SnykLogger.logError(new Exception("Failed to push settings to language server", e));
+                  return null;
+                });
+          }
         }
         return null;
       }
@@ -157,7 +174,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
           .replace("{{MANAGE_BINARIES_CHECKED}}", prefs.isManagedBinaries() ? "checked" : "")
           .replace(
               "{{CLI_BASE_DOWNLOAD_URL}}",
-              htmlAttr(prefs.getPref(Preferences.CLI_BASE_URL, "https://downloads.snyk.io")))
+              htmlAttr(prefs.getPref(Preferences.CLI_BASE_URL, Preferences.DEFAULT_CLI_BASE_URL)))
           .replace("{{CLI_PATH}}", htmlAttr(prefs.getCliPath()))
           .replace(
               "{{CHANNEL_STABLE_SELECTED}}",
@@ -184,10 +201,17 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     }
   }
 
-  private void parseAndSaveConfig(String jsonString) {
+  /**
+   * Parses and persists settings JSON from the HTML page. Returns {@code true}
+   * if the CLI binary path changed and the caller should prompt the user to
+   * restart Eclipse — kept out of this method so the data path stays
+   * workbench-free (and unit-testable headless).
+   */
+  boolean parseAndSaveConfig(String jsonString) {
     try {
       JsonNode root = objectMapper.readTree(jsonString);
       Preferences prefs = Preferences.getInstance();
+      String previousCliPath = prefs.getCliPath();
 
       JsonNode fallbackNode = root.get("isFallbackForm");
       boolean isFallback = fallbackNode != null && fallbackNode.booleanValue();
@@ -200,7 +224,13 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         if (n == null) {
           // absent — form didn't send this key, leave tracking untouched
         } else if (n.isNull()) {
+          // Global reset from the form: drop the persisted override, clear
+          // explicit-changed tracking, and queue a one-shot pending reset so the
+          // next outbound push emits {value:null, changed:true} — the only signal
+          // that makes snyk-ls Unset its user:global override.
+          prefs.removePref(entry.prefKey);
           prefs.clearExplicitlyChangedNoFlush(entry.prefKey);
+          prefs.addPendingReset(entry.prefKey);
         } else if (entry.formDeserializer != null) {
           prefs.store(entry.prefKey, entry.formDeserializer.apply(n));
           prefs.markExplicitlyChangedNoFlush(entry.prefKey);
@@ -221,10 +251,18 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         }
       }
 
-      // Refresh toolbar UI to reflect changes made in HTML settings.
-      refreshToolbarUI();
+      // If the user changed the CLI binary path, the running LS process is
+      // still bound to the old binary. In-process restart via lsp4e is too
+      // unreliable (cached connection providers, stuck failed wrappers,
+      // protocol-version probes against the wrong CLI), so signal the caller
+      // to prompt for an Eclipse restart — letting normal startup pick up the
+      // new binary. We don't invoke the UI prompt here so this method stays
+      // headless-safe for unit tests.
+      String newCliPath = prefs.getCliPath();
+      return !java.util.Objects.equals(previousCliPath, newCliPath);
     } catch (JsonProcessingException e) {
       SnykLogger.logError(e);
+      return false;
     }
   }
 
@@ -243,7 +281,7 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
   }
 
   private void processFolderConfig(JsonNode folderNode) {
-    JsonNode pathNode = folderNode.get("folderPath");
+    JsonNode pathNode = folderNode.get(LsFolderSettingsKeys.FOLDER_PATH);
     if (pathNode == null || pathNode.isNull()) {
       return;
     }
@@ -254,7 +292,15 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
         var field = fields.next();
         String key = field.getKey();
         JsonNode node = field.getValue();
-        if ("folderPath".equals(key) || node.isNull()) {
+        if (LsFolderSettingsKeys.FOLDER_PATH.equals(key)) {
+          continue;
+        }
+        if (node.isNull()) {
+          // A folder field sent as JSON null is the dialog's "Reset overrides" signal:
+          // forward {value:null, changed:true} so snyk-ls Unsets the override (fallback to
+          // org/LDX/default). snyk-ls is authoritative over which folder keys are resettable
+          // and ignores nulls on keys with no fallback layer, so forwarding all nulls is safe.
+          config = config.withSetting(key, null, true);
           continue;
         }
         if (LsFolderSettingsKeys.SCAN_COMMAND_CONFIG.equals(key)) {
@@ -301,35 +347,6 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
     return v.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;");
   }
   
-  private void refreshToolbarUI() {
-    Display display = Display.getCurrent();
-    if (display == null) {
-      SnykLogger.logInfo("refreshToolbarUI: No display available, skipping UI refresh");
-      return;
-    }
-    display.asyncExec(
-        () -> {
-          ICommandService commandService =
-              PlatformUI.getWorkbench().getService(ICommandService.class);
-          if (commandService != null) {
-            // Refresh severity filter commands
-            commandService.refreshElements(IHandlerCommands.SHOW_CRITICAL, null);
-            commandService.refreshElements(IHandlerCommands.SHOW_HIGH, null);
-            commandService.refreshElements(IHandlerCommands.SHOW_MEDIUM, null);
-            commandService.refreshElements(IHandlerCommands.SHOW_LOW, null);
-            // Refresh product filter commands
-            commandService.refreshElements(IHandlerCommands.ENABLE_OSS, null);
-            commandService.refreshElements(IHandlerCommands.ENABLE_CODE_SECURITY, null);
-            commandService.refreshElements(IHandlerCommands.ENABLE_IAC, null);
-            // Refresh issue view options commands
-            commandService.refreshElements(IHandlerCommands.IGNORES_SHOW_OPEN, null);
-            commandService.refreshElements(IHandlerCommands.IGNORES_SHOW_IGNORED, null);
-            // Refresh delta findings command
-            commandService.refreshElements(IHandlerCommands.ENABLE_DELTA, null);
-          }
-        });
-  }
-
   @Override
   public boolean performOk() {
     browser.evaluate(
@@ -354,6 +371,14 @@ public class HTMLSettingsPreferencePage extends PreferencePage implements IWorkb
       instance = null;
     }
     super.dispose();
+  }
+
+  public static void reloadIfOpen() {
+    HTMLSettingsPreferencePage page = instance;
+    if (page == null || page.browser == null || page.browser.isDisposed()) {
+      return;
+    }
+    page.loadContent();
   }
 
   public static void notifyAuthTokenChanged(String token, String apiUrl) {

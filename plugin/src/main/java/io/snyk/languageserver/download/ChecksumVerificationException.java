@@ -10,4 +10,8 @@ public class ChecksumVerificationException extends Exception {
 	public ChecksumVerificationException(Throwable cause) {
 		super(cause);
 	}
+
+	public ChecksumVerificationException(String s, Throwable cause) {
+		super(s, cause);
+	}
 }

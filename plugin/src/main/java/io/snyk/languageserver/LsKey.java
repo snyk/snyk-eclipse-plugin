@@ -11,13 +11,13 @@ public enum LsKey {
     INSECURE("proxy_insecure"),
     ADDITIONAL_PARAMS("additional_parameters"),
     SCANNING_MODE("scan_automatic"),
-    /** Not in ENTRIES — global scope not yet implemented; folder-scoped env uses LsFolderSettingsKeys.ADDITIONAL_ENV. */
     ADDITIONAL_ENV("additional_environment"),
     SEND_ERROR_REPORTS("send_error_reports"),
     /** Not in ENTRIES — superseded by SEND_ERROR_REPORTS; retained for backward compatibility with stored prefs. */
     ENABLE_TELEMETRY("enableTelemetry"),
     MANAGE_BINARIES_AUTOMATICALLY("automatic_download"),
     CLI_PATH("cli_path"),
+    USER_SETTINGS_PATH("user_settings_path"),
     CLI_BASE_DOWNLOAD_URL("binary_base_url"),
     AUTOMATIC_AUTHENTICATION("automatic_authentication"),
     AUTHENTICATION_METHOD("authentication_method"),
