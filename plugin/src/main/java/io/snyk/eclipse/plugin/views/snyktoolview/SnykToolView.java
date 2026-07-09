@@ -57,16 +57,20 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private volatile TreeViewBrowserHandler treeBrowserHandler;
 	private final AtomicReference<String> pendingHtml = new AtomicReference<>();
 	private static final int TREE_RENDER_DEBOUNCE_MS = 150;
+	private static final int TREE_RENDER_MAX_WAIT_MS = 600;
 	private static final String SASH_PAINTER_KEY = "snyk.sashPainter";
 	private final Runnable treeRenderRunnable = this::renderPendingTreeHtml;
+	// Wall-clock (ms) of the oldest tree update still waiting to render; 0 when nothing is pending.
+	// Only accessed on the UI thread (scheduleTreeRender / renderPendingTreeHtml).
+	private long firstPendingSince;
 
 	@Override
 	public void createPartControl(Composite parent) {
 		this.rootComposite = parent;
 
-		// Best-effort background so the first render is not white. The e4 CSS engine styles the parent
-		// (to the same grey as native trees/views) only after createPartControl returns, so this initial
-		// read may be pre-theme; captureThemeBackgroundDeferred() below re-reads once styling is applied.
+		// Best-effort background so the first render is less jarring (e.g., don't use white
+        // backgrounds in dark mode) if the theme has not loaded yet;
+        // captureThemeBackgroundDeferred() below re-reads once styling is applied.
 		Color viewBackground = parent.getBackground();
 		BaseHtmlProvider.setIdeBackgroundColorHex(toHex(viewBackground));
 
@@ -81,9 +85,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		// Sashes get a contrasting shade so the dividers between panels stay visible.
 		applySashColor(viewBackground);
 
-		// Each browser sits in a panel-colored wrapper. While a browser is hidden during a reload, the
-		// wrapper shows through in the panel color instead of the browser's opaque-white default — so a
-		// refresh reads as a brief dark (invisible in dark mode) transition rather than a white flash.
+		// Each browser sits in a panel-colored wrapper. This means that the panel's background
+        // is used between HTML reloads, rather than the default white. This avoids flickering
+        // and white flashes when the HTML is loading and Eclipse is in dark mode.
 		summaryPane = wrapperComposite(verticalSashForm, viewBackground);
 		summaryBrowser = new Browser(summaryPane, SWT.EDGE);
 		applyBackground(summaryBrowser, viewBackground);
@@ -113,17 +117,16 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 		horizontalSashForm.setWeights(1, 2);
 
-		// Re-assert the sash color on resize: the theme's CSS can repaint the Sash controls the panel
-		// color again (e.g. on a reskin), and resize is the point at which that would become visible.
-		ControlListener sashRecolor = ControlListener.controlResizedAdapter(e -> {
-			colorSashes(horizontalSashForm, sashColor);
-			colorSashes(verticalSashForm, sashColor);
-		});
-		horizontalSashForm.addControlListener(sashRecolor);
-		verticalSashForm.addControlListener(sashRecolor);
+		// Recovery hook on resize: re-read the themed background and re-assert the sash color. This
+		// catches the case where the e4 CSS engine styles the view later than the two deferred capture
+		// attempts below (so the correct background is picked up on the next layout instead of being
+		// stuck at the pre-theme value), and re-asserts the divider color after a theme reskin.
+		ControlListener themeRecovery = ControlListener.controlResizedAdapter(e -> applyThemeColorsIfChanged());
+		horizontalSashForm.addControlListener(themeRecovery);
+		verticalSashForm.addControlListener(themeRecovery);
 
 		// Re-read the background after the CSS engine has styled the view, then re-render so every panel
-		// matches the native Eclipse grey (e.g. #2F2F2F in the dark theme).
+		// matches the native Eclipse theme.
 		captureThemeBackgroundDeferred();
 	}
 
@@ -204,23 +207,27 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	/**
 	 * Paints the SashForm dividers a contrasting shade of the panel background so they stay visible
 	 * (setting them to the panel color made them disappear). Owns the created Color and disposes the
-	 * previous one.
+	 * previous one. The Color is only recreated when the derived divider color actually changes, so
+	 * repeated calls (e.g. from the resize listener) do not churn Colors.
 	 */
 	private void applySashColor(Color panelBackground) {
 		if (panelBackground == null || rootComposite == null || rootComposite.isDisposed()) {
 			return;
 		}
-		Color previous = sashColor;
-		sashColor = createDividerColor(rootComposite.getDisplay(), panelBackground);
+		RGB dividerRgb = createDividerRgb(panelBackground.getRGB());
+		if (sashColor == null || sashColor.isDisposed() || !sashColor.getRGB().equals(dividerRgb)) {
+			Color previous = sashColor;
+			sashColor = new Color(rootComposite.getDisplay(), dividerRgb);
+			if (previous != null && !previous.isDisposed()) {
+				previous.dispose();
+			}
+		}
 		applyBackground(horizontalSashForm, sashColor);
 		applyBackground(verticalSashForm, sashColor);
 		// Also color the Sash child controls directly: the theme's `.MPart Sash` CSS rule paints them the
 		// panel color (making them invisible), overriding the SashForm composite background set above.
 		colorSashes(horizontalSashForm, sashColor);
 		colorSashes(verticalSashForm, sashColor);
-		if (previous != null && !previous.isDisposed()) {
-			previous.dispose();
-		}
 	}
 
 	private void colorSashes(SashForm form, Color color) {
@@ -230,10 +237,11 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		for (Control child : form.getChildren()) {
 			if (child instanceof Sash) {
 				child.setBackground(color);
-				// The theme's CSS repaints the Sash the panel color, and a plain setBackground does not
-				// survive its paint timing (the divider only appeared after the user interacted with it).
+
 				// Install a PaintListener that draws the divider color on top on every paint — this fires
-				// on the natural first paint when the view opens, so no interaction is needed.
+				// on the natural first paint when the view opens, meaning that dividers are always visible
+                // regardless of the theming, the order of the UI rendering, or whether the user has
+                // interacted with the Snyk panels.
 				if (child.getData(SASH_PAINTER_KEY) == null) {
 					child.setData(SASH_PAINTER_KEY, Boolean.TRUE);
 					child.addPaintListener(this::paintSash);
@@ -252,15 +260,14 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		event.gc.fillRectangle(0, 0, size.x, size.y);
 	}
 
-	/** Lightens a dark background / darkens a light one by a fixed step to yield a visible divider. */
-	private Color createDividerColor(Display display, Color background) {
-		RGB rgb = background.getRGB();
+	/** Lightens a dark background / darkens a light one by a fixed step to yield a visible divider RGB. */
+	private RGB createDividerRgb(RGB rgb) {
 		double luminance = (0.299 * rgb.red + 0.587 * rgb.green + 0.114 * rgb.blue) / 255.0;
 		int step = luminance < 0.5 ? 32 : -28;
 		int r = Math.min(255, Math.max(0, rgb.red + step));
 		int g = Math.min(255, Math.max(0, rgb.green + step));
 		int b = Math.min(255, Math.max(0, rgb.blue + step));
-		return new Color(display, r, g, b);
+		return new RGB(r, g, b);
 	}
 
 	@Override
@@ -282,8 +289,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			if (param != null && SCAN_STATE_IN_PROGRESS.equals(param.getStatus())) {
 				this.browserHandler.setScanningBrowserText();
 			} else if (param != null && param.getPresentableError() != null) {
-				String errorHtml = new BaseHtmlProvider().getErrorHtml(param.getPresentableError());
-				this.browserHandler.setBrowserText(errorHtml);
+				this.browserHandler.setErrorBrowserText(param.getPresentableError());
 			} else {
 				this.browserHandler.setDefaultBrowserText();
 			}
@@ -361,17 +367,37 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		try {
 			Display display = Display.getDefault();
 			if (display != null && !display.isDisposed()) {
-				// Debounce: the LS pushes many tree-HTML updates during a scan and each reload flashes the
-				// browser. Rescheduling the same runnable coalesces a burst into a single render once the
-				// updates settle. timerExec must run on the UI thread, hence the asyncExec hop.
-				display.asyncExec(() -> display.timerExec(TREE_RENDER_DEBOUNCE_MS, treeRenderRunnable));
+				// timerExec must run on the UI thread; hop there first.
+				display.asyncExec(this::scheduleTreeRender);
 			}
 		} catch (SWTError | SWTException | UnsatisfiedLinkError | NoClassDefFoundError e) {
 			SnykLogger.logInfo("No SWT Display available, HTML will be drained on createPartControl: " + e.getMessage());
 		}
 	}
 
+	// Debounce tree reloads to reduce flicker during a scan, but with a max-wait ceiling: a sustained
+	// burst of updates arriving faster than the debounce interval would otherwise keep rescheduling the
+	// timer and starve the render, leaving the tree frozen for the whole scan. Once updates have been
+	// pending longer than TREE_RENDER_MAX_WAIT_MS, render immediately instead of deferring again.
+	private void scheduleTreeRender() {
+		Display display = Display.getDefault();
+		if (display == null || display.isDisposed()) {
+			return;
+		}
+		long now = System.currentTimeMillis();
+		if (firstPendingSince == 0) {
+			firstPendingSince = now;
+		}
+		if (now - firstPendingSince >= TREE_RENDER_MAX_WAIT_MS) {
+			display.timerExec(-1, treeRenderRunnable); // cancel any pending debounce
+			renderPendingTreeHtml();
+		} else {
+			display.timerExec(TREE_RENDER_DEBOUNCE_MS, treeRenderRunnable);
+		}
+	}
+
 	private void renderPendingTreeHtml() {
+		firstPendingSince = 0;
 		if (treeBrowserHandler == null) {
 			return;
 		}

@@ -11,9 +11,11 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class SummaryBrowserHandler {
 	private Browser browser;
-	// Last summary rendered (null => the default init page). Kept so the panel can be re-rendered
-	// when the resolved theme color changes after the CSS engine has styled the view.
+	// Track the latest rendered summary so the panel can be re-rendered if the theme color
+    // changes when the CSS engine styles the view. hasSummary is false while only the default
+    // init page has been shown (avoids a null assignment, which the PMD ruleset rejects).
 	private String lastSummary;
+	private boolean hasSummary;
 
 	public SummaryBrowserHandler(Browser browser) {
 		this.browser = browser;
@@ -42,12 +44,13 @@ public class SummaryBrowserHandler {
 	}
 
 	public void setDefaultBrowserText() {
-		lastSummary = null;
+		hasSummary = false;
 		BrowserFlashGuard.setTextFlashSafe(browser, StaticPageHtmlProvider.getInstance().getSummaryInitHtml());
 	}
 
 	public void setBrowserText(String summary) {
 		lastSummary = summary;
+		hasSummary = true;
 		BrowserFlashGuard.setTextFlashSafe(browser,
 				StaticPageHtmlProvider.getInstance().getFormattedSummaryHtml(summary));
 	}
@@ -57,10 +60,10 @@ public class SummaryBrowserHandler {
 		if (browser == null || browser.isDisposed()) {
 			return;
 		}
-		if (lastSummary == null) {
-			setDefaultBrowserText();
-		} else {
+		if (hasSummary) {
 			setBrowserText(lastSummary);
+		} else {
+			setDefaultBrowserText();
 		}
 	}
 

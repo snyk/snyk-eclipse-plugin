@@ -28,9 +28,7 @@ public class BaseHtmlProvider {
 	private final Map<String, String> colorCache = new HashMap<>();
 	private String nonce = "";
 
-	// The actual themed view background, captured from an SWT control that the e4 CSS engine has
-	// styled (see SnykToolView). This is the true "Eclipse grey" for the view content area — the tab
-	// color keys used below resolve to the lighter tab-strip grey, which does not match adjacent views.
+	// The native themed view background color from Eclipse.
 	// Shared statically so every provider instance (tree/summary/detail) resolves the same background.
 	private static volatile String ideBackgroundColorHex;
 
@@ -316,8 +314,7 @@ public class BaseHtmlProvider {
 		vsCodeVarMap.put("vscode-scrollbarSlider-background", inputBgColor);
 		vsCodeVarMap.put("vscode-scrollbarSlider-hoverBackground", adjustForHover(inputBgColor, dark));
 		vsCodeVarMap.put("vscode-scrollbarSlider-activeBackground", adjustBrightness(inputBgColor, dark ? 1.2f : 0.8f));
-		// Tree-view tooltips (.tree-tooltip) key off these. Without a mapping the CSS falls back to a
-		// hardcoded dark background (#252526), which is invisible/unreadable in the light theme.
+		// Used by Tree-view tooltips (.tree-tooltip)
 		vsCodeVarMap.put("vscode-editorHoverWidget-background", inputBgColor);
 		vsCodeVarMap.put("vscode-editorHoverWidget-foreground", textColor);
 		vsCodeVarMap.put("vscode-editorHoverWidget-border", borderColor);
@@ -373,8 +370,7 @@ public class BaseHtmlProvider {
 
 	/**
 	 * Returns the true Eclipse view background as a hex string. Prefers the value captured from a
-	 * themed SWT control (set via {@link #setIdeBackgroundColorHex(String)}), which reflects the exact
-	 * grey the active theme paints view content with. Falls back to the tab-strip background key when no
+	 * themed SWT control, but falls back to the tab-strip background key when no
 	 * control-derived value is available (e.g. before the view is created, or in test mode).
 	 */
 	public String getIdeBackgroundHex() {

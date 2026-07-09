@@ -4,20 +4,13 @@ import org.eclipse.swt.browser.Browser;
 
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.html.ExecuteCommandBridge;
+import io.snyk.eclipse.plugin.html.TreeViewHtmlProvider;
 
 public class TreeViewBrowserHandler {
 	private Browser browser;
-	// The feedback banner link (styles.css: .feedback-banner-link) uses --button-text-color, which the
-	// IDE resolves to the button foreground — black in the dark theme (readable on a light button, but
-	// not on the banner's dark gradient). Override it to the theme text color (white in dark, dark in
-	// light), matching the banner text. Injected via ${ideStyle}, which lands after the LS styles so it
-	// wins by cascade order.
-	private final BaseHtmlProvider htmlProvider = new BaseHtmlProvider() {
-		@Override
-		public String getCss() {
-			return ".feedback-banner-link { color: var(--text-color); }";
-		}
-	};
+	// Tree-specific provider: adds the feedback-banner link color override on top of the base
+	// theme-variable substitution (see TreeViewHtmlProvider).
+	private final BaseHtmlProvider htmlProvider = new TreeViewHtmlProvider();
 	// Last raw HTML rendered. The LS re-pushes tree HTML on many events (often identical); each
 	// full-document reload causes a visible flash, so we skip setText when nothing changed.
 	private String lastRenderedHtml;
@@ -55,13 +48,13 @@ public class TreeViewBrowserHandler {
 		if (html.equals(lastRenderedHtml)) {
 			return;
 		}
-		lastRenderedHtml = html;
-		browser.setText(htmlProvider.replaceCssVariables(html));
+		render(html);
 	}
 
 	/**
-	 * Re-renders the current content so it picks up a newly-resolved theme color. Bypasses the
-	 * unchanged-HTML guard, since the raw HTML is identical but the resolved colors have changed.
+	 * Re-renders the current content so it picks up a newly-resolved theme color. Goes through
+	 * {@link #render} directly (not {@link #setBrowserText}) so the unchanged-HTML guard is bypassed —
+	 * the raw HTML is identical but the resolved colors have changed.
 	 */
 	public void refreshTheme() {
 		if (browser == null || browser.isDisposed()) {
@@ -71,9 +64,12 @@ public class TreeViewBrowserHandler {
 			setEmptyPage();
 			return;
 		}
-		String html = lastRenderedHtml;
-		lastRenderedHtml = null;
-		setBrowserText(html);
+		render(lastRenderedHtml);
+	}
+
+	private void render(String html) {
+		lastRenderedHtml = html;
+		browser.setText(htmlProvider.replaceCssVariables(html));
 	}
 
 	public void selectNode(String issueId) {

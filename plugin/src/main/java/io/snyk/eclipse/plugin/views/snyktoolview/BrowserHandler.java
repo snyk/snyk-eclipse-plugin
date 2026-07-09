@@ -31,14 +31,13 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.HandlerCommands;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import io.snyk.languageserver.protocolextension.messageObjects.PresentableError;
 
 @SuppressWarnings("restriction")
 public class BrowserHandler {
 	private static final int validNumberOfArguments = 5;
 	private Browser browser;
 	private String initScript = "";
-	// How to re-render whatever is currently shown, so the panel can adopt a newly-resolved theme
-	// color once the CSS engine has styled the view. Re-running re-substitutes the color variables.
 	private Runnable currentRenderer;
 
 	public BrowserHandler(Browser browser) {
@@ -203,9 +202,12 @@ public class BrowserHandler {
 		BrowserFlashGuard.setTextFlashSafe(browser, StaticPageHtmlProvider.getInstance().getScanningHtml());
 	}
 
-	public void setBrowserText(String html) {
-		currentRenderer = () -> setBrowserText(html);
-		BrowserFlashGuard.setTextFlashSafe(browser, html);
+	public void setErrorBrowserText(PresentableError error) {
+		// Store the error (not the rendered HTML) so refreshTheme() rebuilds via getErrorHtml, which
+		// re-runs replaceCssVariables and picks up a newly-resolved theme color. Rendering pre-resolved
+		// HTML here would freeze the error page at whatever color was current when it first displayed.
+		currentRenderer = () -> setErrorBrowserText(error);
+		BrowserFlashGuard.setTextFlashSafe(browser, new BaseHtmlProvider().getErrorHtml(error));
 	}
 
 	/** Re-renders the current content so it adopts a newly-resolved theme color. */
