@@ -37,6 +37,9 @@ public class BrowserHandler {
 	private static final int validNumberOfArguments = 5;
 	private Browser browser;
 	private String initScript = "";
+	// How to re-render whatever is currently shown, so the panel can adopt a newly-resolved theme
+	// color once the CSS engine has styled the view. Re-running re-substitutes the color variables.
+	private Runnable currentRenderer;
 
 	public BrowserHandler(Browser browser) {
 		this.browser = browser;
@@ -158,11 +161,14 @@ public class BrowserHandler {
 			}
 		});
 
+		BrowserFlashGuard.install(browser);
+
 		setDefaultBrowserText();
 	}
 
 
 	public void updateBrowserContent(String issueId, String product) {
+		currentRenderer = () -> updateBrowserContent(issueId, product);
 		CompletableFuture.runAsync(() -> {
 			String displayed = ProductConstants.PRODUCT_TO_DISPLAYED.get(product);
 			BaseHtmlProvider htmlProvider = displayed != null ? HtmlProviderFactory.GetHtmlProvider(displayed) : null;
@@ -176,30 +182,37 @@ public class BrowserHandler {
 			}
 			final var browserContent = htmlProvider.replaceCssVariables(htmlContent);
 			Display.getDefault().syncExec(() -> {
-				if (!browser.isDisposed()) {
-					browser.setText(browserContent);
-				}
+				BrowserFlashGuard.setTextFlashSafe(browser, browserContent);
 			});
 		});
 	}
 
 	public void setDefaultBrowserText() {
+		currentRenderer = this::setDefaultBrowserText;
 		// If we are not authenticated, show the welcome page, else show the issue
 		// placeholder.
 		if (!Preferences.getInstance().isAuthenticated()) {
-			browser.setText(StaticPageHtmlProvider.getInstance().getInitHtml());
+			BrowserFlashGuard.setTextFlashSafe(browser, StaticPageHtmlProvider.getInstance().getInitHtml());
 		} else {
-			browser.setText(StaticPageHtmlProvider.getInstance().getDefaultHtml());
+			BrowserFlashGuard.setTextFlashSafe(browser, StaticPageHtmlProvider.getInstance().getDefaultHtml());
 		}
 	}
 
 	public void setScanningBrowserText() {
-		browser.setText(StaticPageHtmlProvider.getInstance().getScanningHtml());
+		currentRenderer = this::setScanningBrowserText;
+		BrowserFlashGuard.setTextFlashSafe(browser, StaticPageHtmlProvider.getInstance().getScanningHtml());
 	}
 
 	public void setBrowserText(String html) {
-		if (!browser.isDisposed()) {
-			browser.setText(html);
+		currentRenderer = () -> setBrowserText(html);
+		BrowserFlashGuard.setTextFlashSafe(browser, html);
+	}
+
+	/** Re-renders the current content so it adopts a newly-resolved theme color. */
+	public void refreshTheme() {
+		if (browser == null || browser.isDisposed() || currentRenderer == null) {
+			return;
 		}
+		currentRenderer.run();
 	}
 }

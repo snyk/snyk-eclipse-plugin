@@ -28,13 +28,26 @@ public class BaseHtmlProvider {
 	private final Map<String, String> colorCache = new HashMap<>();
 	private String nonce = "";
 
+	// The actual themed view background, captured from an SWT control that the e4 CSS engine has
+	// styled (see SnykToolView). This is the true "Eclipse grey" for the view content area — the tab
+	// color keys used below resolve to the lighter tab-strip grey, which does not match adjacent views.
+	// Shared statically so every provider instance (tree/summary/detail) resolves the same background.
+	private static volatile String ideBackgroundColorHex;
+
+	public static void setIdeBackgroundColorHex(String hex) {
+		ideBackgroundColorHex = hex;
+	}
+
+	public static String getIdeBackgroundColorHex() {
+		return ideBackgroundColorHex;
+	}
+
 
 	// Eclipse theme color keys
 	private static final String THEME_INACTIVE_TAB_BG = "org.eclipse.ui.workbench.INACTIVE_TAB_BG_START";
 	private static final String THEME_ACTIVE_TAB_KEYLINE = "org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR";
 	private static final String THEME_ACTIVE_TAB_SELECTED_TEXT = "org.eclipse.ui.workbench.ACTIVE_TAB_SELECTED_TEXT_COLOR";
 	private static final String THEME_ACTIVE_TAB_TEXT = "org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR";
-	private static final String THEME_ACTIVE_NOFOCUS_TAB_BG = "org.eclipse.ui.workbench.ACTIVE_NOFOCUS_TAB_BG_START";
 	private static final String THEME_ACTIVE_TAB_BG_END = "org.eclipse.ui.workbench.ACTIVE_TAB_BG_END";
 	private static final String THEME_ACTIVE_HYPERLINK = "ACTIVE_HYPERLINK_COLOR";
 	private static final String THEME_DARK_BACKGROUND = "org.eclipse.ui.workbench.DARK_BACKGROUND";
@@ -182,12 +195,16 @@ public class BaseHtmlProvider {
 
 		boolean dark = Boolean.TRUE.equals(isDarkTheme());
 
+		// The true Eclipse view background. Both --ide-background-color and --background-color resolve to
+		// this single value so every panel (tree/summary/detail) matches each other and the adjacent views.
+		String ideBg = getIdeBackgroundHex();
+
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace(CSS_VAR_TEXT_COLOR, getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000"));
 		htmlStyled = htmlStyled.replace(CSS_VAR_DIMMED_TEXT_COLOR, getColorAsHex(THEME_ACTIVE_TAB_TEXT, "#4F5456"));
 
-		htmlStyled = htmlStyled.replace(CSS_VAR_IDE_BACKGROUND_COLOR, getColorAsHex(THEME_ACTIVE_NOFOCUS_TAB_BG, DEFAULT_WHITE_COLOR));
-		htmlStyled = htmlStyled.replace(CSS_VAR_BACKGROUND_COLOR, getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR));
+		htmlStyled = htmlStyled.replace(CSS_VAR_IDE_BACKGROUND_COLOR, ideBg);
+		htmlStyled = htmlStyled.replace(CSS_VAR_BACKGROUND_COLOR, ideBg);
 		htmlStyled = htmlStyled.replace(CSS_VAR_CODE_BACKGROUND_COLOR,
 				getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR));
 		htmlStyled = htmlStyled.replace(CSS_VAR_BUTTON_COLOR,
@@ -212,7 +229,7 @@ public class BaseHtmlProvider {
 		// Replace CSS variables used in LS-served HTML (settings page)
 		// Get Eclipse theme colors
 		String textColor = getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000");
-		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
+		String bgColor = ideBg;
 		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
 		String focusColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066cc");
@@ -299,6 +316,11 @@ public class BaseHtmlProvider {
 		vsCodeVarMap.put("vscode-scrollbarSlider-background", inputBgColor);
 		vsCodeVarMap.put("vscode-scrollbarSlider-hoverBackground", adjustForHover(inputBgColor, dark));
 		vsCodeVarMap.put("vscode-scrollbarSlider-activeBackground", adjustBrightness(inputBgColor, dark ? 1.2f : 0.8f));
+		// Tree-view tooltips (.tree-tooltip) key off these. Without a mapping the CSS falls back to a
+		// hardcoded dark background (#252526), which is invisible/unreadable in the light theme.
+		vsCodeVarMap.put("vscode-editorHoverWidget-background", inputBgColor);
+		vsCodeVarMap.put("vscode-editorHoverWidget-foreground", textColor);
+		vsCodeVarMap.put("vscode-editorHoverWidget-border", borderColor);
 		htmlStyled = replaceRemainingCssVars(htmlStyled, vsCodeVarMap);
 
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
@@ -347,6 +369,20 @@ public class BaseHtmlProvider {
 
 		// CSS allows 3 decimal places of precision for calculations.
 		return String.format(Locale.ROOT, "%.3frem", targetSizePt / startingFontSizePt);
+	}
+
+	/**
+	 * Returns the true Eclipse view background as a hex string. Prefers the value captured from a
+	 * themed SWT control (set via {@link #setIdeBackgroundColorHex(String)}), which reflects the exact
+	 * grey the active theme paints view content with. Falls back to the tab-strip background key when no
+	 * control-derived value is available (e.g. before the view is created, or in test mode).
+	 */
+	public String getIdeBackgroundHex() {
+		String captured = ideBackgroundColorHex;
+		if (captured != null && !captured.isEmpty()) {
+			return captured;
+		}
+		return getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
 	}
 
 	public String getColorAsHex(String colorKey, String defaultColor) {

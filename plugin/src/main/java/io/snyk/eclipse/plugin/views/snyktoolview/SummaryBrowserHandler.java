@@ -11,6 +11,9 @@ import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
 
 public class SummaryBrowserHandler {
 	private Browser browser;
+	// Last summary rendered (null => the default init page). Kept so the panel can be re-rendered
+	// when the resolved theme color changes after the CSS engine has styled the view.
+	private String lastSummary;
 
 	public SummaryBrowserHandler(Browser browser) {
 		this.browser = browser;
@@ -34,15 +37,31 @@ public class SummaryBrowserHandler {
 			}
 		};
 
+		BrowserFlashGuard.install(browser);
 		setDefaultBrowserText();
 	}
 
 	public void setDefaultBrowserText() {
-		browser.setText(StaticPageHtmlProvider.getInstance().getSummaryInitHtml());
+		lastSummary = null;
+		BrowserFlashGuard.setTextFlashSafe(browser, StaticPageHtmlProvider.getInstance().getSummaryInitHtml());
 	}
 
 	public void setBrowserText(String summary) {
-		browser.setText(StaticPageHtmlProvider.getInstance().getFormattedSummaryHtml(summary));
+		lastSummary = summary;
+		BrowserFlashGuard.setTextFlashSafe(browser,
+				StaticPageHtmlProvider.getInstance().getFormattedSummaryHtml(summary));
+	}
+
+	/** Re-renders the current summary so it adopts a newly-resolved theme color. */
+	public void refreshTheme() {
+		if (browser == null || browser.isDisposed()) {
+			return;
+		}
+		if (lastSummary == null) {
+			setDefaultBrowserText();
+		} else {
+			setBrowserText(lastSummary);
+		}
 	}
 
 }
