@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,12 +26,22 @@ import io.snyk.languageserver.protocolextension.messageObjects.PresentableError;
 
 public class BaseHtmlProvider {
 	private final Random random = new Random();
-	private final Map<String, String> colorCache = new HashMap<>();
+	// ConcurrentHashMap, not HashMap: the detail panel renders off the UI thread
+	// (BrowserHandler.updateBrowserContent → CompletableFuture.runAsync) against a shared singleton
+	// provider, so refreshThemeCachesIfStale's clear() can race getColorAsHex's computeIfAbsent.
+	private final Map<String, String> colorCache = new ConcurrentHashMap<>();
 	private String nonce = "";
 
 	// The native themed view background color from Eclipse.
 	// Shared statically so every provider instance (tree/summary/detail) resolves the same background.
 	private static volatile String ideBackgroundColorHex;
+
+	// Resolved theme colors are cached per instance (colorCache/colorRegistry/currentTheme). When the
+	// user switches Eclipse light↔dark at runtime those caches go stale. A global generation counter is
+	// bumped on theme change; each instance lazily clears its caches when it sees a newer generation, so
+	// the next render re-resolves foreground/border/etc. from the new theme (not just the background).
+	private static volatile int themeGeneration;
+	private volatile int cacheGeneration;
 
 	public static void setIdeBackgroundColorHex(String hex) {
 		ideBackgroundColorHex = hex;
@@ -38,6 +49,11 @@ public class BaseHtmlProvider {
 
 	public static String getIdeBackgroundColorHex() {
 		return ideBackgroundColorHex;
+	}
+
+	/** Signals that the Eclipse theme changed; cached theme colors are re-resolved on the next render. */
+	public static void invalidateThemeCaches() {
+		themeGeneration++;
 	}
 
 
@@ -178,6 +194,7 @@ public class BaseHtmlProvider {
 	}
 
 	public String replaceCssVariables(String html, boolean useRelativeFontSize) {
+		refreshThemeCachesIfStale();
 		// Build the CSS with the nonce
 		String nonce = getNonce();
 		String css = "<style nonce=\"" + nonce + "\">" + getCss() + "</style>";
@@ -381,6 +398,32 @@ public class BaseHtmlProvider {
 		return getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
 	}
 
+	// Re-resolves this instance's cached theme colors if a theme change has been signalled since the
+	// last render, so subsequent getColorAsHex lookups reflect the current theme. Only re-fetches inside
+	// the branch (never taken until invalidateThemeCaches bumps the generation), so test renders — which
+	// have no running workbench — never call PlatformUI here.
+	private void refreshThemeCachesIfStale() {
+		// Test mode never resolves real colors (getColorAsHex short-circuits), and there is no workbench,
+		// so keep the PlatformUI call out of headless runs — self-enforcing rather than relying on the
+		// generation never being bumped in tests.
+		if (Preferences.getInstance().isTest()) {
+			return;
+		}
+		int currentGeneration = themeGeneration;
+		if (cacheGeneration == currentGeneration) {
+			return;
+		}
+		colorCache.clear();
+		ITheme freshTheme = PlatformUI.getWorkbench().getThemeManager().getCurrentTheme();
+		// Publish currentTheme/colorRegistry (both volatile) BEFORE the volatile cacheGeneration write, so
+		// a concurrent reader that observes the new generation is guaranteed to also see the new fields
+		// (happens-before via the cacheGeneration volatile). Writing the generation first would let a
+		// reader skip its own refresh and then read a stale registry.
+		currentTheme = freshTheme;
+		colorRegistry = freshTheme.getColorRegistry();
+		cacheGeneration = currentGeneration;
+	}
+
 	public String getColorAsHex(String colorKey, String defaultColor) {
 		if (Preferences.getInstance().isTest()) {
 			return "";
@@ -467,7 +510,9 @@ public class BaseHtmlProvider {
 		return !darkColor.isEmpty();
 	}
 
-	private ColorRegistry colorRegistry;
+	// volatile: reassigned from a background render thread in refreshThemeCachesIfStale and read from
+	// other threads via getColorRegistry/getColorAsHex.
+	private volatile ColorRegistry colorRegistry;
 
 	private ColorRegistry getColorRegistry() {
 		if (colorRegistry != null) {
@@ -478,7 +523,8 @@ public class BaseHtmlProvider {
 		return colorRegistry;
 	}
 
-	private ITheme currentTheme;
+	// volatile: see colorRegistry — reassigned from a background render thread and read from others.
+	private volatile ITheme currentTheme;
 
 	public ITheme getCurrentTheme() {
 		if (currentTheme != null) {

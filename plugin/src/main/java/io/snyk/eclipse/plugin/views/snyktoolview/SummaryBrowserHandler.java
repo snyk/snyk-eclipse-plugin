@@ -1,5 +1,6 @@
 package io.snyk.eclipse.plugin.views.snyktoolview;
 
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.swt.browser.Browser;
@@ -49,10 +50,12 @@ public class SummaryBrowserHandler {
 	}
 
 	public void setBrowserText(String summary) {
-		lastSummary = summary;
-		hasSummary = true;
-		BrowserFlashGuard.setTextFlashSafe(browser,
-				StaticPageHtmlProvider.getInstance().getFormattedSummaryHtml(summary));
+		// The LS re-pushes the summary frequently during a scan, often unchanged; skip those so the panel
+		// does not blink (hide → reveal) on every push. Mirrors the tree handler's dedup guard.
+		if (hasSummary && Objects.equals(summary, lastSummary)) {
+			return;
+		}
+		renderSummary(summary);
 	}
 
 	/** Re-renders the current summary so it adopts a newly-resolved theme color. */
@@ -61,10 +64,21 @@ public class SummaryBrowserHandler {
 			return;
 		}
 		if (hasSummary) {
-			setBrowserText(lastSummary);
+			// Go through renderSummary directly so the unchanged-content guard is bypassed — the text is
+			// the same but the resolved theme colors have changed.
+			renderSummary(lastSummary);
 		} else {
 			setDefaultBrowserText();
 		}
+	}
+
+	// Package-private (not private) so SummaryBrowserHandlerTest can override it to count renders and
+	// verify the setBrowserText dedup guard without a live SWT Browser.
+	void renderSummary(String summary) {
+		lastSummary = summary;
+		hasSummary = true;
+		BrowserFlashGuard.setTextFlashSafe(browser,
+				StaticPageHtmlProvider.getInstance().getFormattedSummaryHtml(summary));
 	}
 
 }

@@ -22,7 +22,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Sash;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.themes.IThemeManager;
 
 import io.snyk.eclipse.plugin.html.BaseHtmlProvider;
 import io.snyk.eclipse.plugin.preferences.Preferences;
@@ -63,6 +66,8 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	// Wall-clock (ms) of the oldest tree update still waiting to render; 0 when nothing is pending.
 	// Only accessed on the UI thread (scheduleTreeRender / renderPendingTreeHtml).
 	private long firstPendingSince;
+	// Re-captures the themed background and re-renders when the user switches Eclipse light↔dark.
+	private IPropertyChangeListener themeChangeListener;
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -128,6 +133,38 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		// Re-read the background after the CSS engine has styled the view, then re-render so every panel
 		// matches the native Eclipse theme.
 		captureThemeBackgroundDeferred();
+
+		registerThemeChangeListener();
+	}
+
+	/**
+	 * Re-capture the themed background and re-render every panel when the workbench theme changes
+	 * (e.g. the user toggles light↔dark at runtime). Without this the captured background and the
+	 * cached foreground colors would keep the old theme's values until the view is recreated.
+	 */
+	private void registerThemeChangeListener() {
+		IThemeManager themeManager = PlatformUI.getWorkbench().getThemeManager();
+		themeChangeListener = event -> {
+			if (IThemeManager.CHANGE_CURRENT_THEME.equals(event.getProperty())) {
+				onThemeChanged();
+			}
+		};
+		themeManager.addPropertyChangeListener(themeChangeListener);
+	}
+
+	private void onThemeChanged() {
+		// Drop cached theme colors so panels re-resolve foreground/border/etc. (not just the
+		// background), then re-read the now-restyled background and re-render every panel. force=true
+		// because a theme change can alter foreground/accent colors while leaving the view background
+		// hex unchanged — the hex-equality gate below would otherwise skip the re-render.
+		BaseHtmlProvider.invalidateThemeCaches();
+		if (rootComposite == null || rootComposite.isDisposed()) {
+			return;
+		}
+		// Single deferred pass only: the e4 CSS engine restyles the view asynchronously, so an immediate
+		// render would read the pre-restyle background and then need a second correcting render (a double
+		// flash). One 300ms-deferred forced render picks up the restyled colors in a single pass.
+		rootComposite.getDisplay().timerExec(300, () -> applyThemeColors(true));
 	}
 
 	/**
@@ -146,6 +183,16 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	private void applyThemeColorsIfChanged() {
+		applyThemeColors(false);
+	}
+
+	/**
+	 * Re-applies the themed background to the panels and sashes. When {@code force} is false the panel
+	 * re-render is skipped if the background hex is unchanged (the startup/resize path). When true the
+	 * re-render always runs — used on a theme change, where foreground colors may have changed even if
+	 * the background hex did not.
+	 */
+	private void applyThemeColors(boolean force) {
 		if (rootComposite == null || rootComposite.isDisposed()) {
 			return;
 		}
@@ -159,7 +206,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		// the background color itself is unchanged.
 		applySashColor(themed);
 
-		if (hex.equals(BaseHtmlProvider.getIdeBackgroundColorHex())) {
+		if (!force && hex.equals(BaseHtmlProvider.getIdeBackgroundColorHex())) {
 			return;
 		}
 		BaseHtmlProvider.setIdeBackgroundColorHex(hex);
@@ -272,6 +319,9 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 
 	@Override
 	public void dispose() {
+		if (themeChangeListener != null) {
+			PlatformUI.getWorkbench().getThemeManager().removePropertyChangeListener(themeChangeListener);
+		}
 		if (sashColor != null && !sashColor.isDisposed()) {
 			sashColor.dispose();
 		}
