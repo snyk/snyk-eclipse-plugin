@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,7 +41,7 @@ public class BaseHtmlProvider {
 	// user switches Eclipse light↔dark at runtime those caches go stale. A global generation counter is
 	// bumped on theme change; each instance lazily clears its caches when it sees a newer generation, so
 	// the next render re-resolves foreground/border/etc. from the new theme (not just the background).
-	private static volatile int themeGeneration;
+	private static final AtomicInteger themeGeneration = new AtomicInteger();
 	private volatile int cacheGeneration;
 
 	public static void setIdeBackgroundColorHex(String hex) {
@@ -53,7 +54,7 @@ public class BaseHtmlProvider {
 
 	/** Signals that the Eclipse theme changed; cached theme colors are re-resolved on the next render. */
 	public static void invalidateThemeCaches() {
-		themeGeneration++;
+		themeGeneration.incrementAndGet();
 	}
 
 
@@ -409,7 +410,7 @@ public class BaseHtmlProvider {
 		if (Preferences.getInstance().isTest()) {
 			return;
 		}
-		int currentGeneration = themeGeneration;
+		int currentGeneration = themeGeneration.get();
 		if (cacheGeneration == currentGeneration) {
 			return;
 		}

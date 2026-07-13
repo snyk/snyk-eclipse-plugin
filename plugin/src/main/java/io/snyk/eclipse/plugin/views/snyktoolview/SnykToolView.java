@@ -60,12 +60,13 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	private volatile TreeViewBrowserHandler treeBrowserHandler;
 	private final AtomicReference<String> pendingHtml = new AtomicReference<>();
 	private static final int TREE_RENDER_DEBOUNCE_MS = 150;
-	private static final int TREE_RENDER_MAX_WAIT_MS = 600;
+	private static final long TREE_RENDER_MAX_WAIT_NANOS = 600L * 1_000_000L;
 	private static final String SASH_PAINTER_KEY = "snyk.sashPainter";
 	private final Runnable treeRenderRunnable = this::renderPendingTreeHtml;
-	// Wall-clock (ms) of the oldest tree update still waiting to render; 0 when nothing is pending.
-	// Only accessed on the UI thread (scheduleTreeRender / renderPendingTreeHtml).
-	private long firstPendingSince;
+	// System.nanoTime() of the oldest tree update still waiting to render (monotonic; valid only while
+	// treeRenderPending). Only accessed on the UI thread (scheduleTreeRender / renderPendingTreeHtml).
+	private long firstPendingSinceNanos;
+	private boolean treeRenderPending;
 	// Re-captures the themed background and re-renders when the user switches Eclipse light↔dark.
 	private IPropertyChangeListener themeChangeListener;
 
@@ -317,11 +318,20 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	@Override
 	public void dispose() {
 		if (themeChangeListener != null) {
-			PlatformUI.getWorkbench().getThemeManager().removePropertyChangeListener(themeChangeListener);
+			try {
+				PlatformUI.getWorkbench().getThemeManager().removePropertyChangeListener(themeChangeListener);
+			} catch (IllegalStateException e) {
+				// Workbench is already shutting down — there is nothing left to deregister from. Swallow
+				// so this cannot abort dispose() before the sashColor/static cleanup below.
+				SnykLogger.logInfo("Workbench unavailable while removing theme listener: " + e.getMessage());
+			}
 		}
 		if (sashColor != null && !sashColor.isDisposed()) {
 			sashColor.dispose();
 		}
+		// Clear the shared static background so it does not leak past this view's lifetime (a reopened
+		// view re-captures it in createPartControl; getIdeBackgroundHex falls back until then).
+		BaseHtmlProvider.setIdeBackgroundColorHex(null);
 		super.dispose();
 	}
 
@@ -431,11 +441,12 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 		if (display == null || display.isDisposed()) {
 			return;
 		}
-		long now = System.currentTimeMillis();
-		if (firstPendingSince == 0) {
-			firstPendingSince = now;
+		long now = System.nanoTime();
+		if (!treeRenderPending) {
+			treeRenderPending = true;
+			firstPendingSinceNanos = now;
 		}
-		if (now - firstPendingSince >= TREE_RENDER_MAX_WAIT_MS) {
+		if (now - firstPendingSinceNanos >= TREE_RENDER_MAX_WAIT_NANOS) {
 			display.timerExec(-1, treeRenderRunnable); // cancel any pending debounce
 			renderPendingTreeHtml();
 		} else {
@@ -444,7 +455,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	private void renderPendingTreeHtml() {
-		firstPendingSince = 0;
+		treeRenderPending = false;
 		if (treeBrowserHandler == null) {
 			return;
 		}
