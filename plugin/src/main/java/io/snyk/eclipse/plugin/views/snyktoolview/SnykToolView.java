@@ -153,18 +153,15 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	}
 
 	private void onThemeChanged() {
-		// Drop cached theme colors so panels re-resolve foreground/border/etc. (not just the
-		// background), then re-read the now-restyled background and re-render every panel. force=true
-		// because a theme change can alter foreground/accent colors while leaving the view background
-		// hex unchanged — the hex-equality gate below would otherwise skip the re-render.
-		BaseHtmlProvider.invalidateThemeCaches();
 		if (rootComposite == null || rootComposite.isDisposed()) {
 			return;
 		}
-		// Single deferred pass only: the e4 CSS engine restyles the view asynchronously, so an immediate
-		// render would read the pre-restyle background and then need a second correcting render (a double
-		// flash). One 300ms-deferred forced render picks up the restyled colors in a single pass.
-		rootComposite.getDisplay().timerExec(300, () -> applyThemeColors(true));
+		// Flip foreground and background together, in a single deferred pass. The 300ms delay lets the
+        // renderer restyle and redraw the view first.
+		rootComposite.getDisplay().timerExec(300, () -> {
+			BaseHtmlProvider.invalidateThemeCaches();
+			applyThemeColors(true);
+		});
 	}
 
 	/**

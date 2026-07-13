@@ -413,14 +413,15 @@ public class BaseHtmlProvider {
 		if (cacheGeneration == currentGeneration) {
 			return;
 		}
-		colorCache.clear();
 		ITheme freshTheme = PlatformUI.getWorkbench().getThemeManager().getCurrentTheme();
-		// Publish currentTheme/colorRegistry (both volatile) BEFORE the volatile cacheGeneration write, so
-		// a concurrent reader that observes the new generation is guaranteed to also see the new fields
-		// (happens-before via the cacheGeneration volatile). Writing the generation first would let a
-		// reader skip its own refresh and then read a stale registry.
+		// Order matters:
+		// 1. Swap currentTheme/colorRegistry (both volatile) to the new theme first.
+		// 2. Call clear() after the swap, so a stale inserted against the old registry (in the
+        //    window before the swap) is wiped.
+		// 3. Bump the volatile cacheGeneration last, so readers are guaranteed to see the new fields.
 		currentTheme = freshTheme;
 		colorRegistry = freshTheme.getColorRegistry();
+		colorCache.clear();
 		cacheGeneration = currentGeneration;
 	}
 
