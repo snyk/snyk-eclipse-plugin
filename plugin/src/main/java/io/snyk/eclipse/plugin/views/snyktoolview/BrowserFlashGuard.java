@@ -13,6 +13,8 @@ import org.eclipse.swt.browser.ProgressEvent;
  */
 final class BrowserFlashGuard {
 	private static final int SAFETY_REVEAL_MS = 1500;
+	// Widget-data key holding the single reusable reveal Runnable per browser (see rescheduleSafetyReveal).
+	private static final String REVEAL_KEY = "snyk.flashGuardReveal";
 
 	private BrowserFlashGuard() {
 	}
@@ -39,7 +41,7 @@ final class BrowserFlashGuard {
 		if (browser == null || browser.isDisposed()) {
 			return;
 		}
-		browser.getDisplay().timerExec(SAFETY_REVEAL_MS, () -> reveal(browser));
+		rescheduleSafetyReveal(browser);
 	}
 
 	/**
@@ -52,7 +54,30 @@ final class BrowserFlashGuard {
 		}
 		browser.setVisible(false);
 		browser.setText(html);
-		browser.getDisplay().timerExec(SAFETY_REVEAL_MS, () -> reveal(browser));
+		rescheduleSafetyReveal(browser);
+	}
+
+	/**
+	 * Cancels any pending safety-reveal for this browser and schedules a fresh one. SWT's timerExec
+	 * cancels by Runnable identity, so a single reusable Runnable per browser is reused — otherwise a
+	 * fresh lambda per call would let timers stack, and a stale one could fire mid-load of a later
+	 * document and reveal the browser before it is ready (notably on the summary panel, which re-hides
+	 * on every changed render).
+	 */
+	private static void rescheduleSafetyReveal(Browser browser) {
+		Runnable revealTask = revealRunnable(browser);
+		browser.getDisplay().timerExec(-1, revealTask);
+		browser.getDisplay().timerExec(SAFETY_REVEAL_MS, revealTask);
+	}
+
+	private static Runnable revealRunnable(Browser browser) {
+		Object existing = browser.getData(REVEAL_KEY);
+		if (existing instanceof Runnable) {
+			return (Runnable) existing;
+		}
+		Runnable revealTask = () -> reveal(browser);
+		browser.setData(REVEAL_KEY, revealTask);
+		return revealTask;
 	}
 
 	private static void reveal(Browser browser) {

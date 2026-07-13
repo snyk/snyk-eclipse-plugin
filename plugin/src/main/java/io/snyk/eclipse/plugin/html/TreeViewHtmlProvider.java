@@ -12,11 +12,18 @@ package io.snyk.eclipse.plugin.html;
  * so it wins by cascade order, and the emitted {@code var(--text-color)} is resolved by
  * {@link BaseHtmlProvider#replaceCssVariables} to the themed text color (white in dark, dark in light),
  * matching the banner's own text.
+ *
+ * <p>TEMPORARY / plugin-side workaround. The proper fix belongs in snyk-ls: give the feedback-banner
+ * link its own CSS variable (or a readable-on-gradient value) instead of reusing the shared
+ * {@code --button-text-color}, so every IDE benefits and none needs this element-scoped override.
+ * Tracked as tech debt — remove this override once the LS emits a correct banner link color.
  */
 public class TreeViewHtmlProvider extends BaseHtmlProvider {
 
 	@Override
 	public String getCss() {
+		// TODO(tech-debt): remove once snyk-ls gives the feedback-banner link its own readable color
+		// variable rather than the shared --button-text-color. See the class javadoc.
 		return ".feedback-banner-link { color: var(--text-color); }";
 	}
 }

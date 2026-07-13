@@ -435,7 +435,7 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 	// Debounce tree reloads to reduce flicker during a scan, but with a max-wait ceiling: a sustained
 	// burst of updates arriving faster than the debounce interval would otherwise keep rescheduling the
 	// timer and starve the render, leaving the tree frozen for the whole scan. Once updates have been
-	// pending longer than TREE_RENDER_MAX_WAIT_MS, render immediately instead of deferring again.
+	// pending longer than TREE_RENDER_MAX_WAIT_NANOS, render immediately instead of deferring again.
 	private void scheduleTreeRender() {
 		Display display = Display.getDefault();
 		if (display == null || display.isDisposed()) {
@@ -446,8 +446,11 @@ public class SnykToolView extends ViewPart implements ISnykToolView {
 			treeRenderPending = true;
 			firstPendingSinceNanos = now;
 		}
+		// Cancel any pending debounce first so rapid calls reschedule a single timer rather than stacking
+		// N of them (timerExec adds per call; it does not implicitly replace). The extras would be no-ops
+		// (getAndSet(null)), but coalescing avoids the redundant callbacks.
+		display.timerExec(-1, treeRenderRunnable);
 		if (now - firstPendingSinceNanos >= TREE_RENDER_MAX_WAIT_NANOS) {
-			display.timerExec(-1, treeRenderRunnable); // cancel any pending debounce
 			renderPendingTreeHtml();
 		} else {
 			display.timerExec(TREE_RENDER_DEBOUNCE_MS, treeRenderRunnable);

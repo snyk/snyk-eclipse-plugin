@@ -167,6 +167,10 @@ public class BrowserHandler {
 
 
 	public void updateBrowserContent(String issueId, String product) {
+		// currentRenderer re-runs this method on refreshTheme(), which re-fetches the issue description
+		// from the language server (getIssueDescription below) rather than doing a cheap local re-render.
+		// That is acceptable only because refreshTheme fires on a rare user action (a theme switch); if
+		// theme-change frequency ever increases, cache the raw HTML and re-run only replaceCssVariables.
 		currentRenderer = () -> updateBrowserContent(issueId, product);
 		CompletableFuture.runAsync(() -> {
 			String displayed = ProductConstants.PRODUCT_TO_DISPLAYED.get(product);
