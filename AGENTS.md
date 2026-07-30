@@ -32,9 +32,32 @@ Maven itself from `repo.maven.apache.org` on first use.
 - **Add `-Declipse.p2.mirrors=false`.** Tycho otherwise follows p2 mirror redirects
   out to arbitrary university and ISP mirrors that cannot be enumerated in an
   egress allowlist; the flag forces direct downloads from `download.eclipse.org`.
-- **Tests run headless** under Tycho surefire, so no display is needed. Launching
-  the plugin inside a real Eclipse IDE does need a GUI and is out of scope for a
-  headless cloud VM.
+- **Tests run headless** under Tycho surefire, so no display is needed for the build.
+- **Installing the built plugin into a real Eclipse is the strongest proof**, since
+  building and unit tests do not show that the plugin works inside a running IDE, and
+  it is achievable where the VM provides a display (cloud VMs here have run XFCE on
+  `DISPLAY=:1`). Two things bite, both avoidable:
+  - **You will not get the matching Eclipse release.** The 4.34 / 2024-12 IDE the
+    plugin targets is served only from `archive.eclipse.org` and `www.eclipse.org`,
+    which are typically blocked. The **current** release is reachable directly from
+    `download.eclipse.org`, and the 4.34-built plugin runs fine on it. Install the
+    built feature — the build produces `update-site/target/repository` — with the p2
+    director, adding the lsp4e and release repositories alongside the local one:
+    `<eclipse>/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository file:<repo>/update-site/target/repository,https://download.eclipse.org/lsp4e/releases/<ver>,https://download.eclipse.org/releases/<rel> -installIU io.snyk.scanner.feature.group -destination <eclipse> -profile epp.package.java`.
+  - **The Snyk view needs WebKitGTK.** It renders through an SWT `Browser` widget, so
+    without the library the view dies with `SWTError: No more handles because there is
+    no underlying browser available`, surfacing as `ClassCastException: ErrorViewPart
+    cannot be cast to … SnykToolView` and "Failed to create the part's controls". Fix
+    with `sudo apt-get install -y libwebkit2gtk-4.1-0` and relaunch. Note only one
+    Eclipse may hold a `-data` workspace: kill any prior instance and remove
+    `.metadata/.lock` first.
+- **Authentication does not come from the environment.** The plugin passes the token
+  held in its own preferences (Window > Preferences > Snyk) to the language server, so
+  neither the ambient `SNYK_TOKEN` nor the CLI's `~/.config/configstore` authenticates
+  it — `snyk auth` in a terminal has no effect. Use the API-token method rather than
+  OAuth2, whose browser flow times out here, and trust the project in the Snyk UI: the
+  plugin's folder-trust gate is separate from Eclipse's own, and a scan will not run
+  until it is satisfied.
 - **Probe egress instead of trusting a host list.** The allowlist changes between
   runs, so treat any reachable/blocked list — including in older revisions of this
   section — as stale. Matching is per hostname, and a bare entry is apex-exact
