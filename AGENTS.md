@@ -28,7 +28,8 @@ Maven itself from `repo.maven.apache.org` on first use.
 - **Commands:** `./mvnw package` builds and packages the plugin (jar under
   `plugin/target/`). `./mvnw clean verify -DtrimStackTrace=false` is the CI command
   and additionally runs the headless Tycho tests; a clean run compiles every bundle
-  and passes 400 tests. Do **not** pass `-P sign` — it requires signing certs.
+  and the test suite passes with no failures. Do **not** pass `-P sign` — it requires
+  signing certs.
 - **Add `-Declipse.p2.mirrors=false`.** Tycho otherwise follows p2 mirror redirects
   out to arbitrary university and ISP mirrors that cannot be enumerated in an
   egress allowlist; the flag forces direct downloads from `download.eclipse.org`.
