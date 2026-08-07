@@ -51,6 +51,14 @@ Maven itself from `repo.maven.apache.org` on first use.
     with `sudo apt-get install -y libwebkit2gtk-4.1-0` and relaunch. Note only one
     Eclipse may hold a `-data` workspace: kill any prior instance and remove
     `.metadata/.lock` first.
+  - **A pre-baked workspace traps you in a Secure Storage prompt loop.** On a saved
+    cloud environment `~/eclipse-workspace` already exists, and launching against it
+    produces repeated "Enter Password to Unlock the Secure Storage" dialogs, because
+    the plugin reads stored credentials while Eclipse's master password was never
+    set. It looks like a plugin fault and it blocks unattended runs completely.
+    Interactively, dismiss or set a password once. For an unattended run, use a fresh
+    `-data` workspace or clear `~/.eclipse/org.eclipse.equinox.security` before
+    launching.
 - **Authentication does not come from the environment.** The plugin passes the token
   held in its own preferences (Window > Preferences > Snyk) to the language server, so
   neither the ambient `SNYK_TOKEN` nor the CLI's `~/.config/configstore` authenticates
