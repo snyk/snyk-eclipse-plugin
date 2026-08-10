@@ -70,20 +70,22 @@ Maven itself from `repo.maven.apache.org` on first use.
   OAuth2, whose browser flow times out here, and trust the project in the Snyk UI: the
   plugin's folder-trust gate is separate from Eclipse's own, and a scan will not run
   until it is satisfied.
-- **A scan stuck at "in progress" for ever is almost always an untrusted folder, not a
-  bug.** The language server **silently skips paths it does not trust** and surfaces
-  nothing in the view, so it looks like a hung scan — while the CLI scans the same
-  project in seconds, because it has no trust gate. The tell is in the Eclipse log:
-  `skipping scan of untrusted path path=…`. Three cloud runs read this as a plugin or
-  LS defect before the log line was spotted. Trust it **through the plugin**: use the
-  *Trust folder* affordance the Snyk view offers, or the trusted-folders list in Snyk
-  preferences on the **Setup** tab — which sits near the bottom and may be invisible
-  until the Preferences window is enlarged or scrolled. Writing `trustedFolders` into
-  `~/.config/snyk/ls-config-Eclipse IDE` by hand does **not** work, even after a
-  restart.
-- **Probe egress instead of trusting a host list.** The allowlist changes between
-  runs, so treat any reachable/blocked list — including in older revisions of this
-  section — as stale. Matching is per hostname, and a bare entry is apex-exact
+- **A scan that sits at "in progress" and never completes: check the log before
+  assuming a defect.** One cause seen in a cloud VM is an untrusted folder — the
+  language server skips paths it does not trust and surfaces nothing in the view, so it
+  reads as a hung scan, while the CLI does the same project in seconds because it has no
+  trust gate. The tell is `skipping scan of untrusted path path=…` in the Eclipse log.
+  Trust the folder **through the plugin**: the *Trust folder* affordance the Snyk view
+  offers, or the trusted-folders list in Snyk preferences on the **Setup** tab, which
+  sits near the bottom and can be invisible until the Preferences window is enlarged or
+  scrolled. Writing `trustedFolders` into `~/.config/snyk/ls-config-Eclipse IDE` by hand
+  does not work, even after a restart. An unanswered Secure Storage prompt produces the
+  same symptom for a different reason (above). If the log shows neither, capture it —
+  that is a genuine bug report, not a misconfiguration.
+- **Do not hardcode a reachable/blocked host list.** The Cursor Cloud allowlist is
+  stable — it changes when someone asks an admin to change it, not on its own — but that
+  is exactly why a list written into a doc goes stale: it is still describing the world
+  before the last request landed. Probe the hosts this build actually needs instead. Matching is per hostname, and a bare entry is apex-exact
   while `*.example.com` covers subdomains only, so an apex host has to be
   allowlisted in its own right (the update site `https://snyk.io/ide-plugins/` is
   one such apex). A block surfaces as a TLS reset — target-platform resolution
