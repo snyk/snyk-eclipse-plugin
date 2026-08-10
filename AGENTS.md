@@ -38,11 +38,14 @@ Maven itself from `repo.maven.apache.org` on first use.
   building and unit tests do not show that the plugin works inside a running IDE, and
   it is achievable where the VM provides a display (cloud VMs here have run XFCE on
   `DISPLAY=:1`). Two things bite, both avoidable:
-  - **You will not get the matching Eclipse release.** The 4.34 / 2024-12 IDE the
-    plugin targets is served only from `archive.eclipse.org` and `www.eclipse.org`,
-    which are typically blocked. The **current** release is reachable directly from
-    `download.eclipse.org`, and the 4.34-built plugin runs fine on it. Install the
-    built feature — the build produces `update-site/target/repository` — with the p2
+  - **Getting the matching Eclipse release depends on two hosts.** The 4.34 / 2024-12
+    IDE the plugin targets is served only from `archive.eclipse.org` and
+    `www.eclipse.org`. Both are now reachable from Cursor Cloud, so fetch the release
+    the plugin actually targets. `archive.eclipse.org` has returned a single TLS reset
+    on one run and then served the download on retry, so give it one retry before
+    concluding it is blocked. If it really is unreachable, the **current** release from
+    `download.eclipse.org` works too — the 4.34-built plugin runs fine on it. Install
+    the built feature — the build produces `update-site/target/repository` — with the p2
     director, adding the lsp4e and release repositories alongside the local one:
     `<eclipse>/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository file:<repo>/update-site/target/repository,https://download.eclipse.org/lsp4e/releases/<ver>,https://download.eclipse.org/releases/<rel> -installIU io.snyk.scanner.feature.group -destination <eclipse> -profile epp.package.java`.
   - **The Snyk view needs WebKitGTK.** It renders through an SWT `Browser` widget, so
