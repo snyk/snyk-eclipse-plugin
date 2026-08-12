@@ -18,7 +18,7 @@ The Snyk Eclipse extension allows you to analyze your code, open-source dependen
 ## How to install and set up the extension
 
 
-For information about the versions of Eclipse supported by the Eclipse plugin, see [Snyk IDE plugins and extensions](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions). Snyk recommends always using the latest version of the Eclipse plugin.
+For information about the versions of Eclipse supported by the Eclipse plugin, see [Snyk IDE plugins and extensions](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions). Snyk recommends always using the latest version of the Eclipse plugin.
 
 
 You can use the Eclipse plugin in the following environments:
@@ -42,6 +42,6 @@ Continue by following the instructions in the other Eclipse extension docs:
 
 ## Support
 
-For troubleshooting and known issues, see [Troubleshooting for the Eclipse plugin](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/troubleshooting-for-the-eclipse-plugin).
+For troubleshooting and known issues, see [Troubleshooting for the Eclipse plugin](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/troubleshooting-for-the-eclipse-plugin).
 
 If you need help, submit a request to [Snyk Support](https://support.snyk.io).
