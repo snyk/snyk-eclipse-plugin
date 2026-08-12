@@ -18,7 +18,7 @@ The Snyk Eclipse extension allows you to analyze your code, open-source dependen
 ## How to install and set up the extension
 
 
-For information about the versions of Eclipse supported by the Eclipse plugin, see [Snyk IDE plugins and extensions](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions). Snyk recommends always using the latest version of the Eclipse plugin.
+For information about the versions of Eclipse supported by the Eclipse plugin, see [Snyk IDE plugins and extensions](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions). Snyk recommends always using the latest version of the Eclipse plugin.
 
 
 You can use the Eclipse plugin in the following environments:
@@ -34,14 +34,14 @@ When you are prompted, accept the license agreement and add the **Snyk Security*
 Continue by following the instructions in the other Eclipse extension docs:
 
 * [Download the CLI with the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/download-the-cli-and-language-server-with-the-eclipse-plugin)
-* [Authentication for the Eclipse plugin](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/authentication-for-the-eclipse-plugin)
-* [Eclipse plugin folder trust](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/eclipse-plugin-folder-trust)
+* [Authentication for the Eclipse plugin](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/authentication-for-the-eclipse-plugin)
+* [Eclipse plugin folder trust](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/folder-trust)
 * [Configuration of the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/configuration-of-the-eclipse-plugin)
 * [Environment variables for the Eclipse plugin](environment-variables-for-the-eclipse-plugin.md)
-* [Use the Snyk plugin to secure your Eclipse projects](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/use-the-snyk-plugin-to-secure-your-eclipse-projects)
+* [Use the Snyk plugin to secure your Eclipse projects](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/use-the-snyk-plugin-to-secure-your-eclipse-projects)
 
 ## Support
 
-For troubleshooting and known issues, see [Troubleshooting for the Eclipse plugin](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/troubleshooting-for-the-eclipse-plugin).
+For troubleshooting and known issues, see [Troubleshooting for the Eclipse plugin](https://docs.snyk.io/scm-ide-and-ci-cd-integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/troubleshooting-for-the-eclipse-plugin).
 
 If you need help, submit a request to [Snyk Support](https://support.snyk.io).
