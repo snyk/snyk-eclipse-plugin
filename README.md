@@ -10,10 +10,10 @@ The Snyk Eclipse extension allows you to analyze your code, open-source dependen
 
 * **In-line issue highlighting:** Security issues are flagged directly within your code, categorized by type and severity for quick identification and resolution.
 * **Comprehensive scanning:** The extension scans for a wide range of security issues, including:
-  * [**Open Source Security**](https://snyk.io/product/open-source-security-management/)**:** Detects vulnerabilities and license issues in both direct and transitive open-source dependencies. Automated fix suggestions simplify remediation. Explore more in the [Snyk Open Source documentation](https://docs.snyk.io/scan-using-snyk/snyk-open-source).
-  * [**Code Security**](https://snyk.io/product/snyk-code/)**:** Identifies security vulnerabilities in your custom code. Explore more in the [Snyk Code documentation](https://docs.snyk.io/scan-using-snyk/snyk-code).
-  * [**IaC Security**](https://snyk.io/product/infrastructure-as-code-security/)**:** Uncovers configuration issues in your Infrastructure as Code templates (Terraform, Kubernetes, CloudFormation, Azure Resource Manager). Explore more in the [IaC documentation](https://docs.snyk.io/scan-using-snyk/snyk-iac).
-* **Broad language and framework support:** Snyk Open Source and Snyk Code cover a wide array of package managers, programming languages, and frameworks, with ongoing updates to support the latest technologies. For the most up-to-date information on supported languages, package managers, and frameworks, see the [supported language technologies pages](https://docs.snyk.io/supported-languages-package-managers-and-frameworks).
+  * [**Open Source Security**](https://snyk.io/product/open-source-security-management/)**:** Detects vulnerabilities and license issues in both direct and transitive open-source dependencies. Automated fix suggestions simplify remediation. Explore more in the [Snyk Open Source documentation](https://docs.snyk.io/scan-fix-and-prevent/scan-with-snyk/snyk-open-source).
+  * [**Code Security**](https://snyk.io/product/snyk-code/)**:** Identifies security vulnerabilities in your custom code. Explore more in the [Snyk Code documentation](https://docs.snyk.io/scan-fix-and-prevent/scan-with-snyk/snyk-code).
+  * [**IaC Security**](https://snyk.io/product/infrastructure-as-code-security/)**:** Uncovers configuration issues in your Infrastructure as Code templates (Terraform, Kubernetes, CloudFormation, Azure Resource Manager). Explore more in the [IaC documentation](https://docs.snyk.io/scan-fix-and-prevent/scan-with-snyk/snyk-iac).
+* **Broad language and framework support:** Snyk Open Source and Snyk Code cover a wide array of package managers, programming languages, and frameworks, with ongoing updates to support the latest technologies. For the most up-to-date information on supported languages, package managers, and frameworks, see the [supported language technologies pages](https://docs.snyk.io/supported-languages/supported-languages-package-managers-and-frameworks).
 
 ## How to install and set up the extension
 
@@ -33,10 +33,10 @@ When you are prompted, accept the license agreement and add the **Snyk Security*
 
 Continue by following the instructions in the other Eclipse extension docs:
 
-* [Download the CLI with the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/download-the-cli-and-language-server-with-the-eclipse-plugin)
+* [Download the CLI with the Eclipse plugin](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/download-the-cli-with-the-eclipse-plugin)
 * [Authentication for the Eclipse plugin](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/authentication-for-the-eclipse-plugin)
 * [Eclipse plugin folder trust](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/eclipse-plugin-folder-trust)
-* [Configuration of the Eclipse plugin](https://docs.snyk.io/ide-tools/eclipse-plugin/configuration-of-the-eclipse-plugin)
+* [Configuration of the Eclipse plugin](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/configuration-of-the-eclipse-plugin)
 * [Environment variables for the Eclipse plugin](environment-variables-for-the-eclipse-plugin.md)
 * [Use the Snyk plugin to secure your Eclipse projects](https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/use-the-snyk-plugin-to-secure-your-eclipse-projects)
 
