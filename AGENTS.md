@@ -76,7 +76,10 @@ Maven itself from `repo.maven.apache.org` on first use.
     empty** — it later holds encrypted credentials. Point `-eclipse.keyring` at that real
     file, not an empty stub, and pair it with `-eclipse.password`. Neither a
     gnome-keyring daemon nor `DBUS_SESSION_BUS_ADDRESS` is sufficient on its own, and
-    neither is required once the keyring is seeded. Separately, dismissing or cancelling
+    neither is required once the keyring is seeded. You do **not** need to force
+    `defaultPasswordProvider` either — leave it at its default. Guard the write with
+    `[ ! -s <file> ]`, and in `eclipse.ini` remember the **first occurrence of each argument
+    wins**, so de-duplicate rather than prepending again. Separately, dismissing or cancelling
     the password dialog leaves storage in a state that blocks startup permanently; reset it.
   - **The language server can hang before it ever scans, with no controlling terminal.**
     It shells out to `bash --login -i -c printenv` to load environment; with no TTY that
@@ -86,6 +89,10 @@ Maven itself from `repo.maven.apache.org` on first use.
     the LS inherits only the launching process's `PATH`, so a Maven project whose
     dependency extraction needs `mvn` fails with child exit `-2` and Open Source reports
     `scan failed` unless Maven is on that `PATH`.
+- **The test suite overwrites the managed CLI.** Running the Tycho tests replaces the binary
+  at `~/.snyk/snyk-linux` with a small test artifact, so the next real launch reports the LS
+  protocol as `unknown` and fails to start. Delete that file and let managed binaries download
+  it again. Tests arguably should not write to the shared managed-CLI path.
 - **Authentication does not come from the environment.** The plugin passes the token
   held in its own preferences (Window > Preferences > Snyk) to the language server, so
   neither the ambient `SNYK_TOKEN` nor the CLI's `~/.config/configstore` authenticates
