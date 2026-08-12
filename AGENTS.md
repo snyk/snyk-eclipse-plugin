@@ -55,33 +55,58 @@ Maven itself from `repo.maven.apache.org` on first use.
     with `sudo apt-get install -y libwebkit2gtk-4.1-0` and relaunch. Note only one
     Eclipse may hold a `-data` workspace: kill any prior instance and remove
     `.metadata/.lock` first.
-  - **A pre-baked workspace traps you in a Secure Storage prompt loop.** On a saved
-    cloud environment `~/eclipse-workspace` already exists, and launching against it
-    produces repeated "Enter Password to Unlock the Secure Storage" dialogs, because
-    the plugin reads stored credentials while Eclipse's master password was never
-    set. It looks like a plugin fault and it blocks unattended runs completely.
-    Interactively, dismiss or set a password once. For an unattended run, use a fresh
-    `-data` workspace or clear `~/.eclipse/org.eclipse.equinox.security` before
-    launching.
+  - **Secure storage blocks language-server startup, and the real cause is an Equinox
+    race.** `SnykLanguageServer.start()` waits on `isSecureStorageReady()`, which waits on
+    the `Preferences` constructor's async `waitForSecureStorage()`. If that first encrypted
+    write fails, the Snyk view sits at "Snyk Security is loading…" for ever with no error.
+    On a headless Linux VM the failure is
+    `NullPointerException: null algorithm name` from `SecretKeyFactory.getInstance`, reached
+    through Equinox `JavaEncryption.internalEncrypt`: `JavaEncryption.init()` publishes its
+    `initialized` flag before the cipher and key-factory fields are set, so a concurrent
+    encryption path skips initialisation and uses null algorithm fields. Pre-seeding the
+    keyring with cipher metadata avoids the first-write path and fixes it:
+
+    ```properties
+    org.eclipse.equinox.security.preferences.version=1
+    org.eclipse.equinox.security.preferences.cipher=PBEWithHmacSHA512AndAES_256
+    org.eclipse.equinox.security.preferences.keyFactory=PBEWithHmacSHA512AndAES_256
+    ```
+
+    Write that to the file `-eclipse.keyring` points at, **only when it is absent or
+    empty** — it later holds encrypted credentials. Point `-eclipse.keyring` at that real
+    file, not an empty stub, and pair it with `-eclipse.password`. Neither a
+    gnome-keyring daemon nor `DBUS_SESSION_BUS_ADDRESS` is sufficient on its own, and
+    neither is required once the keyring is seeded. Separately, dismissing or cancelling
+    the password dialog leaves storage in a state that blocks startup permanently; reset it.
+  - **The language server can hang before it ever scans, with no controlling terminal.**
+    It shells out to `bash --login -i -c printenv` to load environment; with no TTY that
+    child takes `SIGTTIN` and sits stopped (`T+`) indefinitely, so no scanner process
+    starts behind it. The scan reports in progress for ever with `0 total` and no error.
+    Set `SNYK_LS_DISABLE_SHELL_ENV_LOADING=1`. Note the knock-on: with shell loading off
+    the LS inherits only the launching process's `PATH`, so a Maven project whose
+    dependency extraction needs `mvn` fails with child exit `-2` and Open Source reports
+    `scan failed` unless Maven is on that `PATH`.
 - **Authentication does not come from the environment.** The plugin passes the token
   held in its own preferences (Window > Preferences > Snyk) to the language server, so
   neither the ambient `SNYK_TOKEN` nor the CLI's `~/.config/configstore` authenticates
   it — `snyk auth` in a terminal has no effect. Use the API-token method rather than
-  OAuth2, whose browser flow times out here, and trust the project in the Snyk UI: the
-  plugin's folder-trust gate is separate from Eclipse's own, and a scan will not run
-  until it is satisfied.
-- **A scan that sits at "in progress" and never completes: check the log before
-  assuming a defect.** One cause seen in a cloud VM is an untrusted folder — the
-  language server skips paths it does not trust and surfaces nothing in the view, so it
-  reads as a hung scan, while the CLI does the same project in seconds because it has no
-  trust gate. The tell is `skipping scan of untrusted path path=…` in the Eclipse log.
-  Trust the folder **through the plugin**: the *Trust folder* affordance the Snyk view
-  offers, or the trusted-folders list in Snyk preferences on the **Setup** tab, which
-  sits near the bottom and can be invisible until the Preferences window is enlarged or
-  scrolled. Writing `trustedFolders` into `~/.config/snyk/ls-config-Eclipse IDE` by hand
-  does not work, even after a restart. An unanswered Secure Storage prompt produces the
-  same symptom for a different reason (above). If the log shows neither, capture it —
-  that is a genuine bug report, not a misconfiguration.
+  OAuth2, whose browser flow times out here — and note the **Re-authenticate** dialog
+  defaults to OAuth and does not offer a token at all. The token path is Window >
+  Preferences > Snyk > Setup > Authentication method > `API token (legacy)`. Trust the
+  project too: the plugin's folder-trust gate is separate from Eclipse's own, and a scan
+  will not run until it is satisfied.
+- **A scan that sits at "in progress" and never completes.** Several distinct causes
+  present identically, so read the Eclipse log before assuming a defect. Two are covered
+  above — the secure-storage failure and the shell-environment hang. The third is an
+  untrusted folder: the language server skips paths it does not trust and surfaces nothing
+  in the view, while the CLI does the same project in seconds because it has no trust gate.
+  The tell is `skipping scan of untrusted path path=…`. Trust the folder **through the
+  plugin**: Window > Preferences > Snyk > Setup > **Trust settings > Trusted folder paths**,
+  then *Add folder* — that section sits near the bottom and is easy to miss, you have to
+  scroll the Preferences content and expand it, and it only renders once the language server
+  is actually running. Applying immediately triggers a scan. Writing `trustedFolders` into
+  `~/.config/snyk/ls-config-Eclipse IDE` by hand does not work, even after a restart. If the
+  log shows none of the three, capture it — that is a genuine bug report.
 - **Do not hardcode a reachable/blocked host list.** The Cursor Cloud allowlist is
   stable — it changes when someone asks an admin to change it, not on its own — but that
   is exactly why a list written into a doc goes stale: it is still describing the world
