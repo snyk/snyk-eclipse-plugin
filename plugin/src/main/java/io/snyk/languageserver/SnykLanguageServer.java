@@ -179,7 +179,7 @@ public class SnykLanguageServer extends ProcessStreamConnectionProvider implemen
 							+ "This plugin requires protocol version " + expected + ", but the installed CLI reports version " + actualStr + ". "
 							+ "Upgrade the Snyk CLI or enable automatic updates in Snyk plugin settings. "
 							+ "For a list of compatible CLI versions, visit the "
-							+ "<a href=\"https://docs.snyk.io/developer-tools/snyk-ide-plugins-and-extensions"
+							+ "<a href=\"https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions"
 							+ "/compatibility-matrix\">IDE Plugin Compatibility Matrix</a>.");
 					link.addListener(SWT.Selection, event -> Program.launch(event.text));
 					return link;

@@ -86,7 +86,7 @@ public class SnykWizardAuthenticatePage extends WizardPage {
                 "When scanning project files, Snyk may automatically execute code "
                 + "such as invoking the package manager to get dependency information. "
                 + "You should only scan projects you trust. "
-                + "<a href=\"https://docs.snyk.io/ide-tools/eclipse-plugin/folder-trust\">More info</a>");
+                + "<a href=\"https://docs.snyk.io/developer-tools/integrations/snyk-ide-plugins-and-extensions/eclipse-plugin/eclipse-plugin-folder-trust\">More info</a>");
         GridData trustData = newHSpan2(SWT.FILL, SWT.FILL, true, true);
         trustData.widthHint = 400;
         trustText.setLayoutData(trustData);
