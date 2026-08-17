@@ -34,6 +34,10 @@ Maven itself from `repo.maven.apache.org` on first use.
   out to arbitrary university and ISP mirrors that cannot be enumerated in an
   egress allowlist; the flag forces direct downloads from `download.eclipse.org`.
 - **Tests run headless** under Tycho surefire, so no display is needed for the build.
+- **`eclipse -version` launches the full IDE, it is not a CLI version query.** A script that
+  runs it to read the version blocks on a GUI launch instead of printing and exiting. Read the
+  version from the install's metadata (e.g. `readme/readme_eclipse.html` or
+  `.eclipseproduct` / `configuration/config.ini` under the Eclipse home) instead.
 - **Installing the built plugin into a real Eclipse is the strongest proof**, since
   building and unit tests do not show that the plugin works inside a running IDE, and
   it is achievable where the VM provides a display (cloud VMs here have run XFCE on
