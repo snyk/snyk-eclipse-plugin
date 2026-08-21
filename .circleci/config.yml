@@ -1,57 +1,41 @@
 version: 2.1
 
+# Manual-trigger equivalents of GitHub Actions' `workflow_dispatch`: set to true when triggering a
+# pipeline by hand (CircleCI UI/API "Trigger Pipeline") to run the `release` or `readme-sync-manual`
+# workflow below. Every normal push/PR pipeline uses the defaults and skips both.
+parameters:
+  run_release:
+    type: boolean
+    default: false
+  run_readme_sync:
+    type: boolean
+    default: false
+
 orbs:
   prodsec: snyk/prodsec-orb@1
+  # OIDC-federated S3 publishing (IDE-2483) - no static AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY.
+  aws-cli: circleci/aws-cli@5.4.1
 
-jobs:
-  security-scans:
-    resource_class: small
-    docker:
-      - image: cimg/openjdk:17.0
+commands:
+  install-gh-cli:
+    description: Install the GitHub CLI (gh) on a Debian/Ubuntu-based image.
     steps:
-      - checkout
-      - prodsec/security_scans:
-          mode: auto
-          open-source-agentic-fix-enabled: true
-          open-source-scan-all-projects: true
-          open-source-additional-arguments: --exclude=tests
-          iac-scan: disabled
-
-  test-linux:
-    resource_class: medium
-    docker:
-      - image: cimg/openjdk:17.0
-    steps:
-      - checkout
-      - restore_cache:
-          name: Restore Maven/Tycho cache
-          keys:
-            - m2-linux-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
-            - m2-linux-v2-
       - run:
-          name: Build and test with Maven
-          command: ./mvnw clean verify -DtrimStackTrace=false
-      - save_cache:
-          name: Save Maven/Tycho cache
-          key: m2-linux-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
-          paths:
-            - ~/.m2/repository
-      - store_test_results:
-          path: tests/target/surefire-reports
-      - store_artifacts:
-          path: tests/target/surefire-reports
+          name: Install GitHub CLI
+          command: |
+            if command -v gh >/dev/null 2>&1; then exit 0; fi
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /usr/share/keyrings/githubcli-archive-keyring.gpg > /dev/null
+            sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt-get update -qq
+            sudo apt-get install -y gh
 
-  test-macos:
-    resource_class: m4pro.medium
-    macos:
-      xcode: 16.4.0
+  install-temurin-17-macos:
+    description: >-
+      Install Temurin JDK 17 on the macOS executor - Tycho/Mockito require JDK 17 specifically
+      (verified locally: JDK 21+ breaks Mockito's inline-mock byte-buddy agent), and the JDK
+      bundled with a given Xcode image isn't guaranteed to be 17.
     steps:
-      - checkout
-      - restore_cache:
-          name: Restore Maven/Tycho cache
-          keys:
-            - m2-macos-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
-            - m2-macos-v2-
       - run:
           name: Install Temurin JDK 17
           command: |
@@ -68,9 +52,179 @@ jobs:
             fi
             echo "export JAVA_HOME=$JAVA_HOME_17" >> "$BASH_ENV"
             echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> "$BASH_ENV"
+
+  decode-keystore:
+    description: Decode and integrity-check the jarsigner keystore (mirrors the GitHub Actions "Decode Keystore" step).
+    steps:
       - run:
-          name: Build and test with Maven
-          command: ./mvnw clean verify -DtrimStackTrace=false
+          name: Decode Keystore
+          command: |
+            echo "$KEYSTORE" | base64 -d > ./keystore.jks
+            echo "$KEYSTORE_SHA  ./keystore.jks" > sha256.txt
+            sha256sum -c sha256.txt
+
+  assume-s3-writer-role:
+    description: >-
+      Assume the OIDC-federated, write-only S3 publishing role (IDE-2483) instead of using static
+      AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY. AWS_ROLE_ARN/AWS_REGION/AWS_S3_BUCKET_NAME are read
+      from the CircleCI context at runtime - all AWS configuration is treated as sensitive and is
+      never hardcoded in this file. Requires the job to run under a CircleCI context (any context)
+      for CIRCLE_OIDC_TOKEN to be issued.
+    steps:
+      - aws-cli/setup:
+          role_arn: ${AWS_ROLE_ARN}
+          region: ${AWS_REGION}
+      - run:
+          name: Verify assumed role identity
+          command: aws sts get-caller-identity
+
+  pmd-lint:
+    description: >-
+      Re-implements `pmd/pmd-github-action` (ruleset + analyzeModifiedFilesOnly + SARIF upload to
+      GitHub code scanning + fail-on-violation), since that Action isn't available outside GitHub
+      Actions. Runs on every push/PR - mirrors the original ubuntu-only-in-the-matrix PMD step.
+    steps:
+      - run:
+          name: Compute changed Java files for PMD
+          command: |
+            command -v jq >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y jq)
+            if [ "<< pipeline.git.branch >>" = "main" ]; then
+              BASE_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+            else
+              PR_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls?head=${CIRCLE_PROJECT_USERNAME}:<< pipeline.git.branch >>&state=open"
+              BASE_REF=$(curl -fsSL -H 'Accept: application/vnd.github+json' "$PR_URL" | jq -r '.[0].base.ref // "main"')
+              git fetch origin "$BASE_REF"
+              BASE_SHA=$(git merge-base HEAD "origin/$BASE_REF" 2>/dev/null || echo "")
+            fi
+            if [ -n "$BASE_SHA" ]; then
+              git diff --name-only "$BASE_SHA" HEAD -- 'plugin/src/main/java/*.java' 'plugin/src/main/java/**/*.java' > /tmp/pmd-changed-files.txt || true
+            fi
+            if [ ! -s /tmp/pmd-changed-files.txt ]; then
+              find plugin/src/main/java -name '*.java' > /tmp/pmd-changed-files.txt
+            fi
+            echo "Changed files for PMD:"
+            cat /tmp/pmd-changed-files.txt
+      - run:
+          name: Run PMD lint
+          command: |
+            echo 0 > /tmp/pmd-violations.txt
+            if [ ! -s /tmp/pmd-changed-files.txt ]; then
+              echo "No changed Java files, skipping PMD."
+              exit 0
+            fi
+            PMD_VERSION=7.26.0
+            curl -fsSL -o /tmp/pmd.zip "https://github.com/pmd/pmd/releases/download/pmd_releases%2F${PMD_VERSION}/pmd-dist-${PMD_VERSION}-bin.zip"
+            unzip -q /tmp/pmd.zip -d /tmp
+            "/tmp/pmd-bin-${PMD_VERSION}/bin/pmd" check \
+              --no-cache \
+              -d "$(paste -sd, /tmp/pmd-changed-files.txt)" \
+              -R plugin/src/main/resources/pmd-ruleset.xml \
+              -f sarif \
+              -r pmd-report.sarif || true
+            if [ -f pmd-report.sarif ]; then
+              jq '[.runs[].results[]] | length' pmd-report.sarif > /tmp/pmd-violations.txt
+            fi
+            echo "PMD violations: $(cat /tmp/pmd-violations.txt)"
+      - install-gh-cli
+      - run:
+          name: Upload SARIF to GitHub code scanning
+          command: |
+            VIOLATIONS=$(cat /tmp/pmd-violations.txt)
+            if [ "$VIOLATIONS" != "0" ] && [ -f pmd-report.sarif ]; then
+              gzip -c pmd-report.sarif | base64 -w0 > /tmp/pmd-report.sarif.gz.b64
+              gh api "repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/code-scanning/sarifs" \
+                -f "commit_sha=<< pipeline.git.revision >>" \
+                -f "ref=refs/heads/<< pipeline.git.branch >>" \
+                -F sarif=@/tmp/pmd-report.sarif.gz.b64 \
+                -f tool_name=PMD
+            fi
+      - run:
+          name: Fail build if PMD violations found
+          command: |
+            VIOLATIONS=$(cat /tmp/pmd-violations.txt)
+            if [ "$VIOLATIONS" != "0" ]; then
+              echo "PMD found $VIOLATIONS violation(s), see pmd-report.sarif"
+              exit 1
+            fi
+
+jobs:
+  security-scans:
+    resource_class: small
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - prodsec/security_scans:
+          mode: auto
+          open-source-agentic-fix-enabled: true
+          open-source-scan-all-projects: true
+          open-source-additional-arguments: --exclude=tests
+          iac-scan: disabled
+
+  # Mirrors the ubuntu-latest leg of the old GitHub Actions matrix: PMD lint (every push/PR) plus,
+  # on push to main only, the signed build and preview upload to static.snyk.io.
+  test-linux:
+    resource_class: medium
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore Maven/Tycho cache
+          keys:
+            - m2-linux-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
+            - m2-linux-v2-
+      - pmd-lint
+      - when:
+          condition:
+            equal: ["main", << pipeline.git.branch >>]
+          steps:
+            - decode-keystore
+            - run:
+                name: Build signed release artifact with Maven
+                command: ./mvnw clean verify -P sign -DtrimStackTrace=false
+            - assume-s3-writer-role
+            - run:
+                name: Upload preview binaries to static.snyk.io
+                command: .github/upload-to-s3.sh preview
+      - unless:
+          condition:
+            equal: ["main", << pipeline.git.branch >>]
+          steps:
+            - run:
+                name: Build and test with Maven
+                command: ./mvnw clean verify -DtrimStackTrace=false
+      - save_cache:
+          name: Save Maven/Tycho cache
+          key: m2-linux-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
+          paths:
+            - ~/.m2/repository
+      - store_test_results:
+          path: tests/target/surefire-reports
+      - store_artifacts:
+          path: tests/target/surefire-reports
+
+  # Mirrors the macos-latest leg: unsigned build+test, except on push to main (where the original
+  # matrix job did nothing for this OS either - no PMD, no build - only ubuntu-latest built there).
+  test-macos:
+    resource_class: m4pro.medium
+    macos:
+      xcode: 16.4.0
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore Maven/Tycho cache
+          keys:
+            - m2-macos-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
+            - m2-macos-v2-
+      - install-temurin-17-macos
+      - unless:
+          condition:
+            equal: ["main", << pipeline.git.branch >>]
+          steps:
+            - run:
+                name: Build and test with Maven
+                command: ./mvnw clean verify -DtrimStackTrace=false
       - save_cache:
           name: Save Maven/Tycho cache
           key: m2-macos-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
@@ -81,6 +235,7 @@ jobs:
       - store_artifacts:
           path: tests/target/surefire-reports
 
+  # Mirrors the windows-latest leg: same as macOS above.
   test-windows:
     resource_class: windows.medium
     machine:
@@ -98,21 +253,25 @@ jobs:
           command: |
             choco install temurin17 -y --no-progress
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - run:
-          name: Build and test with Maven
-          shell: powershell.exe -ExecutionPolicy Bypass
-          command: |
-            $javaHome = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory |
-              Where-Object { $_.Name -like "jdk-17*" } |
-              Select-Object -First 1).FullName
-            if (-not $javaHome) {
-              Write-Error "Temurin 17 install directory not found under 'C:\Program Files\Eclipse Adoptium'"
-              exit 1
-            }
-            $env:JAVA_HOME = $javaHome
-            $env:PATH = "$javaHome\bin;$env:PATH"
-            & .\mvnw.cmd clean verify "-DtrimStackTrace=false"
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - unless:
+          condition:
+            equal: ["main", << pipeline.git.branch >>]
+          steps:
+            - run:
+                name: Build and test with Maven
+                shell: powershell.exe -ExecutionPolicy Bypass
+                command: |
+                  $javaHome = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory |
+                    Where-Object { $_.Name -like "jdk-17*" } |
+                    Select-Object -First 1).FullName
+                  if (-not $javaHome) {
+                    Write-Error "Temurin 17 install directory not found under 'C:\Program Files\Eclipse Adoptium'"
+                    exit 1
+                  }
+                  $env:JAVA_HOME = $javaHome
+                  $env:PATH = "$javaHome\bin;$env:PATH"
+                  & .\mvnw.cmd clean verify "-DtrimStackTrace=false"
+                  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - save_cache:
           name: Save Maven/Tycho cache
           key: m2-windows-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
@@ -122,6 +281,129 @@ jobs:
           path: tests/target/surefire-reports
       - store_artifacts:
           path: tests/target/surefire-reports
+
+  # Ports .github/workflows/resource-check.yml verbatim.
+  static-resource-check:
+    resource_class: small
+    docker:
+      - image: cimg/base:current
+    steps:
+      - checkout
+      - run:
+          name: Check Static Resources
+          command: |
+            declare -A resources
+            # Add each resource as a key, value pair, mapping the local resource to the reference file (which should be stored in the language server repository). For example:
+            # resources["<path_to_local_file>"]="<url_of_reference_file>"
+            resources["plugin/src/main/resources/ui/html/ScanSummaryInit.html"]="https://raw.githubusercontent.com/snyk/snyk-ls/refs/heads/main/shared_ide_resources/ui/html/ScanSummaryInit.html"
+            resources["plugin/src/main/resources/ui/html/settings-fallback.html"]="https://raw.githubusercontent.com/snyk/snyk-ls/refs/heads/main/shared_ide_resources/ui/html/settings-fallback.html"
+            for key in ${!resources[@]}; do
+              candidate=$(sha512sum $key | awk {'print $1'})
+              candidate=${candidate:="null"}
+              reference=$(curl -s ${resources[$key]} | sha512sum | awk {'print $1'})
+              echo "Candidate file $key has sha512sum $candidate"
+              echo "Reference file ${resources[$key]} has sha512sum $reference"
+              [[ $candidate == $reference ]]
+            done
+
+  # Ports .github/workflows/release.yml. Manually triggered (see the `release` workflow below)
+  # instead of GitHub Actions' workflow_dispatch - trigger a CircleCI pipeline on the desired
+  # branch (main, or a hotfix branch per RELEASE.md) with the run_release parameter set to true.
+  release:
+    resource_class: medium
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - run:
+          name: Ensure full git history is available
+          command: git fetch --unshallow 2>/dev/null || true
+      - decode-keystore
+      - run:
+          name: Build signed release artifact with Maven
+          command: ./mvnw clean verify -P sign
+      - run:
+          name: Configure git identity
+          command: |
+            git config user.email "noreply@snyk.io"
+            git config user.name "circleci-release-bot"
+      - run:
+          # NOTE: replicates the original GitHub Actions step exactly, including its pre-existing
+          # `git tag` call with no tag name argument (a no-op that just lists local tags rather
+          # than creating $TAG_NAME) - not fixed here per "no functional change" scope [IDE-2497].
+          name: Create release tag
+          command: |
+            TAG_NAME="v$(git show -s --format=%cd --date=format:%Y%m%d.%H%M%S)"
+            git tag
+            git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
+            git push --tags
+            echo "export TAG_NAME=$TAG_NAME" >> "$BASH_ENV"
+      - install-gh-cli
+      - run:
+          name: Create GitHub release
+          command: gh release create "$TAG_NAME" --generate-notes $(find . -name 'update-site-*.zip')
+      - assume-s3-writer-role
+      - run:
+          name: Upload stable binaries to static.snyk.io
+          command: .github/upload-to-s3.sh stable
+
+  # Ports .github/workflows/readme-sync.yml verbatim (logic unchanged, only the CI-provided
+  # GITHUB_TOKEN is replaced by the GH_TOKEN context secret).
+  synchronize-readme:
+    resource_class: small
+    docker:
+      - image: cimg/base:current
+    environment:
+      SOURCE_PATH: ./docs/docs/developer-tools/snyk-ide-plugins-and-extensions/eclipse-plugin/README.md
+      FILE_TO_COMMIT: README.md
+      DESTINATION_REPOSITORY: snyk-eclipse-plugin
+      DESTINATION_BRANCH: docs/automatic-gitbook-update
+      MESSAGE: 'docs: synchronizing README from snyk/user-docs'
+    steps:
+      - install-gh-cli
+      - run:
+          name: Synchronize README from snyk/user-docs
+          command: |
+            gh auth setup-git
+            git config --global user.email "noreply@snyk.io"
+            git config --global user.name "circleci-readme-sync-bot"
+            gh repo clone snyk/$DESTINATION_REPOSITORY $DESTINATION_REPOSITORY -- --depth=1 --quiet
+            gh repo clone snyk/user-docs docs -- --depth=1 --quiet
+            git -C ./$DESTINATION_REPOSITORY checkout -B $DESTINATION_BRANCH
+
+            cp $SOURCE_PATH ./$DESTINATION_REPOSITORY/$FILE_TO_COMMIT
+            sed -i \
+                -e "s|../../../.gitbook/assets/|https://github.com/snyk/user-docs/raw/HEAD/docs/.gitbook/assets/|g" \
+                ./$DESTINATION_REPOSITORY/$FILE_TO_COMMIT
+            sed -i \
+                -E "s|\!\\[([[:alnum:][:space:][:punct:]]*)\]\(<([[:alnum:][:punct:]\-\.\/:[:space:]\(\)]+)>\)|<img src=\"\2\" alt=\"\1\" />|g" \
+                ./$DESTINATION_REPOSITORY/$FILE_TO_COMMIT
+            sed -i \
+                -E 's|(\{%.*%\})||g' \
+                ./$DESTINATION_REPOSITORY/$FILE_TO_COMMIT
+
+            if [[ $(git -C ./$DESTINATION_REPOSITORY status --porcelain) ]]; then
+              echo "Documentation changes detected"
+              cd ./$DESTINATION_REPOSITORY
+              git push -f -u origin $DESTINATION_BRANCH
+
+              export SHA=$( git rev-parse $DESTINATION_BRANCH:$FILE_TO_COMMIT )
+              export CONTENT=$( base64 -i $FILE_TO_COMMIT )
+              gh api --method PUT /repos/:owner/:repo/contents/$FILE_TO_COMMIT \
+                --field message="$MESSAGE" \
+                --field content="$CONTENT" \
+                --field encoding="base64" \
+                --field branch="$DESTINATION_BRANCH" \
+                --field sha="$SHA"
+
+              if [[ ! $(gh pr list --search "$MESSAGE" 2>&1 | grep -e "$MESSAGE";) ]]; then
+                echo "Creating PR"
+                gh pr create --title="$MESSAGE" --body="Automatic PR controlled by CircleCI." --head $DESTINATION_BRANCH
+              fi
+              echo "PR exists, pushed changes to it."
+            else
+              echo "No documentation changes detected, exiting."
+            fi
 
 workflows:
   version: 2
@@ -140,8 +422,34 @@ workflows:
             - devex_ide
             - prodsec-orb-runtime
 
-      - test-linux
+      - test-linux:
+          context: snyk-eclipse-plugin-secrets
 
       - test-macos
 
       - test-windows
+
+      - static-resource-check
+
+  release:
+    when: << pipeline.parameters.run_release >>
+    jobs:
+      - release:
+          context: snyk-eclipse-plugin-secrets
+
+  readme-sync-scheduled:
+    triggers:
+      - schedule:
+          cron: "0 12 * * 1-5" # Mon-Fri at 12 UTC
+          filters:
+            branches:
+              only: main
+    jobs:
+      - synchronize-readme:
+          context: snyk-eclipse-plugin-secrets
+
+  readme-sync-manual:
+    when: << pipeline.parameters.run_readme_sync >>
+    jobs:
+      - synchronize-readme:
+          context: snyk-eclipse-plugin-secrets
