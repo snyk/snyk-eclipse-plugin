@@ -26,14 +26,14 @@ jobs:
       - restore_cache:
           name: Restore Maven/Tycho cache
           keys:
-            - m2-linux-v1-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}
-            - m2-linux-v1-
+            - m2-linux-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
+            - m2-linux-v2-
       - run:
           name: Build and test with Maven
           command: ./mvnw clean verify -DtrimStackTrace=false
       - save_cache:
           name: Save Maven/Tycho cache
-          key: m2-linux-v1-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}
+          key: m2-linux-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
           paths:
             - ~/.m2/repository
       - store_test_results:
@@ -50,22 +50,30 @@ jobs:
       - restore_cache:
           name: Restore Maven/Tycho cache
           keys:
-            - m2-macos-v1-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}
-            - m2-macos-v1-
+            - m2-macos-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
+            - m2-macos-v2-
       - run:
           name: Install Temurin JDK 17
           command: |
-            curl -fsSL -o /tmp/temurin17.tar.gz "https://api.adoptium.net/v3/binary/latest/17/ga/mac/aarch64/jdk/hotspot/normal/eclipse"
+            JDK_URL="https://api.adoptium.net/v3/binary/latest/17/ga/mac/aarch64/jdk/hotspot/normal/eclipse"
+            curl -fsSL -o /tmp/temurin17.tar.gz "$JDK_URL"
+            curl -fsSL -o /tmp/temurin17.tar.gz.sha256.txt "$JDK_URL.sha256.txt"
+            (cd /tmp && sha256sum -c temurin17.tar.gz.sha256.txt)
             sudo mkdir -p /Library/Java/JavaVirtualMachines
             sudo tar -xzf /tmp/temurin17.tar.gz -C /Library/Java/JavaVirtualMachines
-            echo 'export JAVA_HOME=$(/usr/libexec/java_home -v 17)' >> "$BASH_ENV"
+            JAVA_HOME_17="$(/usr/libexec/java_home -v 17)"
+            if [ -z "$JAVA_HOME_17" ]; then
+              echo "Temurin 17 was not found by /usr/libexec/java_home after extraction" >&2
+              exit 1
+            fi
+            echo "export JAVA_HOME=$JAVA_HOME_17" >> "$BASH_ENV"
             echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> "$BASH_ENV"
       - run:
           name: Build and test with Maven
           command: ./mvnw clean verify -DtrimStackTrace=false
       - save_cache:
           name: Save Maven/Tycho cache
-          key: m2-macos-v1-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}
+          key: m2-macos-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
           paths:
             - ~/.m2/repository
       - store_test_results:
@@ -82,12 +90,14 @@ jobs:
       - restore_cache:
           name: Restore Maven/Tycho cache
           keys:
-            - m2-windows-v1-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}
-            - m2-windows-v1-
+            - m2-windows-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
+            - m2-windows-v2-
       - run:
           name: Install Temurin JDK 17
           shell: powershell.exe -ExecutionPolicy Bypass
-          command: choco install temurin17 -y --no-progress
+          command: |
+            choco install temurin17 -y --no-progress
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - run:
           name: Build and test with Maven
           shell: powershell.exe -ExecutionPolicy Bypass
@@ -95,13 +105,17 @@ jobs:
             $javaHome = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory |
               Where-Object { $_.Name -like "jdk-17*" } |
               Select-Object -First 1).FullName
+            if (-not $javaHome) {
+              Write-Error "Temurin 17 install directory not found under 'C:\Program Files\Eclipse Adoptium'"
+              exit 1
+            }
             $env:JAVA_HOME = $javaHome
             $env:PATH = "$javaHome\bin;$env:PATH"
             & .\mvnw.cmd clean verify "-DtrimStackTrace=false"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - save_cache:
           name: Save Maven/Tycho cache
-          key: m2-windows-v1-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}
+          key: m2-windows-v2-{{ checksum "pom.xml" }}-{{ checksum "plugin/pom.xml" }}-{{ checksum "tests/pom.xml" }}-{{ checksum "target-platform/target-platform.target" }}
           paths:
             - C:\Users\circleci\.m2\repository
       - store_test_results:
