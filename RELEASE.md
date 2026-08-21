@@ -29,13 +29,13 @@
 - Ensure all tests for the latest commit have passed before proceeding with the release.
 
 
-**Release via GitHub Actions**
+**Release via CircleCI**
 
 - If you want to do a hotfix with a subset of commits from main, create a hotfix branch off the previous release tag.
   - For the hotfix release, cherry pick the commits you want to go into the hotfix release.
-  
-- Trigger the release workflow in GitHub Actions.
-  - If this is a hotfix, select the hotfix branch.
+
+- Trigger the `release` workflow in CircleCI: open the project in the CircleCI UI, use "Trigger Pipeline", pick the target branch (`main`, or the hotfix branch), and set the `run_release` pipeline parameter to `true`.
+  - This runs the `release` job defined in `.circleci/config.yml`, which signs the build, tags it, creates the GitHub release, and publishes to `static.snyk.io`.
 
 
 **Release Notes**
