@@ -42,7 +42,11 @@ commands:
             JDK_URL="https://api.adoptium.net/v3/binary/latest/17/ga/mac/aarch64/jdk/hotspot/normal/eclipse"
             curl -fsSL -o /tmp/temurin17.tar.gz "$JDK_URL"
             curl -fsSL -o /tmp/temurin17.tar.gz.sha256.txt "$JDK_URL.sha256.txt"
-            (cd /tmp && sha256sum -c temurin17.tar.gz.sha256.txt)
+            # The checksum file's second column is Adoptium's own asset filename, not
+            # ours, so check the hash directly instead of via `sha256sum -c` (which
+            # requires the filename column to match a file that actually exists).
+            EXPECTED_SHA=$(awk '{print $1}' /tmp/temurin17.tar.gz.sha256.txt)
+            echo "${EXPECTED_SHA}  /tmp/temurin17.tar.gz" | sha256sum -c -
             sudo mkdir -p /Library/Java/JavaVirtualMachines
             sudo tar -xzf /tmp/temurin17.tar.gz -C /Library/Java/JavaVirtualMachines
             JAVA_HOME_17="$(/usr/libexec/java_home -v 17)"
@@ -92,12 +96,14 @@ commands:
               BASE_SHA=$(git rev-parse HEAD~1 2>/dev/null || echo "")
             else
               PR_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls?head=${CIRCLE_PROJECT_USERNAME}:<< pipeline.git.branch >>&state=open"
-              BASE_REF=$(curl -fsSL -H 'Accept: application/vnd.github+json' "$PR_URL" | jq -r '.[0].base.ref // "main"')
+              BASE_REF=$(curl -fsSL -H 'Accept: application/vnd.github+json' -H "Authorization: Bearer ${GH_TOKEN}" "$PR_URL" | jq -r '.[0].base.ref // "main"')
               git fetch origin "$BASE_REF"
               BASE_SHA=$(git merge-base HEAD "origin/$BASE_REF" 2>/dev/null || echo "")
             fi
             if [ -n "$BASE_SHA" ]; then
               git diff --name-only "$BASE_SHA" HEAD -- 'plugin/src/main/java/*.java' 'plugin/src/main/java/**/*.java' > /tmp/pmd-changed-files.txt || true
+            else
+              echo "WARNING: could not determine a diff base, scanning the entire codebase" >&2
             fi
             if [ ! -s /tmp/pmd-changed-files.txt ]; then
               find plugin/src/main/java -name '*.java' > /tmp/pmd-changed-files.txt
@@ -132,9 +138,13 @@ commands:
             VIOLATIONS=$(cat /tmp/pmd-violations.txt)
             if [ "$VIOLATIONS" != "0" ] && [ -f pmd-report.sarif ]; then
               gzip -c pmd-report.sarif | base64 -w0 > /tmp/pmd-report.sarif.gz.b64
+              # PMD's sarif renderer emits absolute file:// artifact URIs and doesn't set
+              # invocations[].workingDirectory itself, so GitHub needs checkout_uri here to
+              # resolve them back to repo-relative paths and show annotated alerts.
               gh api "repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/code-scanning/sarifs" \
                 -f "commit_sha=<< pipeline.git.revision >>" \
                 -f "ref=refs/heads/<< pipeline.git.branch >>" \
+                -f "checkout_uri=file://$(pwd)" \
                 -F sarif=@/tmp/pmd-report.sarif.gz.b64 \
                 -f tool_name=PMD
             fi
