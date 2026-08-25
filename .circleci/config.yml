@@ -1,12 +1,11 @@
 version: 2.1
 
-# Manual-trigger equivalents of GitHub Actions' `workflow_dispatch`: set to true when triggering a
-# pipeline by hand (CircleCI UI/API "Trigger Pipeline") to run the `release` or `readme-sync-manual`
-# workflow below. Every normal push/PR pipeline uses the defaults and skips both.
+# Manual-trigger equivalent of GitHub Actions' `workflow_dispatch` for readme-sync.yml: set to true
+# when triggering a pipeline by hand (CircleCI UI/API "Trigger Pipeline") to run the
+# `readme-sync-manual` workflow below. Every normal push/PR pipeline uses the default and skips it.
+# (release.yml's workflow_dispatch equivalent is the `approve-stable-release` approval job in the
+# `release` workflow instead of a pipeline parameter - see that workflow below.)
 parameters:
-  run_release:
-    type: boolean
-    default: false
   run_readme_sync:
     type: boolean
     default: false
@@ -317,8 +316,9 @@ jobs:
             done
 
   # Ports .github/workflows/release.yml. Manually triggered (see the `release` workflow below)
-  # instead of GitHub Actions' workflow_dispatch - trigger a CircleCI pipeline on the desired
-  # branch (main, or a hotfix branch per RELEASE.md) with the run_release parameter set to true.
+  # instead of GitHub Actions' workflow_dispatch - approve the "approve-stable-release" job on
+  # the pipeline for whichever branch you want to release from (main, or a hotfix branch per
+  # RELEASE.md).
   release:
     resource_class: medium
     docker:
@@ -441,13 +441,14 @@ workflows:
 
       - static-resource-check
 
+  # Runs on every pipeline (any branch, same as GitHub's workflow_dispatch letting you pick any
+  # branch to run from - e.g. a hotfix branch, per RELEASE.md) but never does anything on its own:
+  # it always parks at the "approve-stable-release" approval job. To cut a release, open the
+  # CircleCI pipeline for the commit/branch you want to release from, go to the `release`
+  # workflow, and click Approve on "approve-stable-release" - only then does the `release` job
+  # (sign, tag, GitHub release, stable S3 upload) run. No pipeline parameter needed.
   release:
-    when: << pipeline.parameters.run_release >>
     jobs:
-      # Publishing to the "stable" channel requires an explicit human approval in the CircleCI
-      # UI/API (Workflows -> release -> "approve-stable-release" -> Approve), even after the
-      # pipeline itself was triggered with run_release=true - triggering and approving are two
-      # separate, deliberate actions.
       - approve-stable-release:
           type: approval
       - release:
