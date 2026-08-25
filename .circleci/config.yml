@@ -444,8 +444,16 @@ workflows:
   release:
     when: << pipeline.parameters.run_release >>
     jobs:
+      # Publishing to the "stable" channel requires an explicit human approval in the CircleCI
+      # UI/API (Workflows -> release -> "approve-stable-release" -> Approve), even after the
+      # pipeline itself was triggered with run_release=true - triggering and approving are two
+      # separate, deliberate actions.
+      - approve-stable-release:
+          type: approval
       - release:
           context: snyk-eclipse-plugin-secrets
+          requires:
+            - approve-stable-release
 
   readme-sync-scheduled:
     triggers:

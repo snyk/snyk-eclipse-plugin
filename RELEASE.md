@@ -35,7 +35,9 @@
   - For the hotfix release, cherry pick the commits you want to go into the hotfix release.
 
 - Trigger the `release` workflow in CircleCI: open the project in the CircleCI UI, use "Trigger Pipeline", pick the target branch (`main`, or the hotfix branch), and set the `run_release` pipeline parameter to `true`.
-  - This runs the `release` job defined in `.circleci/config.yml`, which signs the build, tags it, creates the GitHub release, and publishes to `static.snyk.io`.
+  - This starts the `release` workflow defined in `.circleci/config.yml`, which pauses at the `approve-stable-release` job.
+- Publishing to the `stable` channel requires a manual approval: open the pipeline's `release` workflow in the CircleCI UI, find the `approve-stable-release` job, and click "Approve".
+  - Only after approval does the `release` job run: it signs the build, tags it, creates the GitHub release, and publishes to `static.snyk.io`'s `stable` channel.
 
 
 **Release Notes**
