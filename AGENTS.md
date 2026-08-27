@@ -10,40 +10,38 @@
 ./mvnw package                                      # fetch external jars into plugin/target/dependency (for PDE dev setup)
 ```
 
-Tests run via `tycho-surefire-plugin` (module `tests/`, JUnit 5) as part of `verify` — there is no separate test-only target. `maven-pmd-plugin` runs `check`/`cpd-check` in `verify` for `plugin/` (ruleset `plugin/src/main/resources/pmd-ruleset.xml`); CI additionally runs `pmd-github-action` as a hard lint gate before the Maven build, so keep PMD clean.
+Tests run via `tycho-surefire-plugin` (module `tests/`, JUnit 5) as part of `verify`; there is no separate test-only target. `maven-pmd-plugin` runs `check`/`cpd-check` in `verify` for `plugin/` (ruleset `plugin/src/main/resources/pmd-ruleset.xml`); CI additionally runs `pmd-github-action` as a hard lint gate before the Maven build, so keep PMD clean.
 
 ## Architecture
 
 Root `pom.xml` declares five Tycho modules, built in order:
-- `target-platform/` — `target-platform.target`, pinning the Eclipse Platform + LSP4E/LSP4J versions the build resolves against.
-- `plugin/` (`io.snyk.eclipse.plugin`) — the plugin code, under `plugin/src/main/java/io/snyk/`:
-  - `eclipse/plugin/` — `Activator.java`, `SnykStartup.java` (bundle lifecycle/startup).
-  - `eclipse/plugin/views/snyktoolview/` — the Snyk tool view (`SnykToolView`, `BrowserHandler`, `TreeViewBrowserHandler`) and `handlers/` (menu commands).
-  - `eclipse/plugin/html/` — HTML providers rendering scan results into the embedded browser.
-  - `eclipse/plugin/preferences/`, `properties/` — preference pages and per-project/folder settings.
-  - `eclipse/plugin/wizards/`, `analytics/`, `domain/`, `utils/` — setup wizard, analytics events, domain model, shared utilities.
-  - `languageserver/` — LSP4E integration: `SnykLanguageServer`, `LsRuntimeEnvironment`, `LsConfigurationUpdater`, `WorkspaceFolderChangeTracker`, `CommandHandler`.
-  - `languageserver/download/` — binary download/verification of the `snyk-ls`/CLI executable.
-  - `languageserver/protocolextension/` — custom LSP protocol handling (`SnykExtendedLanguageClient`, `ProgressManager`) and `messageObjects/scanResults/` DTOs mapping LS JSON payloads.
-- `feature/` — `feature.xml`/`category.xml` packaging the plugin into an Eclipse feature.
-- `tests/` (`io.snyk.eclipse.plugin.tests`) — JUnit 5 test bundle, mirrors `plugin/`'s package structure.
-- `update-site/` — `eclipse-repository` module producing the p2 update site.
+- `target-platform/` contains `target-platform.target`, pinning the Eclipse Platform + LSP4E/LSP4J versions the build resolves against.
+- `plugin/` (`io.snyk.eclipse.plugin`) is the plugin code, under `plugin/src/main/java/io/snyk/`:
+  - `eclipse/plugin/` has `Activator.java`, `SnykStartup.java` (bundle lifecycle/startup).
+  - `eclipse/plugin/views/snyktoolview/` has the Snyk tool view (`SnykToolView`, `BrowserHandler`, `TreeViewBrowserHandler`) and `handlers/` (menu commands).
+  - `eclipse/plugin/html/` has HTML providers rendering scan results into the embedded browser.
+  - `eclipse/plugin/preferences/`, `properties/`: preference pages and per-project/folder settings.
+  - `eclipse/plugin/wizards/`, `analytics/`, `domain/`, `utils/`: setup wizard, analytics events, domain model, shared utilities.
+  - `languageserver/` handles LSP4E integration: `SnykLanguageServer`, `LsRuntimeEnvironment`, `LsConfigurationUpdater`, `WorkspaceFolderChangeTracker`, `CommandHandler`.
+  - `languageserver/download/` handles binary download/verification of the `snyk-ls`/CLI executable.
+  - `languageserver/protocolextension/` has custom LSP protocol handling (`SnykExtendedLanguageClient`, `ProgressManager`) and `messageObjects/scanResults/` DTOs mapping LS JSON payloads.
+- `feature/` has `feature.xml`/`category.xml` packaging the plugin into an Eclipse feature.
+- `tests/` (`io.snyk.eclipse.plugin.tests`) is the JUnit 5 test bundle, mirroring `plugin/`'s package structure.
+- `update-site/` is the `eclipse-repository` module producing the p2 update site.
 
 ## Conventions
 
 - Test classes are named `<ClassUnderTest>Test.java`, placed in a mirrored package path under `tests/src/test/java` (not co-located with source).
 - Language-server-related tests extend the shared base class `LsBaseTest`.
 - Mocking via Mockito (`mockito-inline`, `mockito-junit-jupiter`) plus Instancio for test-data generation; JUnit 5 (Jupiter) throughout, not JUnit 4.
-- Java package root splits into `io.snyk.eclipse.plugin.*` (Eclipse-specific UI/wiring) and `io.snyk.languageserver.*` (LSP/protocol logic) — a deliberate separation between IDE glue and language-server integration.
+- Java package root splits into `io.snyk.eclipse.plugin.*` (Eclipse-specific UI/wiring) and `io.snyk.languageserver.*` (LSP/protocol logic), a deliberate separation between IDE glue and language-server integration.
 
 ## Development Workflow
 
-- Use TDD: write/update tests before implementation, iterate until green.
-- For non-trivial work, write an implementation plan first and get confirmation before starting; never commit the plan.
-- Make the minimum change needed — don't refactor or optimize beyond the stated goal. Comment on *why*, not *what*.
+- Never commit an implementation plan to the repo.
 - Use Mockito for mocking and reuse existing mocks rather than writing new ones.
 - This is not a library: delete unused files instead of deprecating them.
-- After changing `.java` files, run `./mvnw verify` and fix any issues before continuing. Never disable a test to get past this — only a human may do that.
+- After changing `.java` files, run `./mvnw verify` and fix any issues before continuing.
 - Run Snyk SCA/Code scans against the project's absolute path before committing and after `pom.xml` changes; fix real findings, don't touch test fixtures.
 - Before each commit, check for and address feedback from the PR review bot (snyk-pr-review-bot) on any open PR.
 - Never skip commit hooks (no `--no-verify`). Use atomic, conventional-commit-style commits; if a Jira ID (`XXX-XXXX`) appears in the branch name, append it to the subject.
