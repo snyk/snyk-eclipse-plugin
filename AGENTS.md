@@ -42,7 +42,11 @@ Root `pom.xml` declares five Tycho modules, built in order:
 - For non-trivial work, write an implementation plan first and get confirmation before starting; never commit the plan.
 - Make the minimum change needed — don't refactor or optimize beyond the stated goal. Comment on *why*, not *what*.
 - Use Mockito for mocking and reuse existing mocks rather than writing new ones.
-- After changing `.java` files, run `./mvnw verify` and fix any issues before continuing. Never disable a test to get past this — only a human may do that.
-- Run Snyk SCA/Code scans against the project's absolute path after each edit and before committing; fix real findings, don't touch test fixtures.
-- Never skip commit hooks (no `--no-verify`). Use atomic, conventional-commit-style commits; if a Jira ID (`XXX-XXXX`) appears in the branch name, append it to the subject.
 - This is not a library: delete unused files instead of deprecating them.
+- After changing `.java` files, run `./mvnw verify` and fix any issues before continuing. Never disable a test to get past this — only a human may do that.
+- Run Snyk SCA/Code scans against the project's absolute path before committing and after `pom.xml` changes; fix real findings, don't touch test fixtures.
+- Before each commit, check for and address feedback from the PR review bot (snyk-pr-review-bot) on any open PR.
+- Never skip commit hooks (no `--no-verify`). Use atomic, conventional-commit-style commits; if a Jira ID (`XXX-XXXX`) appears in the branch name, append it to the subject.
+- Never push without asking first, and never force-push. Regularly fetch `main` and offer to merge it into the working branch.
+- After pushing, offer to open a draft PR using `.github/pull_request_template.md` (or update the existing PR description) with a title/description generated from the diff against `main`. Per `CONTRIBUTING.md`, a change applicable to the other Snyk IDE plugins (vscode-extension, snyk-intellij-plugin, snyk-visual-studio-plugin) should get matching PRs opened there too, since releases are usually coordinated.
+- Keep `./docs` up to date; document tested scenarios and add Mermaid diagrams for new flows.
