@@ -204,7 +204,6 @@ hs_err_pid*
 /update-site/.dcignore
 .dccache
 
-CLAUDE.md
 .claude
 *IDE-*
 tests.json
