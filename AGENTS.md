@@ -115,7 +115,10 @@ Maven itself from `repo.maven.apache.org` on first use.
   plugin**: Window > Preferences > Snyk > Setup > **Trust settings > Trusted folder paths**,
   then *Add folder* — that section sits near the bottom and is easy to miss, you have to
   scroll the Preferences content and expand it, and it only renders once the language server
-  is actually running. Applying immediately triggers a scan. Writing `trustedFolders` into
+  is actually running — confirm that first with
+  `pgrep -af 'snyk-(linux|macos|win) language-server'` (Windows without a POSIX shell:
+  `tasklist | findstr snyk-win` or `Get-Process snyk-win`) rather than assuming from wall-clock
+  time. Applying immediately triggers a scan. Writing `trustedFolders` into
   `~/.config/snyk/ls-config-Eclipse IDE` by hand does not work, even after a restart. If the
   log shows none of the three, capture it — that is a genuine bug report.
 - **Do not hardcode a reachable/blocked host list.** The Cursor Cloud allowlist is
