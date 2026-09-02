@@ -83,7 +83,7 @@ public class SnykWizardAuthenticatePage extends WizardPage {
 
         Link trustText = new Link(composite, SWT.WRAP);
         trustText.setText(
-                "When scanning project files, Snyk may automatically execute code "
+                "When scanning project files, Snyk may automatically execute code and configuration, "
                 + "such as invoking the package manager to get dependency information. "
                 + "You should only scan projects you trust. "
                 + "<a href=\"https://docs.snyk.io/ide-tools/eclipse-plugin/folder-trust\">More info</a>");
