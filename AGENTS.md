@@ -48,3 +48,4 @@ Root `pom.xml` declares five Tycho modules, built in order:
 - Never push without asking first, and never force-push. Regularly fetch `main` and offer to merge it into the working branch.
 - After pushing, offer to open a draft PR using `.github/pull_request_template.md` (or update the existing PR description) with a title/description generated from the diff against `main`. Per `CONTRIBUTING.md`, a change applicable to the other Snyk IDE plugins (vscode-extension, snyk-intellij-plugin, snyk-visual-studio-plugin) should get matching PRs opened there too, since releases are usually coordinated.
 - Keep `./docs` up to date; document tested scenarios and add Mermaid diagrams for new flows.
+- Confirm the language server is actually up before touching Preferences — the trust controls do not render until it is. Check with: `pgrep -af 'snyk-(linux|macos|win) language-server'` (Windows without a POSIX shell: `tasklist | findstr snyk-win` or `Get-Process snyk-win`).
