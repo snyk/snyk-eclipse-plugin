@@ -204,7 +204,6 @@ hs_err_pid*
 /update-site/.dcignore
 .dccache
 
-CLAUDE.md
 .claude
 *IDE-*
 tests.json
@@ -239,3 +238,4 @@ tests.json
 .snyk-code-output.err
 .verification-result.*
 *_????????_??????_*.log
+.verify-report
