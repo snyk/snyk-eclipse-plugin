@@ -204,7 +204,8 @@ hs_err_pid*
 /update-site/.dcignore
 .dccache
 
-.claude
+.claude/*
+!.claude/skills/
 *IDE-*
 tests.json
 .vscode
