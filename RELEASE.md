@@ -9,6 +9,7 @@
 
 - Update the release version in all files that specify the Eclipse plugin version.
   - Do not change values that do not represent the plugin version.
+  - Coding agents can use the `bump-version` skill (`.claude/skills/bump-version/SKILL.md`) to do this step, including the protocol version check above.
 
 
 **Update Changelog**
