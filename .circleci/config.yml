@@ -28,6 +28,47 @@ jobs:
           name: Maven verify
           command: ./mvnw clean verify -DtrimStackTrace=false
 
+  test-macos:
+    resource_class: m4pro.medium
+    macos:
+      xcode: 16.4.0
+    steps:
+      - checkout
+      # Tycho/Mockito require JDK 17 specifically (JDK 21+ breaks Mockito's inline-mock
+      # byte-buddy agent), and the JDK bundled with the Xcode image isn't guaranteed to be 17.
+      - run:
+          name: Install Temurin JDK 17
+          command: |
+            # Pinned to a specific Adoptium GA release: the /binary/latest endpoint used here
+            # previously can silently pick up a new patch release with no PR/diff to review.
+            JDK_RELEASE="jdk-17.0.20.1+1"
+            JDK_PLATFORM_PATH="mac/aarch64/jdk/hotspot/normal/eclipse"
+            JDK_URL="https://api.adoptium.net/v3/binary/version/${JDK_RELEASE}/${JDK_PLATFORM_PATH}"
+            JDK_CHECKSUM_URL="https://api.adoptium.net/v3/checksum/version/${JDK_RELEASE}/${JDK_PLATFORM_PATH}"
+            curl -fsSL -o /tmp/temurin17.tar.gz "$JDK_URL"
+            curl -fsSL -o /tmp/temurin17.tar.gz.sha256.txt "$JDK_CHECKSUM_URL"
+            EXPECTED_SHA=$(awk '{print $1}' /tmp/temurin17.tar.gz.sha256.txt)
+            if command -v sha256sum > /dev/null 2>&1; then
+              echo "${EXPECTED_SHA}  /tmp/temurin17.tar.gz" | sha256sum -c -
+            elif command -v shasum > /dev/null 2>&1; then
+              echo "${EXPECTED_SHA}  /tmp/temurin17.tar.gz" | shasum -a 256 -c -
+            else
+              echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available." >&2
+              exit 1
+            fi
+            sudo mkdir -p /Library/Java/JavaVirtualMachines
+            sudo tar -xzf /tmp/temurin17.tar.gz -C /Library/Java/JavaVirtualMachines
+            JAVA_HOME_17="$(/usr/libexec/java_home -v 17)" || true
+            if [ -z "$JAVA_HOME_17" ]; then
+              echo "Temurin 17 was not found by /usr/libexec/java_home after extraction" >&2
+              exit 1
+            fi
+            echo "export JAVA_HOME=$JAVA_HOME_17" >> "$BASH_ENV"
+            echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> "$BASH_ENV"
+      - run:
+          name: Maven verify
+          command: ./mvnw clean verify -DtrimStackTrace=false
+
 workflows:
   version: 2
   CICD:
@@ -46,3 +87,4 @@ workflows:
             - prodsec-orb-runtime
 
       - test-linux
+      - test-macos
