@@ -43,9 +43,18 @@ jobs:
             JAVA_HOME_17="$(/usr/libexec/java_home -v 17 --failfast)"
             echo "export JAVA_HOME=$JAVA_HOME_17" >> "$BASH_ENV"
             echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> "$BASH_ENV"
+      - restore_cache:
+          name: Restore Maven/Tycho cache
+          keys:
+            - &m2-macos-cache-key m2-macos--pom.xml-{{ checksum "pom.xml" }}--plugin/pom.xml-{{ checksum "plugin/pom.xml" }}--tests/pom.xml-{{ checksum "tests/pom.xml" }}--target-platform/target-platform.target-{{ checksum "target-platform/target-platform.target" }}
       - run:
           name: Maven verify
           command: ./mvnw clean verify -DtrimStackTrace=false
+      - save_cache:
+          name: Save Maven/Tycho cache
+          key: *m2-macos-cache-key
+          paths:
+            - ~/.m2/repository
 
 workflows:
   version: 2
