@@ -86,6 +86,10 @@ jobs:
           command: |
             choco install temurin17 -y --no-progress
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - restore_cache:
+          name: Restore Maven/Tycho cache
+          keys:
+            - &m2-windows-cache-key m2-windows--pom.xml-{{ checksum "pom.xml" }}--plugin/pom.xml-{{ checksum "plugin/pom.xml" }}--tests/pom.xml-{{ checksum "tests/pom.xml" }}--target-platform/target-platform.target-{{ checksum "target-platform/target-platform.target" }}
       - run:
           name: Maven verify
           shell: powershell.exe -ExecutionPolicy Bypass
@@ -98,6 +102,11 @@ jobs:
             $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
             .\mvnw.cmd clean verify -DtrimStackTrace=false
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - save_cache:
+          name: Save Maven/Tycho cache
+          key: *m2-windows-cache-key
+          paths:
+            - C:\Users\circleci\.m2\repository
 
 workflows:
   version: 2
