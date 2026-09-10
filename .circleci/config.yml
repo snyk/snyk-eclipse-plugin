@@ -79,14 +79,19 @@ jobs:
       - checkout
       # Tycho/Mockito require JDK 17 specifically (JDK 21+ breaks Mockito's inline-mock
       # byte-buddy agent), and the JDK bundled with the Windows machine image isn't
-      # guaranteed to be 17. Install and verify share one step because CircleCI's Windows
-      # PowerShell has no BASH_ENV equivalent for propagating env vars across steps.
+      # guaranteed to be 17.
       - run:
-          name: Install Temurin JDK 17 and Maven verify
+          name: Install Temurin JDK 17
           shell: powershell.exe -ExecutionPolicy Bypass
           command: |
             choco install temurin17 -y --no-progress
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - run:
+          name: Maven verify
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            # choco install temurin17 does not set JAVA_HOME by default (FeatureJavaHome
+            # is opt-in, unlike FeatureEnvironment/PATH) -- resolve it from disk instead.
             $jdkHome = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory -Filter "jdk-17*" | Select-Object -First 1).FullName
             if (-not $jdkHome) { Write-Error "Temurin 17 install not found under Eclipse Adoptium"; exit 1 }
             $env:JAVA_HOME = $jdkHome
