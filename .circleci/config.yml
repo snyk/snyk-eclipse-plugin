@@ -34,6 +34,13 @@ jobs:
       xcode: 16.4.0
     steps:
       - checkout
+      - restore_cache:
+          name: Restore Homebrew downloads cache
+          keys:
+            # Prefix-only match, restores whatever was most recently saved. Homebrew's own
+            # cleanup auto-removes cached downloads after 120 days, so each restored cache's
+            # content size stays bounded rather than growing unboundedly.
+            - brew-downloads-
       # Tycho/Mockito require JDK 17 specifically (JDK 21+ breaks Mockito's inline-mock
       # byte-buddy agent), and the JDK bundled with the Xcode image isn't guaranteed to be 17.
       - run:
@@ -43,6 +50,14 @@ jobs:
             JAVA_HOME_17="$(/usr/libexec/java_home -v 17 --failfast)"
             echo "export JAVA_HOME=$JAVA_HOME_17" >> "$BASH_ENV"
             echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> "$BASH_ENV"
+      - save_cache:
+          name: Save Homebrew downloads cache
+          # CircleCI cache keys are immutable -- save_cache is a no-op if the exact key
+          # already has a saved cache. A static key would only ever persist the first
+          # run's content forever, so {{ epoch }} forces a brand-new key every run.
+          key: brew-downloads--{{ epoch }}
+          paths:
+            - ~/Library/Caches/Homebrew/downloads
       - restore_cache:
           name: Restore Maven/Tycho cache
           keys:
