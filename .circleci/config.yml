@@ -28,6 +28,26 @@ jobs:
           name: Maven verify
           command: ./mvnw clean verify -DtrimStackTrace=false
 
+  build-sign:
+    resource_class: medium
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - run:
+          name: Decode signing keystore
+          command: |
+            set -euo pipefail
+            [[ -n "${KEYSTORE:-}" ]] || { echo 'ERR: KEYSTORE not set or empty' >&2; exit 1; }
+            [[ -n "${KEYSTORE_SHA:-}" ]] || { echo 'ERR: KEYSTORE_SHA not set or empty' >&2; exit 1; }
+            printf '%s' "$KEYSTORE" | base64 -d > ./keystore.jks
+            printf '%s  ./keystore.jks\n' "$KEYSTORE_SHA" > sha256.txt
+            sha256sum -c sha256.txt
+            [[ -n "${KEYSTORE_PASS:-}" ]] || { echo 'ERR: KEYSTORE_PASS not set or empty' >&2; exit 1; }
+      - run:
+          name: Maven verify with sign profile
+          command: ./mvnw clean verify -P sign -DtrimStackTrace=false
+
   test-macos:
     resource_class: m4pro.medium
     macos:
@@ -128,3 +148,7 @@ workflows:
       - test-linux
       - test-macos
       - test-windows
+
+      - build-sign:
+          context:
+            - snyk-eclipse-plugin-signing
