@@ -18,6 +18,16 @@ jobs:
           open-source-additional-arguments: --exclude=tests
           iac-scan: disabled
 
+  test-linux:
+    resource_class: medium
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - run:
+          name: Maven verify
+          command: ./mvnw clean verify -DtrimStackTrace=false
+
 workflows:
   version: 2
   CICD:
@@ -34,3 +44,5 @@ workflows:
           context:
             - devex_ide
             - prodsec-orb-runtime
+
+      - test-linux
