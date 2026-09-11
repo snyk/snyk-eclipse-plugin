@@ -28,6 +28,49 @@ jobs:
           name: Maven verify
           command: ./mvnw clean verify -DtrimStackTrace=false
 
+  test-macos:
+    resource_class: m4pro.medium
+    macos:
+      xcode: 16.4.0
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore Homebrew downloads cache
+          keys:
+            # Prefix-only match, restores whatever was most recently saved. Homebrew's own
+            # cleanup auto-removes cached downloads after 120 days, so each restored cache's
+            # content size stays bounded rather than growing unboundedly.
+            - brew-downloads-
+      # Tycho/Mockito require JDK 17 specifically (JDK 21+ breaks Mockito's inline-mock
+      # byte-buddy agent), and the JDK bundled with the Xcode image isn't guaranteed to be 17.
+      - run:
+          name: Install Temurin JDK 17
+          command: |
+            HOMEBREW_NO_ASK=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask temurin@17
+            JAVA_HOME_17="$(/usr/libexec/java_home -v 17 --failfast)"
+            echo "export JAVA_HOME=$JAVA_HOME_17" >> "$BASH_ENV"
+            echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> "$BASH_ENV"
+      - save_cache:
+          name: Save Homebrew downloads cache
+          # CircleCI cache keys are immutable -- save_cache is a no-op if the exact key
+          # already has a saved cache. A static key would only ever persist the first
+          # run's content forever, so {{ epoch }} forces a brand-new key every run.
+          key: brew-downloads--{{ epoch }}
+          paths:
+            - ~/Library/Caches/Homebrew/downloads
+      - restore_cache:
+          name: Restore Maven/Tycho cache
+          keys:
+            - &m2-macos-cache-key m2-macos--pom.xml-{{ checksum "pom.xml" }}--plugin/pom.xml-{{ checksum "plugin/pom.xml" }}--tests/pom.xml-{{ checksum "tests/pom.xml" }}--target-platform/target-platform.target-{{ checksum "target-platform/target-platform.target" }}
+      - run:
+          name: Maven verify
+          command: ./mvnw clean verify -DtrimStackTrace=false
+      - save_cache:
+          name: Save Maven/Tycho cache
+          key: *m2-macos-cache-key
+          paths:
+            - ~/.m2/repository
+
 workflows:
   version: 2
   CICD:
@@ -46,3 +89,4 @@ workflows:
             - prodsec-orb-runtime
 
       - test-linux
+      - test-macos
