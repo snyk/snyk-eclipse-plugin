@@ -149,6 +149,8 @@ workflows:
       - test-macos
       - test-windows
 
+      # Approval gate required to switch the downstream job's permissions to this gate's approver's.
+      # This is necessary because the snyk-eclipse-plugin-signing context is restricted.
       - approve-build-sign:
           name: Approve signing job
           type: approval
