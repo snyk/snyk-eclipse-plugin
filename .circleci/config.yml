@@ -149,6 +149,18 @@ workflows:
       - test-macos
       - test-windows
 
+      - approve-build-sign:
+          name: Approve signing job
+          type: approval
+          filters:
+            branches:
+              only: [main]
+
       - build-sign:
           context:
             - snyk-eclipse-plugin-signing
+          requires:
+            - Approve signing job
+          filters:
+            branches:
+              only: [main]
