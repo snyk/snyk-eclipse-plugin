@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   prodsec: snyk/prodsec-orb@1
+  aws-cli: circleci/aws-cli@5.4.2
 
 jobs:
   security-scans:
@@ -47,6 +48,36 @@ jobs:
       - run:
           name: Maven verify with sign profile
           command: ./mvnw clean verify -P sign -DtrimStackTrace=false
+      - persist_to_workspace:
+          root: .
+          paths:
+            - update-site/target/repository
+            - .github/upload-to-s3.sh
+
+  publish-preview:
+    resource_class: small
+    docker:
+      - image: cimg/aws:2026.09.1
+    environment:
+      AWS_S3_BUCKET_NAME: snyk-assets
+      AWS_REGION: us-east-1
+    steps:
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: arn:aws:iam::198361731867:role/snyk-assets-eclipse-writer
+          region: us-east-1
+      - run:
+          name: Verify OIDC identity
+          command: |
+            set -euo pipefail
+            IDENTITY="$(aws sts get-caller-identity --output text --query Arn)"
+            echo "Assumed identity: $IDENTITY"
+            echo "$IDENTITY" | grep -qE '^arn:aws:sts::198361731867:assumed-role/snyk-assets-eclipse-writer/' \
+              || { echo 'ERR: not running as expected OIDC role' >&2; exit 1; }
+      - run:
+          name: Publish preview channel to S3
+          command: .github/upload-to-s3.sh preview
 
   test-macos:
     resource_class: m4pro.medium
@@ -151,8 +182,8 @@ workflows:
 
       # Approval gate required to switch the downstream job's permissions to this gate's approver's.
       # This is necessary because the snyk-eclipse-plugin-signing context is restricted.
-      - approve-build-sign:
-          name: Approve signing job
+      - approve-preview-release:
+          name: Approve preview release
           type: approval
           filters:
             branches:
@@ -162,7 +193,17 @@ workflows:
           context:
             - snyk-eclipse-plugin-signing
           requires:
-            - Approve signing job
+            - Approve preview release
+            - test-linux
+            - test-macos
+            - test-windows
+          filters:
+            branches:
+              only: [main]
+
+      - publish-preview:
+          requires:
+            - build-sign
           filters:
             branches:
               only: [main]
