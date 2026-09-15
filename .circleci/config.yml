@@ -197,6 +197,8 @@ workflows:
             - test-linux
             - test-macos
             - test-windows
+            - security-scans
+            - Scan repository for secrets
           filters:
             branches:
               only: [main]
