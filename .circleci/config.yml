@@ -187,7 +187,7 @@ workflows:
           type: approval
           filters:
             branches:
-              only: [main]
+              only: [main, hotfix/IDE-2483_temp-oidc-verify-test]
 
       - build-sign:
           context:
@@ -201,11 +201,11 @@ workflows:
             - Scan repository for secrets
           filters:
             branches:
-              only: [main]
+              only: [main, hotfix/IDE-2483_temp-oidc-verify-test]
 
       - publish-preview:
           requires:
             - build-sign
           filters:
             branches:
-              only: [main]
+              only: [main, hotfix/IDE-2483_temp-oidc-verify-test]
