@@ -1,5 +1,12 @@
 version: 2.1
 
+parameters:
+  run_stable_release:
+    type: boolean
+    default: false
+    description: >
+      Set to true via CircleCI's "Trigger Pipeline" UI or API when cutting a stable release.
+
 orbs:
   prodsec: snyk/prodsec-orb@1
   aws-cli: circleci/aws-cli@5.4.2
@@ -162,6 +169,10 @@ jobs:
 workflows:
   version: 2
   CICD:
+    # Excludes manually-triggered stable-release pipelines, which would otherwise
+    # also run this full test matrix and surface the unrelated preview gate.
+    when:
+      not: << pipeline.parameters.run_stable_release >>
     jobs:
       - prodsec/secrets-scan:
           name: Scan repository for secrets
@@ -209,3 +220,47 @@ workflows:
           filters:
             branches:
               only: [main]
+
+  stable-release:
+    when:
+      and:
+        - equal: [ true, << pipeline.parameters.run_stable_release >> ]
+        - or:
+            - equal: [ "main", << pipeline.git.branch >> ]
+            - matches: { pattern: "^release/.*", value: << pipeline.git.branch >> }
+            - matches: { pattern: "^hotfix/.*", value: << pipeline.git.branch >> }
+    jobs:
+      - prodsec/secrets-scan:
+          name: Scan repository for secrets (stable)
+          context:
+            - snyk-bot-slack
+            - prodsec-orb-runtime
+          channel: snyk-on-snyk-devex_ide
+          trusted-branch: main
+
+      - security-scans:
+          name: security-scans-stable
+          context:
+            - devex_ide
+            - prodsec-orb-runtime
+
+      - test-linux:
+          name: test-linux-stable
+      - test-macos:
+          name: test-macos-stable
+      - test-windows:
+          name: test-windows-stable
+
+      - build-sign:
+          name: build-sign-stable
+          context:
+            - snyk-eclipse-plugin-signing
+          requires:
+            - test-linux-stable
+            - test-macos-stable
+            - test-windows-stable
+            - security-scans-stable
+            - Scan repository for secrets (stable)
+          filters:
+            branches:
+              only: [main, /release\/.*/, /hotfix\/.*/]
