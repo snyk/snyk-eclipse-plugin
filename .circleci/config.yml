@@ -10,6 +10,20 @@ parameters:
 orbs:
   prodsec: snyk/prodsec-orb@1
   aws-cli: circleci/aws-cli@5.4.2
+  gh: circleci/github-cli@2.7.2
+
+commands:
+  verify-oidc-identity:
+    description: Hard-fails unless the assumed AWS identity is snyk-assets-eclipse-writer.
+    steps:
+      - run:
+          name: Verify OIDC identity
+          command: |
+            set -euo pipefail
+            IDENTITY="$(aws sts get-caller-identity --output text --query Arn)"
+            echo "Assumed identity: $IDENTITY"
+            echo "$IDENTITY" | grep -qE '^arn:aws:sts::198361731867:assumed-role/snyk-assets-eclipse-writer/' \
+              || { echo 'ERR: not running as expected OIDC role' >&2; exit 1; }
 
 jobs:
   security-scans:
@@ -59,6 +73,7 @@ jobs:
           root: .
           paths:
             - update-site/target/repository
+            - update-site/target/*.zip
             - .github/upload-to-s3.sh
 
   publish-preview:
@@ -74,17 +89,57 @@ jobs:
       - aws-cli/setup:
           role_arn: arn:aws:iam::198361731867:role/snyk-assets-eclipse-writer
           region: us-east-1
-      - run:
-          name: Verify OIDC identity
-          command: |
-            set -euo pipefail
-            IDENTITY="$(aws sts get-caller-identity --output text --query Arn)"
-            echo "Assumed identity: $IDENTITY"
-            echo "$IDENTITY" | grep -qE '^arn:aws:sts::198361731867:assumed-role/snyk-assets-eclipse-writer/' \
-              || { echo 'ERR: not running as expected OIDC role' >&2; exit 1; }
+      - verify-oidc-identity
       - run:
           name: Publish preview channel to S3
           command: .github/upload-to-s3.sh preview
+
+  publish-stable:
+    resource_class: small
+    docker:
+      - image: cimg/aws:2026.09.1
+    environment:
+      AWS_S3_BUCKET_NAME: snyk-assets
+      AWS_REGION: us-east-1
+    steps:
+      # checkout must precede attach_workspace: checkout clones into the job's working
+      # directory, and git clone refuses a non-empty target.
+      - checkout
+      - attach_workspace:
+          at: .
+      - gh/install
+      - aws-cli/setup:
+          role_arn: arn:aws:iam::198361731867:role/snyk-assets-eclipse-writer
+          region: us-east-1
+      - verify-oidc-identity
+      - run:
+          name: Create release tag
+          command: |
+            set -euo pipefail
+            TAG_NAME="v$(git show -s --format=%cd --date=format:%Y%m%d.%H%M%S)"
+            echo "export TAG_NAME=$TAG_NAME" >> "$BASH_ENV"
+            # Tag name is derived from the commit date, so a rerun on the same commit
+            # (recovering from a later step's failure) must not re-push an existing tag.
+            if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+              echo "Tag $TAG_NAME already exists on origin — skipping (retry of a prior run)."
+            else
+              git tag "$TAG_NAME"
+              git push origin "$TAG_NAME"
+            fi
+      - run:
+          name: Create GitHub release
+          command: |
+            set -euo pipefail
+            ASSET="$(find update-site/target -maxdepth 2 -name 'update-site-*.zip' -print -quit)"
+            [ -n "$ASSET" ] || { echo "ERR: no update-site-*.zip found under update-site/target" >&2; exit 1; }
+            if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+              echo "GitHub release $TAG_NAME already exists — skipping (retry of a prior run)."
+            else
+              gh release create "$TAG_NAME" --generate-notes "$ASSET"
+            fi
+      - run:
+          name: Publish stable channel to S3
+          command: .github/upload-to-s3.sh stable
 
   test-macos:
     resource_class: m4pro.medium
@@ -261,6 +316,15 @@ workflows:
             - test-windows-stable
             - security-scans-stable
             - Scan repository for secrets (stable)
+          filters:
+            branches:
+              only: [main, /release\/.*/, /hotfix\/.*/]
+
+      - publish-stable:
+          context:
+            - snyk-eclipse-plugin-github-release
+          requires:
+            - build-sign-stable
           filters:
             branches:
               only: [main, /release\/.*/, /hotfix\/.*/]
