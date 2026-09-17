@@ -113,29 +113,20 @@ jobs:
           region: us-east-1
       - verify-oidc-identity
       - run:
-          name: Create release tag
+          name: Create GitHub release (and tag)
           command: |
             set -euo pipefail
+            [[ -n "${GITHUB_TOKEN:-}" ]] \
+              || { echo 'ERR: GITHUB_TOKEN not set or empty (set it in the snyk-eclipse-plugin-github-release context)' >&2; exit 1; }
             TAG_NAME="v$(git show -s --format=%cd --date=format:%Y%m%d.%H%M%S)"
-            echo "export TAG_NAME=$TAG_NAME" >> "$BASH_ENV"
-            # Tag name is derived from the commit date, so a rerun on the same commit
-            # (recovering from a later step's failure) must not re-push an existing tag.
-            if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
-              echo "Tag $TAG_NAME already exists on origin — skipping (retry of a prior run)."
-            else
-              git tag "$TAG_NAME"
-              git push origin "$TAG_NAME"
-            fi
-      - run:
-          name: Create GitHub release
-          command: |
-            set -euo pipefail
             ASSET="$(find update-site/target -maxdepth 2 -name 'update-site-*.zip' -print -quit)"
             [ -n "$ASSET" ] || { echo "ERR: no update-site-*.zip found under update-site/target" >&2; exit 1; }
+            # `gh release create` creates the git tag as a side effect.
+            # `--target` pins the tag to this pipeline's commit instead of main.
             if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-              echo "GitHub release $TAG_NAME already exists — skipping (retry of a prior run)."
+              echo "GitHub release '$TAG_NAME' already exists — skipping (retry of a prior run?)."
             else
-              gh release create "$TAG_NAME" --generate-notes "$ASSET"
+              gh release create "$TAG_NAME" --target "$CIRCLE_SHA1" --generate-notes "$ASSET"
             fi
       - run:
           name: Publish stable channel to S3
