@@ -41,7 +41,6 @@
   - Set `run_stable_release` to `true`.
   - Click Trigger.
   - Safe to retry: if the pipeline fails partway through, re-run it on the same commit. Tagging and the GitHub release step both skip if already done.
-  - N.B. the CircleCI pipeline hasn't been proven with a real release yet. If it fails, use the legacy GitHub Actions workflow (`release-legacy.yml`) instead. Once CircleCI works: delete `release-legacy.yml`, move `.github/upload-to-s3.sh` to `.circleci/upload-to-s3.sh` (nothing else under `.github/` will use it once the legacy workflow is gone) and update its three references in `.circleci/config.yml`, then delete this note.
 
 
 **Release Notes**
