@@ -30,6 +30,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import io.snyk.eclipse.plugin.analytics.TaskProcessor;
+import io.snyk.eclipse.plugin.preferences.HTMLSettingsPreferencePage;
 import io.snyk.eclipse.plugin.preferences.Preferences;
 import io.snyk.eclipse.plugin.views.snyktoolview.ISnykToolView;
 import io.snyk.languageserver.LsBaseTest;
@@ -434,6 +435,70 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 	}
 
 	@Test
+	void snykConfigurationInboundNullValueIsIgnored() {
+		var gson = new com.google.gson.Gson();
+
+		// Pre-existing user:global override for an org-scope global key.
+		pref.store(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "false");
+		pref.markExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE);
+
+		// Inbound reset is not supported: even {value:null, changed:true} is skipped
+		// on the inbound path. Reset flows outbound only (form-save pending-reset).
+		String json = """
+				{
+					"settings": {
+						"snyk_oss_enabled": {
+							"value": null,
+							"changed": true,
+							"source": "cli",
+							"originScope": "org"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		// Override untouched — not persisted, not cleared.
+		assertEquals("false", pref.getPref(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, "true"));
+		assertTrue(pref.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE));
+	}
+
+	@Test
+	void snykConfigurationInboundNullIgnoredForResettableSeverityKey() {
+		// IDE-2149: inbound reset is deliberately unsupported. {value:null, changed:true} for a
+		// concrete resettable org-scope key (severity_filter_high) must NOT drop the persisted
+		// override and must NOT clear explicit-changed. Inverse of the vscode inbound behaviour.
+		var gson = new com.google.gson.Gson();
+
+		pref.store(Preferences.FILTER_SHOW_HIGH, "false");
+		pref.markExplicitlyChanged(Preferences.FILTER_SHOW_HIGH);
+
+		String json = """
+				{
+					"settings": {
+						"severity_filter_high": {
+							"value": null,
+							"changed": true,
+							"source": "cli",
+							"originScope": "org"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		cut = new SnykExtendedLanguageClient();
+		cut.snykConfiguration(param);
+
+		// Override untouched — not removed, not cleared.
+		assertEquals("false", pref.getPref(Preferences.FILTER_SHOW_HIGH, "true"));
+		assertTrue(pref.isExplicitlyChanged(Preferences.FILTER_SHOW_HIGH));
+	}
+
+	@Test
 	void snykConfigurationHandlesEmptyPayload() {
 		var gson = new com.google.gson.Gson();
 		LspConfigurationParam param = gson.fromJson("{}", LspConfigurationParam.class);
@@ -717,5 +782,40 @@ class SnykExtendedLanguageClientTest extends LsBaseTest {
 		java.lang.reflect.Field f = SnykExtendedLanguageClient.class.getDeclaredField("authCompleteFuture");
 		f.setAccessible(true);
 		((java.util.concurrent.atomic.AtomicReference<java.util.concurrent.CompletableFuture<Void>>) f.get(lc)).set(future);
+	}
+
+	@Test
+	void snykConfigurationReloadsOpenSettingsPage() {
+		var gson = new com.google.gson.Gson();
+		String json = """
+				{
+					"settings": {
+						"api_endpoint": {
+							"value": "https://reload-test.snyk.io"
+						}
+					}
+				}
+				""";
+		LspConfigurationParam param = gson.fromJson(json, LspConfigurationParam.class);
+
+		try (MockedStatic<HTMLSettingsPreferencePage> mockedPage = mockStatic(HTMLSettingsPreferencePage.class)) {
+			cut = new SnykExtendedLanguageClient();
+			cut.snykConfiguration(param);
+
+			mockedPage.verify(() -> HTMLSettingsPreferencePage.reloadIfOpen(), Mockito.times(1));
+		}
+	}
+
+	@Test
+	void snykConfigurationReloadsEvenWithEmptyPayload() {
+		var gson = new com.google.gson.Gson();
+		LspConfigurationParam param = gson.fromJson("{}", LspConfigurationParam.class);
+
+		try (MockedStatic<HTMLSettingsPreferencePage> mockedPage = mockStatic(HTMLSettingsPreferencePage.class)) {
+			cut = new SnykExtendedLanguageClient();
+			assertDoesNotThrow(() -> cut.snykConfiguration(param));
+
+			mockedPage.verify(() -> HTMLSettingsPreferencePage.reloadIfOpen(), Mockito.times(1));
+		}
 	}
 }

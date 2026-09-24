@@ -31,12 +31,14 @@ import io.snyk.eclipse.plugin.utils.SnykLogger;
 import io.snyk.eclipse.plugin.views.snyktoolview.handlers.HandlerCommands;
 import io.snyk.eclipse.plugin.wizards.SnykWizard;
 import io.snyk.languageserver.protocolextension.SnykExtendedLanguageClient;
+import io.snyk.languageserver.protocolextension.messageObjects.PresentableError;
 
 @SuppressWarnings("restriction")
 public class BrowserHandler {
 	private static final int validNumberOfArguments = 5;
 	private Browser browser;
 	private String initScript = "";
+	private Runnable currentRenderer;
 
 	public BrowserHandler(Browser browser) {
 		this.browser = browser;
@@ -158,11 +160,18 @@ public class BrowserHandler {
 			}
 		});
 
+		BrowserFlashGuard.install(browser);
+
 		setDefaultBrowserText();
 	}
 
 
 	public void updateBrowserContent(String issueId, String product) {
+		// currentRenderer re-runs this method on refreshTheme(), which re-fetches the issue description
+		// from the language server (getIssueDescription below) rather than doing a cheap local re-render.
+		// That is acceptable only because refreshTheme fires on a rare user action (a theme switch); if
+		// theme-change frequency ever increases, cache the raw HTML and re-run only replaceCssVariables.
+		currentRenderer = () -> updateBrowserContent(issueId, product);
 		CompletableFuture.runAsync(() -> {
 			String displayed = ProductConstants.PRODUCT_TO_DISPLAYED.get(product);
 			BaseHtmlProvider htmlProvider = displayed != null ? HtmlProviderFactory.GetHtmlProvider(displayed) : null;
@@ -176,30 +185,40 @@ public class BrowserHandler {
 			}
 			final var browserContent = htmlProvider.replaceCssVariables(htmlContent);
 			Display.getDefault().syncExec(() -> {
-				if (!browser.isDisposed()) {
-					browser.setText(browserContent);
-				}
+				BrowserFlashGuard.setTextFlashSafe(browser, browserContent);
 			});
 		});
 	}
 
 	public void setDefaultBrowserText() {
+		currentRenderer = this::setDefaultBrowserText;
 		// If we are not authenticated, show the welcome page, else show the issue
 		// placeholder.
 		if (!Preferences.getInstance().isAuthenticated()) {
-			browser.setText(StaticPageHtmlProvider.getInstance().getInitHtml());
+			BrowserFlashGuard.setTextFlashSafe(browser, StaticPageHtmlProvider.getInstance().getInitHtml());
 		} else {
-			browser.setText(StaticPageHtmlProvider.getInstance().getDefaultHtml());
+			BrowserFlashGuard.setTextFlashSafe(browser, StaticPageHtmlProvider.getInstance().getDefaultHtml());
 		}
 	}
 
 	public void setScanningBrowserText() {
-		browser.setText(StaticPageHtmlProvider.getInstance().getScanningHtml());
+		currentRenderer = this::setScanningBrowserText;
+		BrowserFlashGuard.setTextFlashSafe(browser, StaticPageHtmlProvider.getInstance().getScanningHtml());
 	}
 
-	public void setBrowserText(String html) {
-		if (!browser.isDisposed()) {
-			browser.setText(html);
+	public void setErrorBrowserText(PresentableError error) {
+		// Store the error (not the rendered HTML) so refreshTheme() rebuilds via getErrorHtml, which
+		// re-runs replaceCssVariables and picks up a newly-resolved theme color. Rendering pre-resolved
+		// HTML here would freeze the error page at whatever color was current when it first displayed.
+		currentRenderer = () -> setErrorBrowserText(error);
+		BrowserFlashGuard.setTextFlashSafe(browser, new BaseHtmlProvider().getErrorHtml(error));
+	}
+
+	/** Re-renders the current content so it adopts a newly-resolved theme color. */
+	public void refreshTheme() {
+		if (browser == null || browser.isDisposed() || currentRenderer == null) {
+			return;
 		}
+		currentRenderer.run();
 	}
 }

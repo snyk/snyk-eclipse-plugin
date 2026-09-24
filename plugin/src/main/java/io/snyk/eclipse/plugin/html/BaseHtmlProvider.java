@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,8 +27,35 @@ import io.snyk.languageserver.protocolextension.messageObjects.PresentableError;
 
 public class BaseHtmlProvider {
 	private final Random random = new Random();
-	private final Map<String, String> colorCache = new HashMap<>();
+	// ConcurrentHashMap, not HashMap: the detail panel renders off the UI thread
+	// (BrowserHandler.updateBrowserContent → CompletableFuture.runAsync) against a shared singleton
+	// provider, so refreshThemeCachesIfStale's clear() can race getColorAsHex's computeIfAbsent.
+	private final Map<String, String> colorCache = new ConcurrentHashMap<>();
 	private String nonce = "";
+
+	// The native themed view background color from Eclipse.
+	// Shared statically so every provider instance (tree/summary/detail) resolves the same background.
+	private static volatile String ideBackgroundColorHex;
+
+	// Resolved theme colors are cached per instance (colorCache/colorRegistry/currentTheme). When the
+	// user switches Eclipse light↔dark at runtime those caches go stale. A global generation counter is
+	// bumped on theme change; each instance lazily clears its caches when it sees a newer generation, so
+	// the next render re-resolves foreground/border/etc. from the new theme (not just the background).
+	private static final AtomicInteger themeGeneration = new AtomicInteger();
+	private volatile int cacheGeneration;
+
+	public static void setIdeBackgroundColorHex(String hex) {
+		ideBackgroundColorHex = hex;
+	}
+
+	public static String getIdeBackgroundColorHex() {
+		return ideBackgroundColorHex;
+	}
+
+	/** Signals that the Eclipse theme changed; cached theme colors are re-resolved on the next render. */
+	public static void invalidateThemeCaches() {
+		themeGeneration.incrementAndGet();
+	}
 
 
 	// Eclipse theme color keys
@@ -34,7 +63,6 @@ public class BaseHtmlProvider {
 	private static final String THEME_ACTIVE_TAB_KEYLINE = "org.eclipse.ui.workbench.ACTIVE_TAB_OUTER_KEYLINE_COLOR";
 	private static final String THEME_ACTIVE_TAB_SELECTED_TEXT = "org.eclipse.ui.workbench.ACTIVE_TAB_SELECTED_TEXT_COLOR";
 	private static final String THEME_ACTIVE_TAB_TEXT = "org.eclipse.ui.workbench.ACTIVE_TAB_TEXT_COLOR";
-	private static final String THEME_ACTIVE_NOFOCUS_TAB_BG = "org.eclipse.ui.workbench.ACTIVE_NOFOCUS_TAB_BG_START";
 	private static final String THEME_ACTIVE_TAB_BG_END = "org.eclipse.ui.workbench.ACTIVE_TAB_BG_END";
 	private static final String THEME_ACTIVE_HYPERLINK = "ACTIVE_HYPERLINK_COLOR";
 	private static final String THEME_DARK_BACKGROUND = "org.eclipse.ui.workbench.DARK_BACKGROUND";
@@ -167,6 +195,7 @@ public class BaseHtmlProvider {
 	}
 
 	public String replaceCssVariables(String html, boolean useRelativeFontSize) {
+		refreshThemeCachesIfStale();
 		// Build the CSS with the nonce
 		String nonce = getNonce();
 		String css = "<style nonce=\"" + nonce + "\">" + getCss() + "</style>";
@@ -182,12 +211,16 @@ public class BaseHtmlProvider {
 
 		boolean dark = Boolean.TRUE.equals(isDarkTheme());
 
+		// The true Eclipse view background. Both --ide-background-color and --background-color resolve to
+		// this single value so every panel (tree/summary/detail) matches each other and the adjacent views.
+		String ideBg = getIdeBackgroundHex();
+
 		// Replace CSS variables with actual color values
 		htmlStyled = htmlStyled.replace(CSS_VAR_TEXT_COLOR, getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000"));
 		htmlStyled = htmlStyled.replace(CSS_VAR_DIMMED_TEXT_COLOR, getColorAsHex(THEME_ACTIVE_TAB_TEXT, "#4F5456"));
 
-		htmlStyled = htmlStyled.replace(CSS_VAR_IDE_BACKGROUND_COLOR, getColorAsHex(THEME_ACTIVE_NOFOCUS_TAB_BG, DEFAULT_WHITE_COLOR));
-		htmlStyled = htmlStyled.replace(CSS_VAR_BACKGROUND_COLOR, getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR));
+		htmlStyled = htmlStyled.replace(CSS_VAR_IDE_BACKGROUND_COLOR, ideBg);
+		htmlStyled = htmlStyled.replace(CSS_VAR_BACKGROUND_COLOR, ideBg);
 		htmlStyled = htmlStyled.replace(CSS_VAR_CODE_BACKGROUND_COLOR,
 				getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR));
 		htmlStyled = htmlStyled.replace(CSS_VAR_BUTTON_COLOR,
@@ -212,7 +245,7 @@ public class BaseHtmlProvider {
 		// Replace CSS variables used in LS-served HTML (settings page)
 		// Get Eclipse theme colors
 		String textColor = getColorAsHex(THEME_ACTIVE_TAB_SELECTED_TEXT, "#000000");
-		String bgColor = getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
+		String bgColor = ideBg;
 		String inputBgColor = getColorAsHex(THEME_INACTIVE_TAB_BG, DEFAULT_SECTION_BG_COLOR);
 		String borderColor = getColorAsHex(THEME_ACTIVE_TAB_KEYLINE, DEFAULT_BORDER_COLOR);
 		String focusColor = getColorAsHex(THEME_ACTIVE_HYPERLINK, "#0066cc");
@@ -299,6 +332,10 @@ public class BaseHtmlProvider {
 		vsCodeVarMap.put("vscode-scrollbarSlider-background", inputBgColor);
 		vsCodeVarMap.put("vscode-scrollbarSlider-hoverBackground", adjustForHover(inputBgColor, dark));
 		vsCodeVarMap.put("vscode-scrollbarSlider-activeBackground", adjustBrightness(inputBgColor, dark ? 1.2f : 0.8f));
+		// Used by Tree-view tooltips (.tree-tooltip)
+		vsCodeVarMap.put("vscode-editorHoverWidget-background", inputBgColor);
+		vsCodeVarMap.put("vscode-editorHoverWidget-foreground", textColor);
+		vsCodeVarMap.put("vscode-editorHoverWidget-border", borderColor);
 		htmlStyled = replaceRemainingCssVars(htmlStyled, vsCodeVarMap);
 
 		htmlStyled = htmlStyled.replace("${headerEnd}", "");
@@ -347,6 +384,46 @@ public class BaseHtmlProvider {
 
 		// CSS allows 3 decimal places of precision for calculations.
 		return String.format(Locale.ROOT, "%.3frem", targetSizePt / startingFontSizePt);
+	}
+
+	/**
+	 * Returns the true Eclipse view background as a hex string. Prefers the value captured from a
+	 * themed SWT control, but falls back to the tab-strip background key when no
+	 * control-derived value is available (e.g. before the view is created, or in test mode).
+	 */
+	public String getIdeBackgroundHex() {
+		String captured = ideBackgroundColorHex;
+		if (captured != null && !captured.isEmpty()) {
+			return captured;
+		}
+		return getColorAsHex(THEME_ACTIVE_TAB_BG_END, DEFAULT_WHITE_COLOR);
+	}
+
+	// Re-resolves this instance's cached theme colors if a theme change has been signalled since the
+	// last render, so subsequent getColorAsHex lookups reflect the current theme. Only re-fetches inside
+	// the branch (never taken until invalidateThemeCaches bumps the generation), so test renders — which
+	// have no running workbench — never call PlatformUI here.
+	private void refreshThemeCachesIfStale() {
+		// Test mode never resolves real colors (getColorAsHex short-circuits), and there is no workbench,
+		// so keep the PlatformUI call out of headless runs — self-enforcing rather than relying on the
+		// generation never being bumped in tests.
+		if (Preferences.getInstance().isTest()) {
+			return;
+		}
+		int currentGeneration = themeGeneration.get();
+		if (cacheGeneration == currentGeneration) {
+			return;
+		}
+		ITheme freshTheme = PlatformUI.getWorkbench().getThemeManager().getCurrentTheme();
+		// Order matters:
+		// 1. Swap currentTheme/colorRegistry (both volatile) to the new theme first.
+		// 2. Call clear() after the swap, so a stale inserted against the old registry (in the
+        //    window before the swap) is wiped.
+		// 3. Bump the volatile cacheGeneration last, so readers are guaranteed to see the new fields.
+		currentTheme = freshTheme;
+		colorRegistry = freshTheme.getColorRegistry();
+		colorCache.clear();
+		cacheGeneration = currentGeneration;
 	}
 
 	public String getColorAsHex(String colorKey, String defaultColor) {
@@ -435,7 +512,9 @@ public class BaseHtmlProvider {
 		return !darkColor.isEmpty();
 	}
 
-	private ColorRegistry colorRegistry;
+	// volatile: reassigned from a background render thread in refreshThemeCachesIfStale and read from
+	// other threads via getColorRegistry/getColorAsHex.
+	private volatile ColorRegistry colorRegistry;
 
 	private ColorRegistry getColorRegistry() {
 		if (colorRegistry != null) {
@@ -446,7 +525,8 @@ public class BaseHtmlProvider {
 		return colorRegistry;
 	}
 
-	private ITheme currentTheme;
+	// volatile: see colorRegistry — reassigned from a background render thread and read from others.
+	private volatile ITheme currentTheme;
 
 	public ITheme getCurrentTheme() {
 		if (currentTheme != null) {

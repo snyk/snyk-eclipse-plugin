@@ -135,6 +135,48 @@ class LsConfigurationUpdaterTest {
 	}
 
 	@Test
+	void testBuildConfigurationParam_afterGlobalReset_doesNotReassertOverride() {
+		// Re-push guard: after an inbound global reset clears explicit-changed for an
+		// org-scope global key, the next outbound config must send changed=false so the
+		// IDE does not re-assert the (now removed) user:global override. This replaces
+		// the previous manual-restart verification.
+		setupPreferenceMock();
+		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_CODE_SECURITY)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.SCANNING_MODE_AUTOMATIC)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD)).thenReturn(false);
+
+		var settings = new LsConfigurationUpdater().buildConfigurationParam().getSettings();
+
+		assertFalse(settings.get(LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key).getChanged());
+		assertFalse(settings.get(LsKey.ACTIVATE_SNYK_CODE.key).getChanged());
+		assertFalse(settings.get(LsKey.SCANNING_MODE.key).getChanged());
+		assertFalse(settings.get(LsKey.RISK_SCORE_THRESHOLD.key).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_pendingResetEmitsNullChangedTrueOnce() {
+		// Form-save queued a reset for ENDPOINT_KEY. First push must emit
+		// {value:null, changed:true} — the only signal that makes snyk-ls Unset its
+		// user:global override — overriding the normal per-key emit.
+		setupPreferenceMock();
+
+		var first = new LsConfigurationUpdater()
+				.buildConfigurationParam(java.util.Set.of(Preferences.ENDPOINT_KEY))
+				.getSettings().get(LsKey.ENDPOINT.key);
+		assertNull(first.getValue());
+		assertTrue(first.getChanged());
+
+		// Re-push guard: queue drained, so the next push emits the normal value with
+		// changed=false (not explicitly changed), never re-asserting null/changed.
+		var second = new LsConfigurationUpdater()
+				.buildConfigurationParam(java.util.Set.of())
+				.getSettings().get(LsKey.ENDPOINT.key);
+		assertEquals("endpoint", second.getValue());
+		assertFalse(second.getChanged());
+	}
+
+	@Test
 	void testBuildConfigurationParam_unchangedSettingHasChangedFalse() {
 		setupPreferenceMock();
 		when(preferenceMock.getPref(Preferences.ENDPOINT_KEY, Preferences.DEFAULT_ENDPOINT)).thenReturn(Preferences.DEFAULT_ENDPOINT);
@@ -459,6 +501,108 @@ class LsConfigurationUpdaterTest {
 		param = new LsConfigurationUpdater().buildConfigurationParam();
 		assertEquals(Boolean.FALSE, param.getSettings().get(LsKey.SCANNING_MODE.key).getValue(),
 				"scan_automatic false must serialize as Boolean.FALSE");
+	}
+
+	// --- IDE-2149: pending-reset emit + re-push guard for every resettable org-scope key. ---
+	// prefKey -> ls key. Mirrors the resettable set covered form-side in HTMLSettingsPreferencePageTest.
+	private static final String[][] RESETTABLE = {
+			{Preferences.ACTIVATE_SNYK_OPEN_SOURCE, LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key},
+			{Preferences.ACTIVATE_SNYK_CODE_SECURITY, LsKey.ACTIVATE_SNYK_CODE.key},
+			{Preferences.ACTIVATE_SNYK_IAC, LsKey.ACTIVATE_SNYK_IAC.key},
+			{Preferences.ACTIVATE_SNYK_SECRETS, LsKey.ACTIVATE_SNYK_SECRETS.key},
+			{Preferences.SCANNING_MODE_AUTOMATIC, LsKey.SCANNING_MODE.key},
+			{Preferences.ENABLE_DELTA, LsKey.ENABLE_DELTA_FINDINGS.key},
+			{Preferences.FILTER_SHOW_CRITICAL, LsKey.SEVERITY_FILTER_CRITICAL.key},
+			{Preferences.FILTER_SHOW_HIGH, LsKey.SEVERITY_FILTER_HIGH.key},
+			{Preferences.FILTER_SHOW_MEDIUM, LsKey.SEVERITY_FILTER_MEDIUM.key},
+			{Preferences.FILTER_SHOW_LOW, LsKey.SEVERITY_FILTER_LOW.key},
+			{Preferences.FILTER_IGNORES_SHOW_OPEN_ISSUES, LsKey.ISSUE_VIEW_OPEN_ISSUES.key},
+			{Preferences.FILTER_IGNORES_SHOW_IGNORED_ISSUES, LsKey.ISSUE_VIEW_IGNORED_ISSUES.key},
+			{Preferences.RISK_SCORE_THRESHOLD, LsKey.RISK_SCORE_THRESHOLD.key},
+			{Preferences.ORGANIZATION_KEY, LsKey.ORGANIZATION.key},
+	};
+
+	@Test
+	void testBuildConfigurationParam_pendingResetEmitsNullChangedTrueOnce_forEachResettableKey() {
+		for (String[] row : RESETTABLE) {
+			String prefKey = row[0], lsKey = row[1];
+			setUp();
+			setupPreferenceMock();
+			when(preferenceMock.isExplicitlyChanged(prefKey)).thenReturn(false);
+
+			var first = new LsConfigurationUpdater()
+					.buildConfigurationParam(java.util.Set.of(prefKey)).getSettings().get(lsKey);
+			assertNull(first.getValue(), lsKey + " reset must emit value=null");
+			assertTrue(first.getChanged(), lsKey + " reset must emit changed=true");
+
+			var second = new LsConfigurationUpdater()
+					.buildConfigurationParam(java.util.Set.of()).getSettings().get(lsKey);
+			assertNotNull(second.getValue(), lsKey + " second push must send the concrete default, not null");
+			assertFalse(second.getChanged(), lsKey + " second push must send changed=false");
+		}
+	}
+
+	@Test
+	void testBuildConfigurationParam_pendingResetAllSeveritiesTogether() {
+		setupPreferenceMock();
+		var all = java.util.Set.of(Preferences.FILTER_SHOW_CRITICAL, Preferences.FILTER_SHOW_HIGH,
+				Preferences.FILTER_SHOW_MEDIUM, Preferences.FILTER_SHOW_LOW);
+
+		var first = new LsConfigurationUpdater().buildConfigurationParam(all).getSettings();
+		for (LsKey k : new LsKey[] {LsKey.SEVERITY_FILTER_CRITICAL, LsKey.SEVERITY_FILTER_HIGH,
+				LsKey.SEVERITY_FILTER_MEDIUM, LsKey.SEVERITY_FILTER_LOW}) {
+			assertNull(first.get(k.key).getValue(), k.key + " must emit null on reset");
+			assertTrue(first.get(k.key).getChanged(), k.key + " must emit changed=true on reset");
+		}
+
+		var second = new LsConfigurationUpdater().buildConfigurationParam(java.util.Set.of()).getSettings();
+		for (LsKey k : new LsKey[] {LsKey.SEVERITY_FILTER_CRITICAL, LsKey.SEVERITY_FILTER_HIGH,
+				LsKey.SEVERITY_FILTER_MEDIUM, LsKey.SEVERITY_FILTER_LOW}) {
+			assertFalse(second.get(k.key).getChanged(), k.key + " re-push must be changed=false");
+		}
+	}
+
+	@Test
+	void testBuildConfigurationParam_mixedBatch_resetsSomeKeepsOthers() {
+		setupPreferenceMock();
+		var resets = java.util.Set.of(Preferences.ACTIVATE_SNYK_OPEN_SOURCE, Preferences.RISK_SCORE_THRESHOLD);
+		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_OPEN_SOURCE)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.RISK_SCORE_THRESHOLD)).thenReturn(false);
+		when(preferenceMock.isExplicitlyChanged(Preferences.ACTIVATE_SNYK_SECRETS)).thenReturn(true);
+
+		var first = new LsConfigurationUpdater().buildConfigurationParam(resets).getSettings();
+		assertNull(first.get(LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key).getValue());
+		assertTrue(first.get(LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key).getChanged());
+		assertNull(first.get(LsKey.RISK_SCORE_THRESHOLD.key).getValue());
+		assertTrue(first.get(LsKey.RISK_SCORE_THRESHOLD.key).getChanged());
+		assertNotNull(first.get(LsKey.ACTIVATE_SNYK_SECRETS.key).getValue());
+		assertTrue(first.get(LsKey.ACTIVATE_SNYK_SECRETS.key).getChanged());
+
+		var second = new LsConfigurationUpdater().buildConfigurationParam(java.util.Set.of()).getSettings();
+		assertFalse(second.get(LsKey.ACTIVATE_SNYK_OPEN_SOURCE.key).getChanged());
+		assertFalse(second.get(LsKey.RISK_SCORE_THRESHOLD.key).getChanged());
+		assertTrue(second.get(LsKey.ACTIVATE_SNYK_SECRETS.key).getChanged());
+	}
+
+	@Test
+	void testBuildConfigurationParam_exactlyOnceAcrossAllResetKeys() {
+		setupPreferenceMock();
+		java.util.Set<String> allPrefKeys = new java.util.HashSet<>();
+		for (String[] row : RESETTABLE) {
+			allPrefKeys.add(row[0]);
+			when(preferenceMock.isExplicitlyChanged(row[0])).thenReturn(false);
+		}
+
+		var first = new LsConfigurationUpdater().buildConfigurationParam(allPrefKeys).getSettings();
+		for (String[] row : RESETTABLE) {
+			assertNull(first.get(row[1]).getValue(), row[1] + " must emit null on first push");
+			assertTrue(first.get(row[1]).getChanged(), row[1] + " must emit changed=true on first push");
+		}
+
+		var second = new LsConfigurationUpdater().buildConfigurationParam(java.util.Set.of()).getSettings();
+		for (String[] row : RESETTABLE) {
+			assertFalse(second.get(row[1]).getChanged(), row[1] + " must not re-assert reset on second push");
+		}
 	}
 
 	private void setupPreferenceMock() {
