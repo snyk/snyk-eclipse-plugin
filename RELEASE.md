@@ -12,12 +12,6 @@
   - Coding agents can use the `bump-version` skill (`.claude/skills/bump-version/SKILL.md`) to do this step, including the protocol version check above.
 
 
-**Update Changelog**
-
-- In the plugin/extension repo, make sure the the Changelog is updated with the correct version to be released and the correct changes in the release.
-  - Make sure Early Access are specified correctly for new feature.
-
-
 **Build Artifacts**
 
 - Use  `mvnw clean package`  or  `mvnw clean verify`  to build the project and ensure artifacts are created with the correct versions.
