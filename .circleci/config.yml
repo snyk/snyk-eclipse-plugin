@@ -74,7 +74,7 @@ jobs:
           paths:
             - update-site/target/repository
             - update-site/target/*.zip
-            - .github/upload-to-s3.sh
+            - .circleci/upload-to-s3.sh
 
   publish-preview:
     resource_class: small
@@ -92,7 +92,7 @@ jobs:
       - verify-oidc-identity
       - run:
           name: Publish preview channel to S3
-          command: .github/upload-to-s3.sh preview
+          command: .circleci/upload-to-s3.sh preview
 
   publish-stable:
     resource_class: small
@@ -130,7 +130,7 @@ jobs:
             fi
       - run:
           name: Publish stable channel to S3
-          command: .github/upload-to-s3.sh stable
+          command: .circleci/upload-to-s3.sh stable
 
   test-macos:
     resource_class: m4pro.medium
