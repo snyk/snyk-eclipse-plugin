@@ -1,4 +1,4 @@
-name: Release
+name: Release (Legacy — see docs/release.md)
 
 on:
   workflow_dispatch:
