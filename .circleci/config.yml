@@ -106,9 +106,6 @@ jobs:
     resource_class: small
     docker:
       - image: cimg/aws:2026.09.1
-    environment:
-      AWS_S3_BUCKET_NAME: snyk-assets
-      AWS_REGION: us-east-1
     steps:
       # checkout must precede attach_workspace: checkout clones into the job's working
       # directory, and git clone refuses a non-empty target.
