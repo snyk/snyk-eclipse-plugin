@@ -12,6 +12,17 @@ orbs:
   aws-cli: circleci/aws-cli@5.4.2
 
 jobs:
+  fail-invalid-stable-release-branch:
+    resource_class: small
+    docker:
+      - image: cimg/base:current
+    steps:
+      - run:
+          name: Refuse unsupported branch for stable release
+          command: |
+            echo "ERR: run_stable_release=true was triggered on branch '$CIRCLE_BRANCH'. stable-release only runs on main, release/*, or hotfix/* — nothing was built or published." >&2
+            exit 1
+
   security-scans:
     resource_class: small
     docker:
@@ -261,3 +272,15 @@ workflows:
           filters:
             branches:
               only: [main, /release\/.*/, /hotfix\/.*/]
+
+  invalid-stable-release-branch:
+    when:
+      and:
+        - equal: [ true, << pipeline.parameters.run_stable_release >> ]
+        - not:
+            or:
+              - equal: [ "main", << pipeline.git.branch >> ]
+              - matches: { pattern: "^release/.*", value: << pipeline.git.branch >> }
+              - matches: { pattern: "^hotfix/.*", value: << pipeline.git.branch >> }
+    jobs:
+      - fail-invalid-stable-release-branch
