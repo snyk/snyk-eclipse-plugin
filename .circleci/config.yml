@@ -58,9 +58,6 @@ jobs:
     resource_class: small
     docker:
       - image: cimg/aws:2026.09.1
-    environment:
-      AWS_S3_BUCKET_NAME: snyk-assets
-      AWS_REGION: us-east-1
     steps:
       - attach_workspace:
           at: .
