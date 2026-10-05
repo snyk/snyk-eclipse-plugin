@@ -24,18 +24,6 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-      - name: Decode Keystore
-        id: decode_keystore
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
-        env:
-          fileName: ./keystore.jks
-          encodedString: ${{ secrets.KEYSTORE }}
-          sha: ${{ secrets.KEYSTORE_SHA }}
-        run: |
-          echo "$encodedString" | base64 -d > $fileName
-          echo "$sha  $fileName" > sha256.txt
-          sha256sum -c sha256.txt
-
       - uses: pmd/pmd-github-action@v2
         name: Lint
         id: pmd
@@ -56,23 +44,4 @@ jobs:
         run: exit 1
 
       - name: Build with Maven
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
-        run: ./mvnw clean verify -P sign -DtrimStackTrace=false
-        env:
-          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
-
-      - name: Build with Maven
-        if: ${{ github.ref != 'refs/heads/main' }}
-        run: |
-          ./mvnw clean verify -DtrimStackTrace=false
-
-      - name: Upload binaries to static.snyk.io
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_REGION: us-east-1
-        run: |
-          .github/upload-to-s3.sh preview
+        run: ./mvnw clean verify -DtrimStackTrace=false
