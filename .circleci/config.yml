@@ -249,7 +249,7 @@ workflows:
       - security-scans:
           name: security-scans-stable
           context:
-            - devex_ide
+            - endpoint-experience
             - prodsec-orb-runtime
 
       - test-linux:
