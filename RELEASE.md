@@ -9,12 +9,7 @@
 
 - Update the release version in all files that specify the Eclipse plugin version.
   - Do not change values that do not represent the plugin version.
-
-
-**Update Changelog**
-
-- In the plugin/extension repo, make sure the the Changelog is updated with the correct version to be released and the correct changes in the release.
-  - Make sure Early Access are specified correctly for new feature.
+  - Coding agents can use the `bump-version` skill (`.claude/skills/bump-version/SKILL.md`) to do this step, including the protocol version check above.
 
 
 **Build Artifacts**
@@ -29,13 +24,18 @@
 - Ensure all tests for the latest commit have passed before proceeding with the release.
 
 
-**Release via GitHub Actions**
+**Release via CircleCI**
 
 - If you want to do a hotfix with a subset of commits from main, create a hotfix branch off the previous release tag.
   - For the hotfix release, cherry pick the commits you want to go into the hotfix release.
-  
-- Trigger the release workflow in GitHub Actions.
-  - If this is a hotfix, select the hotfix branch.
+
+- Trigger the `stable-release` pipeline on CircleCI's web UI:
+  - Open the project and click "Trigger Pipeline".
+  - Pick the branch (`main`, or your `hotfix/*`/`release/*` branch).
+  - Set `run_stable_release` to `true`.
+  - Click Trigger.
+  - Safe to retry: if the pipeline fails partway through, re-run it on the same commit. Tagging and the GitHub release step both skip if already done.
+  - N.B. the CircleCI pipeline hasn't been proven with a real release yet. If it fails, use the legacy GitHub Actions workflow (`release-legacy.yml`) instead. Once CircleCI works: delete `release-legacy.yml`, move `.github/upload-to-s3.sh` to `.circleci/upload-to-s3.sh` (nothing else under `.github/` will use it once the legacy workflow is gone) and update its three references in `.circleci/config.yml`, then delete this note.
 
 
 **Release Notes**

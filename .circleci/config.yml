@@ -1,9 +1,42 @@
 version: 2.1
 
+parameters:
+  run_stable_release:
+    type: boolean
+    default: false
+    description: >
+      Set to true via CircleCI's "Trigger Pipeline" UI or API when cutting a stable release.
+
 orbs:
   prodsec: snyk/prodsec-orb@1
+  aws-cli: circleci/aws-cli@5.4.2
+  gh: circleci/github-cli@2.7.2
+
+commands:
+  verify-oidc-identity:
+    description: Hard-fails unless the assumed AWS identity is snyk-assets-eclipse-writer.
+    steps:
+      - run:
+          name: Verify OIDC identity
+          command: |
+            set -euo pipefail
+            IDENTITY="$(aws sts get-caller-identity --output text --query Arn)"
+            echo "Assumed identity: $IDENTITY"
+            echo "$IDENTITY" | grep -qE '^arn:aws:sts::198361731867:assumed-role/snyk-assets-eclipse-writer/' \
+              || { echo 'ERR: not running as expected OIDC role' >&2; exit 1; }
 
 jobs:
+  fail-invalid-stable-release-branch:
+    resource_class: small
+    docker:
+      - image: cimg/base:current
+    steps:
+      - run:
+          name: Refuse unsupported branch for stable release
+          command: |
+            echo "ERR: run_stable_release=true was triggered on branch '$CIRCLE_BRANCH'. stable-release only runs on main, release/*, or hotfix/* — nothing was built or published." >&2
+            exit 1
+
   security-scans:
     resource_class: small
     docker:
@@ -13,13 +46,184 @@ jobs:
       - prodsec/security_scans:
           mode: auto
           open-source-agentic-fix-enabled: true
+          open-source-agentic-fix-base-branch: main
           open-source-scan-all-projects: true
           open-source-additional-arguments: --exclude=tests
           iac-scan: disabled
 
+  test-linux:
+    resource_class: medium
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - run:
+          name: Maven verify
+          command: ./mvnw clean verify -DtrimStackTrace=false
+
+  build-sign:
+    resource_class: medium
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - run:
+          name: Decode signing keystore
+          command: |
+            set -euo pipefail
+            [[ -n "${KEYSTORE:-}" ]] || { echo 'ERR: KEYSTORE not set or empty' >&2; exit 1; }
+            [[ -n "${KEYSTORE_SHA:-}" ]] || { echo 'ERR: KEYSTORE_SHA not set or empty' >&2; exit 1; }
+            printf '%s' "$KEYSTORE" | base64 -d > ./keystore.jks
+            printf '%s  ./keystore.jks\n' "$KEYSTORE_SHA" > sha256.txt
+            sha256sum -c sha256.txt
+            [[ -n "${KEYSTORE_PASS:-}" ]] || { echo 'ERR: KEYSTORE_PASS not set or empty' >&2; exit 1; }
+      - run:
+          name: Maven verify with sign profile
+          command: ./mvnw clean verify -P sign -DtrimStackTrace=false
+      - persist_to_workspace:
+          root: .
+          paths:
+            - update-site/target/repository
+            - update-site/target/*.zip
+            - .github/upload-to-s3.sh
+
+  publish-preview:
+    resource_class: small
+    docker:
+      - image: cimg/aws:2026.09.1
+    steps:
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: arn:aws:iam::198361731867:role/snyk-assets-eclipse-writer
+          region: us-east-1
+      - verify-oidc-identity
+      - run:
+          name: Publish preview channel to S3
+          command: .github/upload-to-s3.sh preview
+
+  publish-stable:
+    resource_class: small
+    docker:
+      - image: cimg/aws:2026.09.1
+    steps:
+      # checkout must precede attach_workspace: checkout clones into the job's working
+      # directory, and git clone refuses a non-empty target.
+      - checkout
+      - attach_workspace:
+          at: .
+      - gh/install
+      - aws-cli/setup:
+          role_arn: arn:aws:iam::198361731867:role/snyk-assets-eclipse-writer
+          region: us-east-1
+      - verify-oidc-identity
+      - run:
+          name: Create GitHub release (and tag)
+          command: |
+            set -euo pipefail
+            [[ -n "${GITHUB_TOKEN:-}" ]] \
+              || { echo 'ERR: GITHUB_TOKEN not set or empty (set it in the snyk-eclipse-plugin-github-release context)' >&2; exit 1; }
+            TAG_NAME="v$(git show -s --format=%cd --date=format:%Y%m%d.%H%M%S)"
+            ASSET="$(find update-site/target -maxdepth 2 -name 'update-site-*.zip' -print -quit)"
+            [ -n "$ASSET" ] || { echo "ERR: no update-site-*.zip found under update-site/target" >&2; exit 1; }
+            # `gh release create` creates the git tag as a side effect.
+            # `--target` pins the tag to this pipeline's commit instead of main.
+            if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+              echo "GitHub release '$TAG_NAME' already exists — skipping (retry of a prior run?)."
+            else
+              gh release create "$TAG_NAME" --target "$CIRCLE_SHA1" --generate-notes "$ASSET"
+            fi
+      - run:
+          name: Publish stable channel to S3
+          command: .github/upload-to-s3.sh stable
+
+  test-macos:
+    resource_class: m4pro.medium
+    macos:
+      xcode: 16.4.0
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore Homebrew downloads cache
+          keys:
+            # Prefix-only match, restores whatever was most recently saved. Homebrew's own
+            # cleanup auto-removes cached downloads after 120 days, so each restored cache's
+            # content size stays bounded rather than growing unboundedly.
+            - brew-downloads-
+      # Tycho/Mockito require JDK 17 specifically (JDK 21+ breaks Mockito's inline-mock
+      # byte-buddy agent), and the JDK bundled with the Xcode image isn't guaranteed to be 17.
+      - run:
+          name: Install Temurin JDK 17
+          command: |
+            HOMEBREW_NO_ASK=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask temurin@17
+            JAVA_HOME_17="$(/usr/libexec/java_home -v 17 --failfast)"
+            echo "export JAVA_HOME=$JAVA_HOME_17" >> "$BASH_ENV"
+            echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> "$BASH_ENV"
+      - save_cache:
+          name: Save Homebrew downloads cache
+          # CircleCI cache keys are immutable -- save_cache is a no-op if the exact key
+          # already has a saved cache. A static key would only ever persist the first
+          # run's content forever, so {{ epoch }} forces a brand-new key every run.
+          key: brew-downloads--{{ epoch }}
+          paths:
+            - ~/Library/Caches/Homebrew/downloads
+      - restore_cache:
+          name: Restore Maven/Tycho cache
+          keys:
+            - &m2-macos-cache-key m2-macos--pom.xml-{{ checksum "pom.xml" }}--plugin/pom.xml-{{ checksum "plugin/pom.xml" }}--tests/pom.xml-{{ checksum "tests/pom.xml" }}--target-platform/target-platform.target-{{ checksum "target-platform/target-platform.target" }}
+      - run:
+          name: Maven verify
+          command: ./mvnw clean verify -DtrimStackTrace=false
+      - save_cache:
+          name: Save Maven/Tycho cache
+          key: *m2-macos-cache-key
+          paths:
+            - ~/.m2/repository
+
+  test-windows:
+    resource_class: windows.medium
+    machine:
+      image: windows-server-2022-gui:current
+    steps:
+      - checkout
+      # Tycho/Mockito require JDK 17 specifically (JDK 21+ breaks Mockito's inline-mock
+      # byte-buddy agent), and the JDK bundled with the Windows machine image isn't
+      # guaranteed to be 17.
+      - run:
+          name: Install Temurin JDK 17
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            choco install temurin17 -y --no-progress
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - restore_cache:
+          name: Restore Maven/Tycho cache
+          keys:
+            - &m2-windows-cache-key m2-windows--pom.xml-{{ checksum "pom.xml" }}--plugin/pom.xml-{{ checksum "plugin/pom.xml" }}--tests/pom.xml-{{ checksum "tests/pom.xml" }}--target-platform/target-platform.target-{{ checksum "target-platform/target-platform.target" }}
+      - run:
+          name: Maven verify
+          shell: powershell.exe -ExecutionPolicy Bypass
+          command: |
+            # choco install temurin17 does not set JAVA_HOME by default (FeatureJavaHome
+            # is opt-in, unlike FeatureEnvironment/PATH) -- resolve it from disk instead.
+            $jdkHome = (Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory -Filter "jdk-17*" | Select-Object -First 1).FullName
+            if (-not $jdkHome) { Write-Error "Temurin 17 install not found under Eclipse Adoptium"; exit 1 }
+            $env:JAVA_HOME = $jdkHome
+            $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+            .\mvnw.cmd clean verify -DtrimStackTrace=false
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - save_cache:
+          name: Save Maven/Tycho cache
+          key: *m2-windows-cache-key
+          paths:
+            - C:\Users\circleci\.m2\repository
+
 workflows:
   version: 2
   CICD:
+    # Excludes manually-triggered stable-release pipelines, which would otherwise
+    # also run this full test matrix and surface the unrelated preview gate.
+    when:
+      not: << pipeline.parameters.run_stable_release >>
     jobs:
       - prodsec/secrets-scan:
           name: Scan repository for secrets
@@ -31,5 +235,104 @@ workflows:
 
       - security-scans:
           context:
-            - devex_ide
+            - endpoint-experience
             - prodsec-orb-runtime
+
+      - test-linux
+      - test-macos
+      - test-windows
+
+      # Approval gate required to switch the downstream job's permissions to this gate's approver's.
+      # This is necessary because the snyk-eclipse-plugin-signing context is restricted.
+      - approve-preview-release:
+          name: Approve preview release
+          type: approval
+          filters:
+            branches:
+              only: [main]
+
+      - build-sign:
+          context:
+            - snyk-eclipse-plugin-signing
+          requires:
+            - Approve preview release
+            - test-linux
+            - test-macos
+            - test-windows
+            - security-scans
+            - Scan repository for secrets
+          filters:
+            branches:
+              only: [main]
+
+      - publish-preview:
+          requires:
+            - build-sign
+          filters:
+            branches:
+              only: [main]
+
+  stable-release:
+    when:
+      and:
+        - equal: [ true, << pipeline.parameters.run_stable_release >> ]
+        - or:
+            - equal: [ "main", << pipeline.git.branch >> ]
+            - matches: { pattern: "^release/.*", value: << pipeline.git.branch >> }
+            - matches: { pattern: "^hotfix/.*", value: << pipeline.git.branch >> }
+    jobs:
+      - prodsec/secrets-scan:
+          name: Scan repository for secrets (stable)
+          context:
+            - snyk-bot-slack
+            - prodsec-orb-runtime
+          channel: snyk-on-snyk-devex_ide
+          trusted-branch: main
+
+      - security-scans:
+          name: security-scans-stable
+          context:
+            - endpoint-experience
+            - prodsec-orb-runtime
+
+      - test-linux:
+          name: test-linux-stable
+      - test-macos:
+          name: test-macos-stable
+      - test-windows:
+          name: test-windows-stable
+
+      - build-sign:
+          name: build-sign-stable
+          context:
+            - snyk-eclipse-plugin-signing
+          requires:
+            - test-linux-stable
+            - test-macos-stable
+            - test-windows-stable
+            - security-scans-stable
+            - Scan repository for secrets (stable)
+          filters:
+            branches:
+              only: [main, /release\/.*/, /hotfix\/.*/]
+
+      - publish-stable:
+          context:
+            - snyk-eclipse-plugin-github-release
+          requires:
+            - build-sign-stable
+          filters:
+            branches:
+              only: [main, /release\/.*/, /hotfix\/.*/]
+
+  invalid-stable-release-branch:
+    when:
+      and:
+        - equal: [ true, << pipeline.parameters.run_stable_release >> ]
+        - not:
+            or:
+              - equal: [ "main", << pipeline.git.branch >> ]
+              - matches: { pattern: "^release/.*", value: << pipeline.git.branch >> }
+              - matches: { pattern: "^hotfix/.*", value: << pipeline.git.branch >> }
+    jobs:
+      - fail-invalid-stable-release-branch
