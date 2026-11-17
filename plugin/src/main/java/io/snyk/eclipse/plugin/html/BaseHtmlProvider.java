@@ -111,6 +111,16 @@ public class BaseHtmlProvider {
 	// Matches var(--foo) and var(--foo, simple-fallback). Excludes fallbacks containing parens
 	// (e.g. rgba(...)) so nested-paren fallbacks are left untouched rather than mis-matched.
 	private static final Pattern CSS_VAR_PATTERN = Pattern.compile("var\\(--([a-zA-Z0-9_-]+)(?:,[^()]*)?\\)");
+	private static final Pattern SNYK_LEARN_CONTAINER_PATTERN = Pattern.compile(
+			"<div\\b[^>]*\\bclass\\s*=\\s*(['\"])(?:[^'\"]*\\s)?lesson-container(?:\\s[^'\"]*)?\\1[^>]*>",
+			Pattern.CASE_INSENSITIVE);
+	private static final Pattern SNYK_LEARN_ANCHOR_PATTERN = Pattern.compile(
+			"<a\\b(?=[^>]*\\bhref\\s*=\\s*(['\"])(?:https?://)?learn\\.snyk\\.io(?:[/#?][^'\"]*)?\\1)[^>]*>"
+					+ ".*?</a\\s*>",
+			Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+	private static final Pattern DIV_TAG_PATTERN = Pattern.compile("</?div\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+	private static final String CLOSING_DIV_PREFIX = "</";
+	private static final int NO_OPEN_DIVS = 0;
 
 	// Default fallback colors
 	private static final String DEFAULT_SECTION_BG_COLOR = "#F0F0F0";
@@ -196,10 +206,11 @@ public class BaseHtmlProvider {
 
 	public String replaceCssVariables(String html, boolean useRelativeFontSize) {
 		refreshThemeCachesIfStale();
+		String htmlWithoutSnykLearn = removeSnykLearnContent(html);
 		// Build the CSS with the nonce
 		String nonce = getNonce();
 		String css = "<style nonce=\"" + nonce + "\">" + getCss() + "</style>";
-		String htmlStyled = html.replace("${ideStyle}", css);
+		String htmlStyled = htmlWithoutSnykLearn.replace("${ideStyle}", css);
 		htmlStyled = htmlStyled.replace("<style nonce=\"ideNonce\" data-ide-style></style>", css);
 		htmlStyled = htmlStyled.replace(CSS_VAR_DEFAULT_FONT,
 				" ui-sans-serif, \"SF Pro Text\", \"Segoe UI\", \"Ubuntu\", Tahoma, Geneva, Verdana, sans-serif;");
@@ -346,6 +357,46 @@ public class BaseHtmlProvider {
 		htmlStyled = htmlStyled.replace("${ideScript}", "");
 
 		return htmlStyled;
+	}
+
+	private String removeSnykLearnContent(String html) {
+		Matcher learnContainerMatcher = SNYK_LEARN_CONTAINER_PATTERN.matcher(html);
+		StringBuilder filteredHtml = new StringBuilder(html.length());
+		int retainedContentStart = 0;
+		int searchStart = 0;
+
+		while (learnContainerMatcher.find(searchStart)) {
+			int containerEnd = findClosingDiv(html, learnContainerMatcher.end());
+			if (containerEnd < 0) {
+				searchStart = learnContainerMatcher.end();
+				continue;
+			}
+
+			filteredHtml.append(html, retainedContentStart, learnContainerMatcher.start());
+			retainedContentStart = containerEnd;
+			searchStart = containerEnd;
+		}
+
+		filteredHtml.append(html, retainedContentStart, html.length());
+		return SNYK_LEARN_ANCHOR_PATTERN.matcher(filteredHtml).replaceAll("");
+	}
+
+	private int findClosingDiv(String html, int contentStart) {
+		Matcher divMatcher = DIV_TAG_PATTERN.matcher(html);
+		divMatcher.region(contentStart, html.length());
+		int depth = 1;
+
+		while (divMatcher.find()) {
+			if (divMatcher.group().startsWith(CLOSING_DIV_PREFIX)) {
+				depth--;
+				if (depth == NO_OPEN_DIVS) {
+					return divMatcher.end();
+				}
+			} else {
+				depth++;
+			}
+		}
+		return -1;
 	}
 
 	private String replaceRemainingCssVars(String html, Map<String, String> varMap) {
